@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Identity/">
+    <Project Path="Identity/VMP.Identity/VMP.Identity.csproj" />
+  </Folder>
+  <Project Path="VMP.AppHost/VMP.AppHost.csproj" />
+  <Project Path="VMP.Common/VMP.Common.csproj" />
+  <Project Path="VMP.DatabaseMigrationHelpers/VMP.DatabaseMigrationHelpers.csproj" />
+  <Project Path="VMP.ServiceDefaults/VMP.ServiceDefaults.csproj" />
+</Solution>
