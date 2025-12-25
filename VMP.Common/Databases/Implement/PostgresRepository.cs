@@ -1,0 +1,83 @@
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+using VMP.Common.Databases.Interfaces;
+
+namespace VMP.Common.Databases.Implement
+{
+    public class PostgresRepository<T> : IGenericRepository<T> where T : class, IEntity
+    {
+        protected readonly DbSet<T> _dbSet;
+        protected readonly DbContext _context;
+
+        public PostgresRepository(DbContext context)
+        {
+            _context = context;
+            _dbSet = context.Set<T>();
+        }
+
+        public async Task<T> AddAsync(T entity)
+        {
+            _dbSet.Add(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+
+        public async Task<long> CountAsync(Expression<Func<T, bool>> expression)
+        {
+            var count = await _dbSet.CountAsync(expression);
+            return count;
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var entity = await _dbSet.FindAsync(id);
+            if (entity != null)
+            {
+                _dbSet.Remove(entity);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<T?> FindOneAsync(Expression<Func<T, bool>> expression)
+        {
+            return await _dbSet.FirstOrDefaultAsync(expression);
+        }
+
+        public async Task<IReadOnlyCollection<T>> GetAllAsync()
+        {
+            return await _dbSet.ToListAsync();
+        }
+
+        public async Task<IReadOnlyCollection<T>> GetAllAsync(Expression<Func<T, bool>> expression)
+        {
+            return await _dbSet.Where(expression).ToListAsync();
+        }
+
+        public async Task<T?> GetByIdAsync(Guid id, Expression<Func<T, bool>> expression)
+        {
+            return await _dbSet.Where(expression).FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<T?> GetByIdAsync(Guid id)
+        {
+            return await _dbSet.FindAsync(id);
+        }
+
+        public async Task UpdateAsync(Guid id, T entity)
+        {
+            var existingEntity = await _dbSet.FindAsync(id);
+            if (existingEntity != null)
+            {
+                if (ReferenceEquals(existingEntity, entity))
+                {
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    _context.Entry(existingEntity).CurrentValues.SetValues(entity);
+                    await _context.SaveChangesAsync();
+                }
+            }
+        }
+    }
+}

@@ -1,24 +1,25 @@
-﻿using VMP.ServiceDefaults;
+﻿using VMP.Common.Bootstrapping;
+using VMP.Identity.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-builder.AddDefaultSwagger();
-builder.Services.AddAuthentication();
-builder.Services.AddAuthorization();
+
+builder.AddCommonService();
+
+builder.Services.AddScoped<IIdentityTokenService, IdentityTokenService>();
 
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
+app.UseCommonService();
+
 if (app.Environment.IsDevelopment())
 {
-    app.UseDefaultSwagger();
     app.MapOpenApi();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
 app.UseHttpsRedirection();
 
 app.Run();
