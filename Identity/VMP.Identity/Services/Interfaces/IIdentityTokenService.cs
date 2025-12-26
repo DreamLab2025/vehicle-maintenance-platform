@@ -1,6 +1,6 @@
 using VMP.Identity.Dtos;
 
-namespace VMP.Identity.Services
+namespace VMP.Identity.Services.Interfaces
 {
     public interface IIdentityTokenService
     {

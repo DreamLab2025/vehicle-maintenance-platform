@@ -6,8 +6,9 @@ using System.Security.Cryptography;
 using System.Text;
 using VMP.Common.Configuration;
 using VMP.Identity.Dtos;
+using VMP.Identity.Services.Interfaces;
 
-namespace VMP.Identity.Services
+namespace VMP.Identity.Services.Implement
 {
     public class IdentityTokenService : IIdentityTokenService
     {
@@ -48,7 +49,7 @@ namespace VMP.Identity.Services
                 new Claim(JwtRegisteredClaimNames.Sub, tokenClaims.UserId),
                 new Claim(JwtRegisteredClaimNames.Email, tokenClaims.Email),
                 new Claim(JwtRegisteredClaimNames.UniqueName, tokenClaims.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.CreateVersion7().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
                 new Claim("userId", tokenClaims.UserId),
                 new Claim("userName", tokenClaims.UserName)

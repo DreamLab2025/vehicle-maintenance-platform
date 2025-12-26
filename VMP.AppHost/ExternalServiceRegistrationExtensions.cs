@@ -10,12 +10,12 @@ namespace VMP.AppHost
             var postgres = builder.AddPostgres("postgres")
                 .WithContainerName("PostgresDb")
                 .WithImageTag("17")
-                .WithPgWeb(pgWeb =>
+                .WithDataVolume()
+                .WithPgAdmin(pgAdmin =>
                 {
-                    pgWeb.WithContainerName("PgWeb")
-                        .WithHostPort(5050);
-                })
-                .WithDataVolume();
+                    pgAdmin.WithContainerName("PgAdmin")
+                           .WithHostPort(5050);
+                });
 
             var rabbitMq = builder.AddRabbitMQ("rabbitmq")
                 .WithContainerName("Rabbitmq")
@@ -36,7 +36,13 @@ namespace VMP.AppHost
                             .WithHostPort(8080)
                             .WithConfiguration(yarp =>
                             {
-                                yarp.AddRoute("/api/v1/identities/{**catch-all}", identityService);
+                                var identityCluster = yarp.AddCluster(identityService)
+                                .WithHttpClientConfig(new Yarp.ReverseProxy.Configuration.HttpClientConfig
+                                {
+                                    DangerousAcceptAnyServerCertificate = GetGatewayDangerousAcceptAnyServerCertificate()
+                                });
+                                yarp.AddRoute("/api/v1/auth/{**catch-all}", identityCluster);
+                                yarp.AddRoute("/api/v1/identities/{**catch-all}", identityCluster);
                             })
                             .WaitFor(identityService);
 
