@@ -159,5 +159,34 @@ namespace VMP.Identity.Services.Implements
                 return ApiResponse<TokenResponse>.FailureResponse("Đã xảy ra lỗi trong quá trình làm mới token");
             }
         }
+
+        public async Task<ApiResponse<UserDto>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found for password change: {UserId}", userId);
+                    return ApiResponse<UserDto>.FailureResponse("Người dùng không tồn tại");
+                }
+                var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.OldPassword);
+                if (verificationResult == PasswordVerificationResult.Failed)
+                {
+                    return ApiResponse<UserDto>.FailureResponse("Mật khẩu cũ không đúng");
+                }
+                user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+                user.UpdatedAt = DateTime.UtcNow;
+                user.UpdatedBy = user.Id;
+                await _userRepository.UpdateAsync(user.Id, user);
+                _logger.LogInformation("Password changed successfully for user: {UserId}", user.Id);
+                return ApiResponse<UserDto>.SuccessResponse(user.ToDto(), "Đổi mật khẩu thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing password");
+                return ApiResponse<UserDto>.FailureResponse("Đã xảy ra lỗi trong quá trình đổi mật khẩu");
+            }
+        }
     }
 }

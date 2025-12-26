@@ -8,5 +8,6 @@ namespace VMP.Identity.Services.Interfaces
         Task<ApiResponse<UserDto>> RegisterUserAsync(RegisterRequest request);
         Task<ApiResponse<TokenResponse>> LoginUserAsync(LoginRequest request);
         Task<ApiResponse<TokenResponse>> RefreshTokenAsync(Guid userId, string refreshToken);
+        Task<ApiResponse<UserDto>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
     }
 }

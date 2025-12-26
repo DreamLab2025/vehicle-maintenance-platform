@@ -7,17 +7,17 @@ namespace VMP.Identity.Apis
 {
     public static class AuthApis
     {
-        public static IEndpointRouteBuilder MapUserApi(this IEndpointRouteBuilder builder)
+        public static IEndpointRouteBuilder MapAuthApi(this IEndpointRouteBuilder builder)
         {
             builder.MapGroup("/api/v1/auth")
-                .MapUserRoutes()
+                .MapAuthRoutes()
                 .WithTags("Authentication Api")
                 .RequireRateLimiting("Fixed");
 
             return builder;
         }
 
-        public static RouteGroupBuilder MapUserRoutes(this RouteGroupBuilder group)
+        public static RouteGroupBuilder MapAuthRoutes(this RouteGroupBuilder group)
         {
             group.MapPost("/login", LoginUser)
                 .WithName("Login")
@@ -44,7 +44,35 @@ namespace VMP.Identity.Apis
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapPut("/change-password", ChangePassword)
+                .WithName("ChangePassword")
+                .WithSummary("Đổi mật khẩu người dùng")
+                .WithDescription("Cho phép người dùng đã xác thực đổi mật khẩu của họ")
+                .RequireAuthorization()
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             return group;
+        }
+
+        private static async Task<IResult> ChangePassword(ChangePasswordRequest request, IAuthService authService, ICurrentUserService currentUserService)
+        {
+            var userId = currentUserService.UserId;
+
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await authService.ChangePasswordAsync(userId, request);
+
+            if (result.IsSuccess)
+            {
+                return Results.Ok(result);
+            }
+
+            return Results.BadRequest(result);
         }
 
         private static async Task<IResult> RefreshToken(

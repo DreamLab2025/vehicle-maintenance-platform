@@ -24,6 +24,7 @@ namespace VMP.Identity.Bootstrapping
 
             builder.Services.AddScoped<IIdentityTokenService, IdentityTokenService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IUserService, UserService>();
 
             return builder;
         }
@@ -42,6 +43,7 @@ namespace VMP.Identity.Bootstrapping
 
             app.UseHttpsRedirection();
 
+            app.MapAuthApi();
             app.MapUserApi();
 
             return app;

@@ -33,4 +33,16 @@ namespace VMP.Identity.Dtos
         [Required(ErrorMessage = "Refresh token không được để trống")]
         public string RefreshToken { get; set; } = string.Empty;
     }
+
+    public class ChangePasswordRequest
+    {
+        [Required(ErrorMessage = "Mật khẩu cũ không được để trống")]
+        [MinLength(8, ErrorMessage = "Mật khẩu cũ tối thiểu 8 ký tự")]
+        [MaxLength(100)]
+        public string OldPassword { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Mật khẩu mới không được để trống")]
+        [MinLength(8, ErrorMessage = "Mật khẩu mới tối thiểu 8 ký tự")]
+        [MaxLength(100)]
+        public string NewPassword { get; set; } = string.Empty;
+    }
 }
