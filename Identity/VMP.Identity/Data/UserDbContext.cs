@@ -24,6 +24,7 @@ namespace VMP.Identity.Data
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                     c => c.ToList());
 
+                // Store Roles as array of integers in PostgreSQL
                 entity.Property(e => e.Roles)
                     .HasConversion(
                         v => v.Select(r => (int)r).ToArray(),

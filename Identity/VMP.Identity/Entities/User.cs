@@ -5,6 +5,9 @@ namespace VMP.Identity.Entities
 {
     public class User : BaseEntity
     {
+        [Key]
+        public Guid Id { get; set; }
+
         [Required]
         [MaxLength(200)]
         public string FullName { get; set; } = string.Empty;
@@ -31,12 +34,20 @@ namespace VMP.Identity.Entities
         public UserStatus Status { get; set; }
 
         public DateTime? RefreshTokenExpiryTime { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public Guid CreatedBy { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public Guid? UpdatedBy { get; set; }
+        public DateTime? DeletedAt { get; set; }
+        public Guid? DeletedBy { get; set; }
     }
 
     public enum UserStatus
     {
         Inactive = 0,
         Active = 1,
+        Suspended = 2,
+        Deleted = 3
     }
 
     public enum UserRole

@@ -15,5 +15,14 @@ namespace VMP.Common.Databases.Interfaces
         Task<T> AddAsync(T entity);
         Task UpdateAsync(Guid id, T entity);
         Task DeleteAsync(Guid id);
+
+        IQueryable<T> AsQueryable();
+
+        Task<(List<T> Items, int TotalCount)> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null
+        );
     }
 }

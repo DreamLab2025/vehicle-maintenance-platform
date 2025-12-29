@@ -23,8 +23,10 @@ namespace VMP.Identity.Mappings
 
         public static User ToEntity(this RegisterRequest request, string passwordHash)
         {
+            var userId = Guid.CreateVersion7();
             return new User
             {
+                Id = userId,
                 Email = request.Email,
                 PasswordHash = passwordHash,
                 FullName = request.Email.Split('@')[0],

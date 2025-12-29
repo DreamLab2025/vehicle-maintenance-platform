@@ -3,6 +3,7 @@ using VMP.Common.Shared;
 using VMP.Identity.Dtos;
 using VMP.Identity.Entities;
 using VMP.Identity.Mappings;
+using VMP.Identity.Repositories.Interfaces;
 using VMP.Identity.Services.Interfaces;
 
 namespace VMP.Identity.Services.Implements
@@ -79,6 +80,8 @@ namespace VMP.Identity.Services.Implements
 
                 user.RefreshToken = tokenResponse.RefreshToken;
                 user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+                user.UpdatedAt = DateTime.UtcNow;
+                user.UpdatedBy = user.Id;
 
                 await _userRepository.UpdateAsync(user.Id, user);
 
@@ -130,6 +133,8 @@ namespace VMP.Identity.Services.Implements
                 {
                     user.RefreshToken = tokenResponse.RefreshToken;
                     user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+                    user.UpdatedAt = DateTime.UtcNow;
+                    user.UpdatedBy = user.Id;
 
                     await _userRepository.UpdateAsync(user.Id, user);
 
