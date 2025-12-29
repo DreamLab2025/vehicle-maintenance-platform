@@ -1,4 +1,4 @@
-﻿using VMP.Common.Databases.Implement;
+﻿using VMP.Common.Databases.Implements;
 using VMP.Identity.Data;
 using VMP.Identity.Entities;
 using VMP.Identity.Repositories.Interfaces;

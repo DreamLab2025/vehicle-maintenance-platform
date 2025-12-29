@@ -2,6 +2,12 @@
   <Folder Name="/Identity/">
     <Project Path="Identity/VMP.Identity/VMP.Identity.csproj" />
   </Folder>
+  <Folder Name="/Vehicle/">
+    <Project Path="Vehicle/VMP.Vehicle.Application/VMP.Vehicle.Application.csproj" Id="742f26bd-d9cc-4253-ada1-a9d69a201504" />
+    <Project Path="Vehicle/VMP.Vehicle.Domain/VMP.Vehicle.Domain.csproj" Id="c138f4dc-2494-432e-bc09-44555e401f1f" />
+    <Project Path="Vehicle/VMP.Vehicle.Infrastructure/VMP.Vehicle.Infrastructure.csproj" Id="b6e26d17-7098-4798-86c1-575231914248" />
+    <Project Path="Vehicle/VMP.Vehicle/VMP.Vehicle.csproj" />
+  </Folder>
   <Project Path="VMP.AppHost/VMP.AppHost.csproj" />
   <Project Path="VMP.Common/VMP.Common.csproj" />
   <Project Path="VMP.DatabaseMigrationHelpers/VMP.DatabaseMigrationHelpers.csproj" />

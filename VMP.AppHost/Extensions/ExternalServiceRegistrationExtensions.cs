@@ -1,7 +1,7 @@
 ﻿using Aspire.Hosting.Yarp;
-using Scalar.Aspire;
+using Yarp.ReverseProxy.Configuration;
 
-namespace VMP.AppHost
+namespace VMP.AppHost.Extensions
 {
     public static class ExternalServiceRegistrationExtensions
     {
@@ -24,9 +24,16 @@ namespace VMP.AppHost
                 .WithDataVolume();
 
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
+            var vehicleDb = postgres.AddDatabase("vehicle-db", "Vehicles");
 
             var identityService = builder.AddProject<Projects.VMP_Identity>("vmp-identity")
                 .WithReference(identityDb)
+                .WithReference(rabbitMq)
+                .WaitFor(postgres)
+                .WaitFor(rabbitMq);
+
+            var vehicleService = builder.AddProject<Projects.VMP_Vehicle>("vmp-vehicle")
+                .WithReference(vehicleDb)
                 .WithReference(rabbitMq)
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
@@ -36,28 +43,35 @@ namespace VMP.AppHost
                             .WithHostPort(8080)
                             .WithConfiguration(yarp =>
                             {
-                                var identityCluster = yarp.AddCluster(identityService)
-                                .WithHttpClientConfig(new Yarp.ReverseProxy.Configuration.HttpClientConfig
-                                {
-                                    DangerousAcceptAnyServerCertificate = GetGatewayDangerousAcceptAnyServerCertificate()
-                                });
+                                var identityCluster = yarp.AddProjectCluster(identityService);
                                 yarp.AddRoute("/api/v1/auth/{**catch-all}", identityCluster);
                                 yarp.AddRoute("/api/v1/identities/{**catch-all}", identityCluster);
+
+                                yarp.AddRoute("/api/v1/vehicles/{**catch-all}", vehicleService);
                             })
                             .WaitFor(identityService);
 
-            var scalarDocs = builder.AddScalarApiReference()
-                .WithContainerName("ScalarDocs")
-                .WithApiReference(identityService);
+            //var scalarDocs = builder.AddScalarApiReference()
+            //    .WithContainerName("ScalarDocs")
+            //    .WithApiReference(identityService);
 
             return builder;
         }
 
+        private static YarpCluster AddProjectCluster(this IYarpConfigurationBuilder yarp, IResourceBuilder<ProjectResource> resource)
+        {
+            return yarp.AddCluster(resource).WithHttpClientConfig(new HttpClientConfig
+            {
+                DangerousAcceptAnyServerCertificate = GetGatewayDangerousAcceptAnyServerCertificate()
+            });
+        }
+
         private static YarpRoute AddRoute(this IYarpConfigurationBuilder yarp, string path, IResourceBuilder<ProjectResource> resource)
         {
-            var serviceCluster = yarp.AddCluster(resource).WithHttpClientConfig(
-                new Yarp.ReverseProxy.Configuration.HttpClientConfig() { DangerousAcceptAnyServerCertificate = GetGatewayDangerousAcceptAnyServerCertificate() }
-                );
+            var serviceCluster = yarp.AddCluster(resource).WithHttpClientConfig(new HttpClientConfig()
+            {
+                DangerousAcceptAnyServerCertificate = GetGatewayDangerousAcceptAnyServerCertificate()
+            });
             return yarp.AddRoute(path, serviceCluster);
         }
 

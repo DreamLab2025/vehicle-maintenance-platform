@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using VMP.Common.Databases.Base;
 using VMP.Common.Shared;
 using VMP.Identity.Dtos;
 using VMP.Identity.Entities;
@@ -71,7 +72,7 @@ namespace VMP.Identity.Services.Implements
                     return ApiResponse<TokenResponse>.FailureResponse("Email hoặc mật khẩu không đúng");
                 }
 
-                if (user.Status != UserStatus.Active)
+                if (user.Status != EntityStatus.Active)
                 {
                     return ApiResponse<TokenResponse>.FailureResponse("Tài khoản người dùng chưa được kích hoạt");
                 }
@@ -108,7 +109,7 @@ namespace VMP.Identity.Services.Implements
                     return ApiResponse<TokenResponse>.FailureResponse("Không tìm thấy người dùng");
                 }
 
-                if (user.Status != UserStatus.Active)
+                if (user.Status != EntityStatus.Active)
                 {
                     return ApiResponse<TokenResponse>.FailureResponse("Tài khoản người dùng chưa được kích hoạt");
                 }

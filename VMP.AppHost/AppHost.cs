@@ -1,4 +1,4 @@
-using VMP.AppHost;
+using VMP.AppHost.Extensions;
 
 var builder = DistributedApplication.CreateBuilder(args);
 

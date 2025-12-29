@@ -1,4 +1,4 @@
-﻿namespace Vicobi.Common.Shared
+﻿namespace VMP.Common.Shared
 {
     public class PaginationRequest
     {

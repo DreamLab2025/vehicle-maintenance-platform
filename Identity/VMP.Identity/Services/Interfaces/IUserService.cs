@@ -1,6 +1,4 @@
-﻿
-using Vicobi.Common.Shared;
-using VMP.Common.Shared;
+﻿using VMP.Common.Shared;
 using VMP.Identity.Dtos;
 
 namespace VMP.Identity.Services.Interfaces

@@ -6,6 +6,8 @@ using VMP.Identity.Repositories.Implements;
 using VMP.Identity.Repositories.Interfaces;
 using VMP.Identity.Services.Implements;
 using VMP.Identity.Services.Interfaces;
+using VMP.Identity.UnitOfWork;
+using VMP.ServiceDefaults;
 
 namespace VMP.Identity.Bootstrapping
 {
@@ -19,8 +21,13 @@ namespace VMP.Identity.Bootstrapping
 
             builder.AddPostgresDatabase<UserDbContext>(Const.IdentityDatabase);
 
+            // Register Unit of Work
+            builder.Services.AddScoped<IIdentityUnitOfWork, IdentityUnitOfWork>();
+
+            // Register Repositories
             builder.Services.AddScoped<IUserRepository, UserRepository>();
 
+            // Register Services
             builder.Services.AddScoped<IIdentityTokenService, IdentityTokenService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
@@ -30,7 +37,6 @@ namespace VMP.Identity.Bootstrapping
 
         public static WebApplication UseApplicationServices(this WebApplication app)
         {
-
             app.MapDefaultEndpoints();
 
             app.UseCommonService();

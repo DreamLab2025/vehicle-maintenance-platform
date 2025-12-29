@@ -1,3 +1,4 @@
+using VMP.Common.Databases.Base;
 using VMP.Identity.Dtos;
 using VMP.Identity.Entities;
 
@@ -30,7 +31,7 @@ namespace VMP.Identity.Mappings
                 Email = request.Email,
                 PasswordHash = passwordHash,
                 FullName = request.Email.Split('@')[0],
-                Status = UserStatus.Active,
+                Status = EntityStatus.Active,
                 Roles = new List<UserRole> { UserRole.User },
                 IsEmailConfirmed = false,
                 IsPhoneNumberConfirmed = false,

@@ -1,5 +1,4 @@
-﻿using Vicobi.Common.Shared;
-using VMP.Common.Jwt;
+﻿using VMP.Common.Jwt;
 using VMP.Common.Shared;
 using VMP.Identity.Dtos;
 using VMP.Identity.Entities;

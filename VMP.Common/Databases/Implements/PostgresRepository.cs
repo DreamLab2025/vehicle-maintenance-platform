@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using VMP.Common.Databases.Interfaces;
 
-namespace VMP.Common.Databases.Implement
+namespace VMP.Common.Databases.Implements
 {
     public class PostgresRepository<T> : IGenericRepository<T> where T : class, IEntity
     {
@@ -17,8 +17,7 @@ namespace VMP.Common.Databases.Implement
 
         public async Task<T> AddAsync(T entity)
         {
-            _dbSet.Add(entity);
-            await _context.SaveChangesAsync();
+            await _dbSet.AddAsync(entity);
             return entity;
         }
 
@@ -28,14 +27,14 @@ namespace VMP.Common.Databases.Implement
             return count;
         }
 
-        public async Task DeleteAsync(Guid id)
+        public Task DeleteAsync(Guid id)
         {
-            var entity = await _dbSet.FindAsync(id);
+            var entity = _dbSet.Find(id);
             if (entity != null)
             {
                 _dbSet.Remove(entity);
-                await _context.SaveChangesAsync();
             }
+            return Task.CompletedTask;
         }
 
         public async Task<T?> FindOneAsync(Expression<Func<T, bool>> expression)
@@ -63,21 +62,17 @@ namespace VMP.Common.Databases.Implement
             return await _dbSet.FindAsync(id);
         }
 
-        public async Task UpdateAsync(Guid id, T entity)
+        public Task UpdateAsync(Guid id, T entity)
         {
-            var existingEntity = await _dbSet.FindAsync(id);
+            var existingEntity = _dbSet.Find(id);
             if (existingEntity != null)
             {
-                if (ReferenceEquals(existingEntity, entity))
-                {
-                    await _context.SaveChangesAsync();
-                }
-                else
+                if (!ReferenceEquals(existingEntity, entity))
                 {
                     _context.Entry(existingEntity).CurrentValues.SetValues(entity);
-                    await _context.SaveChangesAsync();
                 }
             }
+            return Task.CompletedTask;
         }
 
         public IQueryable<T> AsQueryable()

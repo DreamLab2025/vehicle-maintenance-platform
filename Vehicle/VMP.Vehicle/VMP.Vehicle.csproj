@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\VMP.ServiceDefaults\VMP.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\VMP.Vehicle.Application\VMP.Vehicle.Application.csproj" />
+    <ProjectReference Include="..\VMP.Vehicle.Infrastructure\VMP.Vehicle.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
