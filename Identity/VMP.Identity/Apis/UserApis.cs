@@ -1,7 +1,6 @@
 ﻿using VMP.Common.Jwt;
 using VMP.Common.Shared;
 using VMP.Identity.Dtos;
-using VMP.Identity.Entities;
 using VMP.Identity.Services.Interfaces;
 
 namespace VMP.Identity.Apis
@@ -22,27 +21,24 @@ namespace VMP.Identity.Apis
             group.MapGet("/", GetAllUsers)
                 .WithName("GetAllUsers")
                 .WithSummary("Lấy danh sách tất cả người dùng")
-                .WithDescription("Trả về danh sách tất cả người dùng trong hệ thống")
-                .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Admin)))
-                .Produces<ApiResponse<List<UserDto>>>(StatusCodes.Status200OK)
-                .Produces(StatusCodes.Status401Unauthorized);
+                .WithDescription("Trả về danh sách người dùng phân trang")
+                .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
+                .Produces<ApiResponse<List<UserDto>>>(StatusCodes.Status200OK);
 
             group.MapGet("/me", GetCurrentUser)
                 .WithName("GetCurrentUser")
                 .WithSummary("Lấy thông tin người dùng hiện tại")
-                .WithDescription("Trả về thông tin chi tiết của người dùng đã xác thực hiện tại")
                 .RequireAuthorization()
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapGet("/{id}", GetUserById)
+            group.MapGet("/{id:guid}", GetUserById)
                 .WithName("GetUserById")
                 .WithSummary("Lấy thông tin người dùng theo ID")
-                .WithDescription("Trả về thông tin chi tiết của người dùng dựa trên ID được cung cấp")
-                .RequireAuthorization(policy => policy.RequireRole(nameof(UserRole.Admin)))
+                .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<string>>(StatusCodes.Status404NotFound)
-                .Produces(StatusCodes.Status401Unauthorized);
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status404NotFound);
 
             return group;
         }
@@ -58,36 +54,31 @@ namespace VMP.Identity.Apis
 
             var result = await userService.GetUserByIdAsync(userId);
 
-            if (result != null)
+            if (result.IsSuccess)
             {
                 return Results.Ok(result);
             }
 
-            return Results.NotFound("Không tìm thấy người dùng hiện tại.");
+            return Results.NotFound(result);
         }
 
-        private static async Task<IResult> GetAllUsers([AsParameters] PaginationRequest request, IUserService userService)
+        private static async Task<IResult> GetAllUsers([AsParameters] PaginationRequest paginationRequest, IUserService userService)
         {
-            var result = await userService.GetAllUsersAsync(request);
+            var result = await userService.GetAllUsersAsync(paginationRequest);
 
-            if (result != null)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.NotFound("Không tìm thấy danh sách người dùng.");
+            return Results.Ok(result);
         }
 
         private static async Task<IResult> GetUserById(Guid id, IUserService userService)
         {
             var result = await userService.GetUserByIdAsync(id);
 
-            if (result != null)
+            if (result.IsSuccess)
             {
                 return Results.Ok(result);
             }
 
-            return Results.NotFound("Không tìm thấy người dùng.");
+            return Results.NotFound(result);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using VMP.Common.Shared;
 using VMP.Identity.Dtos;
+using VMP.Identity.Entities;
 using VMP.Identity.Mappings;
 using VMP.Identity.Repositories.Interfaces;
 using VMP.Identity.Services.Interfaces;
@@ -10,29 +11,36 @@ namespace VMP.Identity.Services.Implements
     {
         private readonly ILogger<UserService> _logger;
         private readonly IUnitOfWork _unitOfWork;
-        
+
         public UserService(ILogger<UserService> logger, IUnitOfWork unitOfWork)
         {
             _logger = logger;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(PaginationRequest request)
+        public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(PaginationRequest paginationRequest)
         {
-            var result = await _unitOfWork.Users.GetPagedAsync(
-                request.PageNumber,
-                request.PageSize,
+            var users = await _unitOfWork.Users.GetPagedAsync(
+                paginationRequest.PageNumber,
+                paginationRequest.PageSize,
                 null,
                 q => q.OrderByDescending(u => u.CreatedAt)
             );
 
-            var userDtos = result.Items.Select(u => u.ToDto()).ToList();
+            if (users.Items == null)
+            {
+                return ApiResponse<List<UserDto>>.FailureResponse("Không tìm thấy danh sách người dùng.");
+            }
+
+            var userItems = users.Items ?? new List<User>();
+            var userDtos = userItems.Select(u => u.ToDto()).ToList();
 
             return ApiResponse<List<UserDto>>.SuccessPagedResponse(
                 userDtos,
-                result.TotalCount,
-                request.PageNumber,
-                request.PageSize
+                users.TotalCount,
+                paginationRequest.PageNumber,
+                paginationRequest.PageSize,
+                "Lấy danh sách người dùng thành công."
             );
         }
 

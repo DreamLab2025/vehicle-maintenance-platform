@@ -8,4 +8,10 @@
 
         public const string VehicleDatabase = "vehicle-db";
     }
+
+    public enum RoleType
+    {
+        Admin,
+        User
+    }
 }

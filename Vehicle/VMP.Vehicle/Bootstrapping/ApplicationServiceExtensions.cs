@@ -1,12 +1,12 @@
 ﻿using VMP.Common.Bootstrapping;
 using VMP.Common.Shared;
 using VMP.ServiceDefaults;
+using VMP.Vehicle.Apis;
 using VMP.Vehicle.Application.Services.Implements;
 using VMP.Vehicle.Application.Services.Interfaces;
+using VMP.Vehicle.Domain.Repositories.Interfaces;
 using VMP.Vehicle.Infrastructure.Data;
 using VMP.Vehicle.Infrastructure.Repositories.Implements;
-using VMP.Vehicle.Infrastructure.Repositories.Interfaces;
-using VMP.Vehicle.Infrastructure.UnitOfWork;
 
 namespace VMP.Vehicle.Bootstrapping
 {
@@ -21,15 +21,7 @@ namespace VMP.Vehicle.Bootstrapping
             builder.AddPostgresDatabase<VehicleDbContext>(Const.VehicleDatabase);
 
             // Register Unit of Work
-            builder.Services.AddScoped<IVehicleUnitOfWork, VehicleUnitOfWork>();
-
-            // Register Repositories
-            builder.Services.AddScoped<IVehicleTypeRepository, VehicleTypeRepository>();
-            builder.Services.AddScoped<IVehicleBrandRepository, VehicleBrandRepository>();
-            builder.Services.AddScoped<IVehicleModelRepository, VehicleModelRepository>();
-            builder.Services.AddScoped<IUserVehicleRepository, UserVehicleRepository>();
-            builder.Services.AddScoped<IConsumableItemRepository, ConsumableItemRepository>();
-            builder.Services.AddScoped<IMaintenanceActivityRepository, MaintenanceActivityRepository>();
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Register Services
             builder.Services.AddScoped<IVehicleTypeService, VehicleTypeService>();
@@ -53,6 +45,8 @@ namespace VMP.Vehicle.Bootstrapping
             }
 
             app.UseHttpsRedirection();
+
+            app.MapBrandApi();
 
             return app;
         }

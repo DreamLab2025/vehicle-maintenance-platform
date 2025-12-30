@@ -1,9 +1,8 @@
 using VMP.Common.Databases.UnitOfWork;
-using VMP.Vehicle.Infrastructure.Repositories.Interfaces;
 
-namespace VMP.Vehicle.Infrastructure.UnitOfWork
+namespace VMP.Vehicle.Domain.Repositories.Interfaces
 {
-    public interface IVehicleUnitOfWork : IBaseUnitOfWork
+    public interface IUnitOfWork : IBaseUnitOfWork
     {
         IVehicleTypeRepository VehicleTypes { get; }
         IVehicleBrandRepository VehicleBrands { get; }
