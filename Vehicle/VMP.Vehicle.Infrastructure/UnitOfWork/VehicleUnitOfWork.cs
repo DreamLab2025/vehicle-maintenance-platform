@@ -1,11 +1,11 @@
-using VMP.Common.UnitOfWork;
+using VMP.Common.Databases.UnitOfWork;
 using VMP.Vehicle.Infrastructure.Data;
 using VMP.Vehicle.Infrastructure.Repositories.Implements;
 using VMP.Vehicle.Infrastructure.Repositories.Interfaces;
 
 namespace VMP.Vehicle.Infrastructure.UnitOfWork
 {
-    public class VehicleUnitOfWork : UnitOfWork<VehicleDbContext>, IVehicleUnitOfWork
+    public class VehicleUnitOfWork : BaseUnitOfWork<VehicleDbContext>, IVehicleUnitOfWork
     {
         private IVehicleTypeRepository? _vehicleTypes;
         private IVehicleBrandRepository? _vehicleBrands;

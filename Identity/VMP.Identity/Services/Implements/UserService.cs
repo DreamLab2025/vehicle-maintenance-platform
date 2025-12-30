@@ -9,16 +9,17 @@ namespace VMP.Identity.Services.Implements
     public class UserService : IUserService
     {
         private readonly ILogger<UserService> _logger;
-        private readonly IUserRepository _userRepository;
-        public UserService(ILogger<UserService> logger, IUserRepository userRepository)
+        private readonly IUnitOfWork _unitOfWork;
+        
+        public UserService(ILogger<UserService> logger, IUnitOfWork unitOfWork)
         {
             _logger = logger;
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(PaginationRequest request)
         {
-            var result = await _userRepository.GetPagedAsync(
+            var result = await _unitOfWork.Users.GetPagedAsync(
                 request.PageNumber,
                 request.PageSize,
                 null,
@@ -39,7 +40,7 @@ namespace VMP.Identity.Services.Implements
         {
             try
             {
-                var user = await _userRepository.GetByIdAsync(userId);
+                var user = await _unitOfWork.Users.GetByIdAsync(userId);
                 if (user == null)
                 {
                     return ApiResponse<UserDto>.FailureResponse("Người dùng không tồn tại.");

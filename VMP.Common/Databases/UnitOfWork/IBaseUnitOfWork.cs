@@ -1,6 +1,6 @@
-namespace VMP.Common.UnitOfWork
+namespace VMP.Common.Databases.UnitOfWork
 {
-    public interface IUnitOfWork : IDisposable
+    public interface IBaseUnitOfWork : IDisposable
     {
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         Task BeginTransactionAsync();

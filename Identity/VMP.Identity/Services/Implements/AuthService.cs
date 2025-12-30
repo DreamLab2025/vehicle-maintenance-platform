@@ -12,17 +12,17 @@ namespace VMP.Identity.Services.Implements
     public class AuthService : IAuthService
     {
         private readonly ILogger<AuthService> _logger;
-        private readonly IUserRepository _userRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IIdentityTokenService _tokenService;
         private readonly PasswordHasher<User> _passwordHasher;
 
         public AuthService(
             ILogger<AuthService> logger,
-            IUserRepository userRepository,
+            IUnitOfWork unitOfWork,
             IIdentityTokenService tokenService)
         {
             _logger = logger;
-            _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
             _tokenService = tokenService;
             _passwordHasher = new PasswordHasher<User>();
         }
@@ -31,7 +31,7 @@ namespace VMP.Identity.Services.Implements
         {
             try
             {
-                var existingUser = await _userRepository.FindOneAsync(u => u.Email == request.Email);
+                var existingUser = await _unitOfWork.Users.FindOneAsync(u => u.Email == request.Email);
                 if (existingUser != null)
                 {
                     return ApiResponse<UserDto>.FailureResponse("Email đã được đăng ký");
@@ -41,7 +41,8 @@ namespace VMP.Identity.Services.Implements
 
                 user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
 
-                await _userRepository.AddAsync(user);
+                await _unitOfWork.Users.AddAsync(user);
+                await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("User registered successfully: {Email}", request.Email);
 
@@ -60,7 +61,7 @@ namespace VMP.Identity.Services.Implements
         {
             try
             {
-                var user = await _userRepository.FindOneAsync(u => u.Email == request.Email);
+                var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == request.Email);
                 if (user == null)
                 {
                     return ApiResponse<TokenResponse>.FailureResponse("Email hoặc mật khẩu không đúng");
@@ -84,7 +85,8 @@ namespace VMP.Identity.Services.Implements
                 user.UpdatedAt = DateTime.UtcNow;
                 user.UpdatedBy = user.Id;
 
-                await _userRepository.UpdateAsync(user.Id, user);
+                await _unitOfWork.Users.UpdateAsync(user.Id, user);
+                await _unitOfWork.SaveChangesAsync();
 
                 _logger.LogInformation("User logged in successfully: {Email}", request.Email);
 
@@ -103,7 +105,7 @@ namespace VMP.Identity.Services.Implements
         {
             try
             {
-                var user = await _userRepository.GetByIdAsync(userId);
+                var user = await _unitOfWork.Users.GetByIdAsync(userId);
                 if (user == null)
                 {
                     return ApiResponse<TokenResponse>.FailureResponse("Không tìm thấy người dùng");
@@ -137,7 +139,8 @@ namespace VMP.Identity.Services.Implements
                     user.UpdatedAt = DateTime.UtcNow;
                     user.UpdatedBy = user.Id;
 
-                    await _userRepository.UpdateAsync(user.Id, user);
+                    await _unitOfWork.Users.UpdateAsync(user.Id, user);
+                    await _unitOfWork.SaveChangesAsync();
 
                     _logger.LogInformation("Token and refresh token rotated for user: {UserId}, expires in {Days} days",
                         userId, timeUntilExpiry.TotalDays);
@@ -165,7 +168,7 @@ namespace VMP.Identity.Services.Implements
         {
             try
             {
-                var user = await _userRepository.GetByIdAsync(userId);
+                var user = await _unitOfWork.Users.GetByIdAsync(userId);
                 if (user == null)
                 {
                     _logger.LogWarning("User not found for password change: {UserId}", userId);
@@ -178,7 +181,9 @@ namespace VMP.Identity.Services.Implements
                 }
                 user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
 
-                await _userRepository.UpdateAsync(user.Id, user);
+                await _unitOfWork.Users.UpdateAsync(user.Id, user);
+                await _unitOfWork.SaveChangesAsync();
+
                 _logger.LogInformation("Password changed successfully for user: {UserId}", user.Id);
                 return ApiResponse<UserDto>.SuccessResponse(user.ToDto(), "Đổi mật khẩu thành công");
             }

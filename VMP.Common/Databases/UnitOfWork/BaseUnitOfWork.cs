@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace VMP.Common.UnitOfWork
+namespace VMP.Common.Databases.UnitOfWork
 {
-    public abstract class UnitOfWork<TContext> : IUnitOfWork where TContext : DbContext
+    public abstract class BaseUnitOfWork<TContext> : IBaseUnitOfWork where TContext : DbContext
     {
         protected readonly TContext Context;
         private IDbContextTransaction? _transaction;
 
-        protected UnitOfWork(TContext context)
+        protected BaseUnitOfWork(TContext context)
         {
             Context = context;
         }
