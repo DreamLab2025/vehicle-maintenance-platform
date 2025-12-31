@@ -10,5 +10,6 @@ namespace VMP.Vehicle.Domain.Repositories.Interfaces
         IUserVehicleRepository UserVehicles { get; }
         IConsumableItemRepository ConsumableItems { get; }
         IMaintenanceActivityRepository MaintenanceActivities { get; }
+        IOdometerHistoryRepository OdometerHistories { get; }
     }
 }

@@ -25,7 +25,7 @@ namespace VMP.Vehicle.Domain.Entities
         [MaxLength(500)]
         public string? ImageUrl { get; set; }
 
-        [Column(TypeName = "decimal(4,2)")]
+        [Column(TypeName = "decimal(5,2)")]
         public decimal? OilCapacity { get; set; } //Dung tích dầu (liters)
 
         [MaxLength(50)]

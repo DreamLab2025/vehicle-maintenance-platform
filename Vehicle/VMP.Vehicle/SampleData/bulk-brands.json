@@ -1,0 +1,112 @@
+{
+  "brands": [
+    {
+      "name": "Honda",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Honda_Logo.svg",
+      "website": "https://www.honda.com.vn",
+      "supportPhone": "1900545591"
+    },
+    {
+      "name": "Yamaha",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Yamaha_Motor_logo.svg",
+      "website": "https://www.yamaha-motor.com.vn",
+      "supportPhone": "1900545595"
+    },
+    {
+      "name": "Suzuki",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/1/12/Suzuki_logo_2.svg",
+      "website": "https://www.suzuki.com.vn"
+    },
+    {
+      "name": "SYM",
+      "logoUrl": "https://www.sym.com.vn/images/logo.png",
+      "website": "https://www.sym.com.vn",
+      "supportPhone": "1900555591"
+    },
+    {
+      "name": "Piaggio",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/4/46/Piaggio_logo.svg",
+      "website": "https://www.piaggio.com.vn"
+    },
+    {
+      "name": "VinFast",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e3/VinFast_logo.svg",
+      "website": "https://vinfastauto.com",
+      "supportPhone": "1900232389"
+    },
+    {
+      "name": "Toyota",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Toyota.svg",
+      "website": "https://www.toyota.com.vn",
+      "supportPhone": "1900545591"
+    },
+    {
+      "name": "Hyundai",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Hyundai_Motor_Company_logo.svg",
+      "website": "https://www.hyundai.com.vn",
+      "supportPhone": "1900545591"
+    },
+    {
+      "name": "Kia",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Kia_logo.svg",
+      "website": "https://www.kia.com.vn"
+    },
+    {
+      "name": "Mazda",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/2/28/Mazda_logo.svg",
+      "website": "https://www.mazda.com.vn",
+      "supportPhone": "1900545591"
+    },
+    {
+      "name": "Ford",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ford_logo_flat.svg",
+      "website": "https://www.ford.com.vn",
+      "supportPhone": "1900232389"
+    },
+    {
+      "name": "Mitsubishi",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Mitsubishi_logo.svg",
+      "website": "https://www.mitsubishi-motors.com.vn"
+    },
+    {
+      "name": "Chevrolet",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Chevrolet_logo.svg",
+      "website": "https://www.chevrolet.com.vn"
+    },
+    {
+      "name": "Nissan",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Nissan_logo.svg",
+      "website": "https://www.nissan.com.vn"
+    },
+    {
+      "name": "Mercedes-Benz",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/9/90/Mercedes-Logo.svg",
+      "website": "https://www.mercedes-benz.com.vn"
+    },
+    {
+      "name": "BMW",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/4/44/BMW.svg",
+      "website": "https://www.bmw.com.vn"
+    },
+    {
+      "name": "Audi",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/9/92/Audi-Logo_2016.svg",
+      "website": "https://www.audi.com.vn"
+    },
+    {
+      "name": "Lexus",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Lexus_logo.svg",
+      "website": "https://www.lexus.com.vn"
+    },
+    {
+      "name": "Peugeot",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/en/e/e4/Peugeot_logo.svg",
+      "website": "https://www.peugeot.com.vn"
+    },
+    {
+      "name": "Volkswagen",
+      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg",
+      "website": "https://www.volkswagen.com.vn"
+    }
+  ]
+}

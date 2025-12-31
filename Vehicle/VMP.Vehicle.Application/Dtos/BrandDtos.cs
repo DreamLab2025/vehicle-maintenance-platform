@@ -1,24 +1,31 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace VMP.Vehicle.Application.Dtos
 {
     public class BrandRequest
     {
-        [Required(ErrorMessage = "Tên thương hiệu không được để trống")]
-        [MaxLength(100, ErrorMessage = "Tên thương hiệu không được vượt quá 100 ký tự")]
+        [Required(ErrorMessage = "T�n th??ng hi?u kh�ng ???c ?? tr?ng")]
+        [MaxLength(100, ErrorMessage = "T�n th??ng hi?u kh�ng ???c v??t qu� 100 k� t?")]
         public string Name { get; set; } = null!;
 
-        [MaxLength(500, ErrorMessage = "URL logo không được vượt quá 500 ký tự")]
-        [Url(ErrorMessage = "URL logo không hợp lệ")]
+        [MaxLength(500, ErrorMessage = "URL logo kh�ng ???c v??t qu� 500 k� t?")]
+        [Url(ErrorMessage = "URL logo kh�ng h?p l?")]
         public string? LogoUrl { get; set; }
 
-        [MaxLength(500, ErrorMessage = "Website không được vượt quá 500 ký tự")]
-        [Url(ErrorMessage = "Website không hợp lệ")]
+        [MaxLength(500, ErrorMessage = "Website kh�ng ???c v??t qu� 500 k� t?")]
+        [Url(ErrorMessage = "Website kh�ng h?p l?")]
         public string? Website { get; set; }
 
-        [MaxLength(20, ErrorMessage = "Số điện thoại hỗ trợ không được vượt quá 20 ký tự")]
-        [Phone(ErrorMessage = "Số điện thoại hỗ trợ không hợp lệ")]
+        [MaxLength(20, ErrorMessage = "S? ?i?n tho?i h? tr? kh�ng ???c v??t qu� 20 k� t?")]
+        [Phone(ErrorMessage = "S? ?i?n tho?i h? tr? kh�ng h?p l?")]
         public string? SupportPhone { get; set; }
+    }
+
+    public class BulkBrandRequest
+    {
+        [Required(ErrorMessage = "Danh s�ch th??ng hi?u kh�ng ???c ?? tr?ng")]
+        [MinLength(1, ErrorMessage = "Ph?i c� �t nh?t 1 th??ng hi?u")]
+        public List<BrandRequest> Brands { get; set; } = new();
     }
 
     public class BrandResponse
@@ -30,5 +37,13 @@ namespace VMP.Vehicle.Application.Dtos
         public string? SupportPhone { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+    }
+
+    public class BulkBrandResponse
+    {
+        public int SuccessCount { get; set; }
+        public int FailedCount { get; set; }
+        public List<BrandResponse> SuccessfulBrands { get; set; } = new();
+        public List<BulkOperationError> Errors { get; set; } = new();
     }
 }

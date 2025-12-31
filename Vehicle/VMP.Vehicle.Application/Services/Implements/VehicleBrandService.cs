@@ -23,7 +23,7 @@ namespace VMP.Vehicle.Application.Services.Implements
             try
             {
                 var existingBrand = await _unitOfWork.VehicleBrands
-                    .FindOneAsync(b => b.Name == request.Name && !b.IsDeleted);
+                    .FindOneAsync(b => b.Name == request.Name && b.DeletedAt == null);
 
                 if (existingBrand != null)
                 {
@@ -53,7 +53,7 @@ namespace VMP.Vehicle.Application.Services.Implements
             {
                 var brand = await _unitOfWork.VehicleBrands.GetByIdAsync(id);
 
-                if (brand == null || brand.IsDeleted)
+                if (brand == null || brand.DeletedAt != null)
                 {
                     return ApiResponse<string>.FailureResponse("Không tìm thấy thương hiệu");
                 }
@@ -81,7 +81,7 @@ namespace VMP.Vehicle.Application.Services.Implements
                 var (items, totalCount) = await _unitOfWork.VehicleBrands.GetPagedAsync(
                     paginationRequest.PageNumber,
                     paginationRequest.PageSize,
-                    filter: b => !b.IsDeleted,
+                    filter: b => b.DeletedAt == null,
                     orderBy: q => paginationRequest.IsDescending
                         ? q.OrderByDescending(b => b.CreatedAt)
                         : q.OrderBy(b => b.CreatedAt)
@@ -109,13 +109,13 @@ namespace VMP.Vehicle.Application.Services.Implements
             {
                 var brand = await _unitOfWork.VehicleBrands.GetByIdAsync(id);
 
-                if (brand == null || brand.IsDeleted)
+                if (brand == null || brand.DeletedAt != null)
                 {
                     return ApiResponse<BrandResponse>.FailureResponse("Không tìm thấy thương hiệu");
                 }
 
                 var existingBrand = await _unitOfWork.VehicleBrands
-                    .FindOneAsync(b => b.Name == request.Name && b.Id != id && !b.IsDeleted);
+                    .FindOneAsync(b => b.Name == request.Name && b.Id != id && b.DeletedAt == null);
 
                 if (existingBrand != null)
                 {
@@ -136,6 +136,76 @@ namespace VMP.Vehicle.Application.Services.Implements
             {
                 _logger.LogError(ex, "Error updating brand with ID: {BrandId}", id);
                 return ApiResponse<BrandResponse>.FailureResponse("Lỗi khi cập nhật thương hiệu");
+            }
+        }
+
+        public async Task<ApiResponse<BulkBrandResponse>> BulkCreateBrandsAsync(BulkBrandRequest request)
+        {
+            var response = new BulkBrandResponse();
+
+            try
+            {
+                var existingBrands = await _unitOfWork.VehicleBrands
+                    .GetAllAsync(b => b.DeletedAt == null);
+                var existingNames = existingBrands.Select(b => b.Name.ToLower()).ToHashSet();
+
+                for (int i = 0; i < request.Brands.Count; i++)
+                {
+                    var brandRequest = request.Brands[i];
+
+                    try
+                    {
+                        if (existingNames.Contains(brandRequest.Name.ToLower()))
+                        {
+                            response.FailedCount++;
+                            response.Errors.Add(new BulkOperationError
+                            {
+                                Index = i,
+                                ItemName = brandRequest.Name,
+                                ErrorMessage = "Thương hiệu đã tồn tại"
+                            });
+                            continue;
+                        }
+
+                        var brand = brandRequest.ToEntity();
+                        await _unitOfWork.VehicleBrands.AddAsync(brand);
+
+                        existingNames.Add(brandRequest.Name.ToLower());
+
+                        response.SuccessfulBrands.Add(brand.ToResponse());
+                        response.SuccessCount++;
+
+                        _logger.LogInformation("Bulk created brand: {BrandName}", brand.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        response.FailedCount++;
+                        response.Errors.Add(new BulkOperationError
+                        {
+                            Index = i,
+                            ItemName = brandRequest.Name,
+                            ErrorMessage = ex.Message
+                        });
+                        _logger.LogError(ex, "Error creating brand in bulk: {BrandName}", brandRequest.Name);
+                    }
+                }
+
+                if (response.SuccessCount > 0)
+                {
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                _logger.LogInformation("Bulk create brands completed. Success: {SuccessCount}, Failed: {FailedCount}",
+                    response.SuccessCount, response.FailedCount);
+
+                return ApiResponse<BulkBrandResponse>.SuccessResponse(
+                    response,
+                    $"Đã thêm {response.SuccessCount} thương hiệu, {response.FailedCount} thất bại");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in bulk create brands");
+                return ApiResponse<BulkBrandResponse>.FailureResponse("Lỗi khi tạo hàng loạt thương hiệu");
             }
         }
     }

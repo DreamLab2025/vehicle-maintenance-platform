@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VMP.Vehicle.Infrastructure.Data;
@@ -11,9 +12,11 @@ using VMP.Vehicle.Infrastructure.Data;
 namespace VMP.Vehicle.Infrastructure.Migrations
 {
     [DbContext(typeof(VehicleDbContext))]
-    partial class VehicleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251231081745_SeedVehicleTypes")]
+    partial class SeedVehicleTypes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -450,7 +453,7 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                         .HasColumnType("character varying(150)");
 
                     b.Property<decimal?>("OilCapacity")
-                        .HasColumnType("decimal(5,2)");
+                        .HasColumnType("decimal(4,2)");
 
                     b.Property<int>("ReleaseYear")
                         .HasColumnType("integer");
@@ -529,28 +532,28 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 12, 31, 8, 17, 44, 754, DateTimeKind.Utc).AddTicks(2796),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Xe máy hai bánh, bao gồm xe số, xe tay ga, xe côn tay",
+                            Description = "Xe máy hai bánh, bao g?m xe s?, xe tay ga, xe côn tay",
                             Name = "Xe máy",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 12, 31, 8, 17, 44, 754, DateTimeKind.Utc).AddTicks(2796),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Xe ô tô 4 bánh trở lên, bao gồm sedan, SUV, hatchback, MPV",
+                            Description = "Xe ô tô 4 bánh tr? lên, bao g?m sedan, SUV, hatchback, MPV",
                             Name = "Xe ô tô",
                             Status = 1
                         },
                         new
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2025, 12, 31, 8, 17, 44, 754, DateTimeKind.Utc).AddTicks(2796),
                             CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Xe chạy bằng động cơ điện, bao gồm xe máy điện và ô tô điện",
-                            Name = "Xe điện",
+                            Description = "Xe ch?y b?ng ??ng c? ?i?n, bao g?m xe máy ?i?n và ô tô ?i?n",
+                            Name = "Xe ?i?n",
                             Status = 1
                         });
                 });

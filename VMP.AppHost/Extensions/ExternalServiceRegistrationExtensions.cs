@@ -49,7 +49,9 @@ namespace VMP.AppHost.Extensions
 
                                 var vehicleCluster = yarp.AddProjectCluster(vehicleService);
                                 yarp.AddRoute("/api/v1/brands/{**catch-all}", vehicleCluster);
-                                yarp.AddRoute("/api/v1/vehicles/{**catch-all}", vehicleCluster);
+                                yarp.AddRoute("/api/v1/models/{**catch-all}", vehicleCluster);
+                                yarp.AddRoute("/api/v1/types/{**catch-all}", vehicleCluster);
+                                yarp.AddRoute("/api/v1/user-vehicles/{**catch-all}", vehicleCluster);
                             })
                             .WaitFor(identityService);
 

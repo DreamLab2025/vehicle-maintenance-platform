@@ -47,6 +47,9 @@ namespace VMP.Vehicle.Bootstrapping
             app.UseHttpsRedirection();
 
             app.MapBrandApi();
+            app.MapTypeApi();
+            app.MapModelApi();
+            app.MapUserVehicleApi();
 
             return app;
         }

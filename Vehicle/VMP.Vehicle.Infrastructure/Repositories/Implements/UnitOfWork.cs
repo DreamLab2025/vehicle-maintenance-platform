@@ -12,6 +12,7 @@ namespace VMP.Vehicle.Infrastructure.Repositories.Implements
         private IUserVehicleRepository? _userVehicles;
         private IConsumableItemRepository? _consumableItems;
         private IMaintenanceActivityRepository? _maintenanceActivities;
+        private IOdometerHistoryRepository? _odometerHistories;
 
         public UnitOfWork(VehicleDbContext context) : base(context)
         {
@@ -34,5 +35,8 @@ namespace VMP.Vehicle.Infrastructure.Repositories.Implements
 
         public IMaintenanceActivityRepository MaintenanceActivities =>
             _maintenanceActivities ??= new MaintenanceActivityRepository(Context);
+
+        public IOdometerHistoryRepository OdometerHistories =>
+            _odometerHistories ??= new OdometerHistoryRepository(Context);
     }
 }

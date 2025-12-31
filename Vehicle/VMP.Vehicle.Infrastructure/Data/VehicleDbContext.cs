@@ -40,6 +40,14 @@ namespace VMP.Vehicle.Infrastructure.Data
             modelBuilder.Entity<MaintenanceActivityDetail>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<OdometerHistory>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<UserMaintenanceConfig>().HasQueryFilter(e => e.DeletedAt == null);
+
+            // Seed data
+            SeedVehicleTypes(modelBuilder);
+        }
+
+        private void SeedVehicleTypes(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<VehicleType>().HasData(VehicleDataSeeder.GetVehicleTypes());
         }
     }
 }

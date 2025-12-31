@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VMP.Vehicle.Infrastructure.Data;
@@ -11,9 +12,11 @@ using VMP.Vehicle.Infrastructure.Data;
 namespace VMP.Vehicle.Infrastructure.Migrations
 {
     [DbContext(typeof(VehicleDbContext))]
-    partial class VehicleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251231085916_FixSeedData")]
+    partial class FixSeedData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -450,7 +453,7 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                         .HasColumnType("character varying(150)");
 
                     b.Property<decimal?>("OilCapacity")
-                        .HasColumnType("decimal(5,2)");
+                        .HasColumnType("decimal(4,2)");
 
                     b.Property<int>("ReleaseYear")
                         .HasColumnType("integer");
