@@ -113,6 +113,12 @@ namespace VMP.ServiceDefaults
 
                 if (type != null && type.IsEnum)
                 {
+                    if (!string.IsNullOrEmpty(parameter.Description) &&
+                       (parameter.Description.Contains("Options:") || parameter.Description.Contains("<ul>")))
+                    {
+                        continue;
+                    }
+
                     var enumDescriptions = new List<string>();
                     foreach (var name in Enum.GetNames(type))
                     {
