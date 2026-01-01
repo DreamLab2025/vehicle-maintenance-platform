@@ -22,7 +22,7 @@ namespace VMP.Vehicle.Apis
             group.MapGet("/", GetAllModels)
                 .WithName("GetAllModels")
                 .WithSummary("Lấy danh sách tất cả mẫu xe")
-                .WithDescription("Trả về danh sách tất cả mẫu xe trong hệ thống")
+                .WithDescription("Trả về danh sách tất cả mẫu xe trong hệ thống. Hỗ trợ tìm kiếm theo tên thương hiệu, loại xe và loại truyền động")
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<ModelResponse>>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<List<ModelResponse>>>(StatusCodes.Status404NotFound)
@@ -99,7 +99,7 @@ namespace VMP.Vehicle.Apis
             try
             {
                 using var stream = file.OpenReadStream();
-                var bulkRequest = await JsonSerializer.DeserializeAsync<BulkModelRequest>(stream, new JsonSerializerOptions
+                var bulkRequest = await JsonSerializer.DeserializeAsync<BulkModelFileRequest>(stream, new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 });
@@ -109,7 +109,7 @@ namespace VMP.Vehicle.Apis
                     return Results.BadRequest(ApiResponse<BulkModelResponse>.FailureResponse("File JSON không hợp lệ hoặc rỗng"));
                 }
 
-                var result = await modelService.BulkCreateModelsAsync(bulkRequest);
+                var result = await modelService.BulkCreateModelsFromFileAsync(bulkRequest);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
             }
             catch (JsonException)
@@ -152,9 +152,9 @@ namespace VMP.Vehicle.Apis
             return Results.BadRequest(result);
         }
 
-        private static async Task<IResult> GetAllModels([AsParameters] PaginationRequest paginationRequest, IVehicleModelService modelService)
+        private static async Task<IResult> GetAllModels([AsParameters] ModelFilterRequest filterRequest, IVehicleModelService modelService)
         {
-            var results = await modelService.GetAllModelsAsync(paginationRequest);
+            var results = await modelService.GetAllModelsAsync(filterRequest);
             if (results.IsSuccess)
             {
                 return Results.Ok(results);

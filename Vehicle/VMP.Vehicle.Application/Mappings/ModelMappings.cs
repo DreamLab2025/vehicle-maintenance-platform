@@ -14,7 +14,10 @@ namespace VMP.Vehicle.Application.Mappings
                 TypeId = request.TypeId,
                 ReleaseYear = request.ReleaseYear,
                 FuelType = request.FuelType,
+                TransmissionType = request.TransmissionType,
                 ImageUrl = request.ImageUrl,
+                EngineDisplacement = request.EngineDisplacement,
+                EngineCapacity = request.EngineCapacity,
                 OilCapacity = request.OilCapacity,
                 TireSizeFront = request.TireSizeFront,
                 TireSizeRear = request.TireSizeRear
@@ -34,7 +37,11 @@ namespace VMP.Vehicle.Application.Mappings
                 ReleaseYear = entity.ReleaseYear,
                 FuelType = entity.FuelType,
                 FuelTypeName = GetFuelTypeName(entity.FuelType),
+                TransmissionType = entity.TransmissionType,
+                TransmissionTypeName = GetTransmissionTypeName(entity.TransmissionType),
                 ImageUrl = entity.ImageUrl,
+                EngineDisplacementDisplay = entity.EngineDisplacement.HasValue ? $"{entity.EngineDisplacement} cc" : null,
+                EngineCapacity = entity.EngineCapacity,
                 OilCapacity = entity.OilCapacity,
                 TireSizeFront = entity.TireSizeFront,
                 TireSizeRear = entity.TireSizeRear,
@@ -50,7 +57,10 @@ namespace VMP.Vehicle.Application.Mappings
             entity.TypeId = request.TypeId;
             entity.ReleaseYear = request.ReleaseYear;
             entity.FuelType = request.FuelType;
+            entity.TransmissionType = request.TransmissionType;
             entity.ImageUrl = request.ImageUrl;
+            entity.EngineDisplacement = request.EngineDisplacement;
+            entity.EngineCapacity = request.EngineCapacity;
             entity.OilCapacity = request.OilCapacity;
             entity.TireSizeFront = request.TireSizeFront;
             entity.TireSizeRear = request.TireSizeRear;
@@ -64,6 +74,17 @@ namespace VMP.Vehicle.Application.Mappings
                 VehicleFuelType.Diesel => "Dầu Diesel",
                 VehicleFuelType.Electric => "Điện",
                 VehicleFuelType.Hybrid => "Hybrid",
+                _ => "Không xác định"
+            };
+        }
+
+        private static string GetTransmissionTypeName(VehicleTransmissionType transmissionType)
+        {
+            return transmissionType switch
+            {
+                VehicleTransmissionType.Manual => "Xe số / Số sàn",
+                VehicleTransmissionType.Automatic => "Tay ga / Số tự động",
+                VehicleTransmissionType.Electric => "Điện",
                 _ => "Không xác định"
             };
         }

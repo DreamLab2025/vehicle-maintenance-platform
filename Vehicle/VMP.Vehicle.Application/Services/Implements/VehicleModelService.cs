@@ -95,7 +95,7 @@ namespace VMP.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<ModelResponse>>> GetAllModelsAsync(PaginationRequest paginationRequest)
+        public async Task<ApiResponse<List<ModelResponse>>> GetAllModelsAsync(ModelFilterRequest filterRequest)
         {
             try
             {
@@ -104,9 +104,25 @@ namespace VMP.Vehicle.Application.Services.Implements
                     .Include(m => m.Type)
                     .Where(m => m.DeletedAt == null);
 
+                // Apply filters
+                if (!string.IsNullOrWhiteSpace(filterRequest.BrandName))
+                {
+                    query = query.Where(m => m.Brand!.Name.Contains(filterRequest.BrandName));
+                }
+
+                if (!string.IsNullOrWhiteSpace(filterRequest.TypeName))
+                {
+                    query = query.Where(m => m.Type!.Name.Contains(filterRequest.TypeName));
+                }
+
+                if (filterRequest.TransmissionType.HasValue)
+                {
+                    query = query.Where(m => m.TransmissionType == filterRequest.TransmissionType.Value);
+                }
+
                 var totalCount = await query.CountAsync();
 
-                if (paginationRequest.IsDescending)
+                if (filterRequest.IsDescending)
                 {
                     query = query.OrderByDescending(m => m.CreatedAt);
                 }
@@ -116,8 +132,8 @@ namespace VMP.Vehicle.Application.Services.Implements
                 }
 
                 var items = await query
-                    .Skip((paginationRequest.PageNumber - 1) * paginationRequest.PageSize)
-                    .Take(paginationRequest.PageSize)
+                    .Skip((filterRequest.PageNumber - 1) * filterRequest.PageSize)
+                    .Take(filterRequest.PageSize)
                     .ToListAsync();
 
                 var modelResponses = items.Select(m => m.ToResponse()).ToList();
@@ -125,8 +141,8 @@ namespace VMP.Vehicle.Application.Services.Implements
                 return ApiResponse<ModelResponse>.SuccessPagedResponse(
                     modelResponses,
                     totalCount,
-                    paginationRequest.PageNumber,
-                    paginationRequest.PageSize,
+                    filterRequest.PageNumber,
+                    filterRequest.PageSize,
                     "Lấy danh sách mẫu xe thành công");
             }
             catch (Exception ex)
@@ -241,7 +257,10 @@ namespace VMP.Vehicle.Application.Services.Implements
                             TypeId = request.TypeId,
                             ReleaseYear = modelItem.ReleaseYear,
                             FuelType = modelItem.FuelType,
+                            TransmissionType = modelItem.TransmissionType,
                             ImageUrl = modelItem.ImageUrl,
+                            EngineDisplacement = modelItem.EngineDisplacement,
+                            EngineCapacity = modelItem.EngineCapacity,
                             OilCapacity = modelItem.OilCapacity,
                             TireSizeFront = modelItem.TireSizeFront,
                             TireSizeRear = modelItem.TireSizeRear
@@ -295,6 +314,119 @@ namespace VMP.Vehicle.Application.Services.Implements
             {
                 _logger.LogError(ex, "Error in bulk create models");
                 return ApiResponse<BulkModelResponse>.FailureResponse("Lỗi khi tạo hàng loạt mẫu xe");
+            }
+        }
+
+        public async Task<ApiResponse<BulkModelResponse>> BulkCreateModelsFromFileAsync(BulkModelFileRequest request)
+        {
+            var response = new BulkModelResponse();
+
+            try
+            {
+                // Tìm thương hiệu theo tên
+                var brand = await _unitOfWork.VehicleBrands
+                    .FindOneAsync(b => b.Name == request.BrandName && b.DeletedAt == null);
+                if (brand == null)
+                {
+                    return ApiResponse<BulkModelResponse>.FailureResponse($"Không tìm thấy thương hiệu với tên: {request.BrandName}");
+                }
+
+                // Tìm loại xe theo tên
+                var type = await _unitOfWork.VehicleTypes
+                    .FindOneAsync(t => t.Name == request.TypeName && t.DeletedAt == null);
+                if (type == null)
+                {
+                    return ApiResponse<BulkModelResponse>.FailureResponse($"Không tìm thấy loại xe với tên: {request.TypeName}");
+                }
+
+                var existingModels = await _unitOfWork.VehicleModels
+                    .GetAllAsync(m => m.BrandId == brand.Id && m.DeletedAt == null);
+                var existingModelNames = existingModels
+                    .Select(m => m.Name.ToLower())
+                    .ToHashSet();
+
+                for (int i = 0; i < request.Models.Count; i++)
+                {
+                    var modelItem = request.Models[i];
+
+                    try
+                    {
+                        if (existingModelNames.Contains(modelItem.Name.ToLower()))
+                        {
+                            response.FailedCount++;
+                            response.Errors.Add(new BulkOperationError
+                            {
+                                Index = i,
+                                ItemName = modelItem.Name,
+                                ErrorMessage = "Mẫu xe đã tồn tại cho thương hiệu này"
+                            });
+                            continue;
+                        }
+
+                        var model = new VehicleModel
+                        {
+                            Name = modelItem.Name,
+                            BrandId = brand.Id,
+                            TypeId = type.Id,
+                            ReleaseYear = modelItem.ReleaseYear,
+                            FuelType = modelItem.FuelType,
+                            TransmissionType = modelItem.TransmissionType,
+                            ImageUrl = modelItem.ImageUrl,
+                            EngineDisplacement = modelItem.EngineDisplacement,
+                            EngineCapacity = modelItem.EngineCapacity,
+                            OilCapacity = modelItem.OilCapacity,
+                            TireSizeFront = modelItem.TireSizeFront,
+                            TireSizeRear = modelItem.TireSizeRear
+                        };
+
+                        await _unitOfWork.VehicleModels.AddAsync(model);
+
+                        existingModelNames.Add(modelItem.Name.ToLower());
+
+                        response.SuccessCount++;
+
+                        _logger.LogInformation("Bulk created model from file: {ModelName} for brand: {BrandName}",
+                            modelItem.Name, brand.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        response.FailedCount++;
+                        response.Errors.Add(new BulkOperationError
+                        {
+                            Index = i,
+                            ItemName = modelItem.Name,
+                            ErrorMessage = ex.Message
+                        });
+                        _logger.LogError(ex, "Error creating model in bulk from file: {ModelName}", modelItem.Name);
+                    }
+                }
+
+                if (response.SuccessCount > 0)
+                {
+                    await _unitOfWork.SaveChangesAsync();
+
+                    var createdModels = await _unitOfWork.VehicleModels.AsQueryable()
+                        .Include(m => m.Brand)
+                        .Include(m => m.Type)
+                        .Where(m => m.BrandId == brand.Id && m.DeletedAt == null)
+                        .OrderByDescending(m => m.CreatedAt)
+                        .Take(response.SuccessCount)
+                        .ToListAsync();
+
+                    response.SuccessfulModels = createdModels.Select(m => m.ToResponse()).ToList();
+                }
+
+                _logger.LogInformation("Bulk create models from file completed for {BrandName} ({TypeName}). Success: {SuccessCount}, Failed: {FailedCount}",
+                    brand.Name, type.Name, response.SuccessCount, response.FailedCount);
+
+                return ApiResponse<BulkModelResponse>.SuccessResponse(
+                    response,
+                    $"Đã thêm {response.SuccessCount} mẫu xe {brand.Name} ({type.Name}), {response.FailedCount} thất bại");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in bulk create models from file");
+                return ApiResponse<BulkModelResponse>.FailureResponse("Lỗi khi tạo hàng loạt mẫu xe từ file");
             }
         }
     }
