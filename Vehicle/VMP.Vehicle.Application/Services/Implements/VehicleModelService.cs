@@ -105,6 +105,11 @@ namespace VMP.Vehicle.Application.Services.Implements
                     .Where(m => m.DeletedAt == null);
 
                 // Apply filters
+                if (!string.IsNullOrWhiteSpace(filterRequest.ModelName))
+                {
+                    query = query.Where(m => m.Name.Contains(filterRequest.ModelName));
+                }
+
                 if (!string.IsNullOrWhiteSpace(filterRequest.BrandName))
                 {
                     query = query.Where(m => m.Brand!.Name.Contains(filterRequest.BrandName));
@@ -118,6 +123,16 @@ namespace VMP.Vehicle.Application.Services.Implements
                 if (filterRequest.TransmissionType.HasValue)
                 {
                     query = query.Where(m => m.TransmissionType == filterRequest.TransmissionType.Value);
+                }
+
+                if (filterRequest.EngineDisplacement.HasValue)
+                {
+                    query = query.Where(m => m.EngineDisplacement == filterRequest.EngineDisplacement.Value);
+                }
+
+                if (filterRequest.ReleaseYear.HasValue)
+                {
+                    query = query.Where(m => m.ReleaseYear == filterRequest.ReleaseYear.Value);
                 }
 
                 var totalCount = await query.CountAsync();

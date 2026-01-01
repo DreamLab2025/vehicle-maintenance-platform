@@ -22,7 +22,7 @@ namespace VMP.Vehicle.Apis
             group.MapGet("/", GetAllModels)
                 .WithName("GetAllModels")
                 .WithSummary("Lấy danh sách tất cả mẫu xe")
-                .WithDescription("Trả về danh sách tất cả mẫu xe trong hệ thống. Hỗ trợ tìm kiếm theo tên thương hiệu, loại xe và loại truyền động")
+                .WithDescription("Trả về danh sách tất cả mẫu xe trong hệ thống. Hỗ trợ tìm kiếm theo tên model, tên thương hiệu, loại xe, loại truyền động, phân khối (cc) và năm sản xuất")
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<ModelResponse>>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<List<ModelResponse>>>(StatusCodes.Status404NotFound)

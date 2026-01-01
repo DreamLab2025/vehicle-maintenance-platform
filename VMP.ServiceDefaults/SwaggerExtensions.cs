@@ -26,15 +26,26 @@ namespace VMP.ServiceDefaults
                 });
 
                 options.OperationFilter<SecurityRequirementsOperationFilter>();
+                options.SchemaFilter<EnumSchemaFilter>();
+                
+                // Force inline enum definitions instead of references
+                options.UseInlineDefinitionsForEnums();
             });
-
+            
             return builder;
         }
 
         public static WebApplication UseDefaultSwagger(this WebApplication app)
         {
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(c =>
+            {
+                // Disable caching to ensure latest schema
+                c.ConfigObject.AdditionalItems["syntaxHighlight"] = new Dictionary<string, object>
+                {
+                    ["activated"] = false
+                };
+            });
             app.MapGet("/", () => Results.Redirect("/swagger/index.html")).ExcludeFromDescription();
             return app;
         }
@@ -70,6 +81,33 @@ namespace VMP.ServiceDefaults
 
                 if (!operation.Responses.ContainsKey("401"))
                     operation.Responses.Add("401", new OpenApiResponse { Description = "Unauthorized" });
+            }
+        }
+    }
+
+    public class EnumSchemaFilter : ISchemaFilter
+    {
+        public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+        {
+            var type = context.Type;
+            
+            // Handle nullable enums (e.g., VehicleTransmissionType?)
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                type = Nullable.GetUnderlyingType(type);
+            }
+            
+            if (type != null && type.IsEnum)
+            {
+                schema.Enum.Clear();
+                schema.Type = "string";
+                schema.Format = null;
+                schema.Nullable = context.Type.IsGenericType && context.Type.GetGenericTypeDefinition() == typeof(Nullable<>);
+                
+                foreach (var enumValue in Enum.GetValues(type))
+                {
+                    schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(enumValue.ToString()));
+                }
             }
         }
     }

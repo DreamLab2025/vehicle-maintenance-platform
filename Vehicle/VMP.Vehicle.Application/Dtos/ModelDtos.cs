@@ -143,8 +143,11 @@ namespace VMP.Vehicle.Application.Dtos
 
     public class ModelFilterRequest : PaginationRequest
     {
+        public string? ModelName { get; set; }
         public string? BrandName { get; set; }
         public string? TypeName { get; set; }
         public VehicleTransmissionType? TransmissionType { get; set; }
+        public int? EngineDisplacement { get; set; }
+        public int? ReleaseYear { get; set; }
     }
 }
