@@ -65,7 +65,100 @@ namespace VMP.Identity.Apis
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapPost("/verify-otp", VerifyOtp)
+                .WithName("VerifyOtp")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Xác thực OTP đăng ký";
+                    return operation;
+                })
+                .AllowAnonymous()
+                .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status400BadRequest);
+
+            group.MapPost("/resend-otp", ResendOtp)
+                .WithName("ResendOtp")
+                .WithOpenApi(op =>
+                {
+                    op.Summary = "Gửi lại mã OTP (Giới hạn 60s/lần)";
+                    return op;
+                })
+                .AllowAnonymous()
+                .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status400BadRequest);
+
+            group.MapPost("/forgot-password", ForgotPassword)
+                .WithName("ForgotPassword")
+                .WithOpenApi(op =>
+                {
+                    op.Summary = "Yêu cầu mã OTP lấy lại mật khẩu";
+                    return op;
+                })
+                .AllowAnonymous()
+                .Produces<ApiResponse<bool>>(StatusCodes.Status200OK);
+
+            group.MapPost("/reset-password", ResetPassword)
+                .WithName("ResetPassword")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Đặt lại mật khẩu người dùng";
+                    return operation;
+                })
+                .AllowAnonymous()
+                .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status400BadRequest);
+
             return group;
+        }
+
+        private static async Task<IResult> ForgotPassword(ForgotPasswordRequest request, IAuthService authService)
+        {
+            var result = await authService.ForgotPasswordAsync(request);
+
+            if (result.IsSuccess)
+            {
+                return Results.Ok(result);
+            }
+
+            return Results.BadRequest(result);
+        }
+
+        private static async Task<IResult> ResetPassword(
+            ResetPasswordRequest request,
+            IAuthService authService)
+        {
+            var result = await authService.ResetPasswordAsync(request);
+
+            if (result.IsSuccess)
+            {
+                return Results.Ok(result);
+            }
+
+            return Results.BadRequest(result);
+        }
+
+        private static async Task<IResult> ResendOtp(ResendOtpRequest request, IAuthService authService)
+        {
+            var result = await authService.ResendRegisterOtpAsync(request);
+
+            if (result.IsSuccess)
+            {
+                return Results.Ok(result);
+            }
+
+            return Results.BadRequest(result);
+        }
+
+        private static async Task<IResult> VerifyOtp(VerifyOtpRequest request, IAuthService authService)
+        {
+            var result = await authService.VerifyRegisterOtpAsync(request);
+
+            if (result.IsSuccess)
+            {
+                return Results.Ok(result);
+            }
+
+            return Results.BadRequest(result);
         }
 
         private static async Task<IResult> ChangePassword(ChangePasswordRequest request, IAuthService authService, ICurrentUserService currentUserService)

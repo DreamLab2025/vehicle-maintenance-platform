@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using VMP.Common.Caching;
 using VMP.Common.Databases.Base;
 using VMP.Common.Shared;
 using VMP.Identity.Dtos;
@@ -15,16 +16,25 @@ namespace VMP.Identity.Services.Implements
         private readonly IUnitOfWork _unitOfWork;
         private readonly IIdentityTokenService _tokenService;
         private readonly PasswordHasher<User> _passwordHasher;
+        private readonly ICacheService _cacheService;
 
         public AuthService(
             ILogger<AuthService> logger,
             IUnitOfWork unitOfWork,
-            IIdentityTokenService tokenService)
+            IIdentityTokenService tokenService,
+            ICacheService cacheService)
         {
             _logger = logger;
             _unitOfWork = unitOfWork;
             _tokenService = tokenService;
             _passwordHasher = new PasswordHasher<User>();
+            _cacheService = cacheService;
+        }
+
+        private string GetOtpCode()
+        {
+            var random = new Random();
+            return random.Next(100000, 999999).ToString();
         }
 
         public async Task<ApiResponse<UserDto>> RegisterUserAsync(RegisterRequest request)
@@ -40,15 +50,20 @@ namespace VMP.Identity.Services.Implements
                 var user = request.ToEntity(string.Empty);
 
                 user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
-
+                user.Status = EntityStatus.Inactive;
                 await _unitOfWork.Users.AddAsync(user);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation("User registered successfully: {Email}", request.Email);
+                var otpCode = GetOtpCode();
+                _logger.LogError("Send OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
+                await _cacheService.SetAsync($"otp_register:{request.Email}", otpCode, TimeSpan.FromMinutes(5));
 
+                //Publish event to event bus for sending email with OTP code here
+
+                _logger.LogInformation("User registered successfully: {Email}", request.Email);
                 return ApiResponse<UserDto>.SuccessResponse(
                     user.ToDto(),
-                    "Đăng ký người dùng thành công");
+                    "Đăng ký người dùng thành công, vui lòng kiểm tra email để xác thực OTP");
             }
             catch (Exception ex)
             {
@@ -191,6 +206,168 @@ namespace VMP.Identity.Services.Implements
             {
                 _logger.LogError(ex, "Error changing password");
                 return ApiResponse<UserDto>.FailureResponse("Đã xảy ra lỗi trong quá trình đổi mật khẩu");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> VerifyRegisterOtpAsync(VerifyOtpRequest request)
+        {
+            try
+            {
+                var cacheKey = $"otp_register:{request.Email}";
+                var storedOtp = await _cacheService.GetAsync<string>(cacheKey);
+
+                if (string.IsNullOrEmpty(storedOtp))
+                {
+                    return ApiResponse<bool>.FailureResponse("Mã OTP đã hết hạn hoặc không tồn tại.");
+                }
+
+                if (storedOtp != request.OtpCode)
+                {
+                    return ApiResponse<bool>.FailureResponse("Mã OTP không chính xác.");
+                }
+
+                var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == request.Email);
+                if (user == null)
+                {
+                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                }
+
+                if (user.Status == EntityStatus.Active)
+                {
+                    return ApiResponse<bool>.SuccessResponse(true, "Tài khoản đã được kích hoạt trước đó.");
+                }
+
+                user.Status = EntityStatus.Active;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _unitOfWork.Users.UpdateAsync(user.Id, user);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _cacheService.RemoveAsync(cacheKey);
+                return ApiResponse<bool>.SuccessResponse(true, "Kích hoạt tài khoản thành công. Bạn có thể đăng nhập ngay bây giờ.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying OTP: {Email}", request.Email);
+                return ApiResponse<bool>.FailureResponse("Lỗi hệ thống khi xác thực OTP.");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> ResendRegisterOtpAsync(ResendOtpRequest request)
+        {
+            try
+            {
+                var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == request.Email);
+
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found for OTP resend: {Email}", request.Email);
+                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                }
+
+                if (user.Status == EntityStatus.Active)
+                {
+                    _logger.LogInformation("OTP resend requested for already active user: {Email}", request.Email);
+                    return ApiResponse<bool>.SuccessResponse(true, "Tài khoản đã được kích hoạt trước đó.");
+                }
+
+                var lockKey = $"otp_resend_lock:{request.Email}";
+                var isLocked = await _cacheService.GetAsync<bool?>(lockKey);
+                if (isLocked == true)
+                {
+                    _logger.LogInformation("OTP resend attempted too soon for user: {Email}", request.Email);
+                    return ApiResponse<bool>.FailureResponse("Vui lòng đợi 60 giây trước khi gửi lại OTP.");
+                }
+                var otpCode = GetOtpCode();
+                _logger.LogError("Resending OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
+                await _cacheService.SetAsync($"otp_register:{request.Email}", otpCode, TimeSpan.FromMinutes(5));
+                await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
+
+                //Publish event to event bus for sending email with OTP code here
+
+                _logger.LogInformation("OTP code resent successfully to email: {Email}", request.Email);
+                return ApiResponse<bool>.SuccessResponse(true, "Gửi lại mã OTP thành công. Vui lòng kiểm tra email của bạn.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resending OTP: {Email}", request.Email);
+                return ApiResponse<bool>.FailureResponse("Đã xảy ra lỗi trong quá trình gửi lại mã OTP.");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> ForgotPasswordAsync(ForgotPasswordRequest request)
+        {
+            try
+            {
+                var lockKey = $"otp_forgot_lock:{request.Email}";
+                var isLocked = await _cacheService.GetAsync<bool?>(lockKey);
+
+                if (isLocked == true)
+                {
+                    return ApiResponse<bool>.FailureResponse("Vui lòng đợi 60 giây trước khi yêu cầu lại.");
+                }
+
+                var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == request.Email);
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found for forgot password: {Email}", request.Email);
+                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                }
+
+                var otpCode = GetOtpCode();
+                _logger.LogError("Send OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
+                await _cacheService.SetAsync($"otp_forgot:{request.Email}", otpCode, TimeSpan.FromMinutes(5));
+                await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
+
+                //Publish event to event bus for sending email with OTP code here
+
+                _logger.LogInformation("Forgot password OTP code sent successfully to email: {Email}", request.Email);
+                return ApiResponse<bool>.SuccessResponse(true, "Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra email để tiếp tục quá trình đặt lại mật khẩu.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in ForgotPasswordAsync for email: {Email}", request.Email);
+                return ApiResponse<bool>.FailureResponse("Đã xảy ra lỗi trong quá trình xử lý yêu cầu.");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            try
+            {
+                var cacheKey = $"otp_forgot:{request.Email}";
+                var storedOtp = await _cacheService.GetAsync<string>(cacheKey);
+
+                if (string.IsNullOrEmpty(storedOtp) || storedOtp != request.OtpCode)
+                {
+                    _logger.LogInformation("Invalid or expired OTP for password reset: {Email}", request.Email);
+                    return ApiResponse<bool>.FailureResponse("Mã OTP không hợp lệ hoặc đã hết hạn.");
+                }
+
+                var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == request.Email);
+                if (user == null)
+                {
+                    _logger.LogWarning("User not found for password reset: {Email}", request.Email);
+                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                }
+
+                user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
+                user.RefreshToken = null;
+                user.RefreshTokenExpiryTime = null;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _unitOfWork.Users.UpdateAsync(user.Id, user);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _cacheService.RemoveAsync(cacheKey);
+                _logger.LogInformation("Password reset successfully for: {Email}", request.Email);
+
+                return ApiResponse<bool>.SuccessResponse(true, "Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error resetting password for email: {Email}", request.Email);
+                return ApiResponse<bool>.FailureResponse("Đã xảy ra lỗi trong quá trình đặt lại mật khẩu.");
             }
         }
     }

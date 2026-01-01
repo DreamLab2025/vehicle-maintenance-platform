@@ -20,6 +20,8 @@ namespace VMP.Identity.Bootstrapping
 
             builder.AddPostgresDatabase<UserDbContext>(Const.IdentityDatabase);
 
+            builder.AddServiceRedis(nameof(Identity), connectionName: Const.Redis);
+
             // Register Unit of Work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 

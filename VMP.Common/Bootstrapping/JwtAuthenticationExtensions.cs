@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using VMP.Common.Configuration;
 using VMP.Common.Jwt;
 
 namespace VMP.Common.Bootstrapping

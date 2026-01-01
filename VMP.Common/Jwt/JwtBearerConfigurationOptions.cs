@@ -1,4 +1,4 @@
-namespace VMP.Common.Configuration
+namespace VMP.Common.Jwt
 {
     public class JwtBearerConfigurationOptions
     {

@@ -23,14 +23,18 @@ namespace VMP.AppHost.Extensions
                 .WithManagementPlugin(15672)
                 .WithDataVolume();
 
+            var redis = builder.AddRedis("redis-cache");
+
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
             var vehicleDb = postgres.AddDatabase("vehicle-db", "Vehicles");
 
             var identityService = builder.AddProject<Projects.VMP_Identity>("vmp-identity")
                 .WithReference(identityDb)
                 .WithReference(rabbitMq)
+                .WithReference(redis)
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq);
+                .WaitFor(rabbitMq)
+                .WaitFor(redis);
 
             var vehicleService = builder.AddProject<Projects.VMP_Vehicle>("vmp-vehicle")
                 .WithReference(vehicleDb)
