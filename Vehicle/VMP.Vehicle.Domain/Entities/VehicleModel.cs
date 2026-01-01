@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using VMP.Common.Databases.Base;
 
@@ -44,16 +45,37 @@ namespace VMP.Vehicle.Domain.Entities
 
     public enum VehicleFuelType
     {
+        [Description("Xăng")]
         Gasoline = 1,
+
+        [Description("Dầu diesel")]
         Diesel = 2,
+
+        [Description("Điện")]
         Electric = 3,
+
+        [Description("Hybrid")]
         Hybrid = 4
     }
 
     public enum VehicleTransmissionType
     {
-        Manual = 1,      // Xe số / Số sàn
-        Automatic = 2,   // Tay ga / Số tự động
-        Electric = 3     // Điện (không hộp số)
+        [Description("Xe số")]
+        Manual = 1,
+
+        [Description("Tay ga")]
+        Automatic = 2,
+
+        [Description("Xe côn")]
+        Sport = 3,
+
+        [Description("Số sàn")]
+        ManualCar = 4,
+
+        [Description("Số tự động")]
+        AutomaticCar = 5,
+
+        [Description("Điện")]
+        Electric = 6
     }
 }

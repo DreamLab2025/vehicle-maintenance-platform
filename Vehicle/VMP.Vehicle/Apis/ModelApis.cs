@@ -21,8 +21,11 @@ namespace VMP.Vehicle.Apis
         {
             group.MapGet("/", GetAllModels)
                 .WithName("GetAllModels")
-                .WithSummary("Lấy danh sách tất cả mẫu xe")
-                .WithDescription("Trả về danh sách tất cả mẫu xe trong hệ thống. Hỗ trợ tìm kiếm theo tên model, tên thương hiệu, loại xe, loại truyền động, phân khối (cc) và năm sản xuất")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách tất cả mẫu xe";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<ModelResponse>>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<List<ModelResponse>>>(StatusCodes.Status404NotFound)
@@ -30,8 +33,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/", CreateVehicleModel)
                 .WithName("CreateModel")
-                .WithSummary("Tạo mới mẫu xe")
-                .WithDescription("Tạo mới một mẫu xe trong hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Tạo mới mẫu xe (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status201Created)
                 .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status400BadRequest)
@@ -39,8 +45,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/bulk", BulkCreateModels)
                 .WithName("BulkCreateModels")
-                .WithSummary("Tạo hàng loạt mẫu xe từ JSON")
-                .WithDescription("Upload file JSON hoặc gửi JSON body để tạo nhiều mẫu xe cùng lúc")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Tạo hàng loạt mẫu xe từ JSON (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BulkModelResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<BulkModelResponse>>(StatusCodes.Status400BadRequest)
@@ -49,8 +58,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/bulk/upload", BulkCreateModelsFromFile)
                 .WithName("BulkCreateModelsFromFile")
-                .WithSummary("Tạo hàng loạt mẫu xe từ file JSON")
-                .WithDescription("Upload file JSON để tạo nhiều mẫu xe cùng lúc")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Tạo hàng loạt mẫu xe từ file JSON (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BulkModelResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<BulkModelResponse>>(StatusCodes.Status400BadRequest)
@@ -59,8 +71,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPut("/{id:guid}", UpdateVehicleModel)
                 .WithName("UpdateModel")
-                .WithSummary("Cập nhật mẫu xe")
-                .WithDescription("Cập nhật thông tin một mẫu xe trong hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Cập nhật mẫu xe (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status400BadRequest)
@@ -68,8 +83,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapDelete("/{id:guid}", DeleteVehicleModel)
                 .WithName("DeleteModel")
-                .WithSummary("Xóa mẫu xe")
-                .WithDescription("Xóa một mẫu xe khỏi hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Xóa mẫu xe (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)

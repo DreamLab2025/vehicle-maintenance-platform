@@ -1,4 +1,4 @@
-using System.Security.Claims;
+Ôªøusing System.Security.Claims;
 using VMP.Common.Shared;
 using VMP.Vehicle.Application.Dtos;
 using VMP.Vehicle.Application.Services.Interfaces;
@@ -21,8 +21,11 @@ namespace VMP.Vehicle.Apis
         {
             group.MapGet("/", GetUserVehicles)
                 .WithName("GetUserVehicles")
-                .WithSummary("L?y danh s·ch xe c?a ng??i d˘ng")
-                .WithDescription("Tr? v? danh s·ch t?t c? xe c?a ng??i d˘ng hi?n t?i")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "L·∫•y danh s√°ch xe c·ªßa ng∆∞·ªùi d√πng";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<UserVehicleResponse>>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<List<UserVehicleResponse>>>(StatusCodes.Status404NotFound)
@@ -30,8 +33,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapGet("/{id:guid}", GetUserVehicleById)
                 .WithName("GetUserVehicleById")
-                .WithSummary("L?y thÙng tin chi ti?t xe")
-                .WithDescription("Tr? v? thÙng tin chi ti?t c?a m?t xe")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "L·∫•y th√¥ng tin chi ti·∫øt xe";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<UserVehicleDetailResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<UserVehicleDetailResponse>>(StatusCodes.Status404NotFound)
@@ -39,8 +45,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/", CreateUserVehicle)
                 .WithName("CreateUserVehicle")
-                .WithSummary("ThÍm xe m?i")
-                .WithDescription("ThÍm m?t xe m?i v‡o danh s·ch c?a ng??i d˘ng")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Th√™m xe m·ªõi";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status201Created)
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
@@ -48,8 +57,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPut("/{id:guid}", UpdateUserVehicle)
                 .WithName("UpdateUserVehicle")
-                .WithSummary("C?p nh?t thÙng tin xe")
-                .WithDescription("C?p nh?t thÙng tin c?a m?t xe")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "C·∫≠p nh·∫≠t th√¥ng tin xe";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
@@ -57,8 +69,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPatch("/{id:guid}/odometer", UpdateOdometer)
                 .WithName("UpdateOdometer")
-                .WithSummary("C?p nh?t s? km")
-                .WithDescription("C?p nh?t s? km hi?n t?i c?a xe")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "C·∫≠p nh·∫≠t s·ªë km";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
@@ -66,8 +81,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapDelete("/{id:guid}", DeleteUserVehicle)
                 .WithName("DeleteUserVehicle")
-                .WithSummary("XÛa xe")
-                .WithDescription("XÛa m?t xe kh?i danh s·ch")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "X√≥a xe";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)

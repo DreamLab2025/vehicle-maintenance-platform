@@ -20,8 +20,11 @@ namespace VMP.Vehicle.Apis
         {
             group.MapGet("/", GetAllBrands)
                 .WithName("GetAllBrands")
-                .WithSummary("Lấy danh sách tất cả thương hiệu")
-                .WithDescription("Trả về danh sách tất cả thương hiệu trong hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách tất cả thương hiệu";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status404NotFound)
@@ -29,8 +32,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/", CreateVehicleBrand)
                 .WithName("CreateBrand")
-                .WithSummary("Tạo mới thương hiệu")
-                .WithDescription("Tạo mới một thương hiệu trong hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Tạo mới thương hiệu (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status201Created)
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status400BadRequest)
@@ -38,8 +44,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/bulk", BulkCreateBrands)
                 .WithName("BulkCreateBrands")
-                .WithSummary("Tạo hàng loạt thương hiệu từ JSON")
-                .WithDescription("Upload file JSON hoặc gửi JSON body để tạo nhiều thương hiệu cùng lúc")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Tạo hàng loạt thương hiệu từ JSON (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BulkBrandResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<BulkBrandResponse>>(StatusCodes.Status400BadRequest)
@@ -48,8 +57,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/bulk/upload", BulkCreateBrandsFromFile)
                 .WithName("BulkCreateBrandsFromFile")
-                .WithSummary("Tạo hàng loạt thương hiệu từ file JSON")
-                .WithDescription("Upload file JSON để tạo nhiều thương hiệu cùng lúc")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Tạo hàng loạt thương hiệu từ file JSON (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BulkBrandResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<BulkBrandResponse>>(StatusCodes.Status400BadRequest)
@@ -58,8 +70,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPut("/{id:guid}", UpdateVehicleBrand)
                 .WithName("UpdateBrand")
-                .WithSummary("Cập nhật thương hiệu")
-                .WithDescription("Cập nhật thông tin một thương hiệu trong hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Cập nhật thương hiệu (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status400BadRequest)
@@ -67,8 +82,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapDelete("/{id:guid}", DeleteVehicleBrand)
                 .WithName("DeleteBrand")
-                .WithSummary("Xóa thương hiệu")
-                .WithDescription("Xóa một thương hiệu khỏi hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Xóa thương hiệu (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)

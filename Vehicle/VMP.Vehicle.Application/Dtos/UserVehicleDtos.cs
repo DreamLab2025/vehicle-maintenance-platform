@@ -1,34 +1,34 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace VMP.Vehicle.Application.Dtos
 {
     public class UserVehicleRequest
     {
-        [Required(ErrorMessage = "M?u xe kh�ng ???c ?? tr?ng")]
+        [Required(ErrorMessage = "Mẫu xe không được để trống")]
         public Guid VehicleModelId { get; set; }
 
-        [Required(ErrorMessage = "Bi?n s? xe kh�ng ???c ?? tr?ng")]
-        [MaxLength(20, ErrorMessage = "Bi?n s? xe kh�ng ???c v??t qu� 20 k� t?")]
+        [Required(ErrorMessage = "Biển số xe không được để trống")]
+        [MaxLength(20, ErrorMessage = "Biển số xe không được vượt quá 20 ký tự")]
         public string LicensePlate { get; set; } = null!;
 
-        [MaxLength(100, ErrorMessage = "T�n g?i kh�ng ???c v??t qu� 100 k� t?")]
+        [MaxLength(100, ErrorMessage = "Tên gọi không được vượt quá 100 ký tự")]
         public string? Nickname { get; set; }
 
-        [MaxLength(50, ErrorMessage = "S? VIN kh�ng ???c v??t qu� 50 k� t?")]
+        [MaxLength(50, ErrorMessage = "Số VIN không được vượt quá 50 ký tự")]
         public string? VinNumber { get; set; }
 
-        [Required(ErrorMessage = "Ng�y mua kh�ng ???c ?? tr?ng")]
+        [Required(ErrorMessage = "Ngày mua không được để trống")]
         public DateTime PurchaseDate { get; set; }
 
-        [Required(ErrorMessage = "S? km hi?n t?i kh�ng ???c ?? tr?ng")]
-        [Range(0, int.MaxValue, ErrorMessage = "S? km ph?i l?n h?n ho?c b?ng 0")]
+        [Required(ErrorMessage = "Số km hiện tại không được để trống")]
+        [Range(0, int.MaxValue, ErrorMessage = "Số km phải lớn hơn hoặc bằng 0")]
         public int CurrentOdometer { get; set; }
     }
 
     public class UpdateOdometerRequest
     {
-        [Required(ErrorMessage = "S? km hi?n t?i kh�ng ???c ?? tr?ng")]
-        [Range(0, int.MaxValue, ErrorMessage = "S? km ph?i l?n h?n ho?c b?ng 0")]
+        [Required(ErrorMessage = "Số km hiện tại không được để trống")]
+        [Range(0, int.MaxValue, ErrorMessage = "Số km phải lớn hơn hoặc bằng 0")]
         public int CurrentOdometer { get; set; }
     }
 

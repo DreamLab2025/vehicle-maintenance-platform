@@ -21,24 +21,33 @@ namespace VMP.Identity.Apis
         {
             group.MapPost("/login", LoginUser)
                 .WithName("Login")
-                .WithSummary("Đăng nhập người dùng")
-                .WithDescription("Xác thực người dùng bằng email và password, trả về access token và refresh token")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Đăng nhập người dùng";
+                    return operation;
+                })
                 .AllowAnonymous()
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status400BadRequest);
 
             group.MapPost("/register", RegisterUser)
                 .WithName("Register")
-                .WithSummary("Đăng ký người dùng mới")
-                .WithDescription("Tạo tài khoản người dùng mới với email và password")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Đăng ký người dùng mới";
+                    return operation;
+                })
                 .AllowAnonymous()
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest);
 
             group.MapPost("/refresh-token", RefreshToken)
                 .WithName("RefreshToken")
-                .WithSummary("Làm mới access token")
-                .WithDescription("Sử dụng refresh token để lấy access token mới. Cần có JWT token hợp lệ trong Authorization header")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Làm mới access token";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status400BadRequest)
@@ -46,8 +55,11 @@ namespace VMP.Identity.Apis
 
             group.MapPut("/change-password", ChangePassword)
                 .WithName("ChangePassword")
-                .WithSummary("Đổi mật khẩu người dùng")
-                .WithDescription("Cho phép người dùng đã xác thực đổi mật khẩu của họ")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Đổi mật khẩu người dùng";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest)

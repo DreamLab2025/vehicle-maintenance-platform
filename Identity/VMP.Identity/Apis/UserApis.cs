@@ -20,14 +20,21 @@ namespace VMP.Identity.Apis
         {
             group.MapGet("/", GetAllUsers)
                 .WithName("GetAllUsers")
-                .WithSummary("Lấy danh sách tất cả người dùng")
-                .WithDescription("Trả về danh sách người dùng phân trang")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách tất cả người dùng (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<List<UserDto>>>(StatusCodes.Status200OK);
 
             group.MapGet("/me", GetCurrentUser)
                 .WithName("GetCurrentUser")
-                .WithSummary("Lấy thông tin người dùng hiện tại")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy thông tin người dùng hiện tại";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status404NotFound)
@@ -35,7 +42,11 @@ namespace VMP.Identity.Apis
 
             group.MapGet("/{id:guid}", GetUserById)
                 .WithName("GetUserById")
-                .WithSummary("Lấy thông tin người dùng theo ID")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy thông tin người dùng theo ID (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status404NotFound);

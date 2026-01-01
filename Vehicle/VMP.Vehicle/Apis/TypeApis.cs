@@ -19,8 +19,11 @@ namespace VMP.Vehicle.Apis
         {
             group.MapGet("/", GetAllTypes)
                 .WithName("GetAllTypes")
-                .WithSummary("Lấy danh sách tất cả loại xe")
-                .WithDescription("Trả về danh sách tất cả loại xe trong hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách tất cả loại xe";
+                    return operation;
+                })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<TypeResponse>>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<List<TypeResponse>>>(StatusCodes.Status404NotFound)
@@ -28,8 +31,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/", CreateVehicleType)
                 .WithName("CreateType")
-                .WithSummary("Tạo mới loại xe")
-                .WithDescription("Tạo mới một loại xe trong hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Tạo mới loại xe (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status201Created)
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status400BadRequest)
@@ -37,8 +43,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapPut("/{id:guid}", UpdateVehicleType)
                 .WithName("UpdateType")
-                .WithSummary("Cập nhật loại xe")
-                .WithDescription("Cập nhật thông tin một loại xe trong hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Cập nhật loại xe (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status400BadRequest)
@@ -46,8 +55,11 @@ namespace VMP.Vehicle.Apis
 
             group.MapDelete("/{id:guid}", DeleteVehicleType)
                 .WithName("DeleteType")
-                .WithSummary("Xóa loại xe")
-                .WithDescription("Xóa một loại xe khỏi hệ thống")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Xóa loại xe (Admin)";
+                    return operation;
+                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)

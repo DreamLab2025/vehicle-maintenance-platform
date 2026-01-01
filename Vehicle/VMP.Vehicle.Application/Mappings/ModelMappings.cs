@@ -82,8 +82,11 @@ namespace VMP.Vehicle.Application.Mappings
         {
             return transmissionType switch
             {
-                VehicleTransmissionType.Manual => "Xe số / Số sàn",
-                VehicleTransmissionType.Automatic => "Tay ga / Số tự động",
+                VehicleTransmissionType.Manual => "Xe số",
+                VehicleTransmissionType.Automatic => "Tay ga",
+                VehicleTransmissionType.Sport => "Xe côn",
+                VehicleTransmissionType.ManualCar => "Số sàn",
+                VehicleTransmissionType.AutomaticCar => "Số tự động",
                 VehicleTransmissionType.Electric => "Điện",
                 _ => "Không xác định"
             };
