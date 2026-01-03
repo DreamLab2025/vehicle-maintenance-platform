@@ -50,6 +50,10 @@ namespace VMP.Vehicle.Bootstrapping
             app.MapTypeApi();
             app.MapModelApi();
             app.MapUserVehicleApi();
+            app.MapConsumableItemApi();
+            app.MapSMScheduleApi();
+            app.MapMaintenanceActivityApi();
+            app.MapOdometerHistoryApi();
 
             return app;
         }

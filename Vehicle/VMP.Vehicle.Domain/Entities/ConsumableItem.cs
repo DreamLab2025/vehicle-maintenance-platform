@@ -5,9 +5,6 @@ namespace VMP.Vehicle.Domain.Entities
 {
     public class ConsumableItem : BaseEntity
     {
-        [Required, MaxLength(50)]
-        public string Key { get; set; } = null!;
-
         [Required, MaxLength(150)]
         public string Name { get; set; } = null!;
 
