@@ -43,7 +43,8 @@ namespace VMP.Media.Domain.Entities
     {
         Pending,
         Uploaded,
-        Failed
+        Failed,
+        Deleted
     }
 
     public enum StorageProvider

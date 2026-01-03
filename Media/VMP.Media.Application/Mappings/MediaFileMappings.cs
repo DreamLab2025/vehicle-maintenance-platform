@@ -21,11 +21,11 @@ namespace VMP.Media.Application.Mappings
             };
         }
 
-        public static InitUploadResponse ToInitUploadResponse(this MediaFile entity, string uploadUrl)
+        public static InitUploadResponse ToInitUploadResponse(this MediaFile entity, string presignedUrl)
         {
             return new InitUploadResponse
             {
-                UploadUrl = uploadUrl,
+                PresignedUrl = presignedUrl,
                 FileId = entity.Id.ToString()
             };
         }

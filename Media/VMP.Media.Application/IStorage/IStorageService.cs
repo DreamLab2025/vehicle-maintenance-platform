@@ -7,5 +7,7 @@
         Task DeleteFileAsync(string fileKey);
 
         string GetFilePath(string fileKey);
+
+        string ExtractKeyFromUrl(string url);
     }
 }

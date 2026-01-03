@@ -1,6 +1,7 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
+using System.Net;
 using VMP.Media.Application.IStorage;
 using VMP.Media.Infrastructure.Configuration;
 
@@ -17,10 +18,64 @@ namespace VMP.Media.Infrastructure.Storage
             _s3settings = s3Settings.Value;
         }
 
-        public Task DeleteFileAsync(string fileKey)
+        public async Task DeleteFileAsync(string fileKey)
         {
-            return _s3Client.DeleteObjectAsync(_s3settings.BucketName, fileKey);
+            if (string.IsNullOrWhiteSpace(fileKey))
+            {
+                return;
+            }
+
+            try
+            {
+                await _s3Client.DeleteObjectAsync(_s3settings.BucketName, fileKey);
+            }
+            catch (AmazonS3Exception ex)
+            {
+                throw;
+            }
         }
+
+        public string ExtractKeyFromUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return null;
+
+            try
+            {
+                var uri = new Uri(url);
+
+                return WebUtility.UrlDecode(uri.AbsolutePath.TrimStart('/'));
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        //public static string? ExtractFirebasePath(string fullUrl)
+        //{
+        //    if (string.IsNullOrWhiteSpace(fullUrl)) return null;
+
+        //    try
+        //    {
+        //        var parts = fullUrl.Split(new[] { "/o/" }, StringSplitOptions.None);
+
+        //        if (parts.Length < 2) return null;
+
+        //        var segment = parts[1];
+
+        //        var queryIndex = segment.IndexOf('?');
+        //        if (queryIndex != -1)
+        //        {
+        //            segment = segment.Substring(0, queryIndex);
+        //        }
+
+        //        return WebUtility.UrlDecode(segment);
+        //    }
+        //    catch
+        //    {
+        //        return null;
+        //    }
+        //}
 
         public async Task<string> GeneratePresignedUrlAsync(string fileKey, string contentType)
         {

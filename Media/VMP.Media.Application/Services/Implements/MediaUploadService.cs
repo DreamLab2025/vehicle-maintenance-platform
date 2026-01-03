@@ -30,7 +30,7 @@ namespace VMP.Media.Application.Services.Implements
             _logger = logger;
         }
 
-        public async Task<ApiResponse<bool>> ConfirmUploadFileAsync(Guid id, Guid userId)
+        public async Task<ApiResponse<string>> ConfirmUploadFileAsync(Guid id, Guid userId)
         {
             try
             {
@@ -38,25 +38,73 @@ namespace VMP.Media.Application.Services.Implements
                 if (mediaFile == null)
                 {
                     _logger.LogWarning("Media file with ID {FileId} not found for confirmation", id);
-                    return ApiResponse<bool>.FailureResponse("File không tồn tại");
+                    return ApiResponse<string>.FailureResponse("File không tồn tại");
                 }
                 if (mediaFile.UserId != userId)
                 {
                     _logger.LogWarning("User {UserId} attempted to confirm upload for file {FileId} they do not own", userId, id);
-                    return ApiResponse<bool>.FailureResponse("Bạn không có quyền xác nhận file này");
+                    return ApiResponse<string>.FailureResponse("Bạn không có quyền xác nhận file này");
                 }
 
                 mediaFile.Status = FileStatus.Uploaded;
                 await _unitOfWork.MediaFileRepository.UpdateAsync(id, mediaFile);
                 await _unitOfWork.SaveChangesAsync();
 
+                string finalUrl = _storageService.GetFilePath(mediaFile.FilePath);
+
                 _logger.LogInformation("Upload confirmed for file {FileId} by user {UserId}", id, userId);
-                return ApiResponse<bool>.SuccessResponse(true, "Xác nhận upload thành công");
+                return ApiResponse<string>.SuccessResponse(finalUrl, "Xác nhận upload thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error confirming upload for file {FileId}", id);
-                return ApiResponse<bool>.FailureResponse("Lỗi khi xác nhận upload");
+                return ApiResponse<string>.FailureResponse("Lỗi khi xác nhận upload");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> DeleteFileByKeyAsync(string url)
+        {
+            try
+            {
+                var fileKey = _storageService.ExtractKeyFromUrl(url);
+                if (string.IsNullOrEmpty(fileKey))
+                {
+                    _logger.LogWarning("Invalid file url provided for deletion: {Url}", url);
+                    return ApiResponse<bool>.FailureResponse("Đường dẫn file không hợp lệ");
+                }
+
+                var mediaFile = await _unitOfWork.MediaFileRepository.FindOneAsync(m => m.FilePath == fileKey);
+                if (mediaFile == null)
+                {
+                    _logger.LogWarning("Media file with key {Key} not found for deletion", fileKey);
+                    return ApiResponse<bool>.FailureResponse("File không tồn tại");
+                }
+
+                try
+                {
+                    await _storageService.DeleteFileAsync(fileKey);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Lỗi khi xóa trên S3 (nhưng vẫn tiếp tục xóa DB): {Key}", fileKey);
+                }
+
+                if (mediaFile != null)
+                {
+                    mediaFile.DeletedAt = DateTime.UtcNow;
+                    mediaFile.FilePath = string.Empty;
+                    mediaFile.Status = FileStatus.Deleted;
+
+                    await _unitOfWork.MediaFileRepository.UpdateAsync(mediaFile.Id, mediaFile);
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
+                return ApiResponse<bool>.SuccessResponse(true, "Xóa file thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting file by url: {Url}", url);
+                return ApiResponse<bool>.FailureResponse("Lỗi hệ thống khi xóa file");
             }
         }
 
@@ -85,7 +133,7 @@ namespace VMP.Media.Application.Services.Implements
 
                 string fileKey = GenerateFilePath(request.FileType, userId, request.FileName);
 
-                var uploadUrl = await _storageService.GeneratePresignedUrlAsync(fileKey, request.ContentType);
+                var presignedUrl = await _storageService.GeneratePresignedUrlAsync(fileKey, request.ContentType);
 
                 var mediaFile = request.ToEntity(userId, fileKey);
 
@@ -96,7 +144,7 @@ namespace VMP.Media.Application.Services.Implements
                     request.FileName, request.FileType, mediaFile.Id);
 
                 return ApiResponse<InitUploadResponse>.SuccessResponse(
-                    mediaFile.ToInitUploadResponse(uploadUrl),
+                    mediaFile.ToInitUploadResponse(presignedUrl),
                     "Khởi tạo upload thành công");
             }
             catch (Exception ex)

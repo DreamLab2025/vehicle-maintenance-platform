@@ -13,8 +13,7 @@ namespace VMP.Media.Application.Dtos
 
     public class InitUploadResponse
     {
-        public string UploadUrl { get; set; } = null!;
+        public string PresignedUrl { get; set; } = null!;
         public string FileId { get; set; } = null!;
-        public string FilePath { get; set; } = null!;
     }
 }
