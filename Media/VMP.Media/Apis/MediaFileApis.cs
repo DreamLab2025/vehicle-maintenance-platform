@@ -40,8 +40,8 @@ namespace VMP.Media.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<bool>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
