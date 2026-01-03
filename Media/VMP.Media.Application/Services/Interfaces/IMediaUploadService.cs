@@ -7,6 +7,6 @@ namespace VMP.Media.Application.Services.Interfaces
     {
         Task<ApiResponse<string>> ConfirmUploadFileAsync(Guid id, Guid userId);
         Task<ApiResponse<InitUploadResponse>> InitiateUploadAsync(InitUploadRequest request, Guid userId);
-        Task<ApiResponse<bool>> DeleteFileByKeyAsync(string key);
+        Task<ApiResponse<bool>> DeleteFileByUrlAsync(string url);
     }
 }

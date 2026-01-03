@@ -62,7 +62,7 @@ namespace VMP.Media.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<bool>> DeleteFileByKeyAsync(string url)
+        public async Task<ApiResponse<bool>> DeleteFileByUrlAsync(string url)
         {
             try
             {
