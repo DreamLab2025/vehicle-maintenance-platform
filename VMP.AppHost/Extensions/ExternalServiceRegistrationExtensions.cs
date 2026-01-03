@@ -27,6 +27,7 @@ namespace VMP.AppHost.Extensions
 
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
             var vehicleDb = postgres.AddDatabase("vehicle-db", "Vehicles");
+            var mediaDb = postgres.AddDatabase("media-db", "Media");
 
             var identityService = builder.AddProject<Projects.VMP_Identity>("vmp-identity")
                 .WithReference(identityDb)
@@ -41,6 +42,13 @@ namespace VMP.AppHost.Extensions
                 .WithReference(rabbitMq)
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
+
+            var mediaService = builder.AddProject<Projects.VMP_Media>("vmp-media")
+                .WithReference(mediaDb)
+                .WithReference(rabbitMq)
+                .WaitFor(postgres)
+                .WaitFor(rabbitMq);
+
 
             var apiGateway = builder.AddYarp("api-gateway")
                             .WithContainerName("ApiGateway")

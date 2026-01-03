@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Identity\VMP.Identity\VMP.Identity.csproj" />
+    <ProjectReference Include="..\Media\VMP.Media\VMP.Media.csproj" />
     <ProjectReference Include="..\Vehicle\VMP.Vehicle\VMP.Vehicle.csproj" />
   </ItemGroup>
 
