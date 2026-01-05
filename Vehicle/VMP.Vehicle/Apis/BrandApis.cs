@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using VMP.Common.Shared;
 using VMP.Vehicle.Application.Dtos;
 using VMP.Vehicle.Application.Services.Interfaces;
@@ -69,11 +70,6 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/bulk/upload", BulkCreateBrandsFromFile)
                 .WithName("BulkCreateBrandsFromFile")
-                .WithOpenApi(operation =>
-                {
-                    operation.Summary = "Tạo hàng loạt thương hiệu từ file JSON (Admin)";
-                    return operation;
-                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BulkBrandResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<BulkBrandResponse>>(StatusCodes.Status400BadRequest)
@@ -113,7 +109,7 @@ namespace VMP.Vehicle.Apis
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
-        private static async Task<IResult> BulkCreateBrandsFromFile(IFormFile file, IVehicleBrandService brandService)
+        private static async Task<IResult> BulkCreateBrandsFromFile([FromForm] IFormFile file, IVehicleBrandService brandService)
         {
             if (file == null || file.Length == 0)
             {
