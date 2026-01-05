@@ -41,6 +41,10 @@ namespace VMP.Vehicle.Domain.Entities
         public string? TireSizeRear { get; set; } // Kích thước lốp sau
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
+
+        // Navigation properties
+        public ICollection<StandardMaintenanceSchedule> StandardMaintenanceSchedules { get; set; } = new List<StandardMaintenanceSchedule>();
+        public ICollection<UserVehicle> UserVehicles { get; set; } = new List<UserVehicle>();
     }
 
     public enum VehicleFuelType

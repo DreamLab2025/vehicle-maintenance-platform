@@ -12,6 +12,7 @@ namespace VMP.Vehicle.Infrastructure.Data
 
         public DbSet<VehicleType> VehicleTypes { get; set; } = null!;
         public DbSet<VehicleBrand> VehicleBrands { get; set; } = null!;
+        public DbSet<VehicleTypeBrand> VehicleTypeBrands { get; set; } = null!;
         public DbSet<VehicleModel> VehicleModels { get; set; } = null!;
         public DbSet<UserVehicle> UserVehicles { get; set; } = null!;
         public DbSet<ConsumableItem> ConsumableItems { get; set; } = null!;
@@ -25,20 +26,38 @@ namespace VMP.Vehicle.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<VehicleTypeBrand>(entity =>
+            {
+                entity.Ignore(e => e.Id);
+                entity.HasKey(e => new { e.VehicleTypeId, e.VehicleBrandId });
+                
+                entity.HasOne(e => e.VehicleType)
+                    .WithMany(vt => vt.VehicleTypeBrands)
+                    .HasForeignKey(e => e.VehicleTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.VehicleBrand)
+                    .WithMany(vb => vb.VehicleTypeBrands)
+                    .HasForeignKey(e => e.VehicleBrandId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             modelBuilder.Entity<StandardMaintenanceSchedule>(entity =>
             {
-                entity.HasKey(e => new { e.VehicleModelId, e.ConsumableItemId });
-                entity.HasQueryFilter(e => e.ConsumableItem.DeletedAt == null);
+                entity.HasIndex(e => new { e.VehicleModelId, e.ConsumableItemId })
+                    .IsUnique();
             });
 
             modelBuilder.Entity<VehicleType>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleBrand>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<VehicleTypeBrand>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleModel>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<UserVehicle>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<ConsumableItem>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<MaintenanceActivity>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<MaintenanceActivityDetail>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<OdometerHistory>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<StandardMaintenanceSchedule>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<UserMaintenanceConfig>().HasQueryFilter(e => e.DeletedAt == null);
 
             // Seed data

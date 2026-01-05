@@ -8,6 +8,7 @@ namespace VMP.Vehicle.Infrastructure.Repositories.Implements
     {
         private IVehicleTypeRepository? _vehicleTypes;
         private IVehicleBrandRepository? _vehicleBrands;
+        private IVehicleTypeBrandRepository? _vehicleTypeBrands;
         private IVehicleModelRepository? _vehicleModels;
         private IUserVehicleRepository? _userVehicles;
         private IConsumableItemRepository? _consumableItems;
@@ -23,6 +24,9 @@ namespace VMP.Vehicle.Infrastructure.Repositories.Implements
 
         public IVehicleBrandRepository VehicleBrands =>
             _vehicleBrands ??= new VehicleBrandRepository(Context);
+
+        public IVehicleTypeBrandRepository VehicleTypeBrands =>
+            _vehicleTypeBrands ??= new VehicleTypeBrandRepository(Context);
 
         public IVehicleModelRepository VehicleModels =>
             _vehicleModels ??= new VehicleModelRepository(Context);

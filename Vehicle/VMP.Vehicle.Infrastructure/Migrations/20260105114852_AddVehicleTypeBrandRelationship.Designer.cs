@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VMP.Vehicle.Infrastructure.Data;
@@ -11,9 +12,11 @@ using VMP.Vehicle.Infrastructure.Data;
 namespace VMP.Vehicle.Infrastructure.Migrations
 {
     [DbContext(typeof(VehicleDbContext))]
-    partial class VehicleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260105114852_AddVehicleTypeBrandRelationship")]
+    partial class AddVehicleTypeBrandRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -212,23 +215,10 @@ namespace VMP.Vehicle.Infrastructure.Migrations
 
             modelBuilder.Entity("VMP.Vehicle.Domain.Entities.StandardMaintenanceSchedule", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("VehicleModelId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ConsumableItemId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
 
                     b.Property<int>("DistanceInterval")
@@ -243,21 +233,9 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                     b.Property<int>("TimeIntervalMonth")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("VehicleModelId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
+                    b.HasKey("VehicleModelId", "ConsumableItemId");
 
                     b.HasIndex("ConsumableItemId");
-
-                    b.HasIndex("VehicleModelId", "ConsumableItemId")
-                        .IsUnique();
 
                     b.ToTable("StandardMaintenanceSchedules");
                 });
@@ -532,6 +510,7 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -601,6 +580,9 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Status")

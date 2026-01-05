@@ -30,6 +30,18 @@ namespace VMP.Vehicle.Apis
                 .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/types/{typeId:guid}", GetBrandsByType)
+                .WithName("GetBrandsByType")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách thương hiệu theo loại xe";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             group.MapPost("/", CreateVehicleBrand)
                 .WithName("CreateBrand")
                 .WithOpenApi(operation =>
@@ -172,6 +184,16 @@ namespace VMP.Vehicle.Apis
         private static async Task<IResult> GetAllBrands([AsParameters] PaginationRequest paginationRequest, IVehicleBrandService brandService)
         {
             var results = await brandService.GetAllBrandsAsync(paginationRequest);
+            if (results.IsSuccess)
+            {
+                return Results.Ok(results);
+            }
+            return Results.NotFound(results);
+        }
+
+        private static async Task<IResult> GetBrandsByType(Guid typeId, IVehicleBrandService brandService)
+        {
+            var results = await brandService.GetBrandsByTypeIdAsync(typeId);
             if (results.IsSuccess)
             {
                 return Results.Ok(results);
