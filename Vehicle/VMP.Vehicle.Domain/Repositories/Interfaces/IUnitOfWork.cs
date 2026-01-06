@@ -8,6 +8,7 @@ namespace VMP.Vehicle.Domain.Repositories.Interfaces
         IVehicleBrandRepository VehicleBrands { get; }
         IVehicleTypeBrandRepository VehicleTypeBrands { get; }
         IVehicleModelRepository VehicleModels { get; }
+        IModelImageRepository ModelImages { get; }
         IUserVehicleRepository UserVehicles { get; }
         IConsumableItemRepository ConsumableItems { get; }
         IMaintenanceActivityRepository MaintenanceActivities { get; }

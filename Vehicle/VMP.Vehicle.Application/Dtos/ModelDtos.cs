@@ -124,6 +124,7 @@ namespace VMP.Vehicle.Application.Dtos
         public VehicleTransmissionType TransmissionType { get; set; }
         public string TransmissionTypeName { get; set; } = null!;
         public string? ImageUrl { get; set; }
+        public List<ModelImageResponse> AvailableColors { get; set; } = new();
         public string? EngineDisplacementDisplay { get; set; } // Hiển thị phân khối với đơn vị "cc"
         public decimal? EngineCapacity { get; set; }
         public decimal? OilCapacity { get; set; }

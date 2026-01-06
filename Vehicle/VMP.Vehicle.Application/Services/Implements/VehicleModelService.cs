@@ -407,7 +407,6 @@ namespace VMP.Vehicle.Application.Services.Implements
                 ReleaseYear = item.ReleaseYear,
                 FuelType = item.FuelType,
                 TransmissionType = item.TransmissionType,
-                ImageUrl = item.ImageUrl,
                 EngineDisplacement = item.EngineDisplacement,
                 EngineCapacity = item.EngineCapacity,
                 OilCapacity = item.OilCapacity,

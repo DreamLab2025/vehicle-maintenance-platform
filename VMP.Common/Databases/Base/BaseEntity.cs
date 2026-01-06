@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using VMP.Common.Databases.Interfaces;
 
 namespace VMP.Common.Databases.Base
@@ -17,9 +16,6 @@ namespace VMP.Common.Databases.Base
 
         public DateTime? DeletedAt { get; set; }
         public Guid? DeletedBy { get; set; }
-
-        [NotMapped]
-        public bool IsDeleted => DeletedAt.HasValue;
     }
 
     public enum EntityStatus
