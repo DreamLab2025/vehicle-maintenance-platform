@@ -124,9 +124,12 @@ namespace VMP.Vehicle.Application.Services.Implements
 
                 var totalCount = await query.CountAsync();
 
-                query = filterRequest.IsDescending
-                    ? query.OrderByDescending(m => m.CreatedAt)
-                    : query.OrderBy(m => m.CreatedAt);
+                if (filterRequest.IsDescending.HasValue)
+                {
+                    query = filterRequest.IsDescending.Value
+                        ? query.OrderByDescending(m => m.CreatedAt)
+                        : query.OrderBy(m => m.CreatedAt);
+                }
 
                 var items = await query
                     .Skip((filterRequest.PageNumber - 1) * filterRequest.PageSize)
