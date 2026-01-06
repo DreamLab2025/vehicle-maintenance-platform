@@ -39,15 +39,7 @@ namespace VMP.Vehicle.Application.Mappings
                 TransmissionType = entity.TransmissionType,
                 TransmissionTypeName = GetTransmissionTypeName(entity.TransmissionType),
                 ImageUrl = entity.ModelImages?.FirstOrDefault()?.ImageUrl,
-                AvailableColors = entity.ModelImages?.Select(mi => new ModelImageResponse
-                {
-                    Id = mi.Id,
-                    VehicleModelId = mi.VehicleModelId,
-                    Color = mi.Color,
-                    ImageUrl = mi.ImageUrl,
-                    CreatedAt = mi.CreatedAt,
-                    UpdatedAt = mi.UpdatedAt
-                }).ToList() ?? new List<ModelImageResponse>(),
+                AvailableColors = entity.ModelImages?.Select(mi => mi.ToResponse()).ToList() ?? [],
                 EngineDisplacementDisplay = entity.EngineDisplacement.HasValue ? $"{entity.EngineDisplacement} cc" : null,
                 EngineCapacity = entity.EngineCapacity,
                 OilCapacity = entity.OilCapacity,

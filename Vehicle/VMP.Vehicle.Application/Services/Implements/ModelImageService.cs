@@ -1,5 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+ï»¿using Microsoft.Extensions.Logging;
 using VMP.Common.Shared;
 using VMP.Vehicle.Application.Dtos;
 using VMP.Vehicle.Application.Mappings;
@@ -26,7 +25,7 @@ namespace VMP.Vehicle.Application.Services.Implements
                 var model = await _unitOfWork.VehicleModels.GetByIdAsync(vehicleModelId);
                 if (model == null)
                 {
-                    return ApiResponse<List<ModelImageResponse>>.FailureResponse("Không tìm th?y m?u xe");
+                    return ApiResponse<List<ModelImageResponse>>.FailureResponse("KhÃ´ng tÃ¬m th?y m?u xe");
                 }
 
                 var images = await _unitOfWork.ModelImages.GetImagesByVehicleModelIdAsync(vehicleModelId);
@@ -37,29 +36,9 @@ namespace VMP.Vehicle.Application.Services.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting images for vehicle model {VehicleModelId}", vehicleModelId);
-                return ApiResponse<List<ModelImageResponse>>.FailureResponse("Có l?i x?y ra khi l?y danh sách hình ?nh");
+                return ApiResponse<List<ModelImageResponse>>.FailureResponse("CÃ³ l?i x?y ra khi l?y danh sÃ¡ch hÃ¬nh ?nh");
             }
         }
-
-        public async Task<ApiResponse<ModelImageResponse>> GetImageByModelAndColorAsync(Guid vehicleModelId, string color)
-        {
-            try
-            {
-                var image = await _unitOfWork.ModelImages.GetImageByVehicleModelIdAndColorAsync(vehicleModelId, color);
-                if (image == null)
-                {
-                    return ApiResponse<ModelImageResponse>.FailureResponse("Không tìm th?y hình ?nh cho màu này");
-                }
-
-                return ApiResponse<ModelImageResponse>.SuccessResponse(image.ToResponse());
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting image for vehicle model {VehicleModelId} and color {Color}", vehicleModelId, color);
-                return ApiResponse<ModelImageResponse>.FailureResponse("Có l?i x?y ra khi l?y hình ?nh");
-            }
-        }
-
         public async Task<ApiResponse<ModelImageResponse>> CreateImageAsync(ModelImageRequest request)
         {
             try
@@ -67,32 +46,31 @@ namespace VMP.Vehicle.Application.Services.Implements
                 var model = await _unitOfWork.VehicleModels.GetByIdAsync(request.VehicleModelId);
                 if (model == null)
                 {
-                    return ApiResponse<ModelImageResponse>.FailureResponse("Không tìm th?y m?u xe");
+                    return ApiResponse<ModelImageResponse>.FailureResponse("KhÃ´ng tÃ¬m tháº¥y máº«u xe");
                 }
 
-                var existingImage = await _unitOfWork.ModelImages
-                    .GetImageByVehicleModelIdAndColorAsync(request.VehicleModelId, request.Color);
-                
+                var existingImage = await _unitOfWork.ModelImages.GetImageByVehicleModelIdAndColorAsync(request.VehicleModelId, request.Color);
+
                 if (existingImage != null)
                 {
-                    return ApiResponse<ModelImageResponse>.FailureResponse("Màu xe này ?ã t?n t?i cho m?u xe");
+                    return ApiResponse<ModelImageResponse>.FailureResponse("MÃ u xe nÃ y Ä‘Ã£ tá»“n táº¡i cho máº«u xe");
                 }
 
                 var image = request.ToEntity();
                 await _unitOfWork.ModelImages.AddAsync(image);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation("Created model image for model {VehicleModelId} with color {Color}", 
+                _logger.LogInformation("Created model image for model {VehicleModelId} with color {Color}",
                     request.VehicleModelId, request.Color);
 
                 return ApiResponse<ModelImageResponse>.SuccessResponse(
-                    image.ToResponse(), 
-                    "T?o hình ?nh xe thành công");
+                    image.ToResponse(),
+                    "Táº¡o hÃ¬nh áº£nh xe thÃ nh cÃ´ng");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating model image for model {VehicleModelId}", request.VehicleModelId);
-                return ApiResponse<ModelImageResponse>.FailureResponse("Có l?i x?y ra khi t?o hình ?nh");
+                return ApiResponse<ModelImageResponse>.FailureResponse("CÃ³ lá»—i xáº£y ra khi táº¡o hÃ¬nh áº£nh");
             }
         }
 
@@ -103,17 +81,16 @@ namespace VMP.Vehicle.Application.Services.Implements
                 var image = await _unitOfWork.ModelImages.GetByIdAsync(id);
                 if (image == null)
                 {
-                    return ApiResponse<ModelImageResponse>.FailureResponse("Không tìm th?y hình ?nh");
+                    return ApiResponse<ModelImageResponse>.FailureResponse("KhÃ´ng tÃ¬m tháº¥y hÃ¬nh áº£nh");
                 }
 
                 if (image.Color != request.Color)
                 {
-                    var existingImage = await _unitOfWork.ModelImages
-                        .GetImageByVehicleModelIdAndColorAsync(image.VehicleModelId, request.Color);
-                    
+                    var existingImage = await _unitOfWork.ModelImages.GetImageByVehicleModelIdAndColorAsync(image.VehicleModelId, request.Color);
+
                     if (existingImage != null)
                     {
-                        return ApiResponse<ModelImageResponse>.FailureResponse("Màu xe này ?ã t?n t?i cho m?u xe");
+                        return ApiResponse<ModelImageResponse>.FailureResponse("MÃ u xe nÃ y Ä‘Ã£ tá»“n táº¡i cho máº«u xe");
                     }
                 }
 
@@ -125,12 +102,12 @@ namespace VMP.Vehicle.Application.Services.Implements
 
                 return ApiResponse<ModelImageResponse>.SuccessResponse(
                     image.ToResponse(),
-                    "C?p nh?t hình ?nh xe thành công");
+                    "C?p nh?t hÃ¬nh ?nh xe thÃ nh cÃ´ng");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating model image {ImageId}", id);
-                return ApiResponse<ModelImageResponse>.FailureResponse("Có l?i x?y ra khi c?p nh?t hình ?nh");
+                return ApiResponse<ModelImageResponse>.FailureResponse("CÃ³ l?i x?y ra khi c?p nh?t hÃ¬nh ?nh");
             }
         }
 
@@ -141,7 +118,7 @@ namespace VMP.Vehicle.Application.Services.Implements
                 var image = await _unitOfWork.ModelImages.GetByIdAsync(id);
                 if (image == null)
                 {
-                    return ApiResponse<string>.FailureResponse("Không tìm th?y hình ?nh");
+                    return ApiResponse<string>.FailureResponse("KhÃ´ng tÃ¬m th?y hÃ¬nh ?nh");
                 }
 
                 await _unitOfWork.ModelImages.DeleteAsync(id);
@@ -149,13 +126,33 @@ namespace VMP.Vehicle.Application.Services.Implements
 
                 _logger.LogInformation("Deleted model image {ImageId}", id);
 
-                return ApiResponse<string>.SuccessResponse("Xóa hình ?nh xe thành công");
+                return ApiResponse<string>.SuccessResponse("XÃ³a hÃ¬nh ?nh xe thÃ nh cÃ´ng");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting model image {ImageId}", id);
-                return ApiResponse<string>.FailureResponse("Có l?i x?y ra khi xóa hình ?nh");
+                return ApiResponse<string>.FailureResponse("CÃ³ l?i x?y ra khi xÃ³a hÃ¬nh ?nh");
             }
+        }
+
+        private bool IsHexCode(string hexCode)
+        {
+            if (string.IsNullOrEmpty(hexCode) || hexCode.Length != 7 || hexCode[0] != '#')
+            {
+                return false;
+            }
+            for (int i = 1; i < hexCode.Length; i++)
+            {
+                char c = hexCode[i];
+                bool isHexDigit = (c >= '0' && c <= '9') ||
+                                  (c >= 'A' && c <= 'F') ||
+                                  (c >= 'a' && c <= 'f');
+                if (!isHexDigit)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

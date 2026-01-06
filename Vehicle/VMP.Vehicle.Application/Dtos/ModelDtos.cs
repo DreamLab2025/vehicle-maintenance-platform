@@ -26,9 +26,7 @@ namespace VMP.Vehicle.Application.Dtos
         [Required(ErrorMessage = "Loại truyền động không được để trống")]
         public VehicleTransmissionType TransmissionType { get; set; }
 
-        [MaxLength(500, ErrorMessage = "URL hình ảnh không được vượt quá 500 ký tự")]
-        [Url(ErrorMessage = "URL hình ảnh không hợp lệ")]
-        public string? ImageUrl { get; set; }
+        public List<ModelImageItem> Images { get; set; } = new();
 
         [Range(1, 10000, ErrorMessage = "Phân khối phải từ 1 đến 10000 cc")]
         public int? EngineDisplacement { get; set; }
@@ -44,6 +42,22 @@ namespace VMP.Vehicle.Application.Dtos
 
         [MaxLength(50, ErrorMessage = "Kích thước lốp sau không được vượt quá 50 ký tự")]
         public string? TireSizeRear { get; set; }
+    }
+
+    public class ModelImageItem
+    {
+        [Required(ErrorMessage = "Màu xe không được để trống")]
+        [MaxLength(50, ErrorMessage = "Màu xe không được vượt quá 50 ký tự")]
+        public string Color { get; set; } = null!;
+
+        [Required(ErrorMessage = "Mã màu không được để trống")]
+        [MaxLength(7, ErrorMessage = "Mã màu không được vượt quá 7 ký tự")]
+        public string HexCode { get; set; } = null!;
+
+        [Required(ErrorMessage = "URL hình ảnh không được để trống")]
+        [MaxLength(500, ErrorMessage = "URL hình ảnh không được vượt quá 500 ký tự")]
+        [Url(ErrorMessage = "URL hình ảnh không hợp lệ")]
+        public string ImageUrl { get; set; } = null!;
     }
 
     public class BulkModelItem
@@ -62,9 +76,7 @@ namespace VMP.Vehicle.Application.Dtos
         [Required(ErrorMessage = "Loại truyền động không được để trống")]
         public VehicleTransmissionType TransmissionType { get; set; }
 
-        [MaxLength(500, ErrorMessage = "URL hình ảnh không được vượt quá 500 ký tự")]
-        [Url(ErrorMessage = "URL hình ảnh không hợp lệ")]
-        public string? ImageUrl { get; set; }
+        public List<ModelImageItem> Images { get; set; } = new();
 
         [Range(1, 10000, ErrorMessage = "Phân khối phải từ 1 đến 10000 cc")]
         public int? EngineDisplacement { get; set; }

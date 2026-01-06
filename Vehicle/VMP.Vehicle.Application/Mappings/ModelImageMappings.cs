@@ -1,3 +1,4 @@
+using VMP.Common.Shared;
 using VMP.Vehicle.Application.Dtos;
 using VMP.Vehicle.Domain.Entities;
 
@@ -11,6 +12,7 @@ namespace VMP.Vehicle.Application.Mappings
             {
                 VehicleModelId = request.VehicleModelId,
                 Color = request.Color,
+                HexCode = ColorCode.IsHex(request.HexCode) ? request.HexCode : "#000000",
                 ImageUrl = request.ImageUrl
             };
         }
@@ -22,6 +24,7 @@ namespace VMP.Vehicle.Application.Mappings
                 Id = entity.Id,
                 VehicleModelId = entity.VehicleModelId,
                 Color = entity.Color,
+                HexCode = entity.HexCode,
                 ImageUrl = entity.ImageUrl,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
@@ -32,6 +35,7 @@ namespace VMP.Vehicle.Application.Mappings
         {
             entity.Color = request.Color;
             entity.ImageUrl = request.ImageUrl;
+            entity.HexCode = ColorCode.IsHex(request.HexCode) ? request.HexCode : "#000000";
         }
     }
 }

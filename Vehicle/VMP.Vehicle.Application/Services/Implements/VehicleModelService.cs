@@ -39,10 +39,27 @@ namespace VMP.Vehicle.Application.Services.Implements
                 await _unitOfWork.VehicleModels.AddAsync(model);
                 await _unitOfWork.SaveChangesAsync();
 
+                // Add images if provided
+                if (request.Images != null && request.Images.Any())
+                {
+                    foreach (var imageItem in request.Images)
+                    {
+                        var image = new ModelImage
+                        {
+                            VehicleModelId = model.Id,
+                            Color = imageItem.Color,
+                            HexCode = ColorCode.IsHex(imageItem.HexCode) ? imageItem.HexCode : "#000000",
+                            ImageUrl = imageItem.ImageUrl
+                        };
+                        await _unitOfWork.ModelImages.AddAsync(image);
+                    }
+                    await _unitOfWork.SaveChangesAsync();
+                }
+
                 var createdModel = await GetModelWithDetailsAsync(model.Id);
 
-                _logger.LogInformation("Created vehicle model {ModelName} (ID: {ModelId}) for brand {BrandName}",
-                    model.Name, model.Id, brand!.Name);
+                _logger.LogInformation("Created vehicle model {ModelName} (ID: {ModelId}) for brand {BrandName} with {ImageCount} images",
+                    model.Name, model.Id, brand!.Name, request.Images?.Count ?? 0);
 
                 return ApiResponse<ModelResponse>.SuccessResponse(
                     createdModel!.ToResponse(),
@@ -89,6 +106,7 @@ namespace VMP.Vehicle.Application.Services.Implements
                 var query = _unitOfWork.VehicleModels.AsQueryable()
                     .Include(m => m.Brand)
                     .Include(m => m.Type)
+                    .Include(m => m.ModelImages)
                     .Where(m => m.DeletedAt == null);
 
                 // Apply filters by ID (more efficient than name search)
@@ -224,12 +242,30 @@ namespace VMP.Vehicle.Application.Services.Implements
 
                         var model = CreateModelEntity(modelItem, request.BrandId, request.TypeId);
                         await _unitOfWork.VehicleModels.AddAsync(model);
+                        await _unitOfWork.SaveChangesAsync();
+
+                        // Add images if provided
+                        if (modelItem.Images != null && modelItem.Images.Any())
+                        {
+                            foreach (var imageItem in modelItem.Images)
+                            {
+                                var image = new ModelImage
+                                {
+                                    VehicleModelId = model.Id,
+                                    Color = imageItem.Color,
+                                    HexCode = ColorCode.IsHex(imageItem.HexCode) ? imageItem.HexCode : "#000000",
+                                    ImageUrl = imageItem.ImageUrl
+                                };
+                                await _unitOfWork.ModelImages.AddAsync(image);
+                            }
+                            await _unitOfWork.SaveChangesAsync();
+                        }
 
                         existingModelNames.Add(modelItem.Name.ToLower());
                         response.SuccessCount++;
 
-                        _logger.LogInformation("Bulk created model {ModelName} for brand {BrandName}",
-                            modelItem.Name, brand!.Name);
+                        _logger.LogInformation("Bulk created model {ModelName} for brand {BrandName} with {ImageCount} images",
+                            modelItem.Name, brand!.Name, modelItem.Images?.Count ?? 0);
                     }
                     catch (Exception ex)
                     {
@@ -245,6 +281,7 @@ namespace VMP.Vehicle.Application.Services.Implements
                     var createdModels = await _unitOfWork.VehicleModels.AsQueryable()
                         .Include(m => m.Brand)
                         .Include(m => m.Type)
+                        .Include(m => m.ModelImages)
                         .Where(m => m.BrandId == request.BrandId && m.DeletedAt == null)
                         .OrderByDescending(m => m.CreatedAt)
                         .Take(response.SuccessCount)
@@ -313,11 +350,28 @@ namespace VMP.Vehicle.Application.Services.Implements
                         var model = CreateModelEntity(modelItem, brand.Id, type.Id);
                         await _unitOfWork.VehicleModels.AddAsync(model);
 
+                        // Add images if provided
+                        if (modelItem.Images != null && modelItem.Images.Any())
+                        {
+                            foreach (var imageItem in modelItem.Images)
+                            {
+                                var image = new ModelImage
+                                {
+                                    VehicleModelId = model.Id,
+                                    Color = imageItem.Color,
+                                    HexCode = ColorCode.IsHex(imageItem.HexCode) ? imageItem.HexCode : "#000000",
+                                    ImageUrl = imageItem.ImageUrl
+                                };
+                                await _unitOfWork.ModelImages.AddAsync(image);
+                            }
+                            await _unitOfWork.SaveChangesAsync();
+                        }
+
                         existingModelNames.Add(modelItem.Name.ToLower());
                         response.SuccessCount++;
 
-                        _logger.LogInformation("Bulk created model from file {ModelName} for brand {BrandName}",
-                            modelItem.Name, brand.Name);
+                        _logger.LogInformation("Bulk created model from file {ModelName} for brand {BrandName} with {ImageCount} images",
+                            modelItem.Name, brand.Name, modelItem.Images?.Count ?? 0);
                     }
                     catch (Exception ex)
                     {
@@ -333,6 +387,7 @@ namespace VMP.Vehicle.Application.Services.Implements
                     var createdModels = await _unitOfWork.VehicleModels.AsQueryable()
                         .Include(m => m.Brand)
                         .Include(m => m.Type)
+                        .Include(m => m.ModelImages)
                         .Where(m => m.BrandId == brand.Id && m.DeletedAt == null)
                         .OrderByDescending(m => m.CreatedAt)
                         .Take(response.SuccessCount)
@@ -394,6 +449,7 @@ namespace VMP.Vehicle.Application.Services.Implements
             return await _unitOfWork.VehicleModels.AsQueryable()
                 .Include(m => m.Brand)
                 .Include(m => m.Type)
+                .Include(m => m.ModelImages)
                 .FirstOrDefaultAsync(m => m.Id == id);
         }
 
