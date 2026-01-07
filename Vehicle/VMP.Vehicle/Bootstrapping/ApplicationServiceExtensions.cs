@@ -27,6 +27,7 @@ namespace VMP.Vehicle.Bootstrapping
             builder.Services.AddScoped<IVehicleTypeService, VehicleTypeService>();
             builder.Services.AddScoped<IVehicleBrandService, VehicleBrandService>();
             builder.Services.AddScoped<IVehicleModelService, VehicleModelService>();
+            builder.Services.AddScoped<IModelImageService, ModelImageService>();
             builder.Services.AddScoped<IUserVehicleService, UserVehicleService>();
             builder.Services.AddScoped<IMaintenanceActivityService, MaintenanceActivityService>();
 
@@ -49,7 +50,12 @@ namespace VMP.Vehicle.Bootstrapping
             app.MapBrandApi();
             app.MapTypeApi();
             app.MapModelApi();
+            app.MapModelImageApi();
             app.MapUserVehicleApi();
+            app.MapConsumableItemApi();
+            app.MapSMScheduleApi();
+            app.MapMaintenanceActivityApi();
+            app.MapOdometerHistoryApi();
 
             return app;
         }

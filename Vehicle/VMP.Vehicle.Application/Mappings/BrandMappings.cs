@@ -16,12 +16,16 @@ namespace VMP.Vehicle.Application.Mappings
             };
         }
 
-        public static BrandResponse ToResponse(this VehicleBrand entity)
+        public static BrandResponse ToResponse(this VehicleBrand entity, List<string>? typeNames = null)
         {
             return new BrandResponse
             {
                 Id = entity.Id,
                 Name = entity.Name,
+                VehicleTypeNames = typeNames ?? entity.VehicleTypeBrands?
+                    .Where(vtb => vtb.VehicleType != null)
+                    .Select(vtb => vtb.VehicleType.Name)
+                    .ToList() ?? new List<string>(),
                 LogoUrl = entity.LogoUrl,
                 Website = entity.Website,
                 SupportPhone = entity.SupportPhone,

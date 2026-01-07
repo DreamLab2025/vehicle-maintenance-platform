@@ -7,120 +7,492 @@
       "releaseYear": 2024,
       "fuelType": 1,
       "transmissionType": 1,
-      "imageUrl": "https://th.bing.com/th/id/OIP.TBISPU1AY3s9irUuiV391AHaF7?o=7rm=3&rs=1&pid=ImgDetMain&o=7&rm=3",
       "engineDisplacement": 155,
       "engineCapacity": 0.155,
       "oilCapacity": 1.2,
       "tireSizeFront": "90/80-17",
-      "tireSizeRear": "120/70-17"
+      "tireSizeRear": "120/70-17",
+      "images": [
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://th.bing.com/th/id/OIP.TBISPU1AY3s9irUuiV391AHaF7?rs=1&pid=ImgDetMain"
+        },
+        {
+          "color": "Xanh GP",
+          "imageUrl": "https://example.com/images/exciter-155-racing-blue.jpg"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://example.com/images/exciter-155-matte-black.jpg"
+        },
+        {
+          "color": "Trắng xanh",
+          "imageUrl": "https://example.com/images/exciter-155-white-blue.jpg"
+        }
+      ]
     },
     {
       "name": "NVX 155",
       "releaseYear": 2024,
       "fuelType": 1,
       "transmissionType": 2,
-      "imageUrl": "https://www.bikesrepublic.com/wp-content/uploads/2022/10/2022-yamaha-nvx-155-19.jpg",
       "engineDisplacement": 155,
       "engineCapacity": 0.155,
       "oilCapacity": 1.3,
       "tireSizeFront": "110/70-13",
-      "tireSizeRear": "130/70-13"
+      "tireSizeRear": "130/70-13",
+      "images": [
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://www.bikesrepublic.com/wp-content/uploads/2022/10/2022-yamaha-nvx-155-19.jpg"
+        },
+        {
+          "color": "Xanh GP",
+          "imageUrl": "https://example.com/images/nvx-155-racing-blue.jpg"
+        },
+        {
+          "color": "Trắng đỏ",
+          "imageUrl": "https://example.com/images/nvx-155-white-red.jpg"
+        },
+        {
+          "color": "Xám bạc",
+          "imageUrl": "https://example.com/images/nvx-155-grey-silver.jpg"
+        }
+      ]
     },
     {
       "name": "Sirius",
       "releaseYear": 2023,
       "fuelType": 1,
       "transmissionType": 1,
-      "imageUrl": "https://tse2.mm.bing.net/th/id/OIP.qNbslArA0a43qZAoZZfSNgHaF7?rs=1&pid=ImgDetMain&o=7&rm=3",
       "engineDisplacement": 110,
       "engineCapacity": 0.11,
       "oilCapacity": 1.0,
       "tireSizeFront": "70/90-17",
-      "tireSizeRear": "80/90-17"
+      "tireSizeRear": "80/90-17",
+      "images": [
+        {
+          "color": "Đen đỏ",
+          "imageUrl": "https://tse2.mm.bing.net/th/id/OIP.qNbslArA0a43qZAoZZfSNgHaF7?rs=1&pid=ImgDetMain"
+        },
+        {
+          "color": "Xanh trắng",
+          "imageUrl": "https://example.com/images/sirius-blue-white.jpg"
+        }
+      ]
     },
     {
       "name": "Jupiter",
       "releaseYear": 2023,
       "fuelType": 1,
       "transmissionType": 1,
-      "imageUrl": "https://otorider.com/images/800x450_yamaha_jupiter_z1_warna_baru_2023_2023_iebx.webp",
       "engineDisplacement": 115,
       "engineCapacity": 0.115,
       "oilCapacity": 0.9,
       "tireSizeFront": "70/90-17",
-      "tireSizeRear": "80/90-17"
+      "tireSizeRear": "80/90-17",
+      "images": [
+        {
+          "color": "Xanh đen",
+          "imageUrl": "https://otorider.com/images/800x450_yamaha_jupiter_z1_warna_baru_2023_2023_iebx.webp"
+        },
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://example.com/images/jupiter-red-black.jpg"
+        },
+        {
+          "color": "Trắng xanh",
+          "imageUrl": "https://example.com/images/jupiter-white-blue.jpg"
+        }
+      ]
     },
     {
       "name": "Grande",
       "releaseYear": 2024,
       "fuelType": 1,
       "transmissionType": 2,
-      "imageUrl": "https://tse3.mm.bing.net/th/id/OIP.xGm-znmkjEb_3ZjwK7LXIgHaFj?w=500&h=375&rs=1&pid=ImgDetMain&o=7&rm=3",
-      "engineDisplacement": 125,
-      "engineCapacity": 0.125,
-      "oilCapacity": 1.1,
-      "tireSizeFront": "90/90-12",
-      "tireSizeRear": "100/90-10"
-    },
-    {
-      "name": "Janus",
-      "releaseYear": 2023,
-      "fuelType": 1,
-      "transmissionType": 2,
-      "imageUrl": "https://lajumotor.com/wp-content/uploads/2024/10/Yamaha-Janus-125-2025-White.jpg",
       "engineDisplacement": 125,
       "engineCapacity": 0.125,
       "oilCapacity": 1.0,
-      "tireSizeFront": "80/90-14",
-      "tireSizeRear": "90/90-14"
+      "tireSizeFront": "90/90-12",
+      "tireSizeRear": "100/90-10",
+      "images": [
+        {
+          "color": "Xanh dương",
+          "imageUrl": "https://example.com/images/grande-blue.jpg"
+        },
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://example.com/images/grande-red-black.jpg"
+        },
+        {
+          "color": "Trắng xanh",
+          "imageUrl": "https://example.com/images/grande-white-blue.jpg"
+        }
+      ]
     },
     {
       "name": "FreeGo",
       "releaseYear": 2024,
       "fuelType": 1,
       "transmissionType": 2,
-      "imageUrl": "https://sukoharjonews.com/wp-content/uploads/2024/05/06-yamaha-freego-2024-1.jpg",
       "engineDisplacement": 125,
       "engineCapacity": 0.125,
-      "oilCapacity": 1.2,
+      "oilCapacity": 1.1,
       "tireSizeFront": "90/90-12",
-      "tireSizeRear": "100/90-10"
+      "tireSizeRear": "100/90-10",
+      "images": [
+        {
+          "color": "Xanh trắng",
+          "imageUrl": "https://example.com/images/freego-blue-white.jpg"
+        },
+        {
+          "color": "Đen bạc",
+          "imageUrl": "https://example.com/images/freego-black-silver.jpg"
+        },
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://example.com/images/freego-red-black.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Janus",
+      "releaseYear": 2023,
+      "fuelType": 1,
+      "transmissionType": 2,
+      "engineDisplacement": 125,
+      "engineCapacity": 0.125,
+      "oilCapacity": 0.95,
+      "tireSizeFront": "80/90-14",
+      "tireSizeRear": "90/90-14",
+      "images": [
+        {
+          "color": "Xanh đen",
+          "imageUrl": "https://example.com/images/janus-blue-black.jpg"
+        },
+        {
+          "color": "Đỏ trắng",
+          "imageUrl": "https://example.com/images/janus-red-white.jpg"
+        },
+        {
+          "color": "Nâu kem",
+          "imageUrl": "https://example.com/images/janus-brown-cream.jpg"
+        }
+      ]
     },
     {
       "name": "Latte",
       "releaseYear": 2024,
       "fuelType": 1,
       "transmissionType": 2,
-      "imageUrl": "https://blogcdn.muaban.net/wp-content/uploads/2023/02/19170816/yamaha-latte-2023-02.jpg",
       "engineDisplacement": 125,
       "engineCapacity": 0.125,
-      "oilCapacity": 1.1,
+      "oilCapacity": 1.0,
       "tireSizeFront": "90/90-12",
-      "tireSizeRear": "100/90-10"
+      "tireSizeRear": "100/90-10",
+      "images": [
+        {
+          "color": "Xanh mint",
+          "imageUrl": "https://example.com/images/latte-mint-green.jpg"
+        },
+        {
+          "color": "Hồng trắng",
+          "imageUrl": "https://example.com/images/latte-pink-white.jpg"
+        },
+        {
+          "color": "Nâu kem",
+          "imageUrl": "https://example.com/images/latte-brown-cream.jpg"
+        }
+      ]
     },
     {
-      "name": "XSR155",
+      "name": "NMAX 155",
       "releaseYear": 2024,
       "fuelType": 1,
-      "transmissionType": 3,
-      "imageUrl": "https://news.maxabout.com/wp-content/uploads/2019/08/New-Yamaha-XSR155-5.jpg",
+      "transmissionType": 2,
       "engineDisplacement": 155,
       "engineCapacity": 0.155,
       "oilCapacity": 1.2,
+      "tireSizeFront": "110/70-13",
+      "tireSizeRear": "130/70-13",
+      "images": [
+        {
+          "color": "Xám đen",
+          "imageUrl": "https://example.com/images/nmax-155-grey-black.jpg"
+        },
+        {
+          "color": "Trắng xanh",
+          "imageUrl": "https://example.com/images/nmax-155-white-blue.jpg"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://example.com/images/nmax-155-matte-black.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Aerox 155",
+      "releaseYear": 2024,
+      "fuelType": 1,
+      "transmissionType": 2,
+      "engineDisplacement": 155,
+      "engineCapacity": 0.155,
+      "oilCapacity": 1.15,
+      "tireSizeFront": "110/80-14",
+      "tireSizeRear": "140/70-14",
+      "images": [
+        {
+          "color": "Xanh đen",
+          "imageUrl": "https://example.com/images/aerox-155-blue-black.jpg"
+        },
+        {
+          "color": "Đỏ trắng",
+          "imageUrl": "https://example.com/images/aerox-155-red-white.jpg"
+        },
+        {
+          "color": "Vàng đen",
+          "imageUrl": "https://example.com/images/aerox-155-yellow-black.jpg"
+        }
+      ]
+    },
+    {
+      "name": "R15 V4",
+      "releaseYear": 2024,
+      "fuelType": 1,
+      "transmissionType": 3,
+      "engineDisplacement": 155,
+      "engineCapacity": 0.155,
+      "oilCapacity": 1.05,
       "tireSizeFront": "100/80-17",
-      "tireSizeRear": "140/70-17"
+      "tireSizeRear": "140/70-17",
+      "images": [
+        {
+          "color": "Xanh GP",
+          "imageUrl": "https://example.com/images/r15-v4-racing-blue.jpg"
+        },
+        {
+          "color": "Đen đỏ",
+          "imageUrl": "https://example.com/images/r15-v4-black-red.jpg"
+        },
+        {
+          "color": "Trắng xanh",
+          "imageUrl": "https://example.com/images/r15-v4-white-blue.jpg"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://example.com/images/r15-v4-matte-black.jpg"
+        }
+      ]
     },
     {
       "name": "MT-15",
       "releaseYear": 2024,
       "fuelType": 1,
       "transmissionType": 3,
-      "imageUrl": "https://tse2.mm.bing.net/th/id/OIP.bKUg1RkXCECoroLtaf66AAHaFk?rs=1&pid=ImgDetMain&o=7&rm=3",
       "engineDisplacement": 155,
       "engineCapacity": 0.155,
+      "oilCapacity": 1.05,
+      "tireSizeFront": "110/70-17",
+      "tireSizeRear": "140/70-17",
+      "images": [
+        {
+          "color": "Xanh đen",
+          "imageUrl": "https://example.com/images/mt15-blue-black.jpg"
+        },
+        {
+          "color": "Xám đen",
+          "imageUrl": "https://example.com/images/mt15-grey-black.jpg"
+        },
+        {
+          "color": "Vàng đen",
+          "imageUrl": "https://example.com/images/mt15-yellow-black.jpg"
+        }
+      ]
+    },
+    {
+      "name": "XSR155",
+      "releaseYear": 2024,
+      "fuelType": 1,
+      "transmissionType": 3,
+      "engineDisplacement": 155,
+      "engineCapacity": 0.155,
+      "oilCapacity": 1.0,
+      "tireSizeFront": "110/70-17",
+      "tireSizeRear": "140/70-17",
+      "images": [
+        {
+          "color": "Xanh cổ điển",
+          "imageUrl": "https://example.com/images/xsr155-retro-blue.jpg"
+        },
+        {
+          "color": "Đen bạc",
+          "imageUrl": "https://example.com/images/xsr155-black-silver.jpg"
+        },
+        {
+          "color": "Đỏ kem",
+          "imageUrl": "https://example.com/images/xsr155-red-cream.jpg"
+        }
+      ]
+    },
+    {
+      "name": "WR155R",
+      "releaseYear": 2023,
+      "fuelType": 1,
+      "transmissionType": 3,
+      "engineDisplacement": 155,
+      "engineCapacity": 0.155,
+      "oilCapacity": 1.15,
+      "tireSizeFront": "80/100-21",
+      "tireSizeRear": "110/90-18",
+      "images": [
+        {
+          "color": "Xanh trắng",
+          "imageUrl": "https://example.com/images/wr155r-blue-white.jpg"
+        },
+        {
+          "color": "Đỏ trắng",
+          "imageUrl": "https://example.com/images/wr155r-red-white.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Exciter 150",
+      "releaseYear": 2023,
+      "fuelType": 1,
+      "transmissionType": 1,
+      "engineDisplacement": 150,
+      "engineCapacity": 0.15,
+      "oilCapacity": 1.1,
+      "tireSizeFront": "90/80-17",
+      "tireSizeRear": "120/70-17",
+      "images": [
+        {
+          "color": "Xanh đen",
+          "imageUrl": "https://example.com/images/exciter-150-blue-black.jpg"
+        },
+        {
+          "color": "Đỏ trắng",
+          "imageUrl": "https://example.com/images/exciter-150-red-white.jpg"
+        },
+        {
+          "color": "Vàng đen",
+          "imageUrl": "https://example.com/images/exciter-150-yellow-black.jpg"
+        }
+      ]
+    },
+    {
+      "name": "XTZ125",
+      "releaseYear": 2023,
+      "fuelType": 1,
+      "transmissionType": 1,
+      "engineDisplacement": 125,
+      "engineCapacity": 0.125,
+      "oilCapacity": 0.95,
+      "tireSizeFront": "90/90-19",
+      "tireSizeRear": "110/90-17",
+      "images": [
+        {
+          "color": "Xanh đen",
+          "imageUrl": "https://example.com/images/xtz125-blue-black.jpg"
+        },
+        {
+          "color": "Đỏ trắng",
+          "imageUrl": "https://example.com/images/xtz125-red-white.jpg"
+        }
+      ]
+    },
+    {
+      "name": "TFX150",
+      "releaseYear": 2024,
+      "fuelType": 1,
+      "transmissionType": 3,
+      "engineDisplacement": 150,
+      "engineCapacity": 0.15,
       "oilCapacity": 1.1,
       "tireSizeFront": "100/80-17",
-      "tireSizeRear": "140/70-17"
+      "tireSizeRear": "130/70-17",
+      "images": [
+        {
+          "color": "Đen bạc",
+          "imageUrl": "https://example.com/images/tfx150-black-silver.jpg"
+        },
+        {
+          "color": "Xanh trắng",
+          "imageUrl": "https://example.com/images/tfx150-blue-white.jpg"
+        }
+      ]
+    },
+    {
+      "name": "Fino 125",
+      "releaseYear": 2024,
+      "fuelType": 1,
+      "transmissionType": 2,
+      "engineDisplacement": 125,
+      "engineCapacity": 0.125,
+      "oilCapacity": 0.9,
+      "tireSizeFront": "80/90-14",
+      "tireSizeRear": "90/90-14",
+      "images": [
+        {
+          "color": "Hồng trắng",
+          "imageUrl": "https://example.com/images/fino-125-pink-white.jpg"
+        },
+        {
+          "color": "Xanh mint",
+          "imageUrl": "https://example.com/images/fino-125-mint-green.jpg"
+        },
+        {
+          "color": "Nâu kem",
+          "imageUrl": "https://example.com/images/fino-125-brown-cream.jpg"
+        }
+      ]
+    },
+    {
+      "name": "XMax 300",
+      "releaseYear": 2024,
+      "fuelType": 1,
+      "transmissionType": 2,
+      "engineDisplacement": 292,
+      "engineCapacity": 0.292,
+      "oilCapacity": 2.0,
+      "tireSizeFront": "120/70-15",
+      "tireSizeRear": "140/70-14",
+      "images": [
+        {
+          "color": "Xám đen",
+          "imageUrl": "https://example.com/images/xmax-300-grey-black.jpg"
+        },
+        {
+          "color": "Trắng xanh",
+          "imageUrl": "https://example.com/images/xmax-300-white-blue.jpg"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://example.com/images/xmax-300-matte-black.jpg"
+        }
+      ]
+    },
+    {
+      "name": "MT-03",
+      "releaseYear": 2024,
+      "fuelType": 1,
+      "transmissionType": 3,
+      "engineDisplacement": 321,
+      "engineCapacity": 0.321,
+      "oilCapacity": 2.1,
+      "tireSizeFront": "110/70-17",
+      "tireSizeRear": "140/70-17",
+      "images": [
+        {
+          "color": "Xanh đen",
+          "imageUrl": "https://example.com/images/mt03-blue-black.jpg"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://example.com/images/mt03-matte-black.jpg"
+        }
+      ]
     }
   ]
 }

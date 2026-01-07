@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using VMP.Common.Shared;
 using VMP.Vehicle.Application.Dtos;
 using VMP.Vehicle.Application.Services.Interfaces;
@@ -47,7 +48,8 @@ namespace VMP.Vehicle.Apis
                 .WithName("BulkCreateModels")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Tạo hàng loạt mẫu xe từ JSON (Admin)";
+                    operation.Summary = "Tạo hàng loạt mẫu xe từ JSON body (Admin)";
+                    operation.Description = "Gửi JSON body chứa BrandId, TypeId và danh sách models";
                     return operation;
                 })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
@@ -58,11 +60,6 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/bulk/upload", BulkCreateModelsFromFile)
                 .WithName("BulkCreateModelsFromFile")
-                .WithOpenApi(operation =>
-                {
-                    operation.Summary = "Tạo hàng loạt mẫu xe từ file JSON (Admin)";
-                    return operation;
-                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BulkModelResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<BulkModelResponse>>(StatusCodes.Status400BadRequest)
@@ -102,7 +99,7 @@ namespace VMP.Vehicle.Apis
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
-        private static async Task<IResult> BulkCreateModelsFromFile(IFormFile file, IVehicleModelService modelService)
+        private static async Task<IResult> BulkCreateModelsFromFile([FromForm] IFormFile file, IVehicleModelService modelService)
         {
             if (file == null || file.Length == 0)
             {

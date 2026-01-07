@@ -82,9 +82,11 @@ namespace VMP.Vehicle.Application.Services.Implements
                     paginationRequest.PageNumber,
                     paginationRequest.PageSize,
                     filter: x => x.DeletedAt == null,
-                    orderBy: q => paginationRequest.IsDescending
-                        ? q.OrderByDescending(t => t.CreatedAt)
-                        : q.OrderBy(t => t.CreatedAt)
+                    orderBy: paginationRequest.IsDescending.HasValue
+                        ? (paginationRequest.IsDescending.Value
+                            ? q => q.OrderByDescending(t => t.CreatedAt)
+                            : q => q.OrderBy(t => t.CreatedAt))
+                        : null
                 );
 
                 var typeResponses = items.Select(t => t.ToResponse()).ToList();

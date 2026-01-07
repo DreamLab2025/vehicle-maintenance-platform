@@ -4,7 +4,7 @@ using VMP.Common.Databases.Base;
 
 namespace VMP.Vehicle.Domain.Entities
 {
-    public class StandardMaintenanceSchedule
+    public class StandardMaintenanceSchedule : BaseEntity
     {
         [Required]
         public Guid VehicleModelId { get; set; }

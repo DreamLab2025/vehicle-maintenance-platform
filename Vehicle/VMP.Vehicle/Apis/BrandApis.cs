@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using VMP.Common.Shared;
 using VMP.Vehicle.Application.Dtos;
 using VMP.Vehicle.Application.Services.Interfaces;
@@ -23,6 +24,18 @@ namespace VMP.Vehicle.Apis
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Lấy danh sách tất cả thương hiệu";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/types/{typeId:guid}", GetBrandsByType)
+                .WithName("GetBrandsByType")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách thương hiệu theo loại xe";
                     return operation;
                 })
                 .RequireAuthorization()
@@ -57,11 +70,6 @@ namespace VMP.Vehicle.Apis
 
             group.MapPost("/bulk/upload", BulkCreateBrandsFromFile)
                 .WithName("BulkCreateBrandsFromFile")
-                .WithOpenApi(operation =>
-                {
-                    operation.Summary = "Tạo hàng loạt thương hiệu từ file JSON (Admin)";
-                    return operation;
-                })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BulkBrandResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<BulkBrandResponse>>(StatusCodes.Status400BadRequest)
@@ -101,7 +109,7 @@ namespace VMP.Vehicle.Apis
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
-        private static async Task<IResult> BulkCreateBrandsFromFile(IFormFile file, IVehicleBrandService brandService)
+        private static async Task<IResult> BulkCreateBrandsFromFile([FromForm] IFormFile file, IVehicleBrandService brandService)
         {
             if (file == null || file.Length == 0)
             {
@@ -172,6 +180,16 @@ namespace VMP.Vehicle.Apis
         private static async Task<IResult> GetAllBrands([AsParameters] PaginationRequest paginationRequest, IVehicleBrandService brandService)
         {
             var results = await brandService.GetAllBrandsAsync(paginationRequest);
+            if (results.IsSuccess)
+            {
+                return Results.Ok(results);
+            }
+            return Results.NotFound(results);
+        }
+
+        private static async Task<IResult> GetBrandsByType(Guid typeId, IVehicleBrandService brandService)
+        {
+            var results = await brandService.GetBrandsByTypeIdAsync(typeId);
             if (results.IsSuccess)
             {
                 return Results.Ok(results);

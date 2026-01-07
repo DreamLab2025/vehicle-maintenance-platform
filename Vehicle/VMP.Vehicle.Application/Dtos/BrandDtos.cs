@@ -8,6 +8,10 @@ namespace VMP.Vehicle.Application.Dtos
         [MaxLength(100, ErrorMessage = "Tên thương hiệu không được vượt quá 100 ký tự")]
         public string Name { get; set; } = null!;
 
+        [Required(ErrorMessage = "Phải chọn ít nhất 1 loại xe")]
+        [MinLength(1, ErrorMessage = "Phải chọn ít nhất 1 loại xe")]
+        public List<Guid> VehicleTypeIds { get; set; } = new();
+
         [MaxLength(500, ErrorMessage = "URL logo không được vượt quá 500 ký tự")]
         [Url(ErrorMessage = "URL logo không hợp lệ")]
         public string? LogoUrl { get; set; }
@@ -32,6 +36,7 @@ namespace VMP.Vehicle.Application.Dtos
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
+        public List<string> VehicleTypeNames { get; set; } = new();
         public string? LogoUrl { get; set; }
         public string? Website { get; set; }
         public string? SupportPhone { get; set; }

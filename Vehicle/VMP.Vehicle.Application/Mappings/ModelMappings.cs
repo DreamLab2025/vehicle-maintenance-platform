@@ -15,7 +15,6 @@ namespace VMP.Vehicle.Application.Mappings
                 ReleaseYear = request.ReleaseYear,
                 FuelType = request.FuelType,
                 TransmissionType = request.TransmissionType,
-                ImageUrl = request.ImageUrl,
                 EngineDisplacement = request.EngineDisplacement,
                 EngineCapacity = request.EngineCapacity,
                 OilCapacity = request.OilCapacity,
@@ -39,7 +38,8 @@ namespace VMP.Vehicle.Application.Mappings
                 FuelTypeName = GetFuelTypeName(entity.FuelType),
                 TransmissionType = entity.TransmissionType,
                 TransmissionTypeName = GetTransmissionTypeName(entity.TransmissionType),
-                ImageUrl = entity.ImageUrl,
+                ImageUrl = entity.ModelImages?.FirstOrDefault()?.ImageUrl,
+                AvailableColors = entity.ModelImages?.Select(mi => mi.ToResponse()).ToList() ?? [],
                 EngineDisplacementDisplay = entity.EngineDisplacement.HasValue ? $"{entity.EngineDisplacement} cc" : null,
                 EngineCapacity = entity.EngineCapacity,
                 OilCapacity = entity.OilCapacity,
@@ -58,7 +58,6 @@ namespace VMP.Vehicle.Application.Mappings
             entity.ReleaseYear = request.ReleaseYear;
             entity.FuelType = request.FuelType;
             entity.TransmissionType = request.TransmissionType;
-            entity.ImageUrl = request.ImageUrl;
             entity.EngineDisplacement = request.EngineDisplacement;
             entity.EngineCapacity = request.EngineCapacity;
             entity.OilCapacity = request.OilCapacity;
