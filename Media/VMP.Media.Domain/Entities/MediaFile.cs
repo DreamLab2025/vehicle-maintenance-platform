@@ -56,9 +56,10 @@ namespace VMP.Media.Domain.Entities
     public enum FileType
     {
         Avatar = 1,
-        VehicleBrand = 2,
-        VehicleModel = 3,
-        ConsumableItem = 4,
+        VehicleType = 2,
+        VehicleBrand = 3,
+        VehicleModel = 4,
+        ConsumableItem = 5,
         Other = 99
     }
 }

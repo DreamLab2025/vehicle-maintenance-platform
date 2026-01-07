@@ -42,7 +42,15 @@ namespace VMP.Media.Infrastructure.Storage
             try
             {
                 var uri = new Uri(url);
-
+                
+                // Handle CloudFront URL
+                if (!string.IsNullOrWhiteSpace(_s3settings.CloudFrontUrl) && 
+                    url.StartsWith(_s3settings.CloudFrontUrl, StringComparison.OrdinalIgnoreCase))
+                {
+                    return WebUtility.UrlDecode(uri.AbsolutePath.TrimStart('/'));
+                }
+                
+                // Handle S3 URL
                 return WebUtility.UrlDecode(uri.AbsolutePath.TrimStart('/'));
             }
             catch
@@ -96,6 +104,12 @@ namespace VMP.Media.Infrastructure.Storage
 
         public string GetFilePath(string fileKey)
         {
+            // Use CloudFront URL if configured, otherwise use S3 URL
+            if (!string.IsNullOrWhiteSpace(_s3settings.CloudFrontUrl))
+            {
+                return $"{_s3settings.CloudFrontUrl.TrimEnd('/')}/{fileKey}";
+            }
+            
             return $"https://{_s3settings.BucketName}.s3.{_s3settings.Region}.amazonaws.com/{fileKey}";
         }
     }

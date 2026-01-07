@@ -6,5 +6,6 @@
         public string Region { get; init; } = default!;
         public string AccessKey { get; init; } = default!;
         public string SecretKey { get; init; } = default!;
+        public string? CloudFrontUrl { get; init; }
     }
 }

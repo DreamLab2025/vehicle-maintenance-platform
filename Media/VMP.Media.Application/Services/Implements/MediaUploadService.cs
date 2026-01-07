@@ -159,6 +159,7 @@ namespace VMP.Media.Application.Services.Implements
             string folder = fileType switch
             {
                 FileType.Avatar => $"users/{userId}/avatar",
+                FileType.VehicleType => "master/types",
                 FileType.VehicleBrand => "master/brands",
                 FileType.VehicleModel => "master/models",
                 FileType.ConsumableItem => "master/consumables",
