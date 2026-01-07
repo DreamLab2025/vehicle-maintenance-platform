@@ -1,6 +1,4 @@
-﻿using Vicobi.Common.Shared;
-
-namespace VMP.Common.Shared
+﻿namespace VMP.Common.Shared
 {
     public class ApiResponse<T>
     {

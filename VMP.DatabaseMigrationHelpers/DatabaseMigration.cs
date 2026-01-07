@@ -33,7 +33,15 @@ namespace VMP.DatabaseMigrationHelpers
                     logger.LogInformation("Migrating database for context {DbContextName}", typeof(TContext).Name);
                     await strategy.ExecuteAsync(async () =>
                     {
-                        await context.Database.MigrateAsync(cancellationToken);
+                        try
+                        {
+                            await context.Database.MigrateAsync(cancellationToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "An error occurred while applying migrations for context {DbContextName}", typeof(TContext).Name);
+                            throw;
+                        }
                     });
 
                     logger.LogInformation("Database migration completed for context {DbContextName}", typeof(TContext).Name);

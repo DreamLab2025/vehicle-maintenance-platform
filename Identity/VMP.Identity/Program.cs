@@ -1,25 +1,15 @@
-﻿using VMP.Common.Bootstrapping;
-using VMP.Identity.Services;
+﻿using VMP.DatabaseMigrationHelpers;
+using VMP.Identity.Bootstrapping;
+using VMP.Identity.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
-
-builder.AddCommonService();
-
-builder.Services.AddScoped<IIdentityTokenService, IdentityTokenService>();
+builder.AddApplicationServices();
 
 var app = builder.Build();
 
-app.MapDefaultEndpoints();
+await app.MigrateDbContextAsync<UserDbContext>();
 
-app.UseCommonService();
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
-app.UseHttpsRedirection();
+app.UseApplicationServices();
 
 app.Run();

@@ -1,10 +1,12 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using VMP.Common.Middlewares;
 using VMP.Common.Shared;
 using VMP.ServiceDefaults;
@@ -65,6 +67,12 @@ namespace VMP.Common.Bootstrapping
                         );
                     });
                 });
+            });
+
+            // Configure JSON serialization for Minimal APIs to use string enums
+            builder.Services.Configure<JsonOptions>(options =>
+            {
+                options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
 
             builder.AddJwtAuthentication();
