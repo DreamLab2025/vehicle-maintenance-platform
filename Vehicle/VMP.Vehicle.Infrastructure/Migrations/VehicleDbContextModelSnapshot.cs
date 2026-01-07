@@ -48,11 +48,6 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -172,6 +167,55 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                     b.ToTable("MaintenanceActivityDetails");
                 });
 
+            modelBuilder.Entity("VMP.Vehicle.Domain.Entities.ModelImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("HexCode")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VehicleModelId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VehicleModelId", "Color");
+
+                    b.ToTable("ModelImages");
+                });
+
             modelBuilder.Entity("VMP.Vehicle.Domain.Entities.OdometerHistory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -217,10 +261,23 @@ namespace VMP.Vehicle.Infrastructure.Migrations
 
             modelBuilder.Entity("VMP.Vehicle.Domain.Entities.StandardMaintenanceSchedule", b =>
                 {
-                    b.Property<Guid>("VehicleModelId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ConsumableItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
 
                     b.Property<int>("DistanceInterval")
@@ -235,9 +292,21 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                     b.Property<int>("TimeIntervalMonth")
                         .HasColumnType("integer");
 
-                    b.HasKey("VehicleModelId", "ConsumableItemId");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VehicleModelId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("ConsumableItemId");
+
+                    b.HasIndex("VehicleModelId", "ConsumableItemId")
+                        .IsUnique();
 
                     b.ToTable("StandardMaintenanceSchedules");
                 });
@@ -446,10 +515,6 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                     b.Property<int>("FuelType")
                         .HasColumnType("integer");
 
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -512,7 +577,6 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
@@ -564,6 +628,42 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("VMP.Vehicle.Domain.Entities.VehicleTypeBrand", b =>
+                {
+                    b.Property<Guid>("VehicleTypeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VehicleBrandId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("VehicleTypeId", "VehicleBrandId");
+
+                    b.HasIndex("VehicleBrandId");
+
+                    b.ToTable("VehicleTypeBrands");
+                });
+
             modelBuilder.Entity("VMP.Vehicle.Domain.Entities.MaintenanceActivity", b =>
                 {
                     b.HasOne("VMP.Vehicle.Domain.Entities.UserVehicle", "UserVehicle")
@@ -594,6 +694,17 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                     b.Navigation("MaintenanceActivity");
                 });
 
+            modelBuilder.Entity("VMP.Vehicle.Domain.Entities.ModelImage", b =>
+                {
+                    b.HasOne("VMP.Vehicle.Domain.Entities.VehicleModel", "VehicleModel")
+                        .WithMany("ModelImages")
+                        .HasForeignKey("VehicleModelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("VehicleModel");
+                });
+
             modelBuilder.Entity("VMP.Vehicle.Domain.Entities.OdometerHistory", b =>
                 {
                     b.HasOne("VMP.Vehicle.Domain.Entities.UserVehicle", "UserVehicle")
@@ -614,7 +725,7 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("VMP.Vehicle.Domain.Entities.VehicleModel", "VehicleModel")
-                        .WithMany()
+                        .WithMany("StandardMaintenanceSchedules")
                         .HasForeignKey("VehicleModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -646,7 +757,7 @@ namespace VMP.Vehicle.Infrastructure.Migrations
             modelBuilder.Entity("VMP.Vehicle.Domain.Entities.UserVehicle", b =>
                 {
                     b.HasOne("VMP.Vehicle.Domain.Entities.VehicleModel", "VehicleModel")
-                        .WithMany()
+                        .WithMany("UserVehicles")
                         .HasForeignKey("VehicleModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -657,13 +768,13 @@ namespace VMP.Vehicle.Infrastructure.Migrations
             modelBuilder.Entity("VMP.Vehicle.Domain.Entities.VehicleModel", b =>
                 {
                     b.HasOne("VMP.Vehicle.Domain.Entities.VehicleBrand", "Brand")
-                        .WithMany()
+                        .WithMany("VehicleModels")
                         .HasForeignKey("BrandId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("VMP.Vehicle.Domain.Entities.VehicleType", "Type")
-                        .WithMany()
+                        .WithMany("VehicleModels")
                         .HasForeignKey("TypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -671,6 +782,25 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                     b.Navigation("Brand");
 
                     b.Navigation("Type");
+                });
+
+            modelBuilder.Entity("VMP.Vehicle.Domain.Entities.VehicleTypeBrand", b =>
+                {
+                    b.HasOne("VMP.Vehicle.Domain.Entities.VehicleBrand", "VehicleBrand")
+                        .WithMany("VehicleTypeBrands")
+                        .HasForeignKey("VehicleBrandId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VMP.Vehicle.Domain.Entities.VehicleType", "VehicleType")
+                        .WithMany("VehicleTypeBrands")
+                        .HasForeignKey("VehicleTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("VehicleBrand");
+
+                    b.Navigation("VehicleType");
                 });
 
             modelBuilder.Entity("VMP.Vehicle.Domain.Entities.MaintenanceActivity", b =>
@@ -683,6 +813,29 @@ namespace VMP.Vehicle.Infrastructure.Migrations
                     b.Navigation("MaintenanceConfigs");
 
                     b.Navigation("OdometerHistories");
+                });
+
+            modelBuilder.Entity("VMP.Vehicle.Domain.Entities.VehicleBrand", b =>
+                {
+                    b.Navigation("VehicleModels");
+
+                    b.Navigation("VehicleTypeBrands");
+                });
+
+            modelBuilder.Entity("VMP.Vehicle.Domain.Entities.VehicleModel", b =>
+                {
+                    b.Navigation("ModelImages");
+
+                    b.Navigation("StandardMaintenanceSchedules");
+
+                    b.Navigation("UserVehicles");
+                });
+
+            modelBuilder.Entity("VMP.Vehicle.Domain.Entities.VehicleType", b =>
+                {
+                    b.Navigation("VehicleModels");
+
+                    b.Navigation("VehicleTypeBrands");
                 });
 #pragma warning restore 612, 618
         }

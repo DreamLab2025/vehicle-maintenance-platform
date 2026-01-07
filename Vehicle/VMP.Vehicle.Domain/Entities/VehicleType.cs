@@ -8,9 +8,13 @@ namespace VMP.Vehicle.Domain.Entities
         [Required, MaxLength(100)]
         public string Name { get; set; } = null!;
 
-        [Required, MaxLength(500)]
+        [MaxLength(500)]
         public string? Description { get; set; }
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
+
+        // Navigation properties
+        public ICollection<VehicleTypeBrand> VehicleTypeBrands { get; set; } = new List<VehicleTypeBrand>();
+        public ICollection<VehicleModel> VehicleModels { get; set; } = new List<VehicleModel>();
     }
 }

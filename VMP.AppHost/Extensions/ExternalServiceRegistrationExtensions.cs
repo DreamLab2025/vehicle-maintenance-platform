@@ -9,7 +9,7 @@ namespace VMP.AppHost.Extensions
         {
             var postgres = builder.AddPostgres("postgres")
                 .WithContainerName("PostgresDb")
-                .WithImageTag("17")
+                .WithImageTag("17-alpine")
                 .WithDataVolume()
                 .WithPgAdmin(pgAdmin =>
                 {
@@ -19,14 +19,16 @@ namespace VMP.AppHost.Extensions
 
             var rabbitMq = builder.AddRabbitMQ("rabbitmq")
                 .WithContainerName("Rabbitmq")
-                .WithImageTag("3-management")
+                .WithImageTag("3-management-alpine")
                 .WithManagementPlugin(15672)
                 .WithDataVolume();
 
-            var redis = builder.AddRedis("redis-cache");
+            var redis = builder.AddRedis("redis-cache")
+                .WithImageTag("alpine");
 
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
             var vehicleDb = postgres.AddDatabase("vehicle-db", "Vehicles");
+            var mediaDb = postgres.AddDatabase("media-db", "Media");
 
             var identityService = builder.AddProject<Projects.VMP_Identity>("vmp-identity")
                 .WithReference(identityDb)
@@ -41,6 +43,13 @@ namespace VMP.AppHost.Extensions
                 .WithReference(rabbitMq)
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
+
+            var mediaService = builder.AddProject<Projects.VMP_Media>("vmp-media")
+                .WithReference(mediaDb)
+                .WithReference(rabbitMq)
+                .WaitFor(postgres)
+                .WaitFor(rabbitMq);
+
 
             var apiGateway = builder.AddYarp("api-gateway")
                             .WithContainerName("ApiGateway")

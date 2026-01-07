@@ -24,9 +24,6 @@ namespace VMP.Vehicle.Domain.Entities
         public VehicleFuelType FuelType { get; set; }
         public VehicleTransmissionType TransmissionType { get; set; }
 
-        [MaxLength(500)]
-        public string? ImageUrl { get; set; }
-
         public int? EngineDisplacement { get; set; } // Phân khối (cc)
 
         [Column(TypeName = "decimal(4,2)")]
@@ -41,6 +38,11 @@ namespace VMP.Vehicle.Domain.Entities
         public string? TireSizeRear { get; set; } // Kích thước lốp sau
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
+
+        // Navigation properties
+        public ICollection<StandardMaintenanceSchedule> StandardMaintenanceSchedules { get; set; } = new List<StandardMaintenanceSchedule>();
+        public ICollection<UserVehicle> UserVehicles { get; set; } = new List<UserVehicle>();
+        public ICollection<ModelImage> ModelImages { get; set; } = new List<ModelImage>();
     }
 
     public enum VehicleFuelType

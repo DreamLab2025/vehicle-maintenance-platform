@@ -2,110 +2,169 @@
   "brands": [
     {
       "name": "Honda",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Honda_Logo.svg",
+      "vehicleTypeIds": [
+        "11111111-1111-1111-1111-111111111111",
+        "22222222-2222-2222-2222-222222222222",
+        "33333333-3333-3333-3333-333333333333"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/1a50638b-7e47-42a5-a8c4-5475cd9015d2.png",
       "website": "https://www.honda.com.vn",
       "supportPhone": "1900545591"
     },
     {
       "name": "Yamaha",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Yamaha_Motor_logo.svg",
+      "vehicleTypeIds": [
+        "11111111-1111-1111-1111-111111111111"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/b1966c71-7483-48c6-b7fa-ca7b2832344d.png",
       "website": "https://www.yamaha-motor.com.vn",
       "supportPhone": "1900545595"
     },
     {
       "name": "Suzuki",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/1/12/Suzuki_logo_2.svg",
+      "vehicleTypeIds": [
+        "11111111-1111-1111-1111-111111111111",
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/46e8c78e-dd65-4a2c-8ea1-0a544cc55ada.png",
       "website": "https://www.suzuki.com.vn"
     },
     {
       "name": "SYM",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9f/SYM_logo.svg",
+      "vehicleTypeIds": [
+        "11111111-1111-1111-1111-111111111111"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/c4a1cdc7-456c-4e56-bd55-1247d8a87a60.png",
       "website": "https://www.sym.com.vn",
       "supportPhone": "1900555591"
     },
     {
       "name": "Piaggio",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/4/46/Piaggio_logo.svg",
+      "vehicleTypeIds": [
+        "11111111-1111-1111-1111-111111111111",
+        "33333333-3333-3333-3333-333333333333"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/7bdbdcaa-ff7b-4870-bde3-90a7330ab22f.png",
       "website": "https://www.piaggio.com.vn"
     },
     {
       "name": "VinFast",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e3/VinFast_logo.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222",
+        "33333333-3333-3333-3333-333333333333"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/0ea879b6-a573-4691-b00d-9f078f25b605.png",
       "website": "https://vinfastauto.com",
       "supportPhone": "1900232389"
     },
     {
       "name": "Toyota",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Toyota.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/8e3a3449-fb6e-457c-8b78-a5fcc58c232a.png",
       "website": "https://www.toyota.com.vn",
       "supportPhone": "1900545591"
     },
     {
       "name": "Hyundai",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ce/Hyundai_Motor_Company_logo.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222",
+        "33333333-3333-3333-3333-333333333333"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/eb98b021-f3e1-4f2a-b5e6-2abc50170d32.png",
       "website": "https://www.hyundai.com.vn",
       "supportPhone": "1900545591"
     },
     {
       "name": "Kia",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Kia_logo.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/64d8a6ff-1172-401d-b960-bdc6e77308cb.png",
       "website": "https://www.kia.com.vn"
     },
     {
       "name": "Mazda",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/2/28/Mazda_logo.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/ae1decb3-2344-41b4-9f1f-c613447c643b.png",
       "website": "https://www.mazda.com.vn",
       "supportPhone": "1900545591"
     },
     {
       "name": "Ford",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Ford_logo_flat.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/7fbeea56-2cc7-43c7-bb34-5dbca760adfd.png",
       "website": "https://www.ford.com.vn",
       "supportPhone": "1900232389"
     },
     {
       "name": "Mitsubishi",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Mitsubishi_logo.svg",
+      "vehicleTypeIds": [
+        "11111111-1111-1111-1111-111111111111",
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/70a35260-1736-4965-8506-c0a5fc080d69.png",
       "website": "https://www.mitsubishi-motors.com.vn"
     },
     {
       "name": "Chevrolet",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Chevrolet_logo.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/85a4b788-7ac3-4391-86d7-6c5a152aebd4.png",
       "website": "https://www.chevrolet.com.vn"
     },
     {
       "name": "Nissan",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Nissan_logo.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/ba678234-4ddf-4dd4-8f11-d833625536af.png",
       "website": "https://www.nissan.com.vn"
     },
     {
       "name": "Mercedes-Benz",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/9/90/Mercedes-Logo.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/13b0f5fb-051c-435b-98f3-4028d86dd0db.png",
       "website": "https://www.mercedes-benz.com.vn"
     },
     {
       "name": "BMW",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/4/44/BMW.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/1865400e-d816-4c77-8794-de693c41245d.png",
       "website": "https://www.bmw.com.vn"
     },
     {
       "name": "Audi",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/9/92/Audi-Logo_2016.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/b02e5b12-90ae-495b-b9f7-ccb5ed77d2c7.png",
       "website": "https://www.audi.com.vn"
     },
     {
       "name": "Lexus",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Lexus_logo.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/611b9fa4-0158-4068-b4e7-1636f3aa0528.png",
       "website": "https://www.lexus.com.vn"
     },
     {
-      "name": "Peugeot",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/en/e/e4/Peugeot_logo.svg",
-      "website": "https://www.peugeot.com.vn"
-    },
-    {
       "name": "Volkswagen",
-      "logoUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg",
+      "vehicleTypeIds": [
+        "22222222-2222-2222-2222-222222222222"
+      ],
+      "logoUrl": "https://d3iova6424vljy.cloudfront.net/master/brands/8b472e0d-99f4-40fa-815d-e6db1066a144.png",
       "website": "https://www.volkswagen.com.vn"
     }
   ]

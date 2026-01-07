@@ -17,6 +17,5 @@
     {
         DateTime? DeletedAt { get; set; }
         Guid? DeletedBy { get; set; }
-        bool IsDeleted { get; }
     }
 }

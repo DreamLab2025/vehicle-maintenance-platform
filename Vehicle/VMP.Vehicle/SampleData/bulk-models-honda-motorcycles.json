@@ -5,242 +5,338 @@
     {
       "name": "Winner X",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 1,
-      "imageUrl": "https://tse3.mm.bing.net/th/id/OIP.D1HLGBdT_3vVXhhOz2cY4QHaEv?rs=1&pid=ImgDetMain&o=7&rm=3",
-      "engineDisplacement": 150,
-      "engineCapacity": 0.15,
-      "oilCapacity": 1.2,
-      "tireSizeFront": "90/80-17",
-      "tireSizeRear": "120/70-17"
+      "images": [
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/de4c2e44-95c0-486d-91d6-50f71e6bb05a.png"
+        },
+        {
+          "color": "Xanh trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/5121e716-69fe-4b35-bef8-b123d0b02ee8.png"
+        },
+        {
+          "color": "Đen bạc",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/315f53a2-145d-4198-9a68-139c352a7e8e.png"
+        }
+      ]
     },
     {
       "name": "Wave RSX",
       "releaseYear": 2023,
-      "fuelType": 1,
-      "transmissionType": 1,
-      "imageUrl": "https://images2.thanhnien.vn/Uploaded/bahung/2022_12_03/wave-rsx-fi-110-1-6719.png",
-      "engineDisplacement": 110,
-      "engineCapacity": 0.11,
-      "oilCapacity": 0.9,
-      "tireSizeFront": "70/90-17",
-      "tireSizeRear": "80/90-17"
+      "images": [
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/54cfa623-6643-4d84-812a-64e82a402dad.png"
+        },
+        {
+          "color": "Xanh dương",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/70f5c4c6-15d9-4121-a42f-041848af3748.png"
+        },
+        {
+          "color": "Trắng đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/ef5499a6-907b-4595-a912-579341bad6d5.png"
+        }
+      ]
     },
     {
       "name": "Blade 110",
       "releaseYear": 2023,
-      "fuelType": 1,
-      "transmissionType": 2,
-      "imageUrl": "https://lajumotor.com/wp-content/uploads/2023/03/honda-blade-2023-vietnam.jpg",
-      "engineDisplacement": 110,
-      "engineCapacity": 0.11,
-      "oilCapacity": 0.8,
-      "tireSizeFront": "70/90-17",
-      "tireSizeRear": "80/90-17"
+      "images": [
+        {
+          "color": "Đen bạc",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/04c7786f-3546-4526-8fe4-6e3ff3196d18.png"
+        },
+        {
+          "color": "Đỏ trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/262dac54-2aa1-4636-ba5b-2de8bef52036.png"
+        }
+      ]
     },
     {
       "name": "Future 125",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 1,
-      "imageUrl": "https://static1.cafeland.vn/cafeauto/hinh-anh/2021/10/29/124/future-125-fi-co-ban-cap-nhat-2022-them-mau-moi-hop-trend-gioi-tre-3.jpg",
-      "engineDisplacement": 125,
-      "engineCapacity": 0.125,
-      "oilCapacity": 1.0,
-      "tireSizeFront": "80/90-17",
-      "tireSizeRear": "90/90-17"
+      "images": [
+        {
+          "color": "Xanh trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/cc385f70-0860-4bbe-8db2-c65c3f0dc563.png"
+        },
+        {
+          "color": "Đen đỏ",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/b177a75d-4caf-4ecb-9376-0c8f22c581b1.png"
+        },
+        {
+          "color": "Trắng xanh",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/6582c20c-c49c-4130-923e-bc54c76ecc0e.png"
+        }
+      ]
     },
     {
       "name": "Vision",
       "releaseYear": 2023,
-      "fuelType": 1,
-      "transmissionType": 2,
-      "imageUrl": "https://tse1.mm.bing.net/th/id/OIP.cLraX-sgZzsUenwomxfriwHaEK?rs=1&pid=ImgDetMain&o=7&rm=3",
-      "engineDisplacement": 110,
-      "engineCapacity": 0.11,
-      "oilCapacity": 0.9,
-      "tireSizeFront": "80/90-14",
-      "tireSizeRear": "90/90-14"
+      "images": [
+        {
+          "color": "Trắng đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/3d4ebfae-f8b2-47af-96ba-7a49deb61a6d.png"
+        },
+        {
+          "color": "Nâu kem",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/ebc0cc6c-7883-4110-9d98-eeaf412b192d.png"
+        },
+        {
+          "color": "Xanh trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/a3461890-e0ae-48a1-ac03-cf4a46ca02bd.png"
+        }
+      ]
     },
     {
       "name": "Lead",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 2,
-      "imageUrl": "https://news.webike.net/wp-content/uploads/2023/01/2230112-lead125_003H.jpg",
-      "engineDisplacement": 125,
-      "engineCapacity": 0.125,
-      "oilCapacity": 0.8,
-      "tireSizeFront": "90/90-12",
-      "tireSizeRear": "100/90-10"
+      "images": [
+        {
+          "color": "Xám bạc",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/082f0a16-c87b-4780-996f-746705be77ae.png"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/5ccb6394-cb3e-4faf-a665-60bdec8828a7.png"
+        }
+      ]
     },
     {
       "name": "Air Blade 125",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 2,
-      "imageUrl": "https://www.xemayhuyhoang.com/upload/product/airblade125tieuchuanmoidodenbac-4981.jpg",
-      "engineDisplacement": 125,
-      "engineCapacity": 0.125,
-      "oilCapacity": 1.1,
-      "tireSizeFront": "80/90-14",
-      "tireSizeRear": "100/90-14"
+      "images": [
+        {
+          "color": "Đỏ đen bạc",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/90a6ac25-a5f9-478a-b073-19395370038c.png"
+        },
+        {
+          "color": "Xanh trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/88b60a92-d996-4fb6-afbc-dd124786a7b5.png"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/8c33af14-6c23-411b-af09-b45f7513b4ab.png"
+        }
+      ]
     },
     {
       "name": "SH Mode 125",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 2,
-      "imageUrl": "https://tse3.mm.bing.net/th/id/OIP.1CEm24_FF5r5G_6RBU10DAHaFY?rs=1&pid=ImgDetMain&o=7&rm=3",
-      "engineDisplacement": 125,
-      "engineCapacity": 0.125,
-      "oilCapacity": 1.3,
-      "tireSizeFront": "80/90-16",
-      "tireSizeRear": "100/90-14"
+      "images": [
+        {
+          "color": "Trắng đỏ",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/280ea2a2-d887-40c4-b4f8-5fed1f28fbf7.png"
+        },
+        {
+          "color": "Đen bạc",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/10b7018e-6ac8-4fd8-915a-57642bff6862.png"
+        },
+        {
+          "color": "Xám xanh",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/41555710-4ee6-4c1e-bb77-c7cb050041ae.png"
+        }
+      ]
     },
     {
       "name": "SH 150i",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 2,
-      "imageUrl": "https://tse3.mm.bing.net/th/id/OIP.WEjJYGsObOwLdpnqwPwDFwHaE8?rs=1&pid=ImgDetMain&o=7&rm=3",
-      "engineDisplacement": 150,
-      "engineCapacity": 0.15,
-      "oilCapacity": 1.2,
-      "tireSizeFront": "100/80-16",
-      "tireSizeRear": "120/80-16"
+      "images": [
+        {
+          "color": "Trắng đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/7be1a248-01e5-40b3-a409-665b72b87bbf.png"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/63175b57-1ceb-4c9f-b42a-f5ca47d2d509.png"
+        },
+        {
+          "color": "Xám bạc",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/aa105ea9-4815-4062-9f53-2dae6aee640c.png"
+        },
+        {
+          "color": "Nâu kem",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/c2035f68-11ba-4281-93be-1db329b9b638.png"
+        }
+      ]
     },
     {
       "name": "PCX 160",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 2,
-      "imageUrl": "https://motonewsbrasil.com/wp-content/uploads/2022/09/honda-pcx-cbs-2023-cinza-lateral-direita.jpg",
-      "engineDisplacement": 160,
-      "engineCapacity": 0.16,
-      "oilCapacity": 1.3,
-      "tireSizeFront": "110/70-14",
-      "tireSizeRear": "130/70-13"
+      "images": [
+        {
+          "color": "Xám bạc",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/3d603422-85e0-414e-837f-2e7321277d34.png"
+        },
+        {
+          "color": "Trắng đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/d0c80598-d97d-483c-858b-c440025a3b94.png"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/34d79371-921c-4dd5-ab4e-a6eb2c1453f4.png"
+        }
+      ]
     },
     {
       "name": "ADV 160",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 2,
-      "imageUrl": "https://tse3.mm.bing.net/th/id/OIP._fLynspzDSDIZE_P6aLW-QHaEK?rs=1&pid=ImgDetMain&o=7&rm=3",
-      "engineDisplacement": 160,
-      "engineCapacity": 0.16,
-      "oilCapacity": 1.4,
-      "tireSizeFront": "110/80-14",
-      "tireSizeRear": "130/70-13"
+      "images": [
+        {
+          "color": "Xanh dương",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/db744117-4fd4-4699-9b99-a545a434c766.png"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/42205472-0590-4fe1-a709-cc496ec39dd7.png"
+        },
+        {
+          "color": "Trắng đỏ",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/faa5838f-c7fc-4ae9-a09e-a5cf16bfc54c.png"
+        }
+      ]
     },
     {
       "name": "Vario 160",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 2,
-      "imageUrl": "https://lajumotor.com/wp-content/uploads/2023/08/honda-vario-160-2024-cbs-sporty.jpg",
-      "engineDisplacement": 160,
-      "engineCapacity": 0.16,
-      "oilCapacity": 1.2,
-      "tireSizeFront": "100/80-14",
-      "tireSizeRear": "120/70-14"
+      "images": [
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/531294fb-2920-4a27-a8d9-ede98c537225.png"
+        },
+        {
+          "color": "Xanh trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/bec7564a-64e2-4298-b230-d8ca223721c0.png"
+        }
+      ]
     },
     {
       "name": "CBR150R",
       "releaseYear": 2023,
-      "fuelType": 1,
-      "transmissionType": 3,
-      "imageUrl": "https://sukoharjonews.com/wp-content/uploads/2022/11/25-Honda-CBR150R-2023-Victory-Red-Black.jpg",
-      "engineDisplacement": 150,
-      "engineCapacity": 0.15,
-      "oilCapacity": 1.1,
-      "tireSizeFront": "100/80-17",
-      "tireSizeRear": "130/70-17"
+      "images": [
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/ec24b563-0235-4a41-95ab-a96480cfc3f7.png"
+        },
+        {
+          "color": "Xanh trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/9b66f319-496b-4252-b0e3-81d2b415fa9d.png"
+        },
+        {
+          "color": "Đen bạc",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/c7484607-f894-4ba8-bf97-29533896431a.png"
+        }
+      ]
     },
     {
       "name": "CB150R",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 3,
-      "imageUrl": "https://imgsrv2.voi.id/ILtMWkvbSqeeL0W9KW8JX2CJtS9dgkqd2wrXp4nOccA/auto/1200/675/sm/1/bG9jYWw6Ly8vcHVibGlzaGVycy8zMzg3ODkvMjAyMzEyMTMxNzMyLW1haW4uY3JvcHBlZF8xNzAyNDYzNTI3LmpwZWc.jpg",
-      "engineDisplacement": 150,
-      "engineCapacity": 0.15,
-      "oilCapacity": 1.1,
-      "tireSizeFront": "110/70-17",
-      "tireSizeRear": "140/70-17"
+      "images": [
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/4b34d473-33a7-4e8f-af93-c1cee1049cdb.png"
+        },
+        {
+          "color": "Đen nhám",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/449a29bf-efda-4c58-bc68-ab610640cbeb.png"
+        },
+        {
+          "color": "Trắng đỏ",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/c1948c99-8183-45ad-b486-256f84c5d7df.png"
+        }
+      ]
     },
     {
       "name": "Sonic 150R",
       "releaseYear": 2023,
-      "fuelType": 1,
-      "transmissionType": 1,
-      "imageUrl": "https://fasterwheeler.com/product_images/jpeg/Sonic-150R-2023_2.jpg",
-      "engineDisplacement": 150,
-      "engineCapacity": 0.15,
-      "oilCapacity": 1.0,
-      "tireSizeFront": "70/90-17",
-      "tireSizeRear": "80/90-17"
+      "images": [
+        {
+          "color": "Đỏ trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/a66abf53-2f19-4232-8cd7-8360c69dd35a.png"
+        },
+        {
+          "color": "Xanh đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/5a67d136-e39d-4b92-ac72-bd90cc7a4ecf.png"
+        }
+      ]
     },
     {
       "name": "RS150",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 1,
-      "imageUrl": "https://paultan.org/image/2023/11/2024-Honda-RS-X-150-Trico-White-Edition-1-1200x899.jpg",
-      "engineDisplacement": 150,
-      "engineCapacity": 0.15,
-      "oilCapacity": 1.0,
-      "tireSizeFront": "90/80-17",
-      "tireSizeRear": "120/70-17"
+      "images": [
+        {
+          "color": "Trắng xanh",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/faf0578f-8d61-4cf4-a74b-e0bb6e467082.png"
+        },
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/5b2e4f73-1b48-4476-8f42-0ad13d7d7f04.png"
+        },
+        {
+          "color": "Đen bạc",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/efc20599-029b-48bb-a2b6-c2d1534fae5e.png"
+        }
+      ]
     },
     {
       "name": "MSX 125",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 1,
-      "imageUrl": "https://tse3.mm.bing.net/th/id/OIP.tzA6PVoy60X0mYPtMdB7YgHaEK?rs=1&pid=ImgDetMain&o=7&rm=3",
-      "engineDisplacement": 125,
-      "engineCapacity": 0.125,
-      "oilCapacity": 0.9,
-      "tireSizeFront": "120/70-12",
-      "tireSizeRear": "130/70-12"
+      "images": [
+        {
+          "color": "Đỏ đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/6afcd49d-efeb-4a0f-9547-b3cef8e16590.png"
+        },
+        {
+          "color": "Vàng đen",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/a17ffe47-f472-4926-a301-bdb70679defd.png"
+        }
+      ]
     },
     {
       "name": "Monkey 125",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 1,
-      "imageUrl": "https://tse4.mm.bing.net/th/id/OIP.dv_R84pKGbEHPIwGi_BgwgHaFj?rs=1&pid=ImgDetMain&o=7&rm=3",
-      "engineDisplacement": 125,
-      "engineCapacity": 0.125,
-      "oilCapacity": 0.8,
-      "tireSizeFront": "120/80-12",
-      "tireSizeRear": "130/80-12"
+      "images": [
+        {
+          "color": "Vàng kem",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/ed361c8e-03e4-4256-85a3-776b59f5cd99.png"
+        },
+        {
+          "color": "Đỏ trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/bf74377f-0cf8-483e-9d1f-b51cf51db791.png"
+        },
+        {
+          "color": "Xanh lá",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/32b15f92-c55a-4aef-84e2-439e102fa533.png"
+        }
+      ]
     },
     {
       "name": "Super Cub C125",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 1,
-      "imageUrl": "https://tse2.mm.bing.net/th/id/OIP.06zE_ZxjtvuQWMGGfSW6eAHaFj?rs=1&pid=ImgDetMain&o=7&rm=3",
-      "engineDisplacement": 125,
-      "engineCapacity": 0.125,
-      "oilCapacity": 0.8,
-      "tireSizeFront": "70/90-17",
-      "tireSizeRear": "80/90-17"
+      "images": [
+        {
+          "color": "Xanh lá kem",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/9c1c8d1e-3300-4fc8-9ef5-071eccf5aab3.png"
+        },
+        {
+          "color": "Đỏ trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/47dd7ee0-0aed-4574-9690-e87bd0e2b5cd.png"
+        }
+      ]
     },
     {
       "name": "CRF150L",
       "releaseYear": 2024,
-      "fuelType": 1,
-      "transmissionType": 1,
-      "imageUrl": "https://tse3.mm.bing.net/th/id/OIP.P2DmuwC-Lyim2ASCdLdfZwHaFs?rs=1&pid=ImgDetMain&o=7&rm=3",
-      "engineDisplacement": 150,
-      "engineCapacity": 0.15,
-      "oilCapacity": 1.2,
-      "tireSizeFront": "80/100-21",
-      "tireSizeRear": "100/100-18"
+      "images": [
+        {
+          "color": "Đỏ trắng",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/560de875-c5c1-44e6-8c08-b51d7113bf34.png"
+        },
+        {
+          "color": "Đen đỏ",
+          "imageUrl": "https://d3iova6424vljy.cloudfront.net/master/models/746711db-af24-44c1-9505-90d1bdda35eb.png"
+        }
+      ]
     }
   ]
 }
