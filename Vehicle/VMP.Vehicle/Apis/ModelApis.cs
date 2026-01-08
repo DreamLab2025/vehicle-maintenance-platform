@@ -90,6 +90,18 @@ namespace VMP.Vehicle.Apis
                 .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/{id:guid}", GetModelById)
+                .WithName("GetModelById")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy thông tin mẫu xe theo ID";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             return group;
         }
 
@@ -176,5 +188,16 @@ namespace VMP.Vehicle.Apis
             }
             return Results.NotFound(results);
         }
+
+        private static async Task<IResult> GetModelById(Guid id, IVehicleModelService modelService)
+        {
+            var result = await modelService.GetModelByIdAsync(id);
+            if (result.IsSuccess)
+            {
+                return Results.Ok(result);
+            }
+            return Results.NotFound(result);
+        }
+
     }
 }

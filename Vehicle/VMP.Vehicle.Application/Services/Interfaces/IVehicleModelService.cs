@@ -11,5 +11,6 @@ namespace VMP.Vehicle.Application.Services.Interfaces
         Task<ApiResponse<string>> DeleteModelAsync(Guid id);
         Task<ApiResponse<BulkModelResponse>> BulkCreateModelsAsync(BulkModelRequest request);
         Task<ApiResponse<BulkModelResponse>> BulkCreateModelsFromFileAsync(BulkModelFileRequest request);
+        Task<ApiResponse<ModelResponse>> GetModelByIdAsync(Guid id);
     }
 }

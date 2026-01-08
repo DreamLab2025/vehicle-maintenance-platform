@@ -410,6 +410,26 @@ namespace VMP.Vehicle.Application.Services.Implements
             }
         }
 
+        public async Task<ApiResponse<ModelResponse>> GetModelByIdAsync(Guid id)
+        {
+            try
+            {
+                var model = await GetModelWithDetailsAsync(id);
+                if (model == null || model.DeletedAt != null)
+                {
+                    return ApiResponse<ModelResponse>.FailureResponse("Không tìm thấy mẫu xe");
+                }
+                return ApiResponse<ModelResponse>.SuccessResponse(
+                    model.ToResponse(),
+                    "Lấy mẫu xe thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting vehicle model with ID: {ModelId}", id);
+                return ApiResponse<ModelResponse>.FailureResponse("Lỗi khi lấy mẫu xe");
+            }
+        }
+
         private async Task<(bool IsValid, VehicleBrand? Brand, VehicleType? Type, string? ErrorMessage)> ValidateTypeBrandRelationshipAsync(Guid typeId, Guid brandId)
         {
             var brand = await _unitOfWork.VehicleBrands.GetByIdAsync(brandId);
@@ -481,5 +501,7 @@ namespace VMP.Vehicle.Application.Services.Implements
                 ErrorMessage = errorMessage
             });
         }
+
+       
     }
 }
