@@ -4,7 +4,7 @@ using VMP.Common.Databases.Base;
 
 namespace VMP.Vehicle.Domain.Entities
 {
-    public class ModelImage : BaseEntity
+    public class VehicleVariant : BaseEntity
     {
         [Required]
         public Guid VehicleModelId { get; set; }

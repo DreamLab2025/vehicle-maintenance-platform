@@ -4,8 +4,8 @@ namespace VMP.Vehicle.Application.Dtos
 {
     public class UserVehicleRequest
     {
-        [Required(ErrorMessage = "Mẫu xe không được để trống")]
-        public Guid VehicleModelId { get; set; }
+        [Required(ErrorMessage = "Vui lòng chọn phiên bản màu sắc của xe")]
+        public Guid VehicleVariantId { get; set; }
 
         [Required(ErrorMessage = "Biển số xe không được để trống")]
         [MaxLength(20, ErrorMessage = "Biển số xe không được vượt quá 20 ký tự")]
@@ -36,10 +36,6 @@ namespace VMP.Vehicle.Application.Dtos
     {
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
-        public Guid VehicleModelId { get; set; }
-        public string VehicleModelName { get; set; } = null!;
-        public string BrandName { get; set; } = null!;
-        public string TypeName { get; set; } = null!;
         public string LicensePlate { get; set; } = null!;
         public string? Nickname { get; set; }
         public string? VinNumber { get; set; }
@@ -50,6 +46,7 @@ namespace VMP.Vehicle.Application.Dtos
         public DateTime? LastCalculatedDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public UserVehicleVariantResponse UserVehicleVariant { get; set; } = null!;
     }
 
     public class UserVehicleDetailResponse : UserVehicleResponse

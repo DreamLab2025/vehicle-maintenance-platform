@@ -10,9 +10,10 @@ namespace VMP.Vehicle.Domain.Entities
         public Guid UserId { get; set; }
 
         [Required]
-        public Guid VehicleModelId { get; set; }
-        [ForeignKey(nameof(VehicleModelId))]
-        public VehicleModel VehicleModel { get; set; } = null!;
+        public Guid VehicleVariantId { get; set; }
+
+        [ForeignKey(nameof(VehicleVariantId))]
+        public VehicleVariant VehicleVariant { get; set; } = null!;
 
         [Required, MaxLength(20)]
         public string LicensePlate { get; set; } = null!;

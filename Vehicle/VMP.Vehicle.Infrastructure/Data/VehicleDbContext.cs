@@ -14,7 +14,7 @@ namespace VMP.Vehicle.Infrastructure.Data
         public DbSet<VehicleBrand> VehicleBrands { get; set; } = null!;
         public DbSet<VehicleTypeBrand> VehicleTypeBrands { get; set; } = null!;
         public DbSet<VehicleModel> VehicleModels { get; set; } = null!;
-        public DbSet<ModelImage> ModelImages { get; set; } = null!;
+        public DbSet<VehicleVariant> VehicleVariants { get; set; } = null!;
         public DbSet<UserVehicle> UserVehicles { get; set; } = null!;
         public DbSet<ConsumableItem> ConsumableItems { get; set; } = null!;
         public DbSet<MaintenanceActivity> MaintenanceActivities { get; set; } = null!;
@@ -31,7 +31,7 @@ namespace VMP.Vehicle.Infrastructure.Data
             {
                 entity.Ignore(e => e.Id);
                 entity.HasKey(e => new { e.VehicleTypeId, e.VehicleBrandId });
-                
+
                 entity.HasOne(e => e.VehicleType)
                     .WithMany(vt => vt.VehicleTypeBrands)
                     .HasForeignKey(e => e.VehicleTypeId)
@@ -49,12 +49,12 @@ namespace VMP.Vehicle.Infrastructure.Data
                     .IsUnique();
             });
 
-            modelBuilder.Entity<ModelImage>(entity =>
+            modelBuilder.Entity<VehicleVariant>(entity =>
             {
                 entity.HasIndex(e => new { e.VehicleModelId, e.Color });
-                
+
                 entity.HasOne(e => e.VehicleModel)
-                    .WithMany(vm => vm.ModelImages)
+                    .WithMany(vm => vm.VehicleVariants)
                     .HasForeignKey(e => e.VehicleModelId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
@@ -63,7 +63,7 @@ namespace VMP.Vehicle.Infrastructure.Data
             modelBuilder.Entity<VehicleBrand>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleTypeBrand>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleModel>().HasQueryFilter(e => e.DeletedAt == null);
-            modelBuilder.Entity<ModelImage>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<VehicleVariant>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<UserVehicle>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<ConsumableItem>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<MaintenanceActivity>().HasQueryFilter(e => e.DeletedAt == null);

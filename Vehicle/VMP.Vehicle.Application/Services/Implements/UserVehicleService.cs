@@ -23,10 +23,11 @@ namespace VMP.Vehicle.Application.Services.Implements
         {
             try
             {
-                var vehicleModel = await _unitOfWork.VehicleModels.GetByIdAsync(request.VehicleModelId);
-                if (vehicleModel == null || vehicleModel.DeletedAt != null)
+                var vehicleVariant = await _unitOfWork.VehicleVariants.GetByIdAsync(request.VehicleVariantId);
+
+                if (vehicleVariant == null || vehicleVariant.DeletedAt != null)
                 {
-                    return ApiResponse<UserVehicleResponse>.FailureResponse("Mẫu xe không tồn tại");
+                    return ApiResponse<UserVehicleResponse>.FailureResponse("Phiên bản xe không tồn tại");
                 }
 
                 var existingVehicle = await _unitOfWork.UserVehicles
@@ -49,16 +50,11 @@ namespace VMP.Vehicle.Application.Services.Implements
                     RecordedAt = DateTime.UtcNow,
                     Source = Domain.Entities.MaintenanceSource.ManualInput
                 };
-                
+
                 await _unitOfWork.OdometerHistories.AddAsync(initialOdometerHistory);
                 await _unitOfWork.SaveChangesAsync();
 
-                var createdVehicle = await _unitOfWork.UserVehicles.AsQueryable()
-                    .Include(v => v.VehicleModel)
-                        .ThenInclude(m => m.Brand)
-                    .Include(v => v.VehicleModel)
-                        .ThenInclude(m => m.Type)
-                    .FirstOrDefaultAsync(v => v.Id == userVehicle.Id);
+                var createdVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(userVehicle.Id);
 
                 _logger.LogInformation("Created user vehicle with ID: {VehicleId} for user: {UserId}", userVehicle.Id, userId);
 
@@ -105,12 +101,7 @@ namespace VMP.Vehicle.Application.Services.Implements
         {
             try
             {
-                var vehicle = await _unitOfWork.UserVehicles.AsQueryable()
-                    .Include(v => v.VehicleModel)
-                        .ThenInclude(m => m.Brand)
-                    .Include(v => v.VehicleModel)
-                        .ThenInclude(m => m.Type)
-                    .FirstOrDefaultAsync(v => v.Id == vehicleId && v.UserId == userId && v.DeletedAt == null);
+                var vehicle = await _unitOfWork.UserVehicles.GetByIdAndUserIdWithFullDetailsAsync(vehicleId, userId);
 
                 if (vehicle == null)
                 {
@@ -139,12 +130,8 @@ namespace VMP.Vehicle.Application.Services.Implements
         {
             try
             {
-                var query = _unitOfWork.UserVehicles.AsQueryable()
-                    .Include(v => v.VehicleModel)
-                        .ThenInclude(m => m.Brand)
-                    .Include(v => v.VehicleModel)
-                        .ThenInclude(m => m.Type)
-                    .Where(v => v.UserId == userId && v.DeletedAt == null);
+                var query = _unitOfWork.UserVehicles.GetQueryWithFullDetails()
+                    .Where(v => v.UserId == userId);
 
                 var totalCount = await query.CountAsync();
 
@@ -212,17 +199,12 @@ namespace VMP.Vehicle.Application.Services.Implements
                     await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
                     await _unitOfWork.SaveChangesAsync();
 
-                    _logger.LogInformation("Updated odometer for vehicle: {VehicleId} from {OldOdometer} to {NewOdometer} km", 
+                    _logger.LogInformation("Updated odometer for vehicle: {VehicleId} from {OldOdometer} to {NewOdometer} km",
                         vehicleId, vehicle.CurrentOdometer, request.CurrentOdometer);
                 }
 
                 // Load navigation properties
-                var updatedVehicle = await _unitOfWork.UserVehicles.AsQueryable()
-                    .Include(v => v.VehicleModel)
-                        .ThenInclude(m => m.Brand)
-                    .Include(v => v.VehicleModel)
-                        .ThenInclude(m => m.Type)
-                    .FirstOrDefaultAsync(v => v.Id == vehicleId);
+                var updatedVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(vehicleId);
 
                 return ApiResponse<UserVehicleResponse>.SuccessResponse(
                     updatedVehicle!.ToResponse(),
@@ -248,10 +230,12 @@ namespace VMP.Vehicle.Application.Services.Implements
                 }
 
                 // Validate vehicle model exists
-                var vehicleModel = await _unitOfWork.VehicleModels.GetByIdAsync(request.VehicleModelId);
-                if (vehicleModel == null || vehicleModel.DeletedAt != null)
+                var vehicleVariant = await _unitOfWork.VehicleVariants
+                    .GetByIdAsync(request.VehicleVariantId);
+
+                if (vehicleVariant == null)
                 {
-                    return ApiResponse<UserVehicleResponse>.FailureResponse("Mẫu xe không tồn tại");
+                    return ApiResponse<UserVehicleResponse>.FailureResponse("Phiên bản xe không tồn tại");
                 }
 
                 // Check duplicate license plate (excluding current vehicle)
@@ -271,12 +255,7 @@ namespace VMP.Vehicle.Application.Services.Implements
                 await _unitOfWork.SaveChangesAsync();
 
                 // Load navigation properties
-                var updatedVehicle = await _unitOfWork.UserVehicles.AsQueryable()
-                    .Include(v => v.VehicleModel)
-                        .ThenInclude(m => m.Brand)
-                    .Include(v => v.VehicleModel)
-                        .ThenInclude(m => m.Type)
-                    .FirstOrDefaultAsync(v => v.Id == vehicleId);
+                var updatedVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(vehicleId);
 
                 _logger.LogInformation("Updated user vehicle with ID: {VehicleId} for user: {UserId}", vehicleId, userId);
 

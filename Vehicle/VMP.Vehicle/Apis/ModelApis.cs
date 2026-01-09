@@ -28,8 +28,8 @@ namespace VMP.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<ModelResponse>>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<List<ModelResponse>>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<List<ModelResponseWithVariants>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<ModelResponseWithVariants>>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateVehicleModel)
@@ -40,8 +40,8 @@ namespace VMP.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
-                .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status201Created)
-                .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status201Created)
+                .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/bulk", BulkCreateModels)
@@ -98,8 +98,8 @@ namespace VMP.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;

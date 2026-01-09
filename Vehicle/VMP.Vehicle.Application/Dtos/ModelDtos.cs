@@ -135,8 +135,6 @@ namespace VMP.Vehicle.Application.Dtos
         public string FuelTypeName { get; set; } = null!;
         public VehicleTransmissionType TransmissionType { get; set; }
         public string TransmissionTypeName { get; set; } = null!;
-        public string? ImageUrl { get; set; }
-        public List<ModelImageResponse> AvailableColors { get; set; } = new();
         public string? EngineDisplacementDisplay { get; set; } // Hiển thị phân khối với đơn vị "cc"
         public decimal? EngineCapacity { get; set; }
         public decimal? OilCapacity { get; set; }
@@ -144,6 +142,11 @@ namespace VMP.Vehicle.Application.Dtos
         public string? TireSizeRear { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+    }
+
+    public class ModelResponseWithVariants : ModelResponse
+    {
+        public List<VehicleVariantResponse> Variants { get; set; } = new();
     }
 
     public class BulkModelResponse
@@ -159,6 +162,7 @@ namespace VMP.Vehicle.Application.Dtos
         public Guid? TypeId { get; set; }
         public Guid? BrandId { get; set; }
         public string? ModelName { get; set; }
+        public string? Color { get; set; }
         public VehicleTransmissionType? TransmissionType { get; set; }
         public int? EngineDisplacement { get; set; }
         public int? ReleaseYear { get; set; }

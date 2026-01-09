@@ -42,7 +42,7 @@ namespace VMP.Vehicle.Domain.Entities
         // Navigation properties
         public ICollection<StandardMaintenanceSchedule> StandardMaintenanceSchedules { get; set; } = new List<StandardMaintenanceSchedule>();
         public ICollection<UserVehicle> UserVehicles { get; set; } = new List<UserVehicle>();
-        public ICollection<ModelImage> ModelImages { get; set; } = new List<ModelImage>();
+        public ICollection<VehicleVariant> VehicleVariants { get; set; } = new List<VehicleVariant>();
     }
 
     public enum VehicleFuelType

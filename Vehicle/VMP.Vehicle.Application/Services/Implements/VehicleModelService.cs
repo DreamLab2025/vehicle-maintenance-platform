@@ -20,19 +20,19 @@ namespace VMP.Vehicle.Application.Services.Implements
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<ApiResponse<ModelResponse>> CreateModelAsync(ModelRequest request)
+        public async Task<ApiResponse<ModelResponseWithVariants>> CreateModelAsync(ModelRequest request)
         {
             try
             {
                 var (isValid, brand, type, errorMessage) = await ValidateTypeBrandRelationshipAsync(request.TypeId, request.BrandId);
                 if (!isValid)
                 {
-                    return ApiResponse<ModelResponse>.FailureResponse(errorMessage!);
+                    return ApiResponse<ModelResponseWithVariants>.FailureResponse(errorMessage!);
                 }
 
                 if (await ModelNameExistsAsync(request.Name, request.BrandId))
                 {
-                    return ApiResponse<ModelResponse>.FailureResponse("Mẫu xe đã tồn tại cho thương hiệu này");
+                    return ApiResponse<ModelResponseWithVariants>.FailureResponse("Mẫu xe đã tồn tại cho thương hiệu này");
                 }
 
                 var model = request.ToEntity();
@@ -44,14 +44,14 @@ namespace VMP.Vehicle.Application.Services.Implements
                 {
                     foreach (var imageItem in request.Images)
                     {
-                        var image = new ModelImage
+                        var image = new VehicleVariant
                         {
                             VehicleModelId = model.Id,
                             Color = imageItem.Color,
                             HexCode = ColorCode.IsHex(imageItem.HexCode) ? imageItem.HexCode : "#000000",
                             ImageUrl = imageItem.ImageUrl
                         };
-                        await _unitOfWork.ModelImages.AddAsync(image);
+                        await _unitOfWork.VehicleVariants.AddAsync(image);
                     }
                     await _unitOfWork.SaveChangesAsync();
                 }
@@ -61,14 +61,14 @@ namespace VMP.Vehicle.Application.Services.Implements
                 _logger.LogInformation("Created vehicle model {ModelName} (ID: {ModelId}) for brand {BrandName} with {ImageCount} images",
                     model.Name, model.Id, brand!.Name, request.Images?.Count ?? 0);
 
-                return ApiResponse<ModelResponse>.SuccessResponse(
-                    createdModel!.ToResponse(),
+                return ApiResponse<ModelResponseWithVariants>.SuccessResponse(
+                    createdModel!.ToModelResponseWithVariants(),
                     "Tạo mẫu xe thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating vehicle model");
-                return ApiResponse<ModelResponse>.FailureResponse("Lỗi khi tạo mẫu xe");
+                return ApiResponse<ModelResponseWithVariants>.FailureResponse("Lỗi khi tạo mẫu xe");
             }
         }
 
@@ -99,14 +99,14 @@ namespace VMP.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<ModelResponse>>> GetAllModelsAsync(ModelFilterRequest filterRequest)
+        public async Task<ApiResponse<List<ModelResponseWithVariants>>> GetAllModelsAsync(ModelFilterRequest filterRequest)
         {
             try
             {
                 var query = _unitOfWork.VehicleModels.AsQueryable()
                     .Include(m => m.Brand)
                     .Include(m => m.Type)
-                    .Include(m => m.ModelImages)
+                    .Include(m => m.VehicleVariants)
                     .Where(m => m.DeletedAt == null);
 
                 // Apply filters by ID (more efficient than name search)
@@ -123,6 +123,11 @@ namespace VMP.Vehicle.Application.Services.Implements
                 if (!string.IsNullOrWhiteSpace(filterRequest.ModelName))
                 {
                     query = query.Where(m => m.Name.Contains(filterRequest.ModelName));
+                }
+
+                if (!string.IsNullOrWhiteSpace(filterRequest.Color))
+                {
+                    query = query.Where(m => m.VehicleVariants.Any(v => v.Color.Contains(filterRequest.Color)));
                 }
 
                 if (filterRequest.TransmissionType.HasValue)
@@ -154,9 +159,9 @@ namespace VMP.Vehicle.Application.Services.Implements
                     .Take(filterRequest.PageSize)
                     .ToListAsync();
 
-                var modelResponses = items.Select(m => m.ToResponse()).ToList();
+                var modelResponses = items.Select(m => m.ToModelResponseWithVariants()).ToList();
 
-                return ApiResponse<ModelResponse>.SuccessPagedResponse(
+                return ApiResponse<ModelResponseWithVariants>.SuccessPagedResponse(
                     modelResponses,
                     totalCount,
                     filterRequest.PageNumber,
@@ -166,7 +171,7 @@ namespace VMP.Vehicle.Application.Services.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all vehicle models");
-                return ApiResponse<List<ModelResponse>>.FailureResponse("Lỗi khi lấy danh sách mẫu xe");
+                return ApiResponse<List<ModelResponseWithVariants>>.FailureResponse("Lỗi khi lấy danh sách mẫu xe");
             }
         }
 
@@ -201,7 +206,7 @@ namespace VMP.Vehicle.Application.Services.Implements
                 _logger.LogInformation("Updated vehicle model {ModelName} (ID: {ModelId})", model.Name, id);
 
                 return ApiResponse<ModelResponse>.SuccessResponse(
-                    updatedModel!.ToResponse(),
+                    updatedModel!.ToModelResponse(),
                     "Cập nhật mẫu xe thành công");
             }
             catch (Exception ex)
@@ -249,14 +254,14 @@ namespace VMP.Vehicle.Application.Services.Implements
                         {
                             foreach (var imageItem in modelItem.Images)
                             {
-                                var image = new ModelImage
+                                var image = new VehicleVariant
                                 {
                                     VehicleModelId = model.Id,
                                     Color = imageItem.Color,
                                     HexCode = ColorCode.IsHex(imageItem.HexCode) ? imageItem.HexCode : "#000000",
                                     ImageUrl = imageItem.ImageUrl
                                 };
-                                await _unitOfWork.ModelImages.AddAsync(image);
+                                await _unitOfWork.VehicleVariants.AddAsync(image);
                             }
                             await _unitOfWork.SaveChangesAsync();
                         }
@@ -281,13 +286,13 @@ namespace VMP.Vehicle.Application.Services.Implements
                     var createdModels = await _unitOfWork.VehicleModels.AsQueryable()
                         .Include(m => m.Brand)
                         .Include(m => m.Type)
-                        .Include(m => m.ModelImages)
+                        .Include(m => m.VehicleVariants)
                         .Where(m => m.BrandId == request.BrandId && m.DeletedAt == null)
                         .OrderByDescending(m => m.CreatedAt)
                         .Take(response.SuccessCount)
                         .ToListAsync();
 
-                    response.SuccessfulModels = createdModels.Select(m => m.ToResponse()).ToList();
+                    response.SuccessfulModels = createdModels.Select(m => m.ToModelResponse()).ToList();
                 }
 
                 _logger.LogInformation("Bulk create models completed for {BrandName} ({TypeName}). Success: {SuccessCount}, Failed: {FailedCount}",
@@ -355,14 +360,14 @@ namespace VMP.Vehicle.Application.Services.Implements
                         {
                             foreach (var imageItem in modelItem.Images)
                             {
-                                var image = new ModelImage
+                                var image = new VehicleVariant
                                 {
                                     VehicleModelId = model.Id,
                                     Color = imageItem.Color,
                                     HexCode = ColorCode.IsHex(imageItem.HexCode) ? imageItem.HexCode : "#000000",
                                     ImageUrl = imageItem.ImageUrl
                                 };
-                                await _unitOfWork.ModelImages.AddAsync(image);
+                                await _unitOfWork.VehicleVariants.AddAsync(image);
                             }
                             await _unitOfWork.SaveChangesAsync();
                         }
@@ -387,13 +392,13 @@ namespace VMP.Vehicle.Application.Services.Implements
                     var createdModels = await _unitOfWork.VehicleModels.AsQueryable()
                         .Include(m => m.Brand)
                         .Include(m => m.Type)
-                        .Include(m => m.ModelImages)
+                        .Include(m => m.VehicleVariants)
                         .Where(m => m.BrandId == brand.Id && m.DeletedAt == null)
                         .OrderByDescending(m => m.CreatedAt)
                         .Take(response.SuccessCount)
                         .ToListAsync();
 
-                    response.SuccessfulModels = createdModels.Select(m => m.ToResponse()).ToList();
+                    response.SuccessfulModels = createdModels.Select(m => m.ToModelResponse()).ToList();
                 }
 
                 _logger.LogInformation("Bulk create models from file completed for {BrandName} ({TypeName}). Success: {SuccessCount}, Failed: {FailedCount}",
@@ -410,23 +415,23 @@ namespace VMP.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<ModelResponse>> GetModelByIdAsync(Guid id)
+        public async Task<ApiResponse<ModelResponseWithVariants>> GetModelByIdAsync(Guid id)
         {
             try
             {
                 var model = await GetModelWithDetailsAsync(id);
                 if (model == null || model.DeletedAt != null)
                 {
-                    return ApiResponse<ModelResponse>.FailureResponse("Không tìm thấy mẫu xe");
+                    return ApiResponse<ModelResponseWithVariants>.FailureResponse("Không tìm thấy mẫu xe");
                 }
-                return ApiResponse<ModelResponse>.SuccessResponse(
-                    model.ToResponse(),
+                return ApiResponse<ModelResponseWithVariants>.SuccessResponse(
+                    model.ToModelResponseWithVariants(),
                     "Lấy mẫu xe thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting vehicle model with ID: {ModelId}", id);
-                return ApiResponse<ModelResponse>.FailureResponse("Lỗi khi lấy mẫu xe");
+                return ApiResponse<ModelResponseWithVariants>.FailureResponse("Lỗi khi lấy mẫu xe");
             }
         }
 
@@ -469,7 +474,7 @@ namespace VMP.Vehicle.Application.Services.Implements
             return await _unitOfWork.VehicleModels.AsQueryable()
                 .Include(m => m.Brand)
                 .Include(m => m.Type)
-                .Include(m => m.ModelImages)
+                .Include(m => m.VehicleVariants)
                 .FirstOrDefaultAsync(m => m.Id == id);
         }
 
@@ -502,6 +507,6 @@ namespace VMP.Vehicle.Application.Services.Implements
             });
         }
 
-       
+
     }
 }

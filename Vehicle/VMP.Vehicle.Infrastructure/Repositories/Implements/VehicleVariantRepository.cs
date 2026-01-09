@@ -6,13 +6,13 @@ using VMP.Vehicle.Infrastructure.Data;
 
 namespace VMP.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class ModelImageRepository : PostgresRepository<ModelImage>, IModelImageRepository
+    public class VehicleVariantRepository : PostgresRepository<VehicleVariant>, IVehicleVariantRepository
     {
-        public ModelImageRepository(VehicleDbContext context) : base(context)
+        public VehicleVariantRepository(VehicleDbContext context) : base(context)
         {
         }
 
-        public async Task<IEnumerable<ModelImage>> GetImagesByVehicleModelIdAsync(Guid vehicleModelId, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<VehicleVariant>> GetImagesByVehicleModelIdAsync(Guid vehicleModelId, CancellationToken cancellationToken = default)
         {
             return await _dbSet
                 .Where(vi => vi.VehicleModelId == vehicleModelId)
@@ -20,7 +20,7 @@ namespace VMP.Vehicle.Infrastructure.Repositories.Implements
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<ModelImage?> GetImageByVehicleModelIdAndColorAsync(Guid vehicleModelId, string color, CancellationToken cancellationToken = default)
+        public async Task<VehicleVariant?> GetImageByVehicleModelIdAndColorAsync(Guid vehicleModelId, string color, CancellationToken cancellationToken = default)
         {
             return await _dbSet
                 .FirstOrDefaultAsync(vi => vi.VehicleModelId == vehicleModelId && vi.Color == color, cancellationToken);

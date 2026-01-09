@@ -5,11 +5,11 @@ using VMP.Vehicle.Application.Services.Interfaces;
 
 namespace VMP.Vehicle.Apis
 {
-    public static class ModelImageApis
+    public static class VehicleVariantApis
     {
         public static IEndpointRouteBuilder MapModelImageApi(this IEndpointRouteBuilder builder)
         {
-            builder.MapGroup("/api/v1/model-images")
+            builder.MapGroup("/api/v1/variants")
                 .MapModelImageRoutes()
                 .WithTags("Model Image Api")
                 .RequireRateLimiting("Fixed");
@@ -27,8 +27,8 @@ namespace VMP.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<ModelImageResponse>>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<List<ModelImageResponse>>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<List<VehicleVariantResponse>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<VehicleVariantResponse>>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateModelImage)
@@ -39,8 +39,8 @@ namespace VMP.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
-                .Produces<ApiResponse<ModelImageResponse>>(StatusCodes.Status201Created)
-                .Produces<ApiResponse<ModelImageResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status201Created)
+                .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{id:guid}", UpdateModelImage)
@@ -51,8 +51,8 @@ namespace VMP.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
-                .Produces<ApiResponse<ModelImageResponse>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<ModelImageResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapDelete("/{id:guid}", DeleteModelImage)
@@ -72,15 +72,15 @@ namespace VMP.Vehicle.Apis
 
         private static async Task<IResult> GetImagesByModelId(
             Guid vehicleModelId,
-            IModelImageService modelImageService)
+            IVehicleVariantService modelImageService)
         {
             var result = await modelImageService.GetImagesByModelIdAsync(vehicleModelId);
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 
         private static async Task<IResult> CreateModelImage(
-            [FromBody] ModelImageRequest request,
-            IModelImageService modelImageService)
+            [FromBody] VehicleVariantRequest request,
+            IVehicleVariantService modelImageService)
         {
             var result = await modelImageService.CreateImageAsync(request);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
@@ -88,8 +88,8 @@ namespace VMP.Vehicle.Apis
 
         private static async Task<IResult> UpdateModelImage(
             Guid id,
-            [FromBody] ModelImageUpdateRequest request,
-            IModelImageService modelImageService)
+            [FromBody] VehicleVariantUpdateRequest request,
+            IVehicleVariantService modelImageService)
         {
             var result = await modelImageService.UpdateImageAsync(id, request);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
@@ -97,7 +97,7 @@ namespace VMP.Vehicle.Apis
 
         private static async Task<IResult> DeleteModelImage(
             Guid id,
-            IModelImageService modelImageService)
+            IVehicleVariantService modelImageService)
         {
             var result = await modelImageService.DeleteImageAsync(id);
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);

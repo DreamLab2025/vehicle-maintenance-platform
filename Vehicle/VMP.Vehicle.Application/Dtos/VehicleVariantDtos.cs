@@ -2,7 +2,7 @@
 
 namespace VMP.Vehicle.Application.Dtos
 {
-    public class ModelImageRequest
+    public class VehicleVariantRequest
     {
         [Required(ErrorMessage = "Mã mẫu xe không được để trống")]
         public Guid VehicleModelId { get; set; }
@@ -21,7 +21,7 @@ namespace VMP.Vehicle.Application.Dtos
         public string ImageUrl { get; set; } = null!;
     }
 
-    public class ModelImageResponse
+    public class VehicleVariantResponse
     {
         public Guid Id { get; set; }
         public Guid VehicleModelId { get; set; }
@@ -32,7 +32,12 @@ namespace VMP.Vehicle.Application.Dtos
         public DateTime? UpdatedAt { get; set; }
     }
 
-    public class ModelImageUpdateRequest
+    public class UserVehicleVariantResponse : VehicleVariantResponse
+    {
+        public ModelResponse Model { get; set; } = null!;
+    }
+
+    public class VehicleVariantUpdateRequest
     {
         [Required(ErrorMessage = "Màu xe không được để trống")]
         [MaxLength(50, ErrorMessage = "Màu xe không được vượt quá 50 ký tự")]

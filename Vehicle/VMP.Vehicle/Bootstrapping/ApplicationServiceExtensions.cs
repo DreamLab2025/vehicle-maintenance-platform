@@ -27,7 +27,7 @@ namespace VMP.Vehicle.Bootstrapping
             builder.Services.AddScoped<IVehicleTypeService, VehicleTypeService>();
             builder.Services.AddScoped<IVehicleBrandService, VehicleBrandService>();
             builder.Services.AddScoped<IVehicleModelService, VehicleModelService>();
-            builder.Services.AddScoped<IModelImageService, ModelImageService>();
+            builder.Services.AddScoped<IVehicleVariantService, VehicleVariantService>();
             builder.Services.AddScoped<IUserVehicleService, UserVehicleService>();
             builder.Services.AddScoped<IMaintenanceActivityService, MaintenanceActivityService>();
 

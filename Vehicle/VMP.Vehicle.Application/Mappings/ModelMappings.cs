@@ -23,7 +23,7 @@ namespace VMP.Vehicle.Application.Mappings
             };
         }
 
-        public static ModelResponse ToResponse(this VehicleModel entity)
+        public static ModelResponse ToModelResponse(this VehicleModel entity)
         {
             return new ModelResponse
             {
@@ -38,8 +38,32 @@ namespace VMP.Vehicle.Application.Mappings
                 FuelTypeName = GetFuelTypeName(entity.FuelType),
                 TransmissionType = entity.TransmissionType,
                 TransmissionTypeName = GetTransmissionTypeName(entity.TransmissionType),
-                ImageUrl = entity.ModelImages?.FirstOrDefault()?.ImageUrl,
-                AvailableColors = entity.ModelImages?.Select(mi => mi.ToResponse()).ToList() ?? [],
+                EngineDisplacementDisplay = entity.EngineDisplacement.HasValue ? $"{entity.EngineDisplacement} cc" : null,
+                EngineCapacity = entity.EngineCapacity,
+                OilCapacity = entity.OilCapacity,
+                TireSizeFront = entity.TireSizeFront,
+                TireSizeRear = entity.TireSizeRear,
+                CreatedAt = entity.CreatedAt,
+                UpdatedAt = entity.UpdatedAt
+            };
+        }
+
+        public static ModelResponseWithVariants ToModelResponseWithVariants(this VehicleModel entity)
+        {
+            return new ModelResponseWithVariants
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                BrandId = entity.BrandId,
+                BrandName = entity.Brand?.Name ?? string.Empty,
+                TypeId = entity.TypeId,
+                TypeName = entity.Type?.Name ?? string.Empty,
+                ReleaseYear = entity.ReleaseYear,
+                FuelType = entity.FuelType,
+                FuelTypeName = GetFuelTypeName(entity.FuelType),
+                TransmissionType = entity.TransmissionType,
+                TransmissionTypeName = GetTransmissionTypeName(entity.TransmissionType),
+                Variants = entity.VehicleVariants?.Select(mi => mi.ToResponse()).ToList() ?? [],
                 EngineDisplacementDisplay = entity.EngineDisplacement.HasValue ? $"{entity.EngineDisplacement} cc" : null,
                 EngineCapacity = entity.EngineCapacity,
                 OilCapacity = entity.OilCapacity,

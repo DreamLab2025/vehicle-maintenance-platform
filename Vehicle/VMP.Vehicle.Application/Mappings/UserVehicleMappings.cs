@@ -10,7 +10,7 @@ namespace VMP.Vehicle.Application.Mappings
             return new UserVehicle
             {
                 UserId = userId,
-                VehicleModelId = request.VehicleModelId,
+                VehicleVariantId = request.VehicleVariantId,
                 LicensePlate = request.LicensePlate,
                 Nickname = request.Nickname,
                 VinNumber = request.VinNumber,
@@ -28,10 +28,7 @@ namespace VMP.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 UserId = entity.UserId,
-                VehicleModelId = entity.VehicleModelId,
-                VehicleModelName = entity.VehicleModel?.Name ?? string.Empty,
-                BrandName = entity.VehicleModel?.Brand?.Name ?? string.Empty,
-                TypeName = entity.VehicleModel?.Type?.Name ?? string.Empty,
+                UserVehicleVariant = entity.VehicleVariant!.ToUserVehicleVariantResponse(),
                 LicensePlate = entity.LicensePlate,
                 Nickname = entity.Nickname,
                 VinNumber = entity.VinNumber,
@@ -48,15 +45,12 @@ namespace VMP.Vehicle.Application.Mappings
         public static UserVehicleDetailResponse ToDetailResponse(this UserVehicle entity, int totalMaintenanceActivities = 0, DateTime? lastMaintenanceDate = null)
         {
             var daysSincePurchase = (DateTime.UtcNow - entity.PurchaseDate).Days;
-            
+
             return new UserVehicleDetailResponse
             {
                 Id = entity.Id,
                 UserId = entity.UserId,
-                VehicleModelId = entity.VehicleModelId,
-                VehicleModelName = entity.VehicleModel?.Name ?? string.Empty,
-                BrandName = entity.VehicleModel?.Brand?.Name ?? string.Empty,
-                TypeName = entity.VehicleModel?.Type?.Name ?? string.Empty,
+                UserVehicleVariant = entity.VehicleVariant!.ToUserVehicleVariantResponse(),
                 LicensePlate = entity.LicensePlate,
                 Nickname = entity.Nickname,
                 VinNumber = entity.VinNumber,
@@ -76,7 +70,7 @@ namespace VMP.Vehicle.Application.Mappings
 
         public static void UpdateEntity(this UserVehicle entity, UserVehicleRequest request)
         {
-            entity.VehicleModelId = request.VehicleModelId;
+            entity.VehicleVariantId = request.VehicleVariantId;
             entity.LicensePlate = request.LicensePlate;
             entity.Nickname = request.Nickname;
             entity.VinNumber = request.VinNumber;

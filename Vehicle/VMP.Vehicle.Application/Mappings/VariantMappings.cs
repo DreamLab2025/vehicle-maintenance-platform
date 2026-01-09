@@ -4,11 +4,11 @@ using VMP.Vehicle.Domain.Entities;
 
 namespace VMP.Vehicle.Application.Mappings
 {
-    public static class ModelImageMappings
+    public static class VariantMappings
     {
-        public static ModelImage ToEntity(this ModelImageRequest request)
+        public static VehicleVariant ToEntity(this VehicleVariantRequest request)
         {
-            return new ModelImage
+            return new VehicleVariant
             {
                 VehicleModelId = request.VehicleModelId,
                 Color = request.Color,
@@ -17,9 +17,9 @@ namespace VMP.Vehicle.Application.Mappings
             };
         }
 
-        public static ModelImageResponse ToResponse(this ModelImage entity)
+        public static VehicleVariantResponse ToResponse(this VehicleVariant entity)
         {
-            return new ModelImageResponse
+            return new VehicleVariantResponse
             {
                 Id = entity.Id,
                 VehicleModelId = entity.VehicleModelId,
@@ -31,7 +31,22 @@ namespace VMP.Vehicle.Application.Mappings
             };
         }
 
-        public static void UpdateEntity(this ModelImage entity, ModelImageUpdateRequest request)
+        public static UserVehicleVariantResponse ToUserVehicleVariantResponse(this VehicleVariant entity)
+        {
+            return new UserVehicleVariantResponse
+            {
+                Id = entity.Id,
+                VehicleModelId = entity.VehicleModelId,
+                Color = entity.Color,
+                HexCode = entity.HexCode,
+                ImageUrl = entity.ImageUrl,
+                CreatedAt = entity.CreatedAt,
+                UpdatedAt = entity.UpdatedAt,
+                Model = entity.VehicleModel?.ToModelResponse() ?? new ModelResponse()
+            };
+        }
+
+        public static void UpdateEntity(this VehicleVariant entity, VehicleVariantUpdateRequest request)
         {
             entity.Color = request.Color;
             entity.ImageUrl = request.ImageUrl;
