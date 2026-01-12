@@ -56,4 +56,12 @@ namespace VMP.Vehicle.Application.Dtos
         public int DaysSincePurchase { get; set; }
         public int TotalKmDriven { get; set; }
     }
+
+    public class VehicleStreakResponse
+    {
+        public Guid VehicleId { get; set; }
+        public int CurrentStreak { get; set; }
+        public bool IsStreakActive { get; set; }
+        public int DaysToNextUnlock { get; set; }
+    }
 }

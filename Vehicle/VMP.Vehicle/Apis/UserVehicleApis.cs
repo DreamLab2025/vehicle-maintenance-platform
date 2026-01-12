@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+﻿using VMP.Common.Jwt;
 using VMP.Common.Shared;
 using VMP.Vehicle.Application.Dtos;
 using VMP.Vehicle.Application.Services.Interfaces;
@@ -91,21 +91,35 @@ namespace VMP.Vehicle.Apis
                 .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/{userVehicleId:guid}/streak", GetVehicleStreak)
+                .WithName("GetVehicleStreak")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy chuỗi streak của xe";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<VehicleStreakResponse>>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             return group;
         }
 
-        private static Guid GetUserId(ClaimsPrincipal user)
+        private static async Task<IResult> GetVehicleStreak(
+            ICurrentUserService currentUserService,
+            IUserVehicleService userVehicleService,
+            Guid userVehicleId)
         {
-            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            return Guid.TryParse(userIdClaim, out var userId) ? userId : Guid.Empty;
+            var result = await userVehicleService.GetVehicleStreakAsync(userVehicleId);
+            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 
         private static async Task<IResult> GetUserVehicles(
-            ClaimsPrincipal user,
+            ICurrentUserService currentUserService,
             [AsParameters] PaginationRequest paginationRequest,
             IUserVehicleService vehicleService)
         {
-            var userId = GetUserId(user);
+            var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
             {
                 return Results.Unauthorized();
@@ -117,10 +131,10 @@ namespace VMP.Vehicle.Apis
 
         private static async Task<IResult> GetUserVehicleById(
             Guid id,
-            ClaimsPrincipal user,
+            ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
         {
-            var userId = GetUserId(user);
+            var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
             {
                 return Results.Unauthorized();
@@ -132,10 +146,10 @@ namespace VMP.Vehicle.Apis
 
         private static async Task<IResult> CreateUserVehicle(
             UserVehicleRequest request,
-            ClaimsPrincipal user,
+            ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
         {
-            var userId = GetUserId(user);
+            var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
             {
                 return Results.Unauthorized();
@@ -148,10 +162,10 @@ namespace VMP.Vehicle.Apis
         private static async Task<IResult> UpdateUserVehicle(
             Guid id,
             UserVehicleRequest request,
-            ClaimsPrincipal user,
+            ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
         {
-            var userId = GetUserId(user);
+            var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
             {
                 return Results.Unauthorized();
@@ -164,10 +178,10 @@ namespace VMP.Vehicle.Apis
         private static async Task<IResult> UpdateOdometer(
             Guid id,
             UpdateOdometerRequest request,
-            ClaimsPrincipal user,
+            ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
         {
-            var userId = GetUserId(user);
+            var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
             {
                 return Results.Unauthorized();
@@ -179,10 +193,10 @@ namespace VMP.Vehicle.Apis
 
         private static async Task<IResult> DeleteUserVehicle(
             Guid id,
-            ClaimsPrincipal user,
+            ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
         {
-            var userId = GetUserId(user);
+            var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
             {
                 return Results.Unauthorized();

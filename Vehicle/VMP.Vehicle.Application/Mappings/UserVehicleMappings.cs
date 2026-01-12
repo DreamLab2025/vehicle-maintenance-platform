@@ -91,5 +91,16 @@ namespace VMP.Vehicle.Application.Mappings
             }
             entity.LastCalculatedDate = DateTime.UtcNow;
         }
+
+        public static VehicleStreakResponse ToStreakResponse(this int streak, Guid userVehicleId)
+        {
+            return new VehicleStreakResponse
+            {
+                VehicleId = userVehicleId,
+                CurrentStreak = streak,
+                IsStreakActive = streak > 0,
+                DaysToNextUnlock = streak > 0 ? 7 - (streak % 7) : 7
+            };
+        }
     }
 }

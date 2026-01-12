@@ -11,5 +11,6 @@ namespace VMP.Vehicle.Application.Services.Interfaces
         Task<ApiResponse<UserVehicleResponse>> UpdateUserVehicleAsync(Guid userId, Guid vehicleId, UserVehicleRequest request);
         Task<ApiResponse<UserVehicleResponse>> UpdateOdometerAsync(Guid userId, Guid vehicleId, UpdateOdometerRequest request);
         Task<ApiResponse<string>> DeleteUserVehicleAsync(Guid userId, Guid vehicleId);
+        Task<ApiResponse<VehicleStreakResponse>> GetVehicleStreakAsync(Guid userVehicleId);
     }
 }

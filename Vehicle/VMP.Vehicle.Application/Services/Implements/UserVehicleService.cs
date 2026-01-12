@@ -30,11 +30,21 @@ namespace VMP.Vehicle.Application.Services.Implements
                     return ApiResponse<UserVehicleResponse>.FailureResponse("Phiên bản xe không tồn tại");
                 }
 
+                var (isAllowed, message) = await _unitOfWork.UserVehicles
+                    .CheckCanCreateVehicleAsync(userId);
+
+                if (!isAllowed)
+                {
+                    return ApiResponse<UserVehicleResponse>.FailureResponse(message);
+                }
+
                 var existingVehicle = await _unitOfWork.UserVehicles
                     .FindOneAsync(v => v.UserId == userId && v.LicensePlate == request.LicensePlate && v.DeletedAt == null);
 
                 if (existingVehicle != null)
                 {
+                    _logger.LogWarning("Attempt to create duplicate vehicle with license plate: {LicensePlate} for user: {UserId}",
+                        request.LicensePlate, userId);
                     return ApiResponse<UserVehicleResponse>.FailureResponse("Biển số xe đã tồn tại trong danh sách của bạn");
                 }
 
@@ -161,6 +171,12 @@ namespace VMP.Vehicle.Application.Services.Implements
                 _logger.LogError(ex, "Error getting user vehicles for user: {UserId}", userId);
                 return ApiResponse<List<UserVehicleResponse>>.FailureResponse("Lỗi khi lấy danh sách xe");
             }
+        }
+
+        public async Task<ApiResponse<VehicleStreakResponse>> GetVehicleStreakAsync(Guid userVehicleId)
+        {
+            var streak = await _unitOfWork.OdometerHistories.GetCurrentStreakAsync(userVehicleId);
+            return ApiResponse<VehicleStreakResponse>.SuccessResponse(streak.ToStreakResponse(userVehicleId), "Lấy chuỗi xe thành công");
         }
 
         public async Task<ApiResponse<UserVehicleResponse>> UpdateOdometerAsync(Guid userId, Guid vehicleId, UpdateOdometerRequest request)
