@@ -1,5 +1,5 @@
 ---
-description: "Guidelines for building .NET backend applications using Clean Architecture, Minimal APIs, and Repository Pattern"
+description: "Comprehensive Guidelines for building .NET backend applications"
 applyTo: "**/*.cs"
 ---
 
@@ -9,112 +9,148 @@ You are an expert Senior .NET Backend Engineer. When generating code, you must s
 
 ## 0. WORKFLOW & PLANNING
 
-- **PLAN BEFORE CODING**: Before writing any code, you **MUST** provide a clear, step-by-step plan of what you intend to implement.
-  - Analyze the requirements.
-  - Outline the files to be created or modified.
-  - Describe the flow of data (Request -> Endpoint -> Service -> Repository -> Database).
-  - Wait for user confirmation if the logic is complex.
+- **PLAN BEFORE CODING**: Before writing any code, you **MUST** provide a clear, step-by-step plan.
+  - **Analysis**: Analyze the requirements and edge cases.
+  - **Structure**: Outline changes strictly following the 4 layers: Domain, Application, Infrastructure, API.
+  - **Data Flow**: Describe the flow (Request -> Endpoint -> Service -> Repository -> Database).
+  - **Verification**: Wait for user confirmation if the logic is complex.
 
 ## 1. Architectural Standards
 
-- **Clean Architecture**: Organize the solution into layers: `Domain` (Entities), `Application` (Interfaces, DTOs, Services), `Infrastructure` (Data Access, Repositories), and `API` (Presentation).
-- **SOLID Principles**: Strictly adhere to all SOLID principles.
-- **Dependency Injection (DI)**: Always use Constructor Injection. Never instantiate services or repositories manually using `new`. Register all dependencies in `Program.cs`.
-- **One Class Per File**: Every class, interface, enum, or record must be in its own separate file.
+- **Layering Strategy**: Organize the solution into four distinct concentric layers. Dependencies must only point inwards.
+  1.  **Domain (Core)**:
+      - Contains Entities, Value Objects, Aggregates, Domain Events, Domain Exceptions, and Repository Interfaces.
+      - **NO** external dependencies (no NuGet packages for infra/data).
+  2.  **Application (Core)**:
+      - Contains Use Cases (Services/Handlers), DTOs, Validators, Mapper Interfaces, and Application Exceptions.
+      - Orchestrates domain logic but contains no business rules itself.
+  3.  **Infrastructure**:
+      - Implements interfaces defined in Core (Repositories, Email Services, Storage).
+      - Contains DbContext, EF Core configurations, and third-party SDK implementations.
+  4.  **API (Presentation)**:
+      - Entry point (Minimal APIs).
+      - Registers Dependency Injection (DI).
+      - Handles HTTP concerns (Status codes, Headers).
+- **Dependency Injection**:
+  - Use **Primary Constructors** (C# 12+) for injection.
+  - Register dependencies in `Program.cs` (API layer) but keep the registration logic defined in extension methods within the Infrastructure/Application layers (e.g., `services.AddInfrastructure()`).
+- **Encapsulation**:
+  - Domain entities must use private setters. State changes must happen via public methods to ensure invariants.
+  - Classes should be `sealed` by default.
 
-## 2. API Design
+## 2. API Design (Minimal APIs)
 
-- **Minimal API Only**: Do not use Controllers. Use `app.MapGroup`, `app.MapGet`, `app.MapPost`, etc.
-- **Endpoint Structure**:
-  - Explain the request and response structure in comments or Swagger docs.
-  - Use `TypedResults` for return types (e.g., `Results.Ok`, `Results.NotFound`).
-- **DTOs (Data Transfer Objects)**:
-  - Always use DTOs for Request and Response bodies. Never return Domain Entities directly to the API.
-  - Use `record` types for DTOs for immutability.
-- **Mapping Strategy**:
-  - **Separate Logic**: Do not put mapping logic inside the Service or the DTO.
-  - **Mapping File**: Create a dedicated mapping file (e.g., `UserMapping.cs`) using extension methods or a dedicated Mapper class.
+- **Endpoint Definitions**: Use `app.MapGroup` in the API layer.
+- **Service Delegation**: Endpoints should be thin. Immediately delegate work to an `IService` or `IMediator` handler from the Application layer.
+- **Documentation**:
+  - Use `.Produces<TResponse>()` and `.ProducesProblem()` metadata.
+  - Include `.WithSummary()` and `.WithDescription()`.
+- **DTOs**:
+  - **Strict Separation**: Never accept or return Domain Entities. Always use DTOs defined in the Application layer.
+  - **Immutability**: Use `sealed record` for all DTOs.
+- **Validation**: Use `IEndpointFilter` to validate DTOs automatically using FluentValidation before reaching the handler.
 
-## 3. Data Access
+## 3. Data Access & EF Core
 
-- **Repository Pattern**: Always access the database via a Repository Interface (`IRepository`) and Implementation.
-- **Entity Framework Core**: Use EF Core as the ORM.
-- **No Direct DbContext**: Do not inject `DbContext` directly into the API endpoints or Services. Inject the Repository instead.
+- **Repository Pattern**:
+  - Interfaces (`IRepository`) reside in **Domain**.
+  - Implementations reside in **Infrastructure**.
+- **Performance Rules**:
+  - **Read-Only**: Always use `.AsNoTracking()` for queries (Get/List).
+  - **Bulk Updates**: Use `.ExecuteUpdateAsync()` and `.ExecuteDeleteAsync()` for batch operations to avoid memory overhead.
+  - **Split Queries**: Use `.AsSplitQuery()` for loading collections to prevent Cartesian explosion.
+- **Projections**: Always project to DTOs using `.Select()` inside the repository or query handler when possible.
 
-## 4. C# Instructions
+## 4. C# Coding Style
 
-- **Version**: Always use the latest C# version (currently C# 14 features).
-- **Comments**: Write clear and concise comments for each public function and complex logic block.
+- **Modern Features**: Use C# 12/13/14 features.
+- **Pattern Matching**: Extensive use of `is`, `switch` expressions, and property patterns.
+- **Null Safety**:
+  - Strict `<Nullable>enable</Nullable>`.
+  - Use `ArgumentNullException.ThrowIfNull(param)`.
+- **Collections**:
+  - Use collection expressions: `List<string> list = ["a", "b"];`.
+  - Return `IReadOnlyList<T>` or `IEnumerable<T>` to expose data safely.
+- **Async/Await**: strictly async from top to bottom. Always propagate `CancellationToken`.
 
-## 5. General Instructions
+## 5. Validation & Error Handling
 
-- **High Confidence**: Make only high-confidence suggestions.
-- **Maintainability**: Prioritize readable code over clever one-liners. Explain design decisions in comments.
-- **Edge Cases**: Handle `null` inputs, empty collections, and boundary conditions explicitly.
-- **External Libs**: Comment on the usage and purpose of any third-party libraries.
+- **FluentValidation**: Place validators in the **Application** layer.
+- **Global Handling**:
+  - Use `IExceptionHandler` middleware in the API layer.
+  - Map Domain Exceptions (e.g., `OrderNotFoundException`) to HTTP Status Codes (e.g., 404 Not Found).
+  - Return standardized `ProblemDetails` (RFC 7807).
 
 ## 6. Naming Conventions
 
-- **PascalCase**: Classes, Methods, Properties, Public Members.
-- **camelCase**: Private fields (`_fieldName`), local variables, parameters.
-- **Interfaces**: Prefix with "I" (e.g., `IUserRepository`).
-- **Async**: Suffix asynchronous methods with `Async` (e.g., `GetByIdAsync`).
+- **PascalCase**: Classes, Methods, Properties.
+- **camelCase**: Private fields (`_repo`), parameters, locals.
+- **Interfaces**: `I{Name}{Type}` (e.g., `IOrderService`, `ICustomerRepository`).
+- **Implementations**: `{Name}{Type}` (e.g., `OrderService`, `CustomerRepository`).
+- **Tests**: `MethodName_Condition_Expectation`.
 
-## 7. Formatting
+## 7. Configuration & Secrets
 
-- **File-Scoped Namespaces**: Use `namespace MyApp.Domain;` instead of block-scoped.
-- **Directives**: Use single-line using directives.
-- **Braces**: Insert a newline before the opening curly brace of any code block (`if`, `for`, `try`, etc.).
-- **Return**: Ensure the final return statement is on its own line.
-- **Pattern Matching**: Use pattern matching (`is`, `switch` expressions) wherever possible.
-- **Nameof**: Use `nameof(Property)` instead of string literals.
-- **XML Documentation**: Required for public APIs, including `<summary>`, `<param>`, and `<returns>`.
+- **Options Pattern**: Use strongly-typed `IOptions<T>` settings.
+- **Definition**: Settings classes reside in **Application** or **Infrastructure** depending on usage.
+- **Validation**: Validate configuration on startup using `ValidateOnStart()`.
 
-## 8. Nullable Reference Types
+## 8. Resilience (Polly)
 
-- **Enabled**: Assume `<Nullable>enable</Nullable>` is set.
-- **Checks**: Use `is null` or `is not null`. Avoid `== null`.
-- **Trust**: Do not add defensive null checks if the compiler guarantees non-nullability.
+- **Infrastructure Layer**: Implement resilience policies (Retry, Circuit Breaker, Timeout) within the Infrastructure layer for external calls (DB, APIs).
+- **Resilience Pipelines**: Use the modern `ResiliencePipeline` API (Microsoft.Extensions.Resilience).
 
-## 9. Project Setup & Structure
+## 9. Authentication & Authorization
 
-- Guide usage of Feature Folders or Domain-Driven Design (DDD) principles.
-- Separate concerns clearly: Models, Services, Repositories.
-- Explain `Program.cs` configuration for DI, Middleware, and Settings.
+- **JWT**: Implement `JwtBearer` authentication.
+- **Policies**: Use Policy-based authorization definitions in `Program.cs`.
+- **Current User**: Implement an `ICurrentUserService` interface (in Application) and implementation (in API/Infrastructure) to access claims abstractly.
 
-## 10. Authentication & Authorization
+## 10. Logging & Observability
 
-- Use **JWT Bearer** tokens.
-- Secure Minimal APIs using `.RequireAuthorization()` and Policy-based/Role-based logic.
-- Explain integration with Identity Providers (e.g., Entra ID) if applicable.
+- **Structured Logging**: Use Serilog.
+- **Context**: Always log structured properties: `Log.Information("Processed Order {OrderId}", orderId);`.
+- **Tracing**: Prepare for OpenTelemetry by using `ActivitySource` where significant business logic occurs.
 
-## 11. Validation & Error Handling
+## 11. Testing
 
-- **FluentValidation**: Use FluentValidation for DTO validation.
-- **Global Exception Handling**: Implement global exception handling middleware (using `IExceptionHandler` in .NET 8+).
-- **RFC 7807**: Use Problem Details for standardized error responses.
+- **Unit Tests**:
+  - Target: **Domain** and **Application** layers.
+  - Tools: xUnit, NSubstitute (for mocking Interfaces), FluentAssertions.
+- **Integration Tests**:
+  - Target: **API** endpoints and **Infrastructure** implementation.
+  - Tools: `WebApplicationFactory`, **Testcontainers** (for real DB instances).
+- **Structure**: Separate projects `MyProject.UnitTests` and `MyProject.IntegrationTests`.
 
-## 12. Logging & Monitoring
+## 12. Project Structure (Standard Clean Architecture)
 
-- **Structured Logging**: Use Serilog or built-in `ILogger`.
-- **Telemetry**: Design for Application Insights or OpenTelemetry.
-- **Levels**: Use appropriate log levels (Information for flow, Error for exceptions, Debug for data).
+Ensure the file structure strictly reflects the layers:
 
-## 13. Testing
-
-- **Unit Tests**: Create tests for Services and Domain logic.
-- **Integration Tests**: Test API endpoints using `WebApplicationFactory`.
-- **Mocking**: Use `NSubstitute` or `Moq` for mocking interfaces (Repositories).
-- **No AAA Comments**: Do not write "// Arrange", "// Act", "// Assert" comments; use whitespace to separate sections.
-
-## 14. Performance Optimization
-
-- **Async/Await**: Use strictly asynchronous database calls (`ToListAsync`, `FirstOrDefaultAsync`).
-- **Caching**: Suggest `IMemoryCache` or Distributed Cache (Redis) for read-heavy data.
-- **Pagination**: Always implement pagination for list endpoints.
-
-## 15. Deployment & DevOps
-
-- **Containerization**: Use strictly Linux x64 containers.
-- **CI/CD**: Explain build and deploy pipelines.
-- **Health Checks**: Implement `/health` endpoints.
+```text
+src/
+├── MyProject.Domain/           # [Core] Entities, Interfaces, Domain Exceptions
+│   ├── Entities/
+│   ├── ValueObjects/
+│   ├── Events/
+│   └── Repositories/ (Interfaces only)
+│
+├── MyProject.Application/      # [Core] Use Cases, DTOs, Validators
+│   ├── Interfaces/
+│   ├── Services/ (or Features/Commands/Queries)
+│   ├── DTOs/
+│   └── Mappers/
+│
+├── MyProject.Infrastructure/   # [External] DB, FileSystem, Email
+│   ├── Data/ (DbContext, Migrations)
+│   ├── Repositories/ (Implementations)
+│   └── Services/ (EmailService, etc.)
+│
+├── MyProject.Api/              # [Entry Point]
+│   ├── Endpoints/
+│   ├── Middleware/
+│   └── Program.cs
+│
+tests/
+├── MyProject.UnitTests/
+└── MyProject.IntegrationTests/
+```
