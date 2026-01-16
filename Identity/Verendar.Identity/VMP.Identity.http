@@ -1,0 +1,6 @@
+@Verendar.Identity_HostAddress = http://localhost:5051
+
+GET {{Verendar.Identity_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

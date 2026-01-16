@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>0f0beb87-1e13-4498-be44-f11f7bfe861c</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Verendar.Media.Application\Verendar.Media.Application.csproj" />
+    <ProjectReference Include="..\Verendar.Media.Infrastructure\Verendar.Media.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
