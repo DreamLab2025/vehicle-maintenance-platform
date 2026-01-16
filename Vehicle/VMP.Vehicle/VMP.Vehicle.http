@@ -1,6 +1,0 @@
-@VMP.Vehicle_HostAddress = http://localhost:5199
-
-GET {{VMP.Vehicle_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -1,0 +1,6 @@
+@Verender.Media_HostAddress = http://localhost:5131
+
+GET {{Verender.Media_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

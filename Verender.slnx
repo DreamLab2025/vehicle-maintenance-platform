@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/Identity/">
+    <Project Path="Identity/Verender.Identity/Verender.Identity.csproj" />
+  </Folder>
+  <Folder Name="/Media/">
+    <Project Path="Media/Verender.Media.Application/Verender.Media.Application.csproj" Id="f4dcf8e7-dd57-4977-9eac-60ad0c27c464" />
+    <Project Path="Media/Verender.Media.Domain/Verender.Media.Domain.csproj" Id="9a4b8302-facb-4e85-a21d-9c59bfc93bd9" />
+    <Project Path="Media/Verender.Media.Infrastructure/Verender.Media.Infrastructure.csproj" Id="9f8383b6-8813-4088-803c-5e5d04c26e61" />
+    <Project Path="Media/Verender.Media/Verender.Media.csproj" />
+  </Folder>
+  <Folder Name="/Vehicle/">
+    <Project Path="Vehicle/Verender.Vehicle.Application/Verender.Vehicle.Application.csproj" Id="742f26bd-d9cc-4253-ada1-a9d69a201504" />
+    <Project Path="Vehicle/Verender.Vehicle.Domain/Verender.Vehicle.Domain.csproj" Id="c138f4dc-2494-432e-bc09-44555e401f1f" />
+    <Project Path="Vehicle/Verender.Vehicle.Infrastructure/Verender.Vehicle.Infrastructure.csproj" Id="b6e26d17-7098-4798-86c1-575231914248" />
+    <Project Path="Vehicle/Verender.Vehicle/Verender.Vehicle.csproj" />
+  </Folder>
+  <Project Path="Verender.AppHost/Verender.AppHost.csproj" />
+  <Project Path="Verender.Common/Verender.Common.csproj" />
+  <Project Path="Verender.DatabaseMigrationHelpers/Verender.DatabaseMigrationHelpers.csproj" />
+  <Project Path="Verender.ServiceDefaults/Verender.ServiceDefaults.csproj" />
+</Solution>
