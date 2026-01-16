@@ -20,7 +20,7 @@ namespace Verender.Identity.Data
             modelBuilder.Entity<User>(entity =>
             {
                 var roleComparer = new ValueComparer<List<UserRole>>(
-                    (c1, c2) => c1.SequenceEqual(c2),
+                    (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                     c => c.ToList());
 

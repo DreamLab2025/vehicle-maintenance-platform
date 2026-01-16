@@ -29,6 +29,7 @@ namespace Verender.AppHost.Extensions
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
             var vehicleDb = postgres.AddDatabase("vehicle-db", "Vehicles");
             var mediaDb = postgres.AddDatabase("media-db", "Media");
+            var notificationDb = postgres.AddDatabase("notification-db", "Notifications");
 
             var identityService = builder.AddProject<Projects.Verender_Identity>("Verender-identity")
                 .WithReference(identityDb)
@@ -50,6 +51,12 @@ namespace Verender.AppHost.Extensions
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
 
+            var notificationService = builder.AddProject<Projects.Verender_Notification>("Verender-notification")
+                .WithReference(notificationDb)
+                .WithReference(rabbitMq)
+                .WaitFor(postgres)
+                .WaitFor(rabbitMq);
+
 
             var apiGateway = builder.AddYarp("api-gateway")
                             .WithContainerName("ApiGateway")
@@ -65,8 +72,17 @@ namespace Verender.AppHost.Extensions
                                 yarp.AddRoute("/api/v1/models/{**catch-all}", vehicleCluster);
                                 yarp.AddRoute("/api/v1/types/{**catch-all}", vehicleCluster);
                                 yarp.AddRoute("/api/v1/user-vehicles/{**catch-all}", vehicleCluster);
+
+                                var mediaCluster = yarp.AddProjectCluster(mediaService);
+                                yarp.AddRoute("/api/v1/media-files/{**catch-all}", mediaCluster);
+
+                                var notificationCluster = yarp.AddProjectCluster(notificationService);
+                                yarp.AddRoute("/api/v1/notifications/{**catch-all}", notificationCluster);
                             })
-                            .WaitFor(identityService);
+                            .WaitFor(identityService)
+                            .WaitFor(vehicleService)
+                            .WaitFor(mediaService)
+                            .WaitFor(notificationService);
 
             //var scalarDocs = builder.AddScalarApiReference()
             //    .WithContainerName("ScalarDocs")

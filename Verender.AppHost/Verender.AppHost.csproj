@@ -23,6 +23,7 @@
     <ProjectReference Include="..\Identity\Verender.Identity\Verender.Identity.csproj" />
     <ProjectReference Include="..\Media\Verender.Media\Verender.Media.csproj" />
     <ProjectReference Include="..\Vehicle\Verender.Vehicle\Verender.Vehicle.csproj" />
+    <ProjectReference Include="..\Notification\Verender.Notification\Verender.Notification.csproj" />
     <ProjectReference Include="..\Verender.ServiceDefaults\Verender.ServiceDefaults.csproj" />
   </ItemGroup>
 
