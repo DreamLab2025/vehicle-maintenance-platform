@@ -27,6 +27,7 @@ public static class ApplicationServiceExtensions
 
         builder.Services.AddScoped<INotificationChannel, SmsChannel>();
         builder.Services.AddScoped<INotificationChannel, ZaloChannel>();
+        builder.Services.AddScoped<IChannelFactory, ChannelFactory>();
 
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 

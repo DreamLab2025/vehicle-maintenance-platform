@@ -40,13 +40,9 @@ public class NotificationDbContext : BaseDbContext
             entity.HasQueryFilter(e => e.DeletedAt == null);
         });
 
-        SeedNotificationTemplates(modelBuilder);
-
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.SeedNotificationData();
     }
 
-    private void SeedNotificationTemplates(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<NotificationTemplate>().HasData(NotificationTemplateSeeder.GetNotificationTemplates());
-    }
 }

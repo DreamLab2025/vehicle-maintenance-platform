@@ -10,7 +10,8 @@ public class ZaloChannel(IESmsService esmsService, ILogger<ZaloChannel> logger) 
 {
     private readonly IESmsService _esmsService = esmsService;
     private readonly ILogger<ZaloChannel> _logger = logger;
-    public NotificationChannel ChannelType => NotificationChannel.Zalo;
+    public NotificationChannel ChannelType => NotificationChannel.ZALO;
+
     public async Task<ChannelDeliveryResult> SendAsync(NotificationDeliveryContext context)
     {
         try

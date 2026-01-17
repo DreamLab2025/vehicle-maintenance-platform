@@ -22,7 +22,6 @@ public class NotificationTemplate : BaseEntity
     public string MessageTemplate { get; set; } = string.Empty;
     public NotificationType NotificationType { get; set; }
 
-
     public NotificationPriority DefaultPriority { get; set; } = NotificationPriority.Medium;
 
     [Column(TypeName = "jsonb")]

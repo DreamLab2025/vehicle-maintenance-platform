@@ -14,6 +14,5 @@ public class OtpRequestedEvent : BaseEvent
 
 public enum OtpType
 {
-    PhoneNumber = 1,
-    Email = 2
+    PhoneNumber = 1
 }

@@ -9,9 +9,9 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.ESms;
 public class SmsChannel(IESmsService esmsService, ILogger<SmsChannel> logger) : INotificationChannel
 {
     private readonly IESmsService _esmsService = esmsService;
-
     private readonly ILogger<SmsChannel> _logger = logger;
     public NotificationChannel ChannelType => NotificationChannel.SMS;
+    
     public async Task<ChannelDeliveryResult> SendAsync(NotificationDeliveryContext context)
     {
         try

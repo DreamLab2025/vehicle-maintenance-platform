@@ -4,5 +4,6 @@ public enum NotificationChannel
 {
     InApp = 1,
     SMS = 2,
-    Zalo = 3
+    ZALO = 3,
+    EMAIL = 4
 }

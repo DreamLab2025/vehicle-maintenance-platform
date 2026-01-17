@@ -14,4 +14,7 @@ public class NotificationTemplateChannel : BaseEntity
     public NotificationChannel Channel { get; set; }
 
     public bool IsEnabled { get; set; } = true;
+
+    [MaxLength(100)]
+    public string? ExternalTemplateId { get; set; }
 }
