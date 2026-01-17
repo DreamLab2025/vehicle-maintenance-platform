@@ -20,7 +20,7 @@ public class NotificationPreference : BaseEntity
     public bool EmailVerified { get; set; } = false;
 
     public bool InAppEnabled { get; set; } = true;
-    public bool SmsEnabled { get; set; } = false;
+    public bool SmsEnabled { get; set; } = true;
 
     public bool SmsForHighPriorityOnly { get; set; } = true;
 }

@@ -59,16 +59,6 @@ namespace Verendar.Identity.Services.Implements
                 await _unitOfWork.Users.AddAsync(user);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation("Publishing UserRegisteredEvent for user: {PhoneNumber}", request.PhoneNumber);
-                await _publishEndpoint.Publish(new UserRegisteredEvent
-                {
-                    UserId = user.Id,
-                    PhoneNumber = user.PhoneNumber,
-                    PhoneNumberVerified = user.PhoneNumberVerified,
-                    Email = user.Email,
-                    EmailVerified = user.EmailVerified
-                });
-
                 var otpCode = GetOtpCode();
                 _logger.LogDebug("Send OTP code to phone number: {PhoneNumber} with OTP: {OtpCode}", request.PhoneNumber, otpCode);
                 await _cacheService.SetAsync($"otp_register:{request.PhoneNumber}", otpCode, TimeSpan.FromMinutes(5));
@@ -265,6 +255,18 @@ namespace Verendar.Identity.Services.Implements
 
                 await _unitOfWork.Users.UpdateAsync(user.Id, user);
                 await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Publishing UserRegisteredEvent for user: {PhoneNumber}", request.PhoneNumber);
+                await _publishEndpoint.Publish(new UserRegisteredEvent
+                {
+                    UserId = user.Id,
+                    FullName = user.FullName,
+                    PhoneNumber = user.PhoneNumber,
+                    PhoneNumberVerified = user.PhoneNumberVerified,
+                    Email = user.Email,
+                    EmailVerified = user.EmailVerified,
+                    RegistrationDate = user.CreatedAt
+                });
 
                 await _cacheService.RemoveAsync(cacheKey);
                 return ApiResponse<bool>.SuccessResponse(true, "Kích hoạt tài khoản thành công. Bạn có thể đăng nhập ngay bây giờ.");
