@@ -2,7 +2,6 @@ using Polly;
 using Polly.Extensions.Http;
 using Verendar.Common.Bootstrapping;
 using Verendar.Common.Shared;
-using Verendar.Notification.Application.Dtos.ESms;
 using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Notification.Domain.Repositories.Interfaces;
 using Verendar.Notification.Infrastructure.Data;

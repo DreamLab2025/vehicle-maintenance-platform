@@ -47,7 +47,7 @@ namespace Verendar.Identity.Services.Implements
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, tokenClaims.UserId),
-                new Claim(JwtRegisteredClaimNames.Email, tokenClaims.Email),
+                new Claim(JwtRegisteredClaimNames.PhoneNumber, tokenClaims.PhoneNumber),
                 new Claim(JwtRegisteredClaimNames.UniqueName, tokenClaims.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),

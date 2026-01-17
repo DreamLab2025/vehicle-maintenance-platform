@@ -11,14 +11,14 @@ namespace Verendar.Identity.Entities
 
         [Required]
         [MaxLength(256)]
-        public string Email { get; set; } = string.Empty;
+        public string? Email { get; set; }
 
-        public bool IsEmailConfirmed { get; set; }
+        public bool EmailVerified { get; set; } = false;
 
         [MaxLength(20)]
-        public string? PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; } = string.Empty;
 
-        public bool IsPhoneNumberConfirmed { get; set; }
+        public bool PhoneNumberVerified { get; set; } = false;
 
         [Required]
         public string PasswordHash { get; set; } = string.Empty;

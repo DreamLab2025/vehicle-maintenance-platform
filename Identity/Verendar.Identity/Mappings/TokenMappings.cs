@@ -10,7 +10,7 @@ namespace Verendar.Identity.Mappings
             return new TokenClaims
             {
                 UserId = user.Id.ToString(),
-                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
                 UserName = user.FullName,
                 Roles = user.Roles.Select(r => r.ToString()).ToList()
             };

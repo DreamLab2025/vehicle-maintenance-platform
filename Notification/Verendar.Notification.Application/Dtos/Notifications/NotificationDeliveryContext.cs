@@ -1,4 +1,5 @@
 using System;
+using Verendar.Notification.Domain.Enums;
 
 namespace Verendar.Notification.Application.Dtos.Notifications;
 
@@ -10,6 +11,7 @@ public class NotificationDeliveryContext
     public string? RecipientEmail { get; set; }
     public string? RecipientPhone { get; set; }
     public string? ZaloTemplateId { get; set; }
+    public NotificationType NotificationType { get; set; }
     public Dictionary<string, string>? TemplateParameters { get; set; }
     public Dictionary<string, object>? Metadata { get; set; }
 }

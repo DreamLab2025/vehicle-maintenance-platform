@@ -13,7 +13,11 @@ public class NotificationPreference : BaseEntity
     [MaxLength(15)]
     public string? PhoneNumber { get; set; }
 
-    public bool PhoneVerified { get; set; } = false;
+    public bool PhoneNumberVerified { get; set; } = false;
+
+    [MaxLength(256)]
+    public string? Email { get; set; }
+    public bool EmailVerified { get; set; } = false;
 
     public bool InAppEnabled { get; set; } = true;
     public bool SmsEnabled { get; set; } = false;

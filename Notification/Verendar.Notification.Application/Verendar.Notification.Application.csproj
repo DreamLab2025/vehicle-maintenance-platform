@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Identity\Verender.Identity.Contracts\Verender.Identity.Contracts.csproj" />
     <ProjectReference Include="..\Verendar.Notification.Domain\Verendar.Notification.Domain.csproj" />
   </ItemGroup>
 

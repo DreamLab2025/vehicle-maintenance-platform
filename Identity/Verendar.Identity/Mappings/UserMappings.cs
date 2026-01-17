@@ -12,10 +12,10 @@ namespace Verendar.Identity.Mappings
             {
                 Id = user.Id.ToString(),
                 UserName = user.FullName,
-                Email = user.Email,
+                Email = user.Email ?? string.Empty,
                 PhoneNumber = user.PhoneNumber,
-                IsEmailConfirmed = user.IsEmailConfirmed,
-                IsPhoneNumberConfirmed = user.IsPhoneNumberConfirmed,
+                EmailVerified = user.EmailVerified,
+                PhoneNumberVerified = user.PhoneNumberVerified,
                 Status = user.Status.ToString(),
                 Roles = user.Roles.Select(r => r.ToString()).ToList(),
                 CreatedAt = user.CreatedAt
@@ -28,14 +28,13 @@ namespace Verendar.Identity.Mappings
             return new User
             {
                 Id = userId,
-                Email = request.Email,
+                PhoneNumber = request.PhoneNumber,
                 PasswordHash = passwordHash,
-                FullName = request.Email.Split('@')[0],
+                FullName = request.PhoneNumber,
                 Status = EntityStatus.Active,
                 Roles = new List<UserRole> { UserRole.User },
-                IsEmailConfirmed = false,
-                IsPhoneNumberConfirmed = false,
-                PhoneNumber = string.Empty,
+                PhoneNumberVerified = false,
+                EmailVerified = false,
                 RefreshToken = string.Empty,
                 RefreshTokenExpiryTime = null
             };
