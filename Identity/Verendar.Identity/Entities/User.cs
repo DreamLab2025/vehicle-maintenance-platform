@@ -9,12 +9,12 @@ namespace Verendar.Identity.Entities
         [MaxLength(200)]
         public string FullName { get; set; } = string.Empty;
 
-        [Required]
         [MaxLength(256)]
-        public string? Email { get; set; }
+        public string? Email { get; set; } = string.Empty;
 
         public bool EmailVerified { get; set; } = false;
 
+        [Required]
         [MaxLength(20)]
         public string PhoneNumber { get; set; } = string.Empty;
 

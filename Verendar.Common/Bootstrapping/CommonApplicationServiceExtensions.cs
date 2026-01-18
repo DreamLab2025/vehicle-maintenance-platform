@@ -46,7 +46,106 @@ namespace Verendar.Common.Bootstrapping
 
             builder.Services.AddMassTransit(config =>
             {
-                config.AddConsumers(Assembly.GetEntryAssembly());
+                var scannedAssemblies = new HashSet<Assembly>();
+                var entryAssembly = Assembly.GetEntryAssembly();
+
+                if (entryAssembly != null)
+                {
+                    config.AddConsumers(entryAssembly);
+                    scannedAssemblies.Add(entryAssembly);
+                }
+
+                var assembliesToScan = GetRelevantAssemblies(entryAssembly)
+                    .Where(a => !scannedAssemblies.Contains(a))
+                    .ToList();
+
+                // Scan each assembly for consumers
+                foreach (var assembly in assembliesToScan)
+                {
+                    if (HasConsumers(assembly))
+                    {
+                        config.AddConsumers(assembly);
+                        scannedAssemblies.Add(assembly);
+                    }
+                }
+
+                static IEnumerable<Assembly> GetRelevantAssemblies(Assembly? entryAssembly)
+                {
+                    var assemblies = new HashSet<Assembly>();
+
+                    // Get already-loaded assemblies
+                    var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+                        .Where(a => !a.IsDynamic && IsApplicationAssembly(a))
+                        .ToList();
+
+                    foreach (var assembly in loadedAssemblies)
+                    {
+                        assemblies.Add(assembly);
+                    }
+
+                    // Try to load referenced assemblies that might contain consumers
+                    if (entryAssembly != null)
+                    {
+                        foreach (var assemblyName in entryAssembly.GetReferencedAssemblies())
+                        {
+                            if (!IsApplicationAssemblyName(assemblyName)) continue;
+
+                            try
+                            {
+                                var assembly = Assembly.Load(assemblyName);
+                                assemblies.Add(assembly);
+                            }
+                            catch
+                            {
+                            }
+                        }
+                    }
+
+                    return assemblies;
+                }
+
+                static bool IsApplicationAssembly(Assembly assembly)
+                {
+                    var name = assembly.FullName;
+                    if (string.IsNullOrEmpty(name)) return false;
+
+                    return !name.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
+                           !name.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase) &&
+                           !name.StartsWith("MassTransit", StringComparison.OrdinalIgnoreCase) &&
+                           !name.StartsWith("Newtonsoft", StringComparison.OrdinalIgnoreCase);
+                }
+
+                static bool IsApplicationAssemblyName(AssemblyName assemblyName)
+                {
+                    var name = assemblyName.FullName;
+                    if (string.IsNullOrEmpty(name)) return false;
+
+                    return !name.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
+                           !name.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase) &&
+                           !name.StartsWith("MassTransit", StringComparison.OrdinalIgnoreCase) &&
+                           !name.StartsWith("Newtonsoft", StringComparison.OrdinalIgnoreCase);
+                }
+
+                static bool HasConsumers(Assembly assembly)
+                {
+                    try
+                    {
+                        return assembly.GetTypes()
+                            .Any(t => !t.IsAbstract &&
+                                     !t.IsInterface &&
+                                     t.GetInterfaces()
+                                         .Any(i => i.IsGenericType &&
+                                                  i.GetGenericTypeDefinition() == typeof(IConsumer<>)));
+                    }
+                    catch (ReflectionTypeLoadException)
+                    {
+                        return false;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
 
                 config.UsingRabbitMq((context, cfg) =>
                 {

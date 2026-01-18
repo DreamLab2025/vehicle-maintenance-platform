@@ -63,7 +63,7 @@ namespace Verendar.Identity.Services.Implements
                 _logger.LogDebug("Send OTP code to phone number: {PhoneNumber} with OTP: {OtpCode}", request.PhoneNumber, otpCode);
                 await _cacheService.SetAsync($"otp_register:{request.PhoneNumber}", otpCode, TimeSpan.FromMinutes(5));
 
-                _logger.LogInformation("Sending OTP code to phone number: {PhoneNumber}", request.PhoneNumber);
+                _logger.LogInformation("Publishing OtpRequestedEvent for new user registration: {PhoneNumber}", request.PhoneNumber);
                 await _publishEndpoint.Publish(new OtpRequestedEvent
                 {
                     UserId = user.Id,

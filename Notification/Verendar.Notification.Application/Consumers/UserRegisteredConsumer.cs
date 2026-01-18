@@ -30,14 +30,30 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
     public async Task Consume(ConsumeContext<UserRegisteredEvent> context)
     {
         var message = context.Message;
-        _logger.LogInformation("Processing UserRegisteredEvent - UserId: {UserId}, Phone: {Phone}",
-            message.UserId, message.PhoneNumber);
+        var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
+        
+        _logger.LogInformation("Processing UserRegisteredEvent - MessageId: {MessageId}, UserId: {UserId}, Phone: {Phone}",
+            messageId, message.UserId, message.PhoneNumber);
 
         try
         {
             if (!ValidateMessage(message))
             {
-                _logger.LogWarning("Invalid UserRegisteredEvent - UserId: {UserId}", message.UserId);
+                _logger.LogWarning("Invalid UserRegisteredEvent - MessageId: {MessageId}, UserId: {UserId}", 
+                    messageId, message.UserId);
+                return;
+            }
+
+            // Idempotency check: Kiểm tra xem đã có welcome notification cho user này chưa
+            var existingNotification = await _unitOfWork.Notifications
+                .FindOneAsync(n => n.UserId == message.UserId &&
+                                  n.CreatedAt > message.RegistrationDate.AddMinutes(-5) &&
+                                  (n.Title.Contains("Chao mung") || n.Title.Contains("Welcome")));
+
+            if (existingNotification != null)
+            {
+                _logger.LogWarning("Duplicate welcome notification detected - MessageId: {MessageId}, UserId: {UserId}, ExistingNotificationId: {NotificationId}",
+                    messageId, message.UserId, existingNotification.Id);
                 return;
             }
 
@@ -52,22 +68,26 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
             if (notificationTemplate == null)
             {
                 _logger.LogWarning("Notification template not found: {TemplateCode}", templateCode);
-                await SendFallbackWelcomeAsync(message);
+                await SendFallbackWelcomeAsync(message, messageId);
                 return;
             }
 
-            await SendWelcomeMessageAsync(message, notificationTemplate);
+            await SendWelcomeMessageAsync(message, notificationTemplate, messageId);
 
-            _logger.LogInformation("Welcome message processed successfully - UserId: {UserId}", message.UserId);
+            _logger.LogInformation("Welcome message processed successfully - MessageId: {MessageId}, UserId: {UserId}", 
+                messageId, message.UserId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing UserRegisteredEvent - UserId: {UserId}", message.UserId);
-            throw;
+            _logger.LogError(ex, "Error processing UserRegisteredEvent - MessageId: {MessageId}, UserId: {UserId}", 
+                messageId, message.UserId);
+            
+            // Không throw để tránh retry tạo duplicate notification
+            // Chỉ log và return vì notification đã được lưu vào DB
         }
     }
 
-    private async Task SendWelcomeMessageAsync(UserRegisteredEvent message, NotificationTemplate notificationTemplate)
+    private async Task SendWelcomeMessageAsync(UserRegisteredEvent message, NotificationTemplate notificationTemplate, string? messageId = null)
     {
         var messageContent = ReplaceTemplatePlaceholders(notificationTemplate.MessageTemplate, message);
         var titleContent = ReplaceTemplatePlaceholders(notificationTemplate.TitleTemplate, message);
@@ -103,11 +123,20 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
             }
         };
 
-        // Gửi & Update Status
-        await ExecuteSendAsync(targetChannel, deliveryContext, notification, delivery);
+        // Gửi & Update Status (không throw exception nếu đã lưu vào DB)
+        try
+        {
+            await ExecuteSendAsync(targetChannel, deliveryContext, notification, delivery);
+        }
+        catch (Exception ex)
+        {
+            // Notification đã được lưu vào DB, không throw để tránh retry
+            _logger.LogError(ex, "Failed to send welcome message after notification created - NotificationId: {NotificationId}, MessageId: {MessageId}",
+                notification.Id, messageId);
+        }
     }
 
-    private async Task SendFallbackWelcomeAsync(UserRegisteredEvent message)
+    private async Task SendFallbackWelcomeAsync(UserRegisteredEvent message, string? messageId = null)
     {
         _logger.LogInformation("Sending fallback welcome message - UserId: {UserId}", message.UserId);
 
@@ -145,7 +174,16 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
             }
         };
 
-        await ExecuteSendAsync(targetChannel, deliveryContext, notification, delivery);
+        try
+        {
+            await ExecuteSendAsync(targetChannel, deliveryContext, notification, delivery);
+        }
+        catch (Exception ex)
+        {
+            // Notification đã được lưu vào DB, không throw để tránh retry
+            _logger.LogError(ex, "Failed to send fallback welcome message after notification created - NotificationId: {NotificationId}, MessageId: {MessageId}",
+                notification.Id, messageId);
+        }
     }
 
     private async Task ExecuteSendAsync(
@@ -182,7 +220,8 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
             notification.Status = NotificationStatus.Failed;
             delivery.Status = NotificationStatus.Failed;
             delivery.ErrorMessage = ex.Message;
-            throw;
+            // Không throw exception ở đây - đã được handle ở method gọi
+            _logger.LogError(ex, "Error in ExecuteSendAsync - NotificationId: {NotificationId}", notification.Id);
         }
         finally
         {

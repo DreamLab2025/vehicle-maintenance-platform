@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Mapping;
 using Verendar.Notification.Application.Services.Interfaces;
@@ -36,13 +33,30 @@ public partial class OtpRequestedConsumer : IConsumer<OtpRequestedEvent>
     public async Task Consume(ConsumeContext<OtpRequestedEvent> context)
     {
         var message = context.Message;
-        _logger.LogDebug("Processing OTP request - UserId: {UserId}, Phone: {Phone}", message.UserId, message.TargetValue);
+        var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
+        
+        _logger.LogDebug("Processing OTP request - MessageId: {MessageId}, UserId: {UserId}, Phone: {Phone}", 
+            messageId, message.UserId, message.TargetValue);
 
         try
         {
             if (!ValidateMessage(message))
             {
-                _logger.LogWarning("Invalid OTP request message - UserId: {UserId}", message.UserId);
+                _logger.LogWarning("Invalid OTP request message - MessageId: {MessageId}, UserId: {UserId}", 
+                    messageId, message.UserId);
+                return;
+            }
+
+            // Idempotency check: Kiểm tra xem đã có notification cho OTP này chưa (trong 10 phút gần đây)
+            var existingNotification = await _unitOfWork.Notifications
+                .FindOneAsync(n => n.UserId == message.UserId &&
+                                  n.CreatedAt > DateTime.UtcNow.AddMinutes(-10) &&
+                                  n.Message.Contains(message.Otp));
+
+            if (existingNotification != null)
+            {
+                _logger.LogWarning("Duplicate OTP request detected - MessageId: {MessageId}, UserId: {UserId}, ExistingNotificationId: {NotificationId}",
+                    messageId, message.UserId, existingNotification.Id);
                 return;
             }
 
@@ -54,25 +68,27 @@ public partial class OtpRequestedConsumer : IConsumer<OtpRequestedEvent>
             {
                 _logger.LogWarning("Notification template not found: {TemplateCode}", templateCode);
 
-                await SendFallbackOtpAsync(message);
+                await SendFallbackOtpAsync(message, messageId);
                 return;
             }
 
-            await SendOtpMessageAsync(message, notificationTemplate);
+            await SendOtpMessageAsync(message, notificationTemplate, messageId);
 
             _logger.LogInformation(
-                "OTP SMS processed successfully - UserId: {UserId}, Phone: {Phone}",
-                message.UserId,
-                MaskPhoneNumber(message.TargetValue));
+                "OTP SMS processed successfully - MessageId: {MessageId}, UserId: {UserId}, Phone: {Phone}",
+                messageId, message.UserId, MaskPhoneNumber(message.TargetValue));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error sending OTP SMS - UserId: {UserId}", message.UserId);
-            throw;
+            _logger.LogError(ex, "Error sending OTP SMS - MessageId: {MessageId}, UserId: {UserId}", 
+                messageId, message.UserId);
+            
+            // Không throw để tránh retry tạo duplicate notification
+            // Chỉ log và return vì notification đã được lưu vào DB
         }
     }
 
-    private async Task SendOtpMessageAsync(OtpRequestedEvent message, NotificationTemplate notificationTemplate)
+    private async Task SendOtpMessageAsync(OtpRequestedEvent message, NotificationTemplate notificationTemplate, string? messageId = null)
     {
         var messageContent = ReplaceTemplatePlaceholders(notificationTemplate.MessageTemplate, message);
         var titleContent = ReplaceTemplatePlaceholders(notificationTemplate.TitleTemplate, message);
@@ -111,11 +127,20 @@ public partial class OtpRequestedConsumer : IConsumer<OtpRequestedEvent>
             Metadata = new Dictionary<string, object> { { "IsFallback", false } }
         };
 
-        // Gửi & Update Status
-        await ExecuteSendAsync(targetChannel, deliveryContext, notification, delivery);
+        // Gửi & Update Status (không throw exception nếu đã lưu vào DB)
+        try
+        {
+            await ExecuteSendAsync(targetChannel, deliveryContext, notification, delivery);
+        }
+        catch (Exception ex)
+        {
+            // Notification đã được lưu vào DB, không throw để tránh retry
+            _logger.LogError(ex, "Failed to send OTP after notification created - NotificationId: {NotificationId}, MessageId: {MessageId}",
+                notification.Id, messageId);
+        }
     }
 
-    private async Task SendFallbackOtpAsync(OtpRequestedEvent message)
+    private async Task SendFallbackOtpAsync(OtpRequestedEvent message, string? messageId = null)
     {
         _logger.LogInformation("Sending fallback OTP message for UserId: {UserId}", message.UserId);
 
@@ -156,7 +181,16 @@ public partial class OtpRequestedConsumer : IConsumer<OtpRequestedEvent>
             Metadata = new Dictionary<string, object> { { "IsFallback", true } }
         };
 
-        await ExecuteSendAsync(targetChannel, deliveryContext, notification, delivery);
+        try
+        {
+            await ExecuteSendAsync(targetChannel, deliveryContext, notification, delivery);
+        }
+        catch (Exception ex)
+        {
+            // Notification đã được lưu vào DB, không throw để tránh retry
+            _logger.LogError(ex, "Failed to send fallback OTP after notification created - NotificationId: {NotificationId}, MessageId: {MessageId}",
+                notification.Id, messageId);
+        }
     }
 
     private async Task ExecuteSendAsync(
@@ -193,7 +227,8 @@ public partial class OtpRequestedConsumer : IConsumer<OtpRequestedEvent>
             notification.Status = NotificationStatus.Failed;
             delivery.Status = NotificationStatus.Failed;
             delivery.ErrorMessage = ex.Message;
-            throw;
+            // Không throw exception ở đây - đã được handle ở method gọi
+            _logger.LogError(ex, "Error in ExecuteSendAsync - NotificationId: {NotificationId}", notification.Id);
         }
         finally
         {

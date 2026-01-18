@@ -21,4 +21,6 @@ public class ZaloZnsRequest
 
     [JsonPropertyName("RequestId")]
     public string? RequestId { get; set; }
+    [JsonPropertyName("Sandbox")]
+    public int Sandbox { get; set; }
 }

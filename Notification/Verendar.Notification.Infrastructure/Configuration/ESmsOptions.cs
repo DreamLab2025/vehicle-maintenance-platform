@@ -8,4 +8,5 @@ public class ESmsOptions
     public string BrandName { get; set; } = "Verendar"; // Tên thương hiệu hiển thị
     public int SmsType { get; set; } = 2; // 2: Brandname, 4: Brandname OTP, 8: Zalo ZNS
     public int Timeout { get; set; } = 30; // seconds
+    public int Sandbox { get; set; } = 0; // 0: Production, 1: Sandbox
 }

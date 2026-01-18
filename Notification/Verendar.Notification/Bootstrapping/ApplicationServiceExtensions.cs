@@ -2,6 +2,7 @@ using Polly;
 using Polly.Extensions.Http;
 using Verendar.Common.Bootstrapping;
 using Verendar.Common.Shared;
+using Verendar.Notification.Application.Dtos.ESms;
 using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Notification.Domain.Repositories.Interfaces;
 using Verendar.Notification.Infrastructure.Data;
@@ -20,6 +21,8 @@ public static class ApplicationServiceExtensions
         builder.AddCommonService();
 
         builder.AddPostgresDatabase<NotificationDbContext>(Const.NotificationDatabase);
+
+        builder.Services.Configure<ESmsOptions>(builder.Configuration.GetSection("ESms"));
 
         builder.Services.AddHttpClient<IESmsService, ESmsService>()
             .AddPolicyHandler(GetRetryPolicy())

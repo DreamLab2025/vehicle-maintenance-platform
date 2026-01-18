@@ -23,4 +23,6 @@ public class ESmsRequest
     public string Brandname { get; set; } = string.Empty;
     [JsonPropertyName("RequestId")]
     public string? RequestId { get; set; }
+    [JsonPropertyName("Sandbox")]
+    public int Sandbox { get; set; }
 }
