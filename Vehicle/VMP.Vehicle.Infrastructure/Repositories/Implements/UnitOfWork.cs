@@ -12,7 +12,9 @@ namespace VMP.Vehicle.Infrastructure.Repositories.Implements
         private IVehicleModelRepository? _vehicleModels;
         private IVehicleVariantRepository? _vehicleVariants;
         private IUserVehicleRepository? _userVehicles;
-        private IConsumableItemRepository? _consumableItems;
+        private IVehiclePartRepository? _vehicleParts;
+        private IVehiclePartCategoryRepository? _vehiclePartCategories;
+        private IOilRepository? _oils;
         private IMaintenanceActivityRepository? _maintenanceActivities;
         private IOdometerHistoryRepository? _odometerHistories;
 
@@ -38,8 +40,14 @@ namespace VMP.Vehicle.Infrastructure.Repositories.Implements
         public IUserVehicleRepository UserVehicles =>
             _userVehicles ??= new UserVehicleRepository(Context);
 
-        public IConsumableItemRepository ConsumableItems =>
-            _consumableItems ??= new ConsumableItemRepository(Context);
+        public IVehiclePartRepository VehicleParts =>
+            _vehicleParts ??= new VehiclePartRepository(Context);
+
+        public IVehiclePartCategoryRepository VehiclePartCategories =>
+            _vehiclePartCategories ??= new VehiclePartCategoryRepository(Context);
+
+        public IOilRepository Oils =>
+            _oils ??= new OilRepository(Context);
 
         public IMaintenanceActivityRepository MaintenanceActivities =>
             _maintenanceActivities ??= new MaintenanceActivityRepository(Context);

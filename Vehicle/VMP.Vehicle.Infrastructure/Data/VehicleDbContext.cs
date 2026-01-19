@@ -16,7 +16,9 @@ namespace VMP.Vehicle.Infrastructure.Data
         public DbSet<VehicleModel> VehicleModels { get; set; } = null!;
         public DbSet<VehicleVariant> VehicleVariants { get; set; } = null!;
         public DbSet<UserVehicle> UserVehicles { get; set; } = null!;
-        public DbSet<ConsumableItem> ConsumableItems { get; set; } = null!;
+        public DbSet<VehiclePart> VehicleParts { get; set; } = null!;
+        public DbSet<VehiclePartCategory> VehiclePartCategories { get; set; } = null!;
+        public DbSet<Oil> Oils { get; set; } = null!;
         public DbSet<MaintenanceActivity> MaintenanceActivities { get; set; } = null!;
         public DbSet<MaintenanceActivityDetail> MaintenanceActivityDetails { get; set; } = null!;
         public DbSet<OdometerHistory> OdometerHistories { get; set; } = null!;
@@ -26,6 +28,9 @@ namespace VMP.Vehicle.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Apply all configurations
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(VehicleDbContext).Assembly);
 
             modelBuilder.Entity<VehicleTypeBrand>(entity =>
             {
@@ -45,7 +50,7 @@ namespace VMP.Vehicle.Infrastructure.Data
 
             modelBuilder.Entity<StandardMaintenanceSchedule>(entity =>
             {
-                entity.HasIndex(e => new { e.VehicleModelId, e.ConsumableItemId })
+                entity.HasIndex(e => new { e.VehicleModelId, e.VehiclePartId })
                     .IsUnique();
             });
 
@@ -65,7 +70,9 @@ namespace VMP.Vehicle.Infrastructure.Data
             modelBuilder.Entity<VehicleModel>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleVariant>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<UserVehicle>().HasQueryFilter(e => e.DeletedAt == null);
-            modelBuilder.Entity<ConsumableItem>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<VehiclePart>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<VehiclePartCategory>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<Oil>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<MaintenanceActivity>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<MaintenanceActivityDetail>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<OdometerHistory>().HasQueryFilter(e => e.DeletedAt == null);
@@ -74,11 +81,19 @@ namespace VMP.Vehicle.Infrastructure.Data
 
             // Seed data
             SeedVehicleTypes(modelBuilder);
+           
         }
 
         private void SeedVehicleTypes(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<VehicleType>().HasData(VehicleDataSeeder.GetVehicleTypes());
         }
+
+        // TODO: Implement VehiclePartCategory seeder
+        // private void SeedVehiclePartCategories(ModelBuilder modelBuilder)
+        // {
+        //     modelBuilder.Entity<VehiclePartCategory>().HasData(
+        //         Seeders.VehiclePartCategorySeeder.GetVehiclePartCategories());
+        // }
     }
 }

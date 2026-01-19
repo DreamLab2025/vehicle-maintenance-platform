@@ -12,9 +12,9 @@ namespace VMP.Vehicle.Domain.Entities
         public MaintenanceActivity MaintenanceActivity { get; set; } = null!;
 
         [Required]
-        public Guid ConsumableItemId { get; set; }
-        [ForeignKey(nameof(ConsumableItemId))]
-        public ConsumableItem ConsumableItem { get; set; } = null!;
+        public Guid VehiclePartId { get; set; }
+        [ForeignKey(nameof(VehiclePartId))]
+        public VehiclePart VehiclePart { get; set; } = null!;
 
         [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }

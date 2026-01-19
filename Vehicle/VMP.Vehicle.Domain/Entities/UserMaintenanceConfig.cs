@@ -12,9 +12,9 @@ namespace VMP.Vehicle.Domain.Entities
         public UserVehicle UserVehicle { get; set; } = null!;
 
         [Required]
-        public Guid ConsumableItemId { get; set; }
-        [ForeignKey(nameof(ConsumableItemId))]
-        public ConsumableItem ConsumableItem { get; set; } = null!;
+        public Guid VehiclePartId { get; set; }
+        [ForeignKey(nameof(VehiclePartId))]
+        public VehiclePart VehiclePart { get; set; } = null!;
 
         public int LastServiceOdometer { get; set; }
         public DateTime LastServiceDate { get; set; }
