@@ -30,8 +30,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public bool AllowsMultipleInstances { get; set; } = false;
 
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
-
         // Navigation properties
         public List<PartProduct> Products { get; set; } = [];
         public List<DefaultMaintenanceSchedule> DefaultSchedules { get; set; } = [];
