@@ -3,7 +3,6 @@ using VMP.Common.Databases.Base;
 
 namespace VMP.Vehicle.Domain.Entities
 {
-    /// Phân loại phụ tùng xe (Dầu nhớt, Lốp, Ắc quy, Lọc gió, v.v.)
     public class VehiclePartCategory : BaseEntity
     {
         [Required, MaxLength(100)]

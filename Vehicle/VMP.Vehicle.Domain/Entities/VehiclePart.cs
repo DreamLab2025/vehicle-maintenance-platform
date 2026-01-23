@@ -19,21 +19,16 @@ namespace VMP.Vehicle.Domain.Entities
         [MaxLength(50)]
         public string? Unit { get; set; } // Đơn vị: lít, cái, bộ, v.v.
 
-        /// <summary>
-        /// Mã SKU hoặc mã sản phẩm (nếu có)
-        /// </summary>
+      
+        ///  mã sản phẩm
         [MaxLength(100)]
         public string? Sku { get; set; }
 
-        /// <summary>
         /// Giá tham khảo (có thể để null nếu không có)
-        /// </summary>
         [Column(TypeName = "decimal(18,2)")]
         public decimal? ReferencePrice { get; set; }
 
-        /// <summary>
         /// Phân loại phụ tùng (Dầu nhớt, Lốp, Ắc quy, v.v.)
-        /// </summary>
         [Required]
         public Guid CategoryId { get; set; }
 
