@@ -12,34 +12,39 @@ namespace Verendar.Vehicle.Domain.Entities
         [Required]
         public Guid VehicleVariantId { get; set; }
 
-        [ForeignKey(nameof(VehicleVariantId))]
-        public VehicleVariant VehicleVariant { get; set; } = null!;
-
-        [Required, MaxLength(20)]
-        public string LicensePlate { get; set; } = null!;
-
-        [MaxLength(100)]
-        public string? Nickname { get; set; } // "Xe đi phượt"
+        // Registration info
+        [MaxLength(20)]
+        public string? LicensePlate { get; set; }
 
         [MaxLength(17)]
-        public string? VinNumber { get; set; }
+        public string? VIN { get; set; }
 
         [MaxLength(50)]
-        public string EngineNumber { get; set; }
+        public string? EngineNumber { get; set; }
 
-        public DateTime PurchaseDate { get; set; }
+        public DateOnly? PurchaseDate { get; set; }
 
+        // Current status
         public int CurrentOdometer { get; set; }
-        public DateTime LastOdometerUpdateAt { get; set; }
 
-        [Column(TypeName = "decimal(10,2)")]
-        public decimal AverageKmPerDay { get; set; }
+        public DateOnly? LastOdometerUpdate { get; set; }
 
-        public DateTime? LastCalculatedDate { get; set; }
+        /// <summary>
+        /// Trung bình km/ngày, dùng để predict ngày cần thay phụ tùng
+        /// Tự động tính từ OdometerHistory
+        /// </summary>
+        public int? AverageKmPerDay { get; set; }
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        public ICollection<OdometerHistory> OdometerHistories { get; set; } = new List<OdometerHistory>();
-        public ICollection<UserMaintenanceConfig> MaintenanceConfigs { get; set; } = new List<UserMaintenanceConfig>();
+        [MaxLength(1000)]
+        public string? Notes { get; set; }
+
+        // Navigation properties
+        public VehicleVariant Variant { get; set; } = null!;
+
+        public ICollection<OdometerHistory> OdometerHistory { get; set; } = new List<OdometerHistory>();
+        public ICollection<VehiclePartTracking> PartTrackings { get; set; } = new List<VehiclePartTracking>();
+        public ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = new List<MaintenanceRecord>();
     }
 }

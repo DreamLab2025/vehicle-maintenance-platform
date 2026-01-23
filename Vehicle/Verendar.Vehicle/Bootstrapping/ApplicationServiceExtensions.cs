@@ -29,8 +29,6 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IVehicleModelService, VehicleModelService>();
             builder.Services.AddScoped<IVehicleVariantService, VehicleVariantService>();
             builder.Services.AddScoped<IUserVehicleService, UserVehicleService>();
-            builder.Services.AddScoped<IOilService, OilService>();
-            builder.Services.AddScoped<IMaintenanceActivityService, MaintenanceActivityService>();
 
             return builder;
         }
@@ -54,9 +52,6 @@ namespace Verendar.Vehicle.Bootstrapping
             app.MapModelImageApi();
             app.MapUserVehicleApi();
             app.MapVehiclePartApi();
-            app.MapOilApi();
-            app.MapSMScheduleApi();
-            app.MapMaintenanceActivityApi();
             app.MapOdometerHistoryApi();
 
             return app;

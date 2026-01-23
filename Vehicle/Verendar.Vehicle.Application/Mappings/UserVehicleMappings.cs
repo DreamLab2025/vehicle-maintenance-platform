@@ -12,13 +12,11 @@ namespace Verendar.Vehicle.Application.Mappings
                 UserId = userId,
                 VehicleVariantId = request.VehicleVariantId,
                 LicensePlate = request.LicensePlate,
-                Nickname = request.Nickname,
-                VinNumber = request.VinNumber,
-                PurchaseDate = request.PurchaseDate,
+                VIN = request.VinNumber,
+                PurchaseDate = request.PurchaseDate.HasValue ? DateOnly.FromDateTime(request.PurchaseDate.Value) : null,
                 CurrentOdometer = request.CurrentOdometer,
-                LastOdometerUpdateAt = DateTime.UtcNow,
-                AverageKmPerDay = 0,
-                LastCalculatedDate = null
+                LastOdometerUpdate = DateOnly.FromDateTime(DateTime.UtcNow),
+                AverageKmPerDay = null
             };
         }
 
@@ -28,15 +26,13 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 UserId = entity.UserId,
-                UserVehicleVariant = entity.VehicleVariant!.ToUserVehicleVariantResponse(),
+                UserVehicleVariant = entity.Variant!.ToUserVehicleVariantResponse(),
                 LicensePlate = entity.LicensePlate,
-                Nickname = entity.Nickname,
-                VinNumber = entity.VinNumber,
-                PurchaseDate = entity.PurchaseDate,
+                VinNumber = entity.VIN,
+                PurchaseDate = entity.PurchaseDate?.ToDateTime(TimeOnly.MinValue),
                 CurrentOdometer = entity.CurrentOdometer,
-                LastOdometerUpdateAt = entity.LastOdometerUpdateAt,
+                LastOdometerUpdateAt = entity.LastOdometerUpdate?.ToDateTime(TimeOnly.MinValue),
                 AverageKmPerDay = entity.AverageKmPerDay,
-                LastCalculatedDate = entity.LastCalculatedDate,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -44,21 +40,21 @@ namespace Verendar.Vehicle.Application.Mappings
 
         public static UserVehicleDetailResponse ToDetailResponse(this UserVehicle entity, int totalMaintenanceActivities = 0, DateTime? lastMaintenanceDate = null)
         {
-            var daysSincePurchase = (DateTime.UtcNow - entity.PurchaseDate).Days;
+            var daysSincePurchase = entity.PurchaseDate.HasValue
+                ? (DateOnly.FromDateTime(DateTime.UtcNow).DayNumber - entity.PurchaseDate.Value.DayNumber)
+                : 0;
 
             return new UserVehicleDetailResponse
             {
                 Id = entity.Id,
                 UserId = entity.UserId,
-                UserVehicleVariant = entity.VehicleVariant!.ToUserVehicleVariantResponse(),
+                UserVehicleVariant = entity.Variant!.ToUserVehicleVariantResponse(),
                 LicensePlate = entity.LicensePlate,
-                Nickname = entity.Nickname,
-                VinNumber = entity.VinNumber,
-                PurchaseDate = entity.PurchaseDate,
+                VinNumber = entity.VIN,
+                PurchaseDate = entity.PurchaseDate?.ToDateTime(TimeOnly.MinValue),
                 CurrentOdometer = entity.CurrentOdometer,
-                LastOdometerUpdateAt = entity.LastOdometerUpdateAt,
+                LastOdometerUpdateAt = entity.LastOdometerUpdate?.ToDateTime(TimeOnly.MinValue),
                 AverageKmPerDay = entity.AverageKmPerDay,
-                LastCalculatedDate = entity.LastCalculatedDate,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt,
                 TotalMaintenanceActivities = totalMaintenanceActivities,
@@ -72,24 +68,25 @@ namespace Verendar.Vehicle.Application.Mappings
         {
             entity.VehicleVariantId = request.VehicleVariantId;
             entity.LicensePlate = request.LicensePlate;
-            entity.Nickname = request.Nickname;
-            entity.VinNumber = request.VinNumber;
-            entity.PurchaseDate = request.PurchaseDate;
+            entity.VIN = request.VinNumber;
+            entity.PurchaseDate = request.PurchaseDate.HasValue ? DateOnly.FromDateTime(request.PurchaseDate.Value) : null;
         }
 
         public static void UpdateOdometer(this UserVehicle entity, int newOdometer)
         {
             var oldOdometer = entity.CurrentOdometer;
             entity.CurrentOdometer = newOdometer;
-            entity.LastOdometerUpdateAt = DateTime.UtcNow;
+            entity.LastOdometerUpdate = DateOnly.FromDateTime(DateTime.UtcNow);
 
             // Calculate average km per day
-            var daysSincePurchase = (DateTime.UtcNow - entity.PurchaseDate).Days;
-            if (daysSincePurchase > 0)
+            if (entity.PurchaseDate.HasValue)
             {
-                entity.AverageKmPerDay = Math.Round((decimal)newOdometer / daysSincePurchase, 2);
+                var daysSincePurchase = DateOnly.FromDateTime(DateTime.UtcNow).DayNumber - entity.PurchaseDate.Value.DayNumber;
+                if (daysSincePurchase > 0)
+                {
+                    entity.AverageKmPerDay = newOdometer / daysSincePurchase;
+                }
             }
-            entity.LastCalculatedDate = DateTime.UtcNow;
         }
 
         public static VehicleStreakResponse ToStreakResponse(this int streak, Guid userVehicleId)

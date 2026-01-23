@@ -18,12 +18,10 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         public IQueryable<UserVehicle> GetQueryWithFullDetails()
         {
             return _dbSet
-                .Include(v => v.VehicleVariant)
+                .Include(v => v.Variant)
                     .ThenInclude(vv => vv.VehicleModel)
                         .ThenInclude(vm => vm.Brand)
-                .Include(v => v.VehicleVariant)
-                    .ThenInclude(vv => vv.VehicleModel)
-                        .ThenInclude(vm => vm.Type)
+                            .ThenInclude(b => b.VehicleType)
                 .Where(v => v.DeletedAt == null);
         }
 
@@ -77,14 +75,14 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 
         private async Task<bool> HasContinuousOdometerUpdatesAsync(Guid vehicleId, int daysRequired)
         {
-            var endDate = DateTime.UtcNow.Date;
+            var endDate = DateOnly.FromDateTime(DateTime.UtcNow);
             var startDate = endDate.AddDays(-(daysRequired - 1));
 
             var logDates = await _context.OdometerHistories
                 .Where(x => x.UserVehicleId == vehicleId
-                            && x.RecordedAt >= startDate
-                            && x.RecordedAt <= DateTime.UtcNow)
-                .Select(x => x.RecordedAt.Date)
+                            && x.RecordedDate >= startDate
+                            && x.RecordedDate <= endDate)
+                .Select(x => x.RecordedDate)
                 .Distinct()
                 .ToListAsync();
 

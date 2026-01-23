@@ -8,41 +8,36 @@ namespace Verendar.Vehicle.Domain.Entities
     public class VehicleModel : BaseEntity
     {
         [Required]
-        public Guid BrandId { get; set; }
-        [ForeignKey(nameof(BrandId))]
-        public VehicleBrand Brand { get; set; } = null!;
+        public Guid VehicleBrandId { get; set; }
 
         [Required]
-        public Guid TypeId { get; set; }
-        [ForeignKey(nameof(TypeId))]
-        public VehicleType Type { get; set; } = null!;
+        [MaxLength(150)]
+        public string Name { get; set; } = string.Empty;
 
-        [Required, MaxLength(150)]
-        public string Name { get; set; } = null!;
+        [Required]
+        [MaxLength(100)]
+        public string Code { get; set; } = string.Empty;
 
-        public int ReleaseYear { get; set; }
-        public VehicleFuelType FuelType { get; set; }
-        public VehicleTransmissionType TransmissionType { get; set; }
+        public int? ManufactureYear { get; set; }
 
-        public int? EngineDisplacement { get; set; } // Phân khối (cc)
+        public VehicleFuelType? FuelType { get; set; }
+
+        public VehicleTransmissionType? TransmissionType { get; set; }
+
+        public int? EngineDisplacement { get; set; }
 
         [Column(TypeName = "decimal(4,2)")]
-        public decimal? EngineCapacity { get; set; } // Dung tích động cơ (L)
+        public decimal? EngineCapacity { get; set; }
 
-        [Column(TypeName = "decimal(5,2)")]
-        public decimal? OilCapacity { get; set; } // Dung tích dầu (liters)
-
-        [MaxLength(50)]
-        public string? TireSizeFront { get; set; } // Kích thước lốp trước
-        [MaxLength(50)]
-        public string? TireSizeRear { get; set; } // Kích thước lốp sau
+        [MaxLength(1000)]
+        public string? Description { get; set; }
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
         // Navigation properties
-        public ICollection<StandardMaintenanceSchedule> StandardMaintenanceSchedules { get; set; } = new List<StandardMaintenanceSchedule>();
-        public ICollection<UserVehicle> UserVehicles { get; set; } = new List<UserVehicle>();
-        public ICollection<VehicleVariant> VehicleVariants { get; set; } = new List<VehicleVariant>();
+        public VehicleBrand Brand { get; set; } = null!;
+        public List<VehicleVariant> Variants { get; set; } = [];
+        public List<DefaultMaintenanceSchedule> DefaultSchedules { get; set; } = [];
     }
 
     public enum VehicleFuelType

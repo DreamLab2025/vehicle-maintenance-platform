@@ -57,8 +57,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 {
                     UserVehicleId = userVehicle.Id,
                     OdometerValue = request.CurrentOdometer,
-                    RecordedAt = DateTime.UtcNow,
-                    Source = Domain.Entities.MaintenanceSource.ManualInput
+                    RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    Source = Domain.Enums.OdometerSource.ManualInput
                 };
 
                 await _unitOfWork.OdometerHistories.AddAsync(initialOdometerHistory);
@@ -204,8 +204,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     {
                         UserVehicleId = vehicleId,
                         OdometerValue = request.CurrentOdometer,
-                        RecordedAt = DateTime.UtcNow,
-                        Source = Domain.Entities.MaintenanceSource.ManualInput
+                        RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                        Source = Domain.Enums.OdometerSource.ManualInput
                     };
 
                     await _unitOfWork.OdometerHistories.AddAsync(odometerHistory);

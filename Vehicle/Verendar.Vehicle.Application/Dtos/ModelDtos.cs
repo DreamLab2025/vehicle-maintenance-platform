@@ -10,21 +10,21 @@ namespace Verendar.Vehicle.Application.Dtos
         [MaxLength(150, ErrorMessage = "Tên mẫu xe không được vượt quá 150 ký tự")]
         public string Name { get; set; } = null!;
 
+        [MaxLength(100, ErrorMessage = "Mã mẫu xe không được vượt quá 100 ký tự")]
+        public string? Code { get; set; }
+
         [Required(ErrorMessage = "Thương hiệu không được để trống")]
         public Guid BrandId { get; set; }
 
         [Required(ErrorMessage = "Loại xe không được để trống")]
         public Guid TypeId { get; set; }
 
-        [Required(ErrorMessage = "Năm sản xuất không được để trống")]
         [Range(1900, 2100, ErrorMessage = "Năm sản xuất không hợp lệ")]
-        public int ReleaseYear { get; set; }
+        public int? ReleaseYear { get; set; }
 
-        [Required(ErrorMessage = "Loại nhiên liệu không được để trống")]
-        public VehicleFuelType FuelType { get; set; }
+        public VehicleFuelType? FuelType { get; set; }
 
-        [Required(ErrorMessage = "Loại truyền động không được để trống")]
-        public VehicleTransmissionType TransmissionType { get; set; }
+        public VehicleTransmissionType? TransmissionType { get; set; }
 
         public List<ModelImageItem> Images { get; set; } = new();
 
@@ -33,15 +33,6 @@ namespace Verendar.Vehicle.Application.Dtos
 
         [Range(0.1, 20, ErrorMessage = "Dung tích động cơ phải từ 0.1 đến 20 lít")]
         public decimal? EngineCapacity { get; set; }
-
-        [Range(0, 100, ErrorMessage = "Dung tích dầu phải từ 0 đến 100 lít")]
-        public decimal? OilCapacity { get; set; }
-
-        [MaxLength(50, ErrorMessage = "Kích thước lốp trước không được vượt quá 50 ký tự")]
-        public string? TireSizeFront { get; set; }
-
-        [MaxLength(50, ErrorMessage = "Kích thước lốp sau không được vượt quá 50 ký tự")]
-        public string? TireSizeRear { get; set; }
     }
 
     public class ModelImageItem
@@ -66,15 +57,12 @@ namespace Verendar.Vehicle.Application.Dtos
         [MaxLength(150, ErrorMessage = "Tên mẫu xe không được vượt quá 150 ký tự")]
         public string Name { get; set; } = null!;
 
-        [Required(ErrorMessage = "Năm sản xuất không được để trống")]
         [Range(1900, 2100, ErrorMessage = "Năm sản xuất không hợp lệ")]
-        public int ReleaseYear { get; set; }
+        public int? ReleaseYear { get; set; }
 
-        [Required(ErrorMessage = "Loại nhiên liệu không được để trống")]
-        public VehicleFuelType FuelType { get; set; }
+        public VehicleFuelType? FuelType { get; set; }
 
-        [Required(ErrorMessage = "Loại truyền động không được để trống")]
-        public VehicleTransmissionType TransmissionType { get; set; }
+        public VehicleTransmissionType? TransmissionType { get; set; }
 
         public List<ModelImageItem> Images { get; set; } = new();
 
@@ -83,15 +71,6 @@ namespace Verendar.Vehicle.Application.Dtos
 
         [Range(0.1, 20, ErrorMessage = "Dung tích động cơ phải từ 0.1 đến 20 lít")]
         public decimal? EngineCapacity { get; set; }
-
-        [Range(0, 100, ErrorMessage = "Dung tích dầu phải từ 0 đến 100 lít")]
-        public decimal? OilCapacity { get; set; }
-
-        [MaxLength(50, ErrorMessage = "Kích thước lốp trước không được vượt quá 50 ký tự")]
-        public string? TireSizeFront { get; set; }
-
-        [MaxLength(50, ErrorMessage = "Kích thước lốp sau không được vượt quá 50 ký tự")]
-        public string? TireSizeRear { get; set; }
     }
 
     public class BulkModelRequest
@@ -130,16 +109,13 @@ namespace Verendar.Vehicle.Application.Dtos
         public string BrandName { get; set; } = null!;
         public Guid TypeId { get; set; }
         public string TypeName { get; set; } = null!;
-        public int ReleaseYear { get; set; }
-        public VehicleFuelType FuelType { get; set; }
+        public int? ReleaseYear { get; set; }
+        public VehicleFuelType? FuelType { get; set; }
         public string FuelTypeName { get; set; } = null!;
-        public VehicleTransmissionType TransmissionType { get; set; }
+        public VehicleTransmissionType? TransmissionType { get; set; }
         public string TransmissionTypeName { get; set; } = null!;
         public string? EngineDisplacementDisplay { get; set; } // Hiển thị phân khối với đơn vị "cc"
         public decimal? EngineCapacity { get; set; }
-        public decimal? OilCapacity { get; set; }
-        public string? TireSizeFront { get; set; }
-        public string? TireSizeRear { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }

@@ -10,132 +10,82 @@ namespace Verendar.Vehicle.Infrastructure.Data
         {
         }
 
+        // Vehicle Catalog
         public DbSet<VehicleType> VehicleTypes { get; set; } = null!;
         public DbSet<VehicleBrand> VehicleBrands { get; set; } = null!;
         public DbSet<VehicleTypeBrand> VehicleTypeBrands { get; set; } = null!;
         public DbSet<VehicleModel> VehicleModels { get; set; } = null!;
         public DbSet<VehicleVariant> VehicleVariants { get; set; } = null!;
+
+        // Part Catalog
+        public DbSet<PartCategory> PartCategories { get; set; } = null!;
+        public DbSet<PartProduct> PartProducts { get; set; } = null!;
+
+        // Maintenance Schedule
+        public DbSet<DefaultMaintenanceSchedule> DefaultMaintenanceSchedules { get; set; } = null!;
+
+        // User Vehicle & Tracking
         public DbSet<UserVehicle> UserVehicles { get; set; } = null!;
-        public DbSet<VehiclePart> VehicleParts { get; set; } = null!;
-        public DbSet<VehiclePartCategory> VehiclePartCategories { get; set; } = null!;
-        public DbSet<Oil> Oils { get; set; } = null!;
-        public DbSet<MaintenanceActivity> MaintenanceActivities { get; set; } = null!;
-        public DbSet<MaintenanceActivityDetail> MaintenanceActivityDetails { get; set; } = null!;
         public DbSet<OdometerHistory> OdometerHistories { get; set; } = null!;
-        public DbSet<StandardMaintenanceSchedule> StandardMaintenanceSchedules { get; set; } = null!;
-        public DbSet<UserMaintenanceConfig> UserMaintenanceConfigs { get; set; } = null!;
+        public DbSet<VehiclePartTracking> VehiclePartTrackings { get; set; } = null!;
+        public DbSet<MaintenanceReminder> MaintenanceReminders { get; set; } = null!;
+
+        // Maintenance History
+        public DbSet<MaintenanceRecord> MaintenanceRecords { get; set; } = null!;
+        public DbSet<MaintenanceRecordItem> MaintenanceRecordItems { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            // =============== INDEXES ===============
+            // VehicleTypeBrand (junction table - needs special config)
             modelBuilder.Entity<VehicleTypeBrand>(entity =>
             {
                 entity.Ignore(e => e.Id);
                 entity.HasKey(e => new { e.VehicleTypeId, e.VehicleBrandId });
-
-                entity.HasOne(e => e.VehicleType)
-                    .WithMany(vt => vt.VehicleTypeBrands)
-                    .HasForeignKey(e => e.VehicleTypeId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasOne(e => e.VehicleBrand)
-                    .WithMany(vb => vb.VehicleTypeBrands)
-                    .HasForeignKey(e => e.VehicleBrandId)
-                    .OnDelete(DeleteBehavior.Restrict);
             });
 
-            modelBuilder.Entity<StandardMaintenanceSchedule>(entity =>
-            {
-                entity.HasIndex(e => new { e.VehicleModelId, e.VehiclePartId })
-                    .IsUnique();
-            });
+            // Unique indexes
+            modelBuilder.Entity<VehicleType>().HasIndex(e => e.Code).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<VehicleBrand>().HasIndex(e => e.Code).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<VehicleModel>().HasIndex(e => e.Code).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<PartCategory>().HasIndex(e => e.Code).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<DefaultMaintenanceSchedule>().HasIndex(e => new { e.VehicleModelId, e.PartCategoryId }).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<VehiclePartTracking>().HasIndex(e => new { e.UserVehicleId, e.PartCategoryId, e.InstanceIdentifier }).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
 
-            modelBuilder.Entity<VehicleVariant>(entity =>
-            {
-                entity.HasIndex(e => new { e.VehicleModelId, e.Color });
+            // Performance indexes
+            modelBuilder.Entity<VehicleModel>().HasIndex(e => new { e.VehicleBrandId, e.Status }).HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<PartCategory>().HasIndex(e => new { e.DisplayOrder, e.Status }).HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<PartProduct>().HasIndex(e => new { e.PartCategoryId, e.Status }).HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<UserVehicle>().HasIndex(e => new { e.UserId, e.Status }).HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<OdometerHistory>().HasIndex(e => new { e.UserVehicleId, e.RecordedDate }).HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<MaintenanceReminder>().HasIndex(e => new { e.VehiclePartTrackingId, e.Level }).HasFilter("\"DeletedAt\" IS NULL");
+            modelBuilder.Entity<MaintenanceRecord>().HasIndex(e => new { e.UserVehicleId, e.ServiceDate }).HasFilter("\"DeletedAt\" IS NULL");
 
-                entity.HasOne(e => e.VehicleModel)
-                    .WithMany(vm => vm.VehicleVariants)
-                    .HasForeignKey(e => e.VehicleModelId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // Oil entity configuration
-            modelBuilder.Entity<Oil>(entity =>
-            {
-                entity.HasOne(o => o.VehiclePart)
-                    .WithOne()
-                    .HasForeignKey<Oil>(o => o.VehiclePartId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            // VehiclePart entity configuration - filtered indexes
-            modelBuilder.Entity<VehiclePart>(entity =>
-            {
-                entity.HasIndex(p => p.Name)
-                    .HasFilter("\"DeletedAt\" IS NULL");
-
-                entity.HasIndex(p => p.Sku)
-                    .HasFilter("\"DeletedAt\" IS NULL AND \"Sku\" IS NOT NULL");
-
-                entity.HasIndex(p => new { p.CategoryId, p.Status })
-                    .HasFilter("\"DeletedAt\" IS NULL");
-
-                entity.HasOne(p => p.Category)
-                    .WithMany(c => c.VehicleParts)
-                    .HasForeignKey(p => p.CategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
-            // VehiclePartCategory entity configuration - filtered indexes
-            modelBuilder.Entity<VehiclePartCategory>(entity =>
-            {
-                entity.HasIndex(c => c.Code)
-                    .IsUnique()
-                    .HasFilter("\"DeletedAt\" IS NULL")
-                    .HasDatabaseName("IX_VehiclePartCategories_Code_Unique");
-
-                entity.HasIndex(c => new { c.DisplayOrder, c.Status })
-                    .HasFilter("\"DeletedAt\" IS NULL");
-
-                entity.HasMany(c => c.VehicleParts)
-                    .WithOne(p => p.Category)
-                    .HasForeignKey(p => p.CategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
-
+            // =============== QUERY FILTERS (SOFT DELETE) ===============
             modelBuilder.Entity<VehicleType>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleBrand>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleTypeBrand>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleModel>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleVariant>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<PartCategory>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<PartProduct>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<DefaultMaintenanceSchedule>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<UserVehicle>().HasQueryFilter(e => e.DeletedAt == null);
-            modelBuilder.Entity<VehiclePart>().HasQueryFilter(e => e.DeletedAt == null);
-            modelBuilder.Entity<VehiclePartCategory>().HasQueryFilter(e => e.DeletedAt == null);
-            modelBuilder.Entity<Oil>().HasQueryFilter(e => e.DeletedAt == null);
-            modelBuilder.Entity<MaintenanceActivity>().HasQueryFilter(e => e.DeletedAt == null);
-            modelBuilder.Entity<MaintenanceActivityDetail>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<OdometerHistory>().HasQueryFilter(e => e.DeletedAt == null);
-            modelBuilder.Entity<StandardMaintenanceSchedule>().HasQueryFilter(e => e.DeletedAt == null);
-            modelBuilder.Entity<UserMaintenanceConfig>().HasQueryFilter(e => e.DeletedAt == null);
-            
+            modelBuilder.Entity<VehiclePartTracking>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<MaintenanceReminder>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<MaintenanceRecord>().HasQueryFilter(e => e.DeletedAt == null);
+            modelBuilder.Entity<MaintenanceRecordItem>().HasQueryFilter(e => e.DeletedAt == null);
 
             // Seed data
             SeedVehicleTypes(modelBuilder);
-           
         }
 
         private void SeedVehicleTypes(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<VehicleType>().HasData(VehicleDataSeeder.GetVehicleTypes());
         }
-
-        // TODO: Implement VehiclePartCategory seeder
-        // private void SeedVehiclePartCategories(ModelBuilder modelBuilder)
-        // {
-        //     modelBuilder.Entity<VehiclePartCategory>().HasData(
-        //         Seeders.VehiclePartCategorySeeder.GetVehiclePartCategories());
-        // }
     }
 }

@@ -16,8 +16,8 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         {
             var logDates = await _dbSet
                 .Where(x => x.UserVehicleId == userVehicleId && x.DeletedAt == null)
-                .OrderByDescending(x => x.RecordedAt)
-                .Select(x => x.RecordedAt.Date)
+                .OrderByDescending(x => x.RecordedDate)
+                .Select(x => x.RecordedDate)
                 .Distinct()
                 .Take(100)
                 .ToListAsync();
@@ -27,7 +27,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 return 0;
             }
 
-            var today = DateTime.UtcNow.Date;
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var yesterday = today.AddDays(-1);
             var lastLogDate = logDates.First();
 

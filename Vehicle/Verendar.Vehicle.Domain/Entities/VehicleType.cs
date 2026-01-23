@@ -5,8 +5,13 @@ namespace Verendar.Vehicle.Domain.Entities
 {
     public class VehicleType : BaseEntity
     {
-        [Required, MaxLength(100)]
-        public string Name { get; set; } = null!;
+        [Required]
+        [MaxLength(100)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(50)]
+        public string Code { get; set; } = string.Empty;
 
         [MaxLength(500)]
         public string? Description { get; set; }
@@ -14,7 +19,7 @@ namespace Verendar.Vehicle.Domain.Entities
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
         // Navigation properties
-        public ICollection<VehicleTypeBrand> VehicleTypeBrands { get; set; } = new List<VehicleTypeBrand>();
-        public ICollection<VehicleModel> VehicleModels { get; set; } = new List<VehicleModel>();
+        public List<VehicleTypeBrand> VehicleTypeBrands { get; set; } = [];
+        public List<VehicleBrand> Brands { get; set; } = [];
     }
 }

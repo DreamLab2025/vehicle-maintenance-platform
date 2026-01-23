@@ -105,19 +105,19 @@ namespace Verendar.Vehicle.Application.Services.Implements
             {
                 var query = _unitOfWork.VehicleModels.AsQueryable()
                     .Include(m => m.Brand)
-                    .Include(m => m.Type)
-                    .Include(m => m.VehicleVariants)
+                    .Include(m => m.Brand).ThenInclude(b => b.VehicleType)
+                    .Include(m => m.Variants)
                     .Where(m => m.DeletedAt == null);
 
                 // Apply filters by ID (more efficient than name search)
                 if (filterRequest.TypeId.HasValue)
                 {
-                    query = query.Where(m => m.TypeId == filterRequest.TypeId.Value);
+                    query = query.Where(m => m.Brand.VehicleTypeId == filterRequest.TypeId.Value);
                 }
 
                 if (filterRequest.BrandId.HasValue)
                 {
-                    query = query.Where(m => m.BrandId == filterRequest.BrandId.Value);
+                    query = query.Where(m => m.VehicleBrandId == filterRequest.BrandId.Value);
                 }
 
                 if (!string.IsNullOrWhiteSpace(filterRequest.ModelName))
@@ -127,7 +127,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (!string.IsNullOrWhiteSpace(filterRequest.Color))
                 {
-                    query = query.Where(m => m.VehicleVariants.Any(v => v.Color.Contains(filterRequest.Color)));
+                    query = query.Where(m => m.Variants.Any(v => v.Color.Contains(filterRequest.Color)));
                 }
 
                 if (filterRequest.TransmissionType.HasValue)
@@ -142,7 +142,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (filterRequest.ReleaseYear.HasValue)
                 {
-                    query = query.Where(m => m.ReleaseYear == filterRequest.ReleaseYear.Value);
+                    query = query.Where(m => m.ManufactureYear == filterRequest.ReleaseYear.Value);
                 }
 
                 var totalCount = await query.CountAsync();
@@ -229,7 +229,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
 
                 var existingModelNames = (await _unitOfWork.VehicleModels
-                    .GetAllAsync(m => m.BrandId == request.BrandId && m.DeletedAt == null))
+                    .GetAllAsync(m => m.VehicleBrandId == request.BrandId && m.DeletedAt == null))
                     .Select(m => m.Name.ToLower())
                     .ToHashSet();
 
@@ -285,9 +285,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                     var createdModels = await _unitOfWork.VehicleModels.AsQueryable()
                         .Include(m => m.Brand)
-                        .Include(m => m.Type)
-                        .Include(m => m.VehicleVariants)
-                        .Where(m => m.BrandId == request.BrandId && m.DeletedAt == null)
+                        .Include(m => m.Brand).ThenInclude(b => b.VehicleType)
+                        .Include(m => m.Variants)
+                        .Where(m => m.VehicleBrandId == request.BrandId && m.DeletedAt == null)
                         .OrderByDescending(m => m.CreatedAt)
                         .Take(response.SuccessCount)
                         .ToListAsync();
@@ -336,7 +336,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
 
                 var existingModelNames = (await _unitOfWork.VehicleModels
-                    .GetAllAsync(m => m.BrandId == brand.Id && m.DeletedAt == null))
+                    .GetAllAsync(m => m.VehicleBrandId == brand.Id && m.DeletedAt == null))
                     .Select(m => m.Name.ToLower())
                     .ToHashSet();
 
@@ -391,9 +391,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                     var createdModels = await _unitOfWork.VehicleModels.AsQueryable()
                         .Include(m => m.Brand)
-                        .Include(m => m.Type)
-                        .Include(m => m.VehicleVariants)
-                        .Where(m => m.BrandId == brand.Id && m.DeletedAt == null)
+                        .Include(m => m.Brand).ThenInclude(b => b.VehicleType)
+                        .Include(m => m.Variants)
+                        .Where(m => m.VehicleBrandId == brand.Id && m.DeletedAt == null)
                         .OrderByDescending(m => m.CreatedAt)
                         .Take(response.SuccessCount)
                         .ToListAsync();
@@ -463,7 +463,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             var existingModel = await _unitOfWork.VehicleModels
                 .FindOneAsync(m => m.Name == name
-                    && m.BrandId == brandId
+                    && m.VehicleBrandId == brandId
                     && m.DeletedAt == null);
 
             return existingModel != null && (!excludeId.HasValue || existingModel.Id != excludeId.Value);
@@ -473,8 +473,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             return await _unitOfWork.VehicleModels.AsQueryable()
                 .Include(m => m.Brand)
-                .Include(m => m.Type)
-                .Include(m => m.VehicleVariants)
+                .Include(m => m.Brand).ThenInclude(b => b.VehicleType)
+                .Include(m => m.Variants)
                 .FirstOrDefaultAsync(m => m.Id == id);
         }
 
@@ -483,16 +483,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
             return new VehicleModel
             {
                 Name = item.Name,
-                BrandId = brandId,
-                TypeId = typeId,
-                ReleaseYear = item.ReleaseYear,
+                Code = item.Name.Replace(" ", "-").ToLowerInvariant(),
+                VehicleBrandId = brandId,
+                ManufactureYear = item.ReleaseYear,
                 FuelType = item.FuelType,
                 TransmissionType = item.TransmissionType,
                 EngineDisplacement = item.EngineDisplacement,
-                EngineCapacity = item.EngineCapacity,
-                OilCapacity = item.OilCapacity,
-                TireSizeFront = item.TireSizeFront,
-                TireSizeRear = item.TireSizeRear
+                EngineCapacity = item.EngineCapacity
             };
         }
 

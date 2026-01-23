@@ -10,16 +10,13 @@ namespace Verendar.Vehicle.Application.Mappings
             return new VehicleModel
             {
                 Name = request.Name,
-                BrandId = request.BrandId,
-                TypeId = request.TypeId,
-                ReleaseYear = request.ReleaseYear,
+                Code = request.Code ?? string.Empty,
+                VehicleBrandId = request.BrandId,
+                ManufactureYear = request.ReleaseYear,
                 FuelType = request.FuelType,
                 TransmissionType = request.TransmissionType,
                 EngineDisplacement = request.EngineDisplacement,
-                EngineCapacity = request.EngineCapacity,
-                OilCapacity = request.OilCapacity,
-                TireSizeFront = request.TireSizeFront,
-                TireSizeRear = request.TireSizeRear
+                EngineCapacity = request.EngineCapacity
             };
         }
 
@@ -29,20 +26,17 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 Name = entity.Name,
-                BrandId = entity.BrandId,
+                BrandId = entity.VehicleBrandId,
                 BrandName = entity.Brand?.Name ?? string.Empty,
-                TypeId = entity.TypeId,
-                TypeName = entity.Type?.Name ?? string.Empty,
-                ReleaseYear = entity.ReleaseYear,
+                TypeId = entity.Brand?.VehicleTypeId ?? Guid.Empty,
+                TypeName = entity.Brand?.VehicleType?.Name ?? string.Empty,
+                ReleaseYear = entity.ManufactureYear,
                 FuelType = entity.FuelType,
-                FuelTypeName = GetFuelTypeName(entity.FuelType),
+                FuelTypeName = entity.FuelType.HasValue ? GetFuelTypeName(entity.FuelType.Value) : string.Empty,
                 TransmissionType = entity.TransmissionType,
-                TransmissionTypeName = GetTransmissionTypeName(entity.TransmissionType),
+                TransmissionTypeName = entity.TransmissionType.HasValue ? GetTransmissionTypeName(entity.TransmissionType.Value) : string.Empty,
                 EngineDisplacementDisplay = entity.EngineDisplacement.HasValue ? $"{entity.EngineDisplacement} cc" : null,
                 EngineCapacity = entity.EngineCapacity,
-                OilCapacity = entity.OilCapacity,
-                TireSizeFront = entity.TireSizeFront,
-                TireSizeRear = entity.TireSizeRear,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -54,21 +48,18 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 Name = entity.Name,
-                BrandId = entity.BrandId,
+                BrandId = entity.VehicleBrandId,
                 BrandName = entity.Brand?.Name ?? string.Empty,
-                TypeId = entity.TypeId,
-                TypeName = entity.Type?.Name ?? string.Empty,
-                ReleaseYear = entity.ReleaseYear,
+                TypeId = entity.Brand?.VehicleTypeId ?? Guid.Empty,
+                TypeName = entity.Brand?.VehicleType?.Name ?? string.Empty,
+                ReleaseYear = entity.ManufactureYear,
                 FuelType = entity.FuelType,
-                FuelTypeName = GetFuelTypeName(entity.FuelType),
+                FuelTypeName = entity.FuelType.HasValue ? GetFuelTypeName(entity.FuelType.Value) : string.Empty,
                 TransmissionType = entity.TransmissionType,
-                TransmissionTypeName = GetTransmissionTypeName(entity.TransmissionType),
-                Variants = entity.VehicleVariants?.Select(mi => mi.ToResponse()).ToList() ?? [],
+                TransmissionTypeName = entity.TransmissionType.HasValue ? GetTransmissionTypeName(entity.TransmissionType.Value) : string.Empty,
+                Variants = entity.Variants?.Select(mi => mi.ToResponse()).ToList() ?? [],
                 EngineDisplacementDisplay = entity.EngineDisplacement.HasValue ? $"{entity.EngineDisplacement} cc" : null,
                 EngineCapacity = entity.EngineCapacity,
-                OilCapacity = entity.OilCapacity,
-                TireSizeFront = entity.TireSizeFront,
-                TireSizeRear = entity.TireSizeRear,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -77,16 +68,13 @@ namespace Verendar.Vehicle.Application.Mappings
         public static void UpdateEntity(this VehicleModel entity, ModelRequest request)
         {
             entity.Name = request.Name;
-            entity.BrandId = request.BrandId;
-            entity.TypeId = request.TypeId;
-            entity.ReleaseYear = request.ReleaseYear;
+            entity.Code = request.Code ?? string.Empty;
+            entity.VehicleBrandId = request.BrandId;
+            entity.ManufactureYear = request.ReleaseYear;
             entity.FuelType = request.FuelType;
             entity.TransmissionType = request.TransmissionType;
             entity.EngineDisplacement = request.EngineDisplacement;
             entity.EngineCapacity = request.EngineCapacity;
-            entity.OilCapacity = request.OilCapacity;
-            entity.TireSizeFront = request.TireSizeFront;
-            entity.TireSizeRear = request.TireSizeRear;
         }
 
         private static string GetFuelTypeName(VehicleFuelType fuelType)

@@ -8,7 +8,6 @@ namespace Verendar.Vehicle.Domain.Entities
     {
         [Required]
         public Guid VehicleModelId { get; set; }
-        [ForeignKey(nameof(VehicleModelId))]
         public VehicleModel VehicleModel { get; set; } = null!;
 
         [Required]

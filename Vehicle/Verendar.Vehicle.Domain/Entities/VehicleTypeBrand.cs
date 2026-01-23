@@ -8,12 +8,10 @@ namespace Verendar.Vehicle.Domain.Entities
     {
         [Required]
         public Guid VehicleTypeId { get; set; }
-        [ForeignKey(nameof(VehicleTypeId))]
         public VehicleType VehicleType { get; set; } = null!;
 
         [Required]
         public Guid VehicleBrandId { get; set; }
-        [ForeignKey(nameof(VehicleBrandId))]
         public VehicleBrand VehicleBrand { get; set; } = null!;
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
