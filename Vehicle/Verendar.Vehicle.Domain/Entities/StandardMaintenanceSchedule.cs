@@ -12,9 +12,9 @@ namespace Verendar.Vehicle.Domain.Entities
         public VehicleModel VehicleModel { get; set; } = null!;
 
         [Required]
-        public Guid ConsumableItemId { get; set; }
-        [ForeignKey(nameof(ConsumableItemId))]
-        public ConsumableItem ConsumableItem { get; set; } = null!;
+        public Guid VehiclePartId { get; set; }
+        [ForeignKey(nameof(VehiclePartId))]
+        public VehiclePart VehiclePart { get; set; } = null!;
 
         public int? InitialDistance { get; set; } // Rodai (km)
         public int DistanceInterval { get; set; } // Chu kỳ lặp (km)

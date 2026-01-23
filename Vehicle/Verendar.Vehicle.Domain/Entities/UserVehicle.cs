@@ -21,8 +21,11 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(100)]
         public string? Nickname { get; set; } // "Xe đi phượt"
 
-        [MaxLength(50)]
+        [MaxLength(17)]
         public string? VinNumber { get; set; }
+
+        [MaxLength(50)]
+        public string EngineNumber { get; set; }
 
         public DateTime PurchaseDate { get; set; }
 

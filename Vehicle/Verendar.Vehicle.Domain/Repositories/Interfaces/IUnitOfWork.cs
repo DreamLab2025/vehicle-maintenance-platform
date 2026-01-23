@@ -10,7 +10,9 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
         IVehicleModelRepository VehicleModels { get; }
         IVehicleVariantRepository VehicleVariants { get; }
         IUserVehicleRepository UserVehicles { get; }
-        IConsumableItemRepository ConsumableItems { get; }
+        IVehiclePartRepository VehicleParts { get; }
+        IVehiclePartCategoryRepository VehiclePartCategories { get; }
+        IOilRepository Oils { get; }
         IMaintenanceActivityRepository MaintenanceActivities { get; }
         IOdometerHistoryRepository OdometerHistories { get; }
     }
