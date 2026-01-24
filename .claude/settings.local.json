@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /S \"C:\\\\Users\\\\hoade\\\\.claude-worktrees\\\\Verendar\\\\lucid-cannon\\\\Vehicle\\\\Verendar.Vehicle.Domain\" /B)",
+      "Bash(dotnet ef:*)",
+      "Bash(dotnet build:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(for f in PartProductRepository.cs PartCategoryRepository.cs DefaultMaintenanceScheduleRepository.cs VehiclePartTrackingRepository.cs MaintenanceReminderRepository.cs MaintenanceRecordRepository.cs MaintenanceRecordItemRepository.cs)",
+      "Bash(do sed -i 's/GenericRepository</PostgresRepository</g; s/, VehicleDbContext>/>/g' \"$f\")",
+      "Bash(done)"
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+using Microsoft.EntityFrameworkCore;
+using Verendar.Common.Databases.Implements;
+using Verendar.Vehicle.Domain.Entities;
+using Verendar.Vehicle.Domain.Repositories.Interfaces;
+using Verendar.Vehicle.Infrastructure.Data;
+
+namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
+{
+    public class PartProductRepository : PostgresRepository<PartProduct>, IPartProductRepository
+    {
+        public PartProductRepository(VehicleDbContext context) : base(context)
+        {
+        }
+
+        public async Task<IEnumerable<PartProduct>> GetByCategoryIdAsync(Guid categoryId, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Where(x => x.PartCategoryId == categoryId)
+                .OrderBy(x => x.Name)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<PartProduct?> GetBySKUAsync(string sku, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .FirstOrDefaultAsync(x => x.SKU == sku, cancellationToken);
+        }
+
+        public async Task<IEnumerable<PartProduct>> GetByBrandAsync(string brand, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Where(x => x.Brand == brand)
+                .OrderBy(x => x.Name)
+                .ToListAsync(cancellationToken);
+        }
+    }
+}
