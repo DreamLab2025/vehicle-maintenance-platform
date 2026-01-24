@@ -1,5 +1,3 @@
-using System;
-
 namespace Verendar.Notification.Application.Dtos.Notifications;
 
 public class ChannelDeliveryResult

@@ -2,21 +2,18 @@ using System.ComponentModel;
 
 namespace Verendar.Vehicle.Domain.Enums
 {
-    /// <summary>
-    /// Mức độ nhắc nhở bảo dưỡng dựa trên % còn lại đến hạn
-    /// </summary>
     public enum ReminderLevel
     {
         [Description("Thấp")]
-        Low = 0,        // >50% remaining
+        Low = 0,
 
         [Description("Trung bình")]
-        Medium = 1,     // 25-50% remaining
+        Medium = 1,
 
         [Description("Cao")]
-        High = 2,       // 10-25% remaining
+        High = 2,
 
         [Description("Khẩn cấp")]
-        Urgent = 3      // <10% remaining
+        Urgent = 3
     }
 }

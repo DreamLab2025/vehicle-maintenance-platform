@@ -1,4 +1,3 @@
-using System;
 using Verendar.Common.Events;
 
 namespace Verendar.Common.Contracts;

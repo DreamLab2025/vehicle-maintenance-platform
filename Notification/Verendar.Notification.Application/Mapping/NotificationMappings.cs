@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 using Verendar.Notification.Domain.Entities;
 using Verendar.Notification.Domain.Enums;

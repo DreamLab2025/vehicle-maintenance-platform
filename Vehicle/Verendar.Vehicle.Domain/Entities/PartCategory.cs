@@ -3,9 +3,6 @@ using Verendar.Common.Databases.Base;
 
 namespace Verendar.Vehicle.Domain.Entities
 {
-    /// <summary>
-    /// Danh mục phụ tùng (Dầu nhớt, Lốp xe, Ắc quy...)
-    /// </summary>
     public class PartCategory : BaseEntity
     {
         [Required]
@@ -32,7 +29,7 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public bool AllowsMultipleInstances { get; set; } = false;
 
-        // Navigation properties
+
         public List<PartProduct> Products { get; set; } = [];
         public List<DefaultMaintenanceSchedule> DefaultSchedules { get; set; } = [];
         public List<VehiclePartTracking> PartTrackings { get; set; } = [];

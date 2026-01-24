@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
-
 namespace Verendar.Vehicle.Apis
 {
     public static class VehiclePartApis

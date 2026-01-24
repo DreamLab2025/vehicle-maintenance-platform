@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Verendar.Common.Shared;
+﻿using Verendar.Common.Shared;
 using Verendar.Vehicle.Domain.Entities;
 
 namespace Verendar.Vehicle.Application.Dtos

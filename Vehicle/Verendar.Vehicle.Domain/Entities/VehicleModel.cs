@@ -34,7 +34,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        // Navigation properties
         public VehicleBrand Brand { get; set; } = null!;
         public List<VehicleVariant> Variants { get; set; } = [];
         public List<DefaultMaintenanceSchedule> DefaultSchedules { get; set; } = [];
@@ -48,11 +47,8 @@ namespace Verendar.Vehicle.Domain.Entities
         [Description("Dầu diesel")]
         Diesel = 2,
 
-        [Description("Điện")]
-        Electric = 3,
-
         [Description("Hybrid")]
-        Hybrid = 4
+        Hybrid = 3
     }
 
     public enum VehicleTransmissionType
@@ -70,9 +66,6 @@ namespace Verendar.Vehicle.Domain.Entities
         ManualCar = 4,
 
         [Description("Số tự động")]
-        AutomaticCar = 5,
-
-        [Description("Điện")]
-        Electric = 6
+        AutomaticCar = 5
     }
 }

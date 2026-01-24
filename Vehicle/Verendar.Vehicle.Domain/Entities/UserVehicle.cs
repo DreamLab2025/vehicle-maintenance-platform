@@ -11,7 +11,6 @@ namespace Verendar.Vehicle.Domain.Entities
         [Required]
         public Guid VehicleVariantId { get; set; }
 
-        // Registration info
         [MaxLength(20)]
         public string? LicensePlate { get; set; }
 
@@ -20,20 +19,14 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public DateOnly? PurchaseDate { get; set; }
 
-        // Current status
         public int CurrentOdometer { get; set; }
 
         public DateOnly? LastOdometerUpdate { get; set; }
 
-        /// <summary>
-        /// Trung bình km/ngày, dùng để predict ngày cần thay phụ tùng
-        /// Tự động tính từ OdometerHistory
-        /// </summary>
         public int? AverageKmPerDay { get; set; }
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        // Navigation properties
         public VehicleVariant Variant { get; set; } = null!;
 
         public ICollection<OdometerHistory> OdometerHistory { get; set; } = new List<OdometerHistory>();

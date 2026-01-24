@@ -8,7 +8,6 @@ using Verendar.Identity.Entities;
 using Verendar.Identity.Mappings;
 using Verendar.Identity.Repositories.Interfaces;
 using Verendar.Identity.Services.Interfaces;
-using Verender.Identity.Contracts.Events;
 
 namespace Verendar.Identity.Services.Implements
 {

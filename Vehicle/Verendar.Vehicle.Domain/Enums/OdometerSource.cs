@@ -2,9 +2,6 @@ using System.ComponentModel;
 
 namespace Verendar.Vehicle.Domain.Enums
 {
-    /// <summary>
-    /// Nguồn gốc của dữ liệu odometer
-    /// </summary>
     public enum OdometerSource
     {
         [Description("Nhập thủ công")]

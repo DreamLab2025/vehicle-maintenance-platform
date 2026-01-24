@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Ai\Verendar.Ai\Verendar.Ai.csproj" />
     <ProjectReference Include="..\Identity\Verendar.Identity\Verendar.Identity.csproj" />
     <ProjectReference Include="..\Media\Verendar.Media\Verendar.Media.csproj" />
     <ProjectReference Include="..\Vehicle\Verendar.Vehicle\Verendar.Vehicle.csproj" />
