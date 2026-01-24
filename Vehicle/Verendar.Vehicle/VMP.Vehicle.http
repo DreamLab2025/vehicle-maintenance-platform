@@ -1,0 +1,6 @@
+@Verendar.Vehicle_HostAddress = http://localhost:5199
+
+GET {{Verendar.Vehicle_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
