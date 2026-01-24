@@ -60,7 +60,7 @@ namespace Verendar.Identity.Services.Implements
                 await _unitOfWork.SaveChangesAsync();
 
                 var otpCode = GetOtpCode();
-                _logger.LogDebug("Send OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
+                _logger.LogError("Send OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
                 await _cacheService.SetAsync($"otp_register:{request.Email}", otpCode, TimeSpan.FromMinutes(5));
 
                 // TODO: Integrate with Notification service later
@@ -307,7 +307,7 @@ namespace Verendar.Identity.Services.Implements
                 }
 
                 var otpCode = GetOtpCode();
-                _logger.LogDebug("Resending OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
+                _logger.LogError("Resending OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
                 await _cacheService.SetAsync($"otp_register:{request.Email}", otpCode, TimeSpan.FromMinutes(5));
                 await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
 
@@ -352,7 +352,7 @@ namespace Verendar.Identity.Services.Implements
                 }
 
                 var otpCode = GetOtpCode();
-                _logger.LogDebug("Send OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
+                _logger.LogError("Send OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
                 await _cacheService.SetAsync($"otp_forgot:{request.Email}", otpCode, TimeSpan.FromMinutes(5));
                 await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
 

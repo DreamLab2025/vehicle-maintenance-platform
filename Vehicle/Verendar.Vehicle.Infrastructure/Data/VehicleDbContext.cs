@@ -13,7 +13,6 @@ namespace Verendar.Vehicle.Infrastructure.Data
         // Vehicle Catalog
         public DbSet<VehicleType> VehicleTypes { get; set; } = null!;
         public DbSet<VehicleBrand> VehicleBrands { get; set; } = null!;
-        public DbSet<VehicleTypeBrand> VehicleTypeBrands { get; set; } = null!;
         public DbSet<VehicleModel> VehicleModels { get; set; } = null!;
         public DbSet<VehicleVariant> VehicleVariants { get; set; } = null!;
 
@@ -39,13 +38,6 @@ namespace Verendar.Vehicle.Infrastructure.Data
             base.OnModelCreating(modelBuilder);
 
             // =============== INDEXES ===============
-            // VehicleTypeBrand (junction table - needs special config)
-            modelBuilder.Entity<VehicleTypeBrand>(entity =>
-            {
-                entity.Ignore(e => e.Id);
-                entity.HasKey(e => new { e.VehicleTypeId, e.VehicleBrandId });
-            });
-
             // Unique indexes
             modelBuilder.Entity<VehicleType>().HasIndex(e => e.Code).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
             modelBuilder.Entity<VehicleBrand>().HasIndex(e => e.Code).IsUnique().HasFilter("\"DeletedAt\" IS NULL");
@@ -66,7 +58,6 @@ namespace Verendar.Vehicle.Infrastructure.Data
             // =============== QUERY FILTERS (SOFT DELETE) ===============
             modelBuilder.Entity<VehicleType>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleBrand>().HasQueryFilter(e => e.DeletedAt == null);
-            modelBuilder.Entity<VehicleTypeBrand>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleModel>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<VehicleVariant>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<PartCategory>().HasQueryFilter(e => e.DeletedAt == null);
@@ -80,12 +71,17 @@ namespace Verendar.Vehicle.Infrastructure.Data
             modelBuilder.Entity<MaintenanceRecordItem>().HasQueryFilter(e => e.DeletedAt == null);
 
             // Seed data
-            SeedVehicleTypes(modelBuilder);
+            SeedData(modelBuilder);
         }
 
-        private void SeedVehicleTypes(ModelBuilder modelBuilder)
+        private void SeedData(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<VehicleType>().HasData(VehicleDataSeeder.GetVehicleTypes());
+            modelBuilder.Entity<VehicleBrand>().HasData(VehicleDataSeeder.GetVehicleBrands());
+            modelBuilder.Entity<VehicleModel>().HasData(VehicleDataSeeder.GetVehicleModels());
+            modelBuilder.Entity<VehicleVariant>().HasData(VehicleDataSeeder.GetVehicleVariants());
+            modelBuilder.Entity<PartCategory>().HasData(VehicleDataSeeder.GetPartCategories());
+            modelBuilder.Entity<DefaultMaintenanceSchedule>().HasData(VehicleDataSeeder.GetDefaultMaintenanceSchedules());
         }
     }
 }

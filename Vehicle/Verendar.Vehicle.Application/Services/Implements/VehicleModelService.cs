@@ -125,11 +125,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     query = query.Where(m => m.Name.Contains(filterRequest.ModelName));
                 }
 
-                if (!string.IsNullOrWhiteSpace(filterRequest.Color))
-                {
-                    query = query.Where(m => m.Variants.Any(v => v.Color.Contains(filterRequest.Color)));
-                }
-
                 if (filterRequest.TransmissionType.HasValue)
                 {
                     query = query.Where(m => m.TransmissionType == filterRequest.TransmissionType.Value);
@@ -216,205 +211,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<BulkModelResponse>> BulkCreateModelsAsync(BulkModelRequest request)
-        {
-            var response = new BulkModelResponse();
-
-            try
-            {
-                var (isValid, brand, type, errorMessage) = await ValidateTypeBrandRelationshipAsync(request.TypeId, request.BrandId);
-                if (!isValid)
-                {
-                    return ApiResponse<BulkModelResponse>.FailureResponse(errorMessage!);
-                }
-
-                var existingModelNames = (await _unitOfWork.VehicleModels
-                    .GetAllAsync(m => m.VehicleBrandId == request.BrandId && m.DeletedAt == null))
-                    .Select(m => m.Name.ToLower())
-                    .ToHashSet();
-
-                for (int i = 0; i < request.Models.Count; i++)
-                {
-                    var modelItem = request.Models[i];
-
-                    try
-                    {
-                        if (existingModelNames.Contains(modelItem.Name.ToLower()))
-                        {
-                            AddBulkError(response, i, modelItem.Name, "Mẫu xe đã tồn tại cho thương hiệu này");
-                            continue;
-                        }
-
-                        var model = CreateModelEntity(modelItem, request.BrandId, request.TypeId);
-                        await _unitOfWork.VehicleModels.AddAsync(model);
-                        await _unitOfWork.SaveChangesAsync();
-
-                        // Add images if provided
-                        if (modelItem.Images != null && modelItem.Images.Any())
-                        {
-                            foreach (var imageItem in modelItem.Images)
-                            {
-                                var image = new VehicleVariant
-                                {
-                                    VehicleModelId = model.Id,
-                                    Color = imageItem.Color,
-                                    HexCode = ColorCode.IsHex(imageItem.HexCode) ? imageItem.HexCode : "#000000",
-                                    ImageUrl = imageItem.ImageUrl
-                                };
-                                await _unitOfWork.VehicleVariants.AddAsync(image);
-                            }
-                            await _unitOfWork.SaveChangesAsync();
-                        }
-
-                        existingModelNames.Add(modelItem.Name.ToLower());
-                        response.SuccessCount++;
-
-                        _logger.LogInformation("Bulk created model {ModelName} for brand {BrandName} with {ImageCount} images",
-                            modelItem.Name, brand!.Name, modelItem.Images?.Count ?? 0);
-                    }
-                    catch (Exception ex)
-                    {
-                        AddBulkError(response, i, modelItem.Name, ex.Message);
-                        _logger.LogError(ex, "Error creating model in bulk: {ModelName}", modelItem.Name);
-                    }
-                }
-
-                if (response.SuccessCount > 0)
-                {
-                    await _unitOfWork.SaveChangesAsync();
-
-                    var createdModels = await _unitOfWork.VehicleModels.AsQueryable()
-                        .Include(m => m.Brand)
-                        .Include(m => m.Brand).ThenInclude(b => b.VehicleType)
-                        .Include(m => m.Variants)
-                        .Where(m => m.VehicleBrandId == request.BrandId && m.DeletedAt == null)
-                        .OrderByDescending(m => m.CreatedAt)
-                        .Take(response.SuccessCount)
-                        .ToListAsync();
-
-                    response.SuccessfulModels = createdModels.Select(m => m.ToModelResponse()).ToList();
-                }
-
-                _logger.LogInformation("Bulk create models completed for {BrandName} ({TypeName}). Success: {SuccessCount}, Failed: {FailedCount}",
-                    brand!.Name, type!.Name, response.SuccessCount, response.FailedCount);
-
-                return ApiResponse<BulkModelResponse>.SuccessResponse(
-                    response,
-                    $"Đã thêm {response.SuccessCount} mẫu xe {brand.Name} ({type.Name}), {response.FailedCount} thất bại");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in bulk create models");
-                return ApiResponse<BulkModelResponse>.FailureResponse("Lỗi khi tạo hàng loạt mẫu xe");
-            }
-        }
-
-        public async Task<ApiResponse<BulkModelResponse>> BulkCreateModelsFromFileAsync(BulkModelFileRequest request)
-        {
-            var response = new BulkModelResponse();
-
-            try
-            {
-                var brand = await _unitOfWork.VehicleBrands
-                    .FindOneAsync(b => b.Name == request.BrandName && b.DeletedAt == null);
-                if (brand == null)
-                {
-                    return ApiResponse<BulkModelResponse>.FailureResponse($"Không tìm thấy thương hiệu với tên: {request.BrandName}");
-                }
-
-                var type = await _unitOfWork.VehicleTypes
-                    .FindOneAsync(t => t.Name == request.TypeName && t.DeletedAt == null);
-                if (type == null)
-                {
-                    return ApiResponse<BulkModelResponse>.FailureResponse($"Không tìm thấy loại xe với tên: {request.TypeName}");
-                }
-
-                var (isValid, _, _, errorMessage) = await ValidateTypeBrandRelationshipAsync(type.Id, brand.Id);
-                if (!isValid)
-                {
-                    return ApiResponse<BulkModelResponse>.FailureResponse(errorMessage!);
-                }
-
-                var existingModelNames = (await _unitOfWork.VehicleModels
-                    .GetAllAsync(m => m.VehicleBrandId == brand.Id && m.DeletedAt == null))
-                    .Select(m => m.Name.ToLower())
-                    .ToHashSet();
-
-                for (int i = 0; i < request.Models.Count; i++)
-                {
-                    var modelItem = request.Models[i];
-
-                    try
-                    {
-                        if (existingModelNames.Contains(modelItem.Name.ToLower()))
-                        {
-                            AddBulkError(response, i, modelItem.Name, "Mẫu xe đã tồn tại cho thương hiệu này");
-                            continue;
-                        }
-
-                        var model = CreateModelEntity(modelItem, brand.Id, type.Id);
-                        await _unitOfWork.VehicleModels.AddAsync(model);
-
-                        // Add images if provided
-                        if (modelItem.Images != null && modelItem.Images.Any())
-                        {
-                            foreach (var imageItem in modelItem.Images)
-                            {
-                                var image = new VehicleVariant
-                                {
-                                    VehicleModelId = model.Id,
-                                    Color = imageItem.Color,
-                                    HexCode = ColorCode.IsHex(imageItem.HexCode) ? imageItem.HexCode : "#000000",
-                                    ImageUrl = imageItem.ImageUrl
-                                };
-                                await _unitOfWork.VehicleVariants.AddAsync(image);
-                            }
-                            await _unitOfWork.SaveChangesAsync();
-                        }
-
-                        existingModelNames.Add(modelItem.Name.ToLower());
-                        response.SuccessCount++;
-
-                        _logger.LogInformation("Bulk created model from file {ModelName} for brand {BrandName} with {ImageCount} images",
-                            modelItem.Name, brand.Name, modelItem.Images?.Count ?? 0);
-                    }
-                    catch (Exception ex)
-                    {
-                        AddBulkError(response, i, modelItem.Name, ex.Message);
-                        _logger.LogError(ex, "Error creating model in bulk from file: {ModelName}", modelItem.Name);
-                    }
-                }
-
-                if (response.SuccessCount > 0)
-                {
-                    await _unitOfWork.SaveChangesAsync();
-
-                    var createdModels = await _unitOfWork.VehicleModels.AsQueryable()
-                        .Include(m => m.Brand)
-                        .Include(m => m.Brand).ThenInclude(b => b.VehicleType)
-                        .Include(m => m.Variants)
-                        .Where(m => m.VehicleBrandId == brand.Id && m.DeletedAt == null)
-                        .OrderByDescending(m => m.CreatedAt)
-                        .Take(response.SuccessCount)
-                        .ToListAsync();
-
-                    response.SuccessfulModels = createdModels.Select(m => m.ToModelResponse()).ToList();
-                }
-
-                _logger.LogInformation("Bulk create models from file completed for {BrandName} ({TypeName}). Success: {SuccessCount}, Failed: {FailedCount}",
-                    brand.Name, type.Name, response.SuccessCount, response.FailedCount);
-
-                return ApiResponse<BulkModelResponse>.SuccessResponse(
-                    response,
-                    $"Đã thêm {response.SuccessCount} mẫu xe {brand.Name} ({type.Name}), {response.FailedCount} thất bại");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in bulk create models from file");
-                return ApiResponse<BulkModelResponse>.FailureResponse("Lỗi khi tạo hàng loạt mẫu xe từ file");
-            }
-        }
-
         public async Task<ApiResponse<ModelResponseWithVariants>> GetModelByIdAsync(Guid id)
         {
             try
@@ -449,8 +245,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return (false, null, null, "Loại xe không tồn tại");
             }
 
-            var typeBrandExists = await _unitOfWork.VehicleTypeBrands.ExistsAsync(typeId, brandId);
-            if (!typeBrandExists)
+            if (brand.VehicleTypeId != typeId)
             {
                 return (false, null, null,
                     $"Thương hiệu '{brand.Name}' không hỗ trợ loại xe '{type.Name}'. Vui lòng chọn thương hiệu phù hợp với loại xe.");
@@ -477,33 +272,5 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 .Include(m => m.Variants)
                 .FirstOrDefaultAsync(m => m.Id == id);
         }
-
-        private static VehicleModel CreateModelEntity(BulkModelItem item, Guid brandId, Guid typeId)
-        {
-            return new VehicleModel
-            {
-                Name = item.Name,
-                Code = item.Name.Replace(" ", "-").ToLowerInvariant(),
-                VehicleBrandId = brandId,
-                ManufactureYear = item.ReleaseYear,
-                FuelType = item.FuelType,
-                TransmissionType = item.TransmissionType,
-                EngineDisplacement = item.EngineDisplacement,
-                EngineCapacity = item.EngineCapacity
-            };
-        }
-
-        private static void AddBulkError(BulkModelResponse response, int index, string itemName, string errorMessage)
-        {
-            response.FailedCount++;
-            response.Errors.Add(new BulkOperationError
-            {
-                Index = index,
-                ItemName = itemName,
-                ErrorMessage = errorMessage
-            });
-        }
-
-
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Verendar.Common.Databases.Base;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Mappings;
@@ -23,9 +24,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             try
             {
-                var vehicleVariant = await _unitOfWork.VehicleVariants.GetByIdAsync(request.VehicleVariantId);
+                // Get vehicle variant with model info
+                var vehicleVariant = await _unitOfWork.VehicleVariants.AsQueryable()
+                    .Include(v => v.VehicleModel)
+                    .FirstOrDefaultAsync(v => v.Id == request.VehicleVariantId && v.DeletedAt == null);
 
-                if (vehicleVariant == null || vehicleVariant.DeletedAt != null)
+                if (vehicleVariant == null)
                 {
                     return ApiResponse<UserVehicleResponse>.FailureResponse("Phiên bản xe không tồn tại");
                 }
@@ -63,6 +67,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 await _unitOfWork.OdometerHistories.AddAsync(initialOdometerHistory);
                 await _unitOfWork.SaveChangesAsync();
+
+                await InitializePartTrackingFromDefaultScheduleAsync(userVehicle.Id, vehicleVariant.VehicleModelId);
 
                 var createdVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(userVehicle.Id);
 
@@ -245,7 +251,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<UserVehicleResponse>.FailureResponse("Không tìm thấy xe");
                 }
 
-                // Validate vehicle model exists
                 var vehicleVariant = await _unitOfWork.VehicleVariants
                     .GetByIdAsync(request.VehicleVariantId);
 
@@ -254,7 +259,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<UserVehicleResponse>.FailureResponse("Phiên bản xe không tồn tại");
                 }
 
-                // Check duplicate license plate (excluding current vehicle)
                 var existingVehicle = await _unitOfWork.UserVehicles
                     .FindOneAsync(v => v.UserId == userId
                                     && v.LicensePlate == request.LicensePlate
@@ -283,6 +287,48 @@ namespace Verendar.Vehicle.Application.Services.Implements
             {
                 _logger.LogError(ex, "Error updating user vehicle with ID: {VehicleId}", vehicleId);
                 return ApiResponse<UserVehicleResponse>.FailureResponse("Lỗi khi cập nhật xe");
+            }
+        }
+
+
+        private async Task InitializePartTrackingFromDefaultScheduleAsync(Guid userVehicleId, Guid vehicleModelId)
+        {
+            try
+            {
+                var defaultSchedules = await _unitOfWork.DefaultMaintenanceSchedules.AsQueryable()
+                    .Include(s => s.PartCategory)
+                    .Where(s => s.VehicleModelId == vehicleModelId && s.DeletedAt == null && s.Status == EntityStatus.Active)
+                    .ToListAsync();
+
+                if (!defaultSchedules.Any())
+                {
+                    _logger.LogInformation("No default maintenance schedules found for model: {VehicleModelId}", vehicleModelId);
+                    return;
+                }
+
+                foreach (var schedule in defaultSchedules)
+                {
+                    var partTracking = new Domain.Entities.VehiclePartTracking
+                    {
+                        UserVehicleId = userVehicleId,
+                        PartCategoryId = schedule.PartCategoryId,
+                        InstanceIdentifier = null,
+                        CustomKmInterval = schedule.KmInterval,
+                        CustomMonthsInterval = schedule.MonthsInterval,
+                        Status = EntityStatus.Active
+                    };
+
+                    await _unitOfWork.VehiclePartTrackings.AddAsync(partTracking);
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Initialized {Count} part tracking records for vehicle: {UserVehicleId}",
+                    defaultSchedules.Count, userVehicleId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error initializing part tracking for vehicle: {UserVehicleId}", userVehicleId);
             }
         }
     }

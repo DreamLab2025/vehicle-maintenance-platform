@@ -27,13 +27,8 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(50)]
         public string? InstanceIdentifier { get; set; }
 
-        public int Quantity { get; set; } = 1;
-
         [Column(TypeName = "decimal(18,2)")]
-        public decimal UnitPrice { get; set; }
-
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal TotalPrice { get; set; }
+        public decimal Price { get; set; }
 
         [MaxLength(500)]
         public string? Notes { get; set; }

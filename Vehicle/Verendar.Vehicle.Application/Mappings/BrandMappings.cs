@@ -9,6 +9,7 @@ namespace Verendar.Vehicle.Application.Mappings
         {
             return new VehicleBrand
             {
+                VehicleTypeId = request.VehicleTypeId,
                 Name = request.Name,
                 LogoUrl = request.LogoUrl,
                 Website = request.Website,
@@ -16,16 +17,14 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static BrandResponse ToResponse(this VehicleBrand entity, List<string>? typeNames = null)
+        public static BrandResponse ToResponse(this VehicleBrand entity)
         {
             return new BrandResponse
             {
                 Id = entity.Id,
+                VehicleTypeId = entity.VehicleTypeId,
+                VehicleTypeName = entity.VehicleType?.Name ?? string.Empty,
                 Name = entity.Name,
-                VehicleTypeNames = typeNames ?? entity.VehicleTypeBrands?
-                    .Where(vtb => vtb.VehicleType != null)
-                    .Select(vtb => vtb.VehicleType.Name)
-                    .ToList() ?? new List<string>(),
                 LogoUrl = entity.LogoUrl,
                 Website = entity.Website,
                 SupportPhone = entity.SupportPhone,
@@ -36,6 +35,7 @@ namespace Verendar.Vehicle.Application.Mappings
 
         public static void UpdateEntity(this VehicleBrand entity, BrandRequest request)
         {
+            entity.VehicleTypeId = request.VehicleTypeId;
             entity.Name = request.Name;
             entity.LogoUrl = request.LogoUrl;
             entity.Website = request.Website;

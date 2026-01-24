@@ -34,9 +34,6 @@ namespace Verendar.Vehicle.Domain.Entities
         /// </summary>
         public int MonthsInterval { get; set; }
 
-        [MaxLength(500)]
-        public string? Notes { get; set; }
-
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
         // Navigation properties

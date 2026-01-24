@@ -349,7 +349,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     PriceCurrency = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: true),
                     RecommendedKmInterval = table.Column<int>(type: "integer", nullable: true),
                     RecommendedMonthsInterval = table.Column<int>(type: "integer", nullable: true),
-                    Specifications = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Specifications = table.Column<string>(type: "text", nullable: true),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
@@ -518,12 +518,40 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                 table: "VehicleVariants",
                 column: "VehicleModelId");
 
+            // Cleanup duplicate VehicleTypes before creating unique index
+            migrationBuilder.Sql(@"
+                DELETE FROM ""VehicleTypes""
+                WHERE ""Id"" IN (
+                    SELECT ""Id""
+                    FROM (
+                        SELECT ""Id"", ROW_NUMBER() OVER (PARTITION BY ""Code"" ORDER BY ""CreatedAt"") as rn
+                        FROM ""VehicleTypes""
+                        WHERE ""DeletedAt"" IS NULL
+                    ) t
+                    WHERE t.rn > 1
+                );
+            ");
+
             migrationBuilder.CreateIndex(
                 name: "IX_VehicleTypes_Code",
                 table: "VehicleTypes",
                 column: "Code",
                 unique: true,
                 filter: "\"DeletedAt\" IS NULL");
+
+            // Cleanup duplicate VehicleModels before creating unique index
+            migrationBuilder.Sql(@"
+                DELETE FROM ""VehicleModels""
+                WHERE ""Id"" IN (
+                    SELECT ""Id""
+                    FROM (
+                        SELECT ""Id"", ROW_NUMBER() OVER (PARTITION BY ""Code"" ORDER BY ""CreatedAt"") as rn
+                        FROM ""VehicleModels""
+                        WHERE ""DeletedAt"" IS NULL
+                    ) t
+                    WHERE t.rn > 1
+                );
+            ");
 
             migrationBuilder.CreateIndex(
                 name: "IX_VehicleModels_Code",
@@ -537,6 +565,20 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                 table: "VehicleModels",
                 columns: new[] { "VehicleBrandId", "Status" },
                 filter: "\"DeletedAt\" IS NULL");
+
+            // Cleanup duplicate VehicleBrands before creating unique index
+            migrationBuilder.Sql(@"
+                DELETE FROM ""VehicleBrands""
+                WHERE ""Id"" IN (
+                    SELECT ""Id""
+                    FROM (
+                        SELECT ""Id"", ROW_NUMBER() OVER (PARTITION BY ""Code"" ORDER BY ""CreatedAt"") as rn
+                        FROM ""VehicleBrands""
+                        WHERE ""DeletedAt"" IS NULL
+                    ) t
+                    WHERE t.rn > 1
+                );
+            ");
 
             migrationBuilder.CreateIndex(
                 name: "IX_VehicleBrands_Code",

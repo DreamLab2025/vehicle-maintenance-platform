@@ -71,8 +71,17 @@ namespace Verendar.Vehicle.Domain.Entities
         /// </summary>
         public bool IsIgnored { get; set; } = false;
 
-        [MaxLength(1000)]
-        public string? Notes { get; set; }
+        /// <summary>
+        /// User input description về tình trạng part này (dùng cho AI analysis)
+        /// </summary>
+        [MaxLength(2000)]
+        public string? UserConditionDescription { get; set; }
+
+        /// <summary>
+        /// AI analysis result từ user description
+        /// </summary>
+        [MaxLength(2000)]
+        public string? AiAnalysisResult { get; set; }
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 

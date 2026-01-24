@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Verendar.Vehicle.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Verendar.Vehicle.Infrastructure.Data;
 namespace Verendar.Vehicle.Infrastructure.Migrations
 {
     [DbContext(typeof(VehicleDbContext))]
-    partial class VehicleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260124143216_SeedVehicleData")]
+    partial class SeedVehicleData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,6 +51,10 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.Property<int>("MonthsInterval")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<Guid>("PartCategoryId")
                         .HasColumnType("uuid");
@@ -173,11 +180,20 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("GarageAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("GarageName")
                         .HasMaxLength(200)
@@ -199,6 +215,10 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<string>("TechnicianName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<decimal>("TotalCost")
                         .HasColumnType("decimal(18,2)");
@@ -255,7 +275,13 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid?>("PartProductId")
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("Price")
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -591,6 +617,10 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid>("PartCategoryId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("PriceCurrency")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.Property<int?>("RecommendedKmInterval")
                         .HasColumnType("integer");
 
@@ -599,6 +629,13 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.Property<decimal?>("ReferencePrice")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("SKU")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Specifications")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -641,12 +678,20 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("EngineNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateOnly?>("LastOdometerUpdate")
                         .HasColumnType("date");
 
                     b.Property<string>("LicensePlate")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<DateOnly?>("PurchaseDate")
                         .HasColumnType("date");
@@ -937,6 +982,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<bool>("IsCustomConfigured")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsIgnored")
                         .HasColumnType("boolean");
 
@@ -945,6 +993,10 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.Property<int?>("LastReplacementOdometer")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<Guid>("PartCategoryId")
                         .HasColumnType("uuid");
@@ -1046,6 +1098,42 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.VehicleTypeBrand", b =>
+                {
+                    b.Property<Guid>("VehicleTypeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("VehicleBrandId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("VehicleTypeId", "VehicleBrandId");
+
+                    b.HasIndex("VehicleBrandId");
+
+                    b.ToTable("VehicleTypeBrands");
+                });
+
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.VehicleVariant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1093,88 +1181,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.HasIndex("VehicleModelId");
 
                     b.ToTable("VehicleVariants");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("e0000001-0000-0000-0000-000000000001"),
-                            Color = "Đỏ đen",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#DC143C",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000002-0000-0000-0000-000000000002"),
-                            Color = "Đen bạc",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#000000",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000003-0000-0000-0000-000000000003"),
-                            Color = "Trắng ngọc trai",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#FFFFFF",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000002-0000-0000-0000-000000000002")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000004-0000-0000-0000-000000000004"),
-                            Color = "Xanh dương",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#4169E1",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000002-0000-0000-0000-000000000002")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000005-0000-0000-0000-000000000005"),
-                            Color = "Đen nhám",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#1C1C1C",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000003-0000-0000-0000-000000000003")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000006-0000-0000-0000-000000000006"),
-                            Color = "Đỏ GP",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#FF0000",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000003-0000-0000-0000-000000000003")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000007-0000-0000-0000-000000000007"),
-                            Color = "Xanh đen",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#000080",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000004-0000-0000-0000-000000000004")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000008-0000-0000-0000-000000000008"),
-                            Color = "Đen nhám",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#000000",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000004-0000-0000-0000-000000000004")
-                        });
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.DefaultMaintenanceSchedule", b =>
@@ -1323,6 +1329,25 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Navigation("UserVehicle");
                 });
 
+            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.VehicleTypeBrand", b =>
+                {
+                    b.HasOne("Verendar.Vehicle.Domain.Entities.VehicleBrand", "VehicleBrand")
+                        .WithMany("VehicleTypeBrands")
+                        .HasForeignKey("VehicleBrandId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Verendar.Vehicle.Domain.Entities.VehicleType", "VehicleType")
+                        .WithMany("VehicleTypeBrands")
+                        .HasForeignKey("VehicleTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("VehicleBrand");
+
+                    b.Navigation("VehicleType");
+                });
+
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.VehicleVariant", b =>
                 {
                     b.HasOne("Verendar.Vehicle.Domain.Entities.VehicleModel", "VehicleModel")
@@ -1369,6 +1394,8 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.VehicleBrand", b =>
                 {
                     b.Navigation("VehicleModels");
+
+                    b.Navigation("VehicleTypeBrands");
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.VehicleModel", b =>
@@ -1386,6 +1413,8 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.VehicleType", b =>
                 {
                     b.Navigation("Brands");
+
+                    b.Navigation("VehicleTypeBrands");
                 });
 #pragma warning restore 612, 618
         }

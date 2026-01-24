@@ -27,18 +27,9 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(200)]
         public string? GarageName { get; set; }
 
-        [MaxLength(500)]
-        public string? GarageAddress { get; set; }
-
-        [MaxLength(100)]
-        public string? TechnicianName { get; set; }
-
         // Financial
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalCost { get; set; }
-
-        [MaxLength(10)]
-        public string Currency { get; set; } = "VND";
 
         [MaxLength(2000)]
         public string? Notes { get; set; }

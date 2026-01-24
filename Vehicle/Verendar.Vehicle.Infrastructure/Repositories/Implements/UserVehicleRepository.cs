@@ -22,6 +22,12 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                     .ThenInclude(vv => vv.VehicleModel)
                         .ThenInclude(vm => vm.Brand)
                             .ThenInclude(b => b.VehicleType)
+                .Include(v => v.PartTrackings)
+                    .ThenInclude(pt => pt.PartCategory)
+                .Include(v => v.PartTrackings)
+                    .ThenInclude(pt => pt.CurrentPartProduct)
+                .Include(v => v.PartTrackings)
+                    .ThenInclude(pt => pt.Reminders)
                 .Where(v => v.DeletedAt == null);
         }
 

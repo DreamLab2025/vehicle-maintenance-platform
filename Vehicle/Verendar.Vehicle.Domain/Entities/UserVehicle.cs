@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using Verendar.Common.Databases.Base;
 
 namespace Verendar.Vehicle.Domain.Entities
@@ -19,9 +18,6 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(17)]
         public string? VIN { get; set; }
 
-        [MaxLength(50)]
-        public string? EngineNumber { get; set; }
-
         public DateOnly? PurchaseDate { get; set; }
 
         // Current status
@@ -36,9 +32,6 @@ namespace Verendar.Vehicle.Domain.Entities
         public int? AverageKmPerDay { get; set; }
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
-
-        [MaxLength(1000)]
-        public string? Notes { get; set; }
 
         // Navigation properties
         public VehicleVariant Variant { get; set; } = null!;

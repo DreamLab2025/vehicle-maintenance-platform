@@ -7,7 +7,6 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
         // Vehicle Catalog
         IVehicleTypeRepository VehicleTypes { get; }
         IVehicleBrandRepository VehicleBrands { get; }
-        IVehicleTypeBrandRepository VehicleTypeBrands { get; }
         IVehicleModelRepository VehicleModels { get; }
         IVehicleVariantRepository VehicleVariants { get; }
 
