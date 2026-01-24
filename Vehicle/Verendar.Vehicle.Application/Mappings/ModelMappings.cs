@@ -83,7 +83,6 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 VehicleFuelType.Gasoline => "Xăng",
                 VehicleFuelType.Diesel => "Dầu Diesel",
-                VehicleFuelType.Electric => "Điện",
                 VehicleFuelType.Hybrid => "Hybrid",
                 _ => "Không xác định"
             };
@@ -98,7 +97,6 @@ namespace Verendar.Vehicle.Application.Mappings
                 VehicleTransmissionType.Sport => "Xe côn",
                 VehicleTransmissionType.ManualCar => "Số sàn",
                 VehicleTransmissionType.AutomaticCar => "Số tự động",
-                VehicleTransmissionType.Electric => "Điện",
                 _ => "Không xác định"
             };
         }
