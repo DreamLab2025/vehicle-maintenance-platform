@@ -4,10 +4,10 @@ namespace Verendar.Identity.Dtos
 {
     public class LoginRequest
     {
-        [Required(ErrorMessage = "Số điện thoại không được để trống")]
-        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
-        [MaxLength(20)]
-        public string PhoneNumber { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Email không được để trống")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        [MaxLength(256)]
+        public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Password không được để trống")]
         [MinLength(8, ErrorMessage = "Password tối thiểu 8 ký tự")]
@@ -17,10 +17,10 @@ namespace Verendar.Identity.Dtos
 
     public class RegisterRequest
     {
-        [Required(ErrorMessage = "Số điện thoại không được để trống")]
-        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
-        [MaxLength(20)]
-        public string PhoneNumber { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Email không được để trống")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        [MaxLength(256)]
+        public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Password không được để trống")]
         [MinLength(8, ErrorMessage = "Password tối thiểu 8 ký tự")]
@@ -48,10 +48,10 @@ namespace Verendar.Identity.Dtos
 
     public class VerifyOtpRequest
     {
-        [Required(ErrorMessage = "Số điện thoại không được để trống")]
-        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
-        [MaxLength(20)]
-        public string PhoneNumber { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Email không được để trống")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        [MaxLength(256)]
+        public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Mã OTP không được để trống")]
         [StringLength(6, MinimumLength = 6, ErrorMessage = "Mã OTP phải bao gồm 6 ký tự")]
@@ -61,26 +61,26 @@ namespace Verendar.Identity.Dtos
 
     public class ResendOtpRequest
     {
-        [Required(ErrorMessage = "Số điện thoại không được để trống")]
-        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
-        [MaxLength(20)]
-        public string PhoneNumber { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Email không được để trống")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        [MaxLength(256)]
+        public string Email { get; set; } = string.Empty;
     }
 
     public class ForgotPasswordRequest
     {
-        [Required(ErrorMessage = "Số điện thoại không được để trống")]
-        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
-        [MaxLength(20)]
-        public string PhoneNumber { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Email không được để trống")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        [MaxLength(256)]
+        public string Email { get; set; } = string.Empty;
     }
 
     public class ResetPasswordRequest
     {
-        [Required(ErrorMessage = "Số điện thoại không được để trống")]
-        [Phone(ErrorMessage = "Số điện thoại không hợp lệ")]
-        [MaxLength(20)]
-        public string PhoneNumber { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Email không được để trống")]
+        [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+        [MaxLength(256)]
+        public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Mã OTP không được để trống")]
         [StringLength(6, MinimumLength = 6, ErrorMessage = "Mã OTP phải gồm 6 chữ số")]

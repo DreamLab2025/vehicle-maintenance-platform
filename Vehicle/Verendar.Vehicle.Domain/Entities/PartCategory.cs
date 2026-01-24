@@ -24,6 +24,8 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public int DisplayOrder { get; set; }
 
+        public EntityStatus Status { get; set; } = EntityStatus.Active;
+
         public bool RequiresOdometerTracking { get; set; } = true;
 
         public bool RequiresTimeTracking { get; set; } = true;

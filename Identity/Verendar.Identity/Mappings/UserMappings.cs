@@ -12,8 +12,8 @@ namespace Verendar.Identity.Mappings
             {
                 Id = user.Id.ToString(),
                 UserName = user.FullName,
-                Email = user.Email ?? string.Empty,
-                PhoneNumber = user.PhoneNumber,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
                 EmailVerified = user.EmailVerified,
                 PhoneNumberVerified = user.PhoneNumberVerified,
                 Status = user.Status.ToString(),
@@ -28,9 +28,9 @@ namespace Verendar.Identity.Mappings
             return new User
             {
                 Id = userId,
-                PhoneNumber = request.PhoneNumber,
+                Email = request.Email,
                 PasswordHash = passwordHash,
-                FullName = request.PhoneNumber,
+                FullName = request.Email,
                 Status = EntityStatus.Active,
                 Roles = new List<UserRole> { UserRole.User },
                 PhoneNumberVerified = false,
