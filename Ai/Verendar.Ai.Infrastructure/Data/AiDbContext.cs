@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore;
 using Verendar.Ai.Domain.Entities;
 using Verendar.Common.Databases.Base;

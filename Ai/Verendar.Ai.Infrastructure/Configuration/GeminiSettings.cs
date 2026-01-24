@@ -1,5 +1,3 @@
-using System;
-
 namespace Verendar.Ai.Infrastructure.Configuration;
 
 public class GeminiSettings
@@ -10,7 +8,7 @@ public class GeminiSettings
     public string ApiEndpoint { get; set; } = "https://generativelanguage.googleapis.com/v1beta";
     public string DefaultModel { get; set; } = "gemini-2.0-flash";
     public int MaxRetries { get; set; } = 3;
-    public int TimeoutSeconds { get; set; } = 30;
+    public int TimeoutSeconds { get; set; } = 60;
     public int RequestsPerMinute { get; set; } = 60;
     public int RequestsPerDay { get; set; } = 1500;
     public int MaxConcurrentRequests { get; set; } = 5;

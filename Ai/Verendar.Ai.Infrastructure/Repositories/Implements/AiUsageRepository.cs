@@ -1,4 +1,3 @@
-using System;
 using Verendar.Ai.Domain.Entities;
 using Verendar.Ai.Domain.Repositories.Interfaces;
 using Verendar.Ai.Infrastructure.Data;
