@@ -1,0 +1,6 @@
+@Verendar.Notification_HostAddress = http://localhost:5192
+
+GET {{Verendar.Notification_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

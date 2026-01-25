@@ -1,0 +1,20 @@
+﻿using System.ComponentModel.DataAnnotations;
+using Verendar.Common.Databases.Base;
+using Verendar.Vehicle.Domain.Enums;
+
+namespace Verendar.Vehicle.Domain.Entities
+{
+    public class OdometerHistory : BaseEntity
+    {
+        [Required]
+        public Guid UserVehicleId { get; set; }
+
+        public int OdometerValue { get; set; }
+
+        public DateOnly RecordedDate { get; set; }
+
+        public OdometerSource Source { get; set; } = OdometerSource.ManualInput;
+
+        public UserVehicle UserVehicle { get; set; } = null!;
+    }
+}

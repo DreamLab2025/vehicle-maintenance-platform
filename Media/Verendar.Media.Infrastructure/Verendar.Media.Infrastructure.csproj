@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Verendar.Media.Application\Verendar.Media.Application.csproj" />
+    <ProjectReference Include="..\Verendar.Media.Domain\Verendar.Media.Domain.csproj" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.11">
+		<PrivateAssets>all</PrivateAssets>
+		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="4.0.16.2" />
+  </ItemGroup>
+
+</Project>
