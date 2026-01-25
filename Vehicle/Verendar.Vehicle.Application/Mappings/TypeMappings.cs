@@ -10,7 +10,8 @@ namespace Verendar.Vehicle.Application.Mappings
             return new VehicleType
             {
                 Name = request.Name,
-                Description = request.Description
+                Description = request.Description,
+                ImageUrl = request.ImageUrl
             };
         }
 
@@ -21,6 +22,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 Id = entity.Id,
                 Name = entity.Name,
                 Description = entity.Description,
+                ImageUrl = entity.ImageUrl ?? string.Empty,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -30,6 +32,7 @@ namespace Verendar.Vehicle.Application.Mappings
         {
             entity.Name = request.Name;
             entity.Description = request.Description;
+            entity.ImageUrl = request.ImageUrl;
         }
     }
 }

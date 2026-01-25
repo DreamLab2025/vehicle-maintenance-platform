@@ -34,13 +34,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<UserVehicleResponse>.FailureResponse("Phiên bản xe không tồn tại");
                 }
 
-                var (isAllowed, message) = await _unitOfWork.UserVehicles
-                    .CheckCanCreateVehicleAsync(userId);
+                // var (isAllowed, message) = await _unitOfWork.UserVehicles
+                //     .CheckCanCreateVehicleAsync(userId);
 
-                if (!isAllowed)
-                {
-                    return ApiResponse<UserVehicleResponse>.FailureResponse(message);
-                }
+                // if (!isAllowed)
+                // {
+                //     return ApiResponse<UserVehicleResponse>.FailureResponse(message);
+                // }
 
                 var existingVehicle = await _unitOfWork.UserVehicles
                     .FindOneAsync(v => v.UserId == userId && v.LicensePlate == request.LicensePlate && v.DeletedAt == null);
