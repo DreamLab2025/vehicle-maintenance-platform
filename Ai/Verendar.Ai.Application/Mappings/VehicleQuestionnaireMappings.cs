@@ -8,16 +8,13 @@ public static class VehicleQuestionnaireMappings
 {
     public static VehicleQuestionnaireResponse ToResponse(
         this GeminiVehicleAnalysisResult analysisResult,
-        IEnumerable<DefaultScheduleDto> schedules,
         GenerativeAiResponse? aiResponse = null)
     {
         return new VehicleQuestionnaireResponse
         {
-            Recommendations = analysisResult.Recommendations
-                .Select(r => r.ToRecommendationDto(schedules))
-                .ToList(),
+            Recommendations = [.. analysisResult.Recommendations.Select(r => r.ToRecommendationDto())],
 
-            Warnings = analysisResult.Warnings ?? new List<string>(),
+            Warnings = [.. analysisResult.Warnings],
 
             Metadata = ToAiAnalysisMetadata(aiResponse)
         };
@@ -35,16 +32,11 @@ public static class VehicleQuestionnaireMappings
     }
 
     private static PartTrackingRecommendation ToRecommendationDto(
-        this GeminiPartRecommendation source,
-        IEnumerable<DefaultScheduleDto> schedules)
+        this GeminiPartRecommendation source)
     {
         return new PartTrackingRecommendation
         {
             PartCategoryCode = source.PartCategoryCode,
-
-            PartCategoryName = schedules
-                .FirstOrDefault(s => s.PartCategoryCode == source.PartCategoryCode)
-                ?.PartCategoryName ?? source.PartCategoryCode,
 
             LastReplacementOdometer = source.LastServiceOdometer,
             LastReplacementDate = ParseDateOnly(source.LastServiceDate),

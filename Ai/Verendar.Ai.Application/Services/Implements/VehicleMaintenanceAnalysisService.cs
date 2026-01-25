@@ -20,6 +20,7 @@ public class VehicleMaintenanceAnalysisService(
     private readonly ILogger<VehicleMaintenanceAnalysisService> _logger = logger;
 
     public async Task<ApiResponse<VehicleQuestionnaireResponse>> AnalyzeQuestionnaireAsync(
+        Guid userId,
         VehicleQuestionnaireRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -28,7 +29,7 @@ public class VehicleMaintenanceAnalysisService(
             // Fetch vehicle info from Vehicle Service
             _logger.LogInformation("Fetching vehicle info from Vehicle Service for UserVehicleId: {UserVehicleId}", request.UserVehicleId);
             var vehicleResponse = await _vehicleServiceClient.GetUserVehicleByIdAsync(request.UserVehicleId, cancellationToken);
-            
+
             if (!vehicleResponse.IsSuccess || vehicleResponse.Data == null)
             {
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
@@ -42,7 +43,7 @@ public class VehicleMaintenanceAnalysisService(
             _logger.LogInformation(
                 "Fetching default schedule from Vehicle Service for VehicleModelId: {VehicleModelId}, PartCategoryCode: {PartCategoryCode}",
                 request.VehicleModelId, request.PartCategoryCode);
-            
+
             var scheduleResponse = await _vehicleServiceClient.GetDefaultScheduleAsync(
                 request.VehicleModelId,
                 request.PartCategoryCode,
@@ -55,19 +56,16 @@ public class VehicleMaintenanceAnalysisService(
             }
 
             var schedule = scheduleResponse.Data;
-            var defaultSchedules = new List<DefaultScheduleDto>
-            {
-                schedule.ToDefaultScheduleDto(request.PartCategoryCode)
-            };
+            var defaultSchedule = schedule.ToDefaultScheduleDto(request.PartCategoryCode);
 
-            var prompt = PromptGenerator.CreateVehicleMaintenancePrompt(vehicleInfo, defaultSchedules, request.Answers);
+            var prompt = PromptGenerator.CreateVehicleMaintenancePrompt(vehicleInfo, defaultSchedule, request.Answers);
 
             _logger.LogInformation("Generated prompt: {Prompt}", prompt);
 
             var aiResponse = await _aiService.GenerateContentAsync(
                 prompt,
                 AiOperation.GenerateText,
-                request.UserId,
+                userId,
                 temperature: 0.3m
             );
 
@@ -108,13 +106,12 @@ public class VehicleMaintenanceAnalysisService(
                 _logger.LogWarning(
                     "AI returned {Count} recommendations, expected 1. Requested part: {PartCode}",
                     analysisResult.Recommendations.Count,
-                    defaultSchedules.First().PartCategoryCode);
+                    defaultSchedule.PartCategoryCode);
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
                     $"AI trả về {analysisResult.Recommendations.Count} khuyến nghị thay vì 1. Vui lòng thử lại.");
             }
 
             var response = analysisResult.ToResponse(
-                defaultSchedules,
                 aiResponse.Data
             );
 

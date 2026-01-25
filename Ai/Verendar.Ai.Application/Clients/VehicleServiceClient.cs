@@ -1,6 +1,4 @@
-using System.Net.Http.Headers;
 using System.Text.Json;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Polly.CircuitBreaker;
 using Verendar.Ai.Application.Dtos.VehicleService;
@@ -8,13 +6,9 @@ using Verendar.Common.Shared;
 
 namespace Verendar.Ai.Application.Clients;
 
-public class VehicleServiceClient(
-    HttpClient httpClient,
-    IHttpContextAccessor httpContextAccessor,
-    ILogger<VehicleServiceClient> logger) : IVehicleServiceClient
+public class VehicleServiceClient(HttpClient httpClient, ILogger<VehicleServiceClient> logger) : IVehicleServiceClient
 {
     private readonly HttpClient _httpClient = httpClient;
-    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<VehicleServiceClient> _logger = logger;
 
     public async Task<ApiResponse<VehicleServiceUserVehicleResponse>> GetUserVehicleByIdAsync(
@@ -24,9 +18,6 @@ public class VehicleServiceClient(
         try
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/user-vehicles/{userVehicleId}");
-            
-            // Forward JWT token from current request
-            await AddAuthorizationHeaderAsync(request);
 
             _logger.LogInformation("Calling Vehicle Service: GET /api/v1/user-vehicles/{UserVehicleId}", userVehicleId);
 
@@ -85,9 +76,6 @@ public class VehicleServiceClient(
                 HttpMethod.Get,
                 $"/api/v1/vehicle-models/{vehicleModelId}/part-categories/{partCategoryCode}/default-schedule");
 
-            // Forward JWT token from current request
-            await AddAuthorizationHeaderAsync(request);
-
             _logger.LogInformation(
                 "Calling Vehicle Service: GET /api/v1/vehicle-models/{VehicleModelId}/part-categories/{PartCategoryCode}/default-schedule",
                 vehicleModelId, partCategoryCode);
@@ -138,24 +126,6 @@ public class VehicleServiceClient(
                 vehicleModelId, partCategoryCode);
             return ApiResponse<VehicleServiceDefaultScheduleResponse>.FailureResponse(
                 $"Error calling Vehicle Service: {ex.Message}");
-        }
-    }
-
-    private async Task AddAuthorizationHeaderAsync(HttpRequestMessage request)
-    {
-        var httpContext = _httpContextAccessor.HttpContext;
-        if (httpContext?.Request.Headers.ContainsKey("Authorization") == true)
-        {
-            var authHeader = httpContext.Request.Headers["Authorization"].ToString();
-            if (!string.IsNullOrWhiteSpace(authHeader))
-            {
-                request.Headers.Authorization = AuthenticationHeaderValue.Parse(authHeader);
-                _logger.LogDebug("Forwarded authorization header to Vehicle Service");
-            }
-        }
-        else
-        {
-            _logger.LogWarning("No authorization header found in current request context");
         }
     }
 }

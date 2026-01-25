@@ -9,11 +9,6 @@ public class VehicleQuestionnaireRequest
     public string PartCategoryCode { get; set; } = string.Empty;
 
     public List<QuestionAnswerDto> Answers { get; set; } = new();
-
-    /// <summary>
-    /// User ID - set by API endpoint from current user context
-    /// </summary>
-    public Guid UserId { get; set; }
 }
 
 public class VehicleInfoDto

@@ -1,4 +1,5 @@
 using Verendar.Ai.Apis;
+using Verendar.Ai.Application.Handlers;
 using Verendar.Ai.Application.Services.Implements;
 using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Domain.Repositories.Interfaces;
@@ -34,6 +35,9 @@ namespace Verendar.Ai.Bootstrapping
 
             builder.Services.AddScoped<IGenerativeAiService, GeminiService>();
             builder.Services.AddScoped<IVehicleMaintenanceAnalysisService, VehicleMaintenanceAnalysisService>();
+
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<ForwardAuthorizationHandler>();
 
             return builder;
         }
