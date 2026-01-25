@@ -18,6 +18,17 @@
         public int CurrentOdometer { get; set; }
     }
 
+    public class ApplyTrackingConfigRequest
+    {
+        public string PartCategoryCode { get; set; } = string.Empty;
+        public int? LastReplacementOdometer { get; set; }
+        public DateOnly? LastReplacementDate { get; set; }
+        public int? PredictedNextOdometer { get; set; }
+        public DateOnly? PredictedNextDate { get; set; }
+        public string? AiReasoning { get; set; }
+        public double? ConfidenceScore { get; set; }
+    }
+
     public class UserVehicleResponse
     {
         public Guid Id { get; set; }

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Net;
-using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,7 +10,6 @@ using Verendar.Ai.Domain.Entities;
 using Verendar.Ai.Domain.Enums;
 using Verendar.Ai.Domain.Repositories.Interfaces;
 using Verendar.Ai.Infrastructure.Configuration;
-using Verendar.Ai.Infrastructure.ExternalServices.Gemini;
 using Verendar.Common.Shared;
 
 namespace Verendar.Ai.Infrastructure.ExternalServices;
@@ -22,7 +21,7 @@ public class GeminiService(
     ILogger<GeminiService> logger
 ) : IGenerativeAiService
 {
-    private readonly GeminiSettings _settings = config.Value;
+    private readonly GeminiSettings _config = config.Value;
 
     public async Task<ApiResponse<GenerativeAiResponse>> GenerateContentAsync(
         string prompt,
@@ -35,260 +34,222 @@ public class GeminiService(
         decimal? topP = null)
     {
         var stopwatch = Stopwatch.StartNew();
-        var selectedModel = model ?? _settings.DefaultModel;
+        var selectedModel = model ?? _config.DefaultModel;
 
         try
         {
-            if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+            if (string.IsNullOrWhiteSpace(_config.ApiKey))
             {
                 logger.LogError("Gemini API key is not configured");
                 return ApiResponse<GenerativeAiResponse>.FailureResponse(
                     "AI service is not properly configured");
             }
 
-            var request = new GeminiRequest
+            var requestBody = new
             {
-                Contents = new List<GeminiContent>
+                contents = new[]
                 {
-                    new()
-                    {
-                        Role = "user",
-                        Parts = new List<GeminiPart>
-                        {
-                            new() { Text = prompt }
-                        }
-                    }
+                    new { parts = new[] { new { text = prompt } } }
                 },
-                GenerationConfig = new GeminiGenerationConfig
+                generationConfig = new
                 {
-                    Temperature = temperature ?? _settings.DefaultParameters.Temperature,
-                    TopP = topP ?? _settings.DefaultParameters.TopP,
-                    TopK = _settings.DefaultParameters.TopK,
-                    MaxOutputTokens = maxTokens ?? _settings.DefaultParameters.MaxTokens,
-                    ResponseMimeType = "application/json"
+                    maxOutputTokens = maxTokens ?? _config.DefaultParameters.MaxTokens,
+                    temperature = temperature ?? _config.DefaultParameters.Temperature,
+                    topP = topP ?? _config.DefaultParameters.TopP,
+                    topK = _config.DefaultParameters.TopK,
+                    responseMimeType = "application/json"
                 }
             };
 
-            var httpClient = httpClientFactory.CreateClient("Gemini");
+            var httpClient = httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(_config.TimeoutSeconds);
 
-            var endpoint = $"{_settings.ApiEndpoint}/models/{selectedModel}:generateContent?key={_settings.ApiKey}";
-            var promptLength = prompt?.Length ?? 0;
-            var requestJson = JsonSerializer.Serialize(request);
+            var url = $"{_config.ApiEndpoint.TrimEnd('/')}/models/{selectedModel}:generateContent";
+            var jsonBody = JsonSerializer.Serialize(requestBody);
 
             logger.LogInformation(
                 "Calling Gemini API - Model: {Model}, Operation: {Operation}, UserId: {UserId}, PromptLength: {PromptLength}, MaxTokens: {MaxTokens}, Temperature: {Temperature}",
-                selectedModel, operation, userId, promptLength, request.GenerationConfig.MaxOutputTokens, request.GenerationConfig.Temperature);
+                selectedModel, operation, userId, prompt?.Length ?? 0, requestBody.generationConfig.maxOutputTokens, requestBody.generationConfig.temperature);
 
-            logger.LogDebug(
-                "Gemini API Request - Endpoint: {Endpoint}, Request: {Request}",
-                endpoint.Replace(_settings.ApiKey, "***"), requestJson);
+            HttpResponseMessage? response = null;
+            var lastResponseContent = string.Empty;
 
-            HttpResponseMessage? httpResponse = null;
-            string? responseContent = null;
-            
-            try
+            // Manual retry logic with exponential backoff
+            for (var attempt = 0; attempt <= _config.MaxRetries; attempt++)
             {
-                httpResponse = await httpClient.PostAsJsonAsync(endpoint, request);
-                responseContent = await httpResponse.Content.ReadAsStringAsync();
-                stopwatch.Stop();
+                if (attempt > 0)
+                {
+                    var delayMs = GetRetryDelayMs(response!, attempt);
+                    logger.LogWarning(
+                        "Gemini API retry {Attempt}/{MaxRetries} after {DelayMs}ms - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
+                        attempt, _config.MaxRetries, delayMs, selectedModel, operation, userId);
+                    await Task.Delay(delayMs);
+                }
 
-                logger.LogDebug(
-                    "Gemini API Response - Status: {StatusCode}, ResponseTime: {ResponseTime}ms, ContentLength: {ContentLength}",
-                    httpResponse.StatusCode, stopwatch.ElapsedMilliseconds, responseContent?.Length ?? 0);
-            }
-            catch (Exception ex)
-            {
-                stopwatch.Stop();
-                logger.LogError(ex,
-                    "Gemini API request failed - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Endpoint: {Endpoint}, ElapsedTime: {ElapsedTime}ms, ExceptionType: {ExceptionType}",
-                    selectedModel, operation, userId, endpoint.Replace(_settings.ApiKey, "***"), stopwatch.ElapsedMilliseconds, ex.GetType().Name);
-                throw;
-            }
-
-            if (!httpResponse.IsSuccessStatusCode)
-            {
-                var statusCode = httpResponse.StatusCode;
-                var reasonPhrase = httpResponse.ReasonPhrase;
-                
-                logger.LogError(
-                    "Gemini API error - Status: {StatusCode} ({ReasonPhrase}), Model: {Model}, Operation: {Operation}, UserId: {UserId}, ResponseTime: {ResponseTime}ms, Response: {Response}",
-                    statusCode, reasonPhrase, selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, 
-                    responseContent?.Length > 1000 ? responseContent[..1000] + "..." : responseContent);
-
-                GeminiErrorResponse? errorResponse = null;
-                string errorMessage = "Unknown error from AI service";
-                string? errorCode = null;
-                string? errorStatus = null;
+                using var request = new HttpRequestMessage(HttpMethod.Post, url);
+                request.Headers.TryAddWithoutValidation("X-goog-api-key", _config.ApiKey);
+                request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
                 try
                 {
-                    errorResponse = JsonSerializer.Deserialize<GeminiErrorResponse>(responseContent ?? string.Empty);
-                    if (errorResponse?.Error != null)
+                    response = await httpClient.SendAsync(request);
+                    lastResponseContent = await response.Content.ReadAsStringAsync();
+
+                    if (response.IsSuccessStatusCode)
+                        break;
+
+                    var isRetryable = response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.ServiceUnavailable;
+                    if (attempt >= _config.MaxRetries || !isRetryable)
+                        break;
+                }
+                catch (TaskCanceledException ex)
+                {
+                    stopwatch.Stop();
+                    var elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
+                    logger.LogError(ex,
+                        "Gemini API timeout - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ConfiguredTimeout: {ConfiguredTimeout}s, ElapsedTime: {ElapsedTime:F2}s, Attempt: {Attempt}",
+                        selectedModel, operation, userId, _config.TimeoutSeconds, elapsedSeconds, attempt + 1);
+
+                    var timeoutMessage = $"Request timeout after {elapsedSeconds:F2}s (configured: {_config.TimeoutSeconds}s)";
+                    await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, timeoutMessage);
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service request timeout");
+                }
+                catch (HttpRequestException ex)
+                {
+                    stopwatch.Stop();
+                    logger.LogError(ex,
+                        "Gemini API HTTP error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ElapsedTime: {ElapsedTime}ms, Attempt: {Attempt}",
+                        selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, attempt + 1);
+
+                    if (attempt >= _config.MaxRetries)
                     {
-                        errorMessage = errorResponse.Error.Message ?? errorMessage;
-                        errorCode = errorResponse.Error.Code.ToString();
-                        errorStatus = errorResponse.Error.Status;
-                        
-                        logger.LogError(
-                            "Gemini API error details - Code: {ErrorCode}, Status: {ErrorStatus}, Message: {ErrorMessage}",
-                            errorCode, errorStatus, errorMessage);
+                        await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, $"HTTP error: {ex.Message}");
+                        return ApiResponse<GenerativeAiResponse>.FailureResponse($"Network error: {ex.Message}");
                     }
+                    // Continue to retry
+                    continue;
                 }
-                catch (JsonException jsonEx)
-                {
-                    logger.LogWarning(jsonEx,
-                        "Failed to deserialize Gemini error response - Response: {Response}",
-                        responseContent?.Length > 500 ? responseContent[..500] : responseContent);
-                }
-
-                var fullErrorMessage = $"HTTP {statusCode}: {errorMessage}";
-                if (!string.IsNullOrEmpty(errorCode))
-                {
-                    fullErrorMessage = $"[{errorCode}] {fullErrorMessage}";
-                }
-
-                await TrackUsageAsync(userId, operation, selectedModel, 0, 0, 0, stopwatch.ElapsedMilliseconds, fullErrorMessage);
-
-                return ApiResponse<GenerativeAiResponse>.FailureResponse(
-                    $"AI service error: {errorMessage}");
             }
 
-            if (string.IsNullOrEmpty(responseContent))
+            stopwatch.Stop();
+
+            if (response == null || !response.IsSuccessStatusCode)
+            {
+                logger.LogError(
+                    "Gemini API error - Status: {StatusCode}, Model: {Model}, Operation: {Operation}, UserId: {UserId}, ResponseTime: {ResponseTime}ms, Response: {Response}",
+                    response?.StatusCode, selectedModel, operation, userId, stopwatch.ElapsedMilliseconds,
+                    lastResponseContent?.Length > 1000 ? lastResponseContent[..1000] + "..." : lastResponseContent);
+
+                await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, lastResponseContent ?? "Unknown error");
+
+                var userMessage = GetUserFriendlyMessage(response?.StatusCode);
+                return ApiResponse<GenerativeAiResponse>.FailureResponse(userMessage);
+            }
+
+            if (string.IsNullOrEmpty(lastResponseContent))
             {
                 logger.LogWarning(
                     "Gemini API returned empty response - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
                     selectedModel, operation, userId);
-                await TrackUsageAsync(userId, operation, selectedModel, 0, 0, 0, stopwatch.ElapsedMilliseconds, "Empty response from API");
+                await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, "Empty response from API");
                 return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned empty response");
             }
 
-            GeminiResponse? geminiResponse = null;
-            
-            try
-            {
-                geminiResponse = JsonSerializer.Deserialize<GeminiResponse>(responseContent);
-            }
-            catch (JsonException jsonEx)
-            {
-                logger.LogError(jsonEx,
-                    "Failed to deserialize Gemini response - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ResponseLength: {ResponseLength}, ResponsePreview: {ResponsePreview}",
-                    selectedModel, operation, userId, responseContent?.Length ?? 0,
-                    responseContent?.Length > 500 ? responseContent[..500] : responseContent);
-                
-                await TrackUsageAsync(userId, operation, selectedModel, 0, 0, 0, stopwatch.ElapsedMilliseconds, 
-                    $"Failed to deserialize response: {jsonEx.Message}");
-                return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned invalid response format");
-            }
+            var geminiResponse = ParseGeminiResponse(lastResponseContent, selectedModel, stopwatch.ElapsedMilliseconds);
 
-            if (geminiResponse == null)
-            {
-                logger.LogWarning(
-                    "Gemini API returned null response - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ResponseContent: {ResponseContent}",
-                    selectedModel, operation, userId, responseContent?.Length > 500 ? responseContent[..500] : responseContent);
-                await TrackUsageAsync(userId, operation, selectedModel, 0, 0, 0, stopwatch.ElapsedMilliseconds, "Null response from API");
-                return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned null response");
-            }
-
-            if (geminiResponse.Candidates == null || geminiResponse.Candidates.Count == 0)
-            {
-                logger.LogWarning(
-                    "Gemini API returned no candidates - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ResponseTime: {ResponseTime}ms, ResponseContent: {ResponseContent}",
-                    selectedModel, operation, userId, stopwatch.ElapsedMilliseconds,
-                    responseContent?.Length > 500 ? responseContent[..500] : responseContent);
-                await TrackUsageAsync(userId, operation, selectedModel, 0, 0, 0, stopwatch.ElapsedMilliseconds, "No candidates returned");
-                return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned no response");
-            }
-
-            var candidate = geminiResponse.Candidates[0];
-            var content = candidate.Content?.Parts?.FirstOrDefault()?.Text ?? string.Empty;
-
-            var inputTokens = geminiResponse.UsageMetadata?.PromptTokenCount ?? 0;
-            var outputTokens = geminiResponse.UsageMetadata?.CandidatesTokenCount ?? 0;
-            var totalTokens = geminiResponse.UsageMetadata?.TotalTokenCount ?? (inputTokens + outputTokens);
-
-            var inputCost = (inputTokens / 1_000_000m) * _settings.Pricing.InputCostPer1MTokens;
-            var outputCost = (outputTokens / 1_000_000m) * _settings.Pricing.OutputCostPer1MTokens;
-            var totalCost = inputCost + outputCost;
-
-            await TrackUsageAsync(userId, operation, selectedModel, inputTokens, outputTokens, totalCost, stopwatch.ElapsedMilliseconds, null, prompt);
-
-            var response = new GenerativeAiResponse
-            {
-                Content = content,
-                InputTokens = inputTokens,
-                OutputTokens = outputTokens,
-                TotalTokens = totalTokens,
-                InputCost = inputCost,
-                OutputCost = outputCost,
-                TotalCost = totalCost,
-                ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds,
-                Model = selectedModel
-            };
+            await TrackSuccessfulUsageAsync(userId, selectedModel, operation, promptId, geminiResponse, prompt ?? string.Empty);
 
             logger.LogInformation(
-                "Gemini API success - Tokens: {TotalTokens}, Cost: ${Cost:F4}, Time: {Time}ms",
-                totalTokens, totalCost, stopwatch.ElapsedMilliseconds);
+                "Gemini API success - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Tokens: {TotalTokens}, Cost: ${Cost:F4}, Time: {Time}ms",
+                selectedModel, operation, userId, geminiResponse.TotalTokens, geminiResponse.TotalCost, stopwatch.ElapsedMilliseconds);
 
-            return ApiResponse<GenerativeAiResponse>.SuccessResponse(response);
-        }
-        catch (TaskCanceledException ex)
-        {
-            stopwatch.Stop();
-            var elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
-            logger.LogError(ex,
-                "Gemini API timeout - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ConfiguredTimeout: {ConfiguredTimeout}s, ElapsedTime: {ElapsedTime:F2}s, InnerException: {InnerException}",
-                selectedModel, operation, userId, _settings.TimeoutSeconds, elapsedSeconds, ex.InnerException?.GetType().Name ?? "None");
-            
-            var timeoutMessage = $"Request timeout after {elapsedSeconds:F2}s (configured: {_settings.TimeoutSeconds}s)";
-            await TrackUsageAsync(userId, operation, selectedModel, 0, 0, 0, stopwatch.ElapsedMilliseconds, timeoutMessage);
-            return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service request timeout");
-        }
-        catch (HttpRequestException ex)
-        {
-            stopwatch.Stop();
-            logger.LogError(ex,
-                "Gemini API HTTP error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ElapsedTime: {ElapsedTime}ms, StatusCode: {StatusCode}, Message: {Message}",
-                selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, 
-                ex.Data.Contains("StatusCode") ? ex.Data["StatusCode"] : "Unknown", ex.Message);
-            
-            await TrackUsageAsync(userId, operation, selectedModel, 0, 0, 0, stopwatch.ElapsedMilliseconds, 
-                $"HTTP error: {ex.Message}");
-            return ApiResponse<GenerativeAiResponse>.FailureResponse($"Network error: {ex.Message}");
-        }
-        catch (JsonException ex)
-        {
-            stopwatch.Stop();
-            logger.LogError(ex,
-                "Gemini API JSON deserialization error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ElapsedTime: {ElapsedTime}ms, Path: {Path}",
-                selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, ex.Path ?? "Unknown");
-            
-            await TrackUsageAsync(userId, operation, selectedModel, 0, 0, 0, stopwatch.ElapsedMilliseconds, 
-                $"JSON error: {ex.Message}");
-            return ApiResponse<GenerativeAiResponse>.FailureResponse("Failed to parse AI service response");
+            return ApiResponse<GenerativeAiResponse>.SuccessResponse(geminiResponse);
         }
         catch (Exception ex)
         {
             stopwatch.Stop();
             logger.LogError(ex,
-                "Gemini API unexpected error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ElapsedTime: {ElapsedTime}ms, ExceptionType: {ExceptionType}, Message: {Message}, StackTrace: {StackTrace}",
-                selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, ex.GetType().Name, ex.Message, ex.StackTrace);
-            
-            await TrackUsageAsync(userId, operation, selectedModel, 0, 0, 0, stopwatch.ElapsedMilliseconds, 
-                $"{ex.GetType().Name}: {ex.Message}");
-            return ApiResponse<GenerativeAiResponse>.FailureResponse($"An unexpected error occurred: {ex.Message}");
+                "Gemini API unexpected error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ElapsedTime: {ElapsedTime}ms, ExceptionType: {ExceptionType}",
+                model ?? _config.DefaultModel, operation, userId, stopwatch.ElapsedMilliseconds, ex.GetType().Name);
+
+            await TrackFailedUsageAsync(userId, model ?? _config.DefaultModel, operation, promptId, stopwatch.ElapsedMilliseconds, ex.Message);
+
+            return ApiResponse<GenerativeAiResponse>.FailureResponse("An unexpected error occurred while calling AI service");
         }
     }
 
-    private async Task TrackUsageAsync(
+    private GenerativeAiResponse ParseGeminiResponse(string responseContent, string model, long responseTimeMs)
+    {
+        var jsonDoc = JsonDocument.Parse(responseContent);
+        var root = jsonDoc.RootElement;
+
+        var content = root.GetProperty("candidates")[0]
+            .GetProperty("content")
+            .GetProperty("parts")[0]
+            .GetProperty("text")
+            .GetString() ?? string.Empty;
+
+        var usageMetadata = root.GetProperty("usageMetadata");
+        var promptTokenCount = usageMetadata.GetProperty("promptTokenCount").GetInt32();
+        var candidatesTokenCount = usageMetadata.GetProperty("candidatesTokenCount").GetInt32();
+        var totalTokenCount = usageMetadata.GetProperty("totalTokenCount").GetInt32();
+
+        var inputCost = (promptTokenCount / 1_000_000m) * _config.Pricing.InputCostPer1MTokens;
+        var outputCost = (candidatesTokenCount / 1_000_000m) * _config.Pricing.OutputCostPer1MTokens;
+
+        return new GenerativeAiResponse
+        {
+            Content = content,
+            InputTokens = promptTokenCount,
+            OutputTokens = candidatesTokenCount,
+            TotalTokens = totalTokenCount,
+            InputCost = inputCost,
+            OutputCost = outputCost,
+            TotalCost = inputCost + outputCost,
+            ResponseTimeMs = (int)responseTimeMs,
+            Model = model
+        };
+    }
+
+    /// <summary>Chờ retry: ưu tiên Retry-After header, không thì exponential backoff (1s, 2s, 4s...), tối đa 60s.</summary>
+    private static int GetRetryDelayMs(HttpResponseMessage response, int attempt)
+    {
+        if (response.Headers.RetryAfter?.Delta is { } delta)
+            return (int)Math.Min(delta.TotalMilliseconds, 60_000);
+
+        if (response.Headers.RetryAfter?.Date is { } date)
+        {
+            var ms = (date - DateTimeOffset.UtcNow).TotalMilliseconds;
+            if (ms > 0) return (int)Math.Min(ms, 60_000);
+        }
+
+        var backoffMs = (int)(Math.Pow(2, attempt) * 1000);
+        return Math.Min(backoffMs, 60_000);
+    }
+
+    private static string GetUserFriendlyMessage(HttpStatusCode? statusCode)
+    {
+        return statusCode switch
+        {
+            HttpStatusCode.TooManyRequests => "Tạm thời quá tải. Vui lòng thử lại sau vài phút.",
+            HttpStatusCode.ServiceUnavailable => "Dịch vụ AI tạm thời bận. Vui lòng thử lại sau.",
+            HttpStatusCode.Unauthorized => "Lỗi xác thực API. Kiểm tra cấu hình Gemini.",
+            HttpStatusCode.BadRequest => "Yêu cầu không hợp lệ. Vui lòng kiểm tra dữ liệu gửi lên.",
+            HttpStatusCode.NotFound => "Model hoặc endpoint không tồn tại. Kiểm tra cấu hình.",
+            HttpStatusCode.RequestEntityTooLarge => "Nội dung gửi lên vượt quá giới hạn. Vui lòng rút gọn.",
+            _ => statusCode is { } s && (int)s >= 500
+                ? "Dịch vụ AI gặp sự cố. Vui lòng thử lại sau."
+                : "Đã xảy ra lỗi khi gọi API AI. Vui lòng thử lại."
+        };
+    }
+
+    private async Task TrackSuccessfulUsageAsync(
         Guid userId,
-        AiOperation operation,
         string model,
-        int inputTokens,
-        int outputTokens,
-        decimal totalCost,
-        long responseTimeMs,
-        string? errorMessage,
-        string? requestSummary = null)
+        AiOperation operation,
+        Guid? promptId,
+        GenerativeAiResponse response,
+        string requestSummary)
     {
         try
         {
@@ -298,14 +259,14 @@ public class GeminiService(
                 Provider = AiProvider.Gemini,
                 Model = model,
                 Operation = operation,
-                InputTokens = inputTokens,
-                OutputTokens = outputTokens,
-                TotalTokens = inputTokens + outputTokens,
-                InputCost = (inputTokens / 1_000_000m) * _settings.Pricing.InputCostPer1MTokens,
-                OutputCost = (outputTokens / 1_000_000m) * _settings.Pricing.OutputCostPer1MTokens,
-                TotalCost = totalCost,
-                ResponseTimeMs = (int)responseTimeMs,
-                ErrorMessage = errorMessage,
+                InputTokens = response.InputTokens,
+                OutputTokens = response.OutputTokens,
+                TotalTokens = response.TotalTokens,
+                InputCost = response.InputCost,
+                OutputCost = response.OutputCost,
+                TotalCost = response.TotalCost,
+                ResponseTimeMs = response.ResponseTimeMs,
+                ErrorMessage = null,
                 RequestSummary = requestSummary?.Length > 500 ? requestSummary[..500] : requestSummary
             };
 
@@ -314,7 +275,43 @@ public class GeminiService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error tracking AI usage");
+            logger.LogError(ex, "Error tracking successful AI usage");
+        }
+    }
+
+    private async Task TrackFailedUsageAsync(
+        Guid userId,
+        string model,
+        AiOperation operation,
+        Guid? promptId,
+        long responseTimeMs,
+        string errorMessage)
+    {
+        try
+        {
+            var usage = new AiUsage
+            {
+                UserId = userId,
+                Provider = AiProvider.Gemini,
+                Model = model,
+                Operation = operation,
+                InputTokens = 0,
+                OutputTokens = 0,
+                TotalTokens = 0,
+                InputCost = 0,
+                OutputCost = 0,
+                TotalCost = 0,
+                ResponseTimeMs = (int)responseTimeMs,
+                ErrorMessage = errorMessage?.Length > 1000 ? errorMessage[..1000] : errorMessage,
+                RequestSummary = null
+            };
+
+            await unitOfWork.AiUsages.AddAsync(usage);
+            await unitOfWork.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error tracking failed AI usage");
         }
     }
 }

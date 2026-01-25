@@ -22,12 +22,26 @@ namespace Verendar.Vehicle.Apis
                 .WithName("GetDefaultMaintenanceSchedules")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Lấy lịch bảo dưỡng mặc định của hãng cho mẫu xe";
+                    operation.Summary = "Lấy TẤT CẢ lịch bảo dưỡng mặc định của hãng cho mẫu xe";
+                    operation.Description = "Trả về danh sách tất cả lịch bảo dưỡng cho mẫu xe này";
                     return operation;
                 })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<DefaultMaintenanceScheduleResponse>>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<List<DefaultMaintenanceScheduleResponse>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/{vehicleModelId:guid}/part-categories/{partCategoryCode}/default-schedule", GetDefaultScheduleByPartCategory)
+                .WithName("GetDefaultMaintenanceScheduleByPartCategory")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy lịch bảo dưỡng cho MỘT linh kiện cụ thể";
+                    operation.Description = "Trả về lịch bảo dưỡng cho 1 linh kiện (engine_oil, oil_filter, etc.)";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<DefaultMaintenanceScheduleResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<DefaultMaintenanceScheduleResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
@@ -39,6 +53,18 @@ namespace Verendar.Vehicle.Apis
             CancellationToken cancellationToken)
         {
             var result = await service.GetByVehicleModelIdAsync(vehicleModelId, cancellationToken);
+            return result.IsSuccess
+                ? Results.Ok(result)
+                : Results.NotFound(result);
+        }
+
+        private static async Task<IResult> GetDefaultScheduleByPartCategory(
+            Guid vehicleModelId,
+            string partCategoryCode,
+            IDefaultMaintenanceScheduleService service,
+            CancellationToken cancellationToken)
+        {
+            var result = await service.GetByVehicleModelAndPartCategoryAsync(vehicleModelId, partCategoryCode, cancellationToken);
             return result.IsSuccess
                 ? Results.Ok(result)
                 : Results.NotFound(result);

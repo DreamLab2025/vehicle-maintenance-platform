@@ -25,6 +25,8 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public int? AverageKmPerDay { get; set; }
 
+        public bool NeedsOnboarding { get; set; } = true;
+
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
         public VehicleVariant Variant { get; set; } = null!;

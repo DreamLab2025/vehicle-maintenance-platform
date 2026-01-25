@@ -1,310 +1,351 @@
 # Ví dụ Luồng Tạo User Vehicle và Bảo Dưỡng
 
-## 1. Khi User Đăng Ký Xe Mới (với AI Analysis)
+## 1. Khi User Đăng Ký Xe Mới (với AI Analysis - Per Part)
 
-### Flow Đăng Ký Xe:
+### Flow Đăng Ký Xe Mới:
 
 ```
 [User] → Chọn xe (Brand/Model/Variant)
    ↓
-[User] → Nhập thông tin cơ bản
+[User] → Nhập thông tin cơ bản (biển số, số km hiện tại)
    ↓
-[System] → Hiển thị form câu hỏi về tình trạng xe
+[System] → Tạo UserVehicle với NeedsOnboarding = true
    ↓
-[User] → Trả lời câu hỏi (text tự do)
+[System] → Tạo default VehiclePartTracking cho tất cả linh kiện
    ↓
-[AI] → Phân tích và đề xuất
+[Frontend] → Hiển thị danh sách linh kiện cần onboarding
    ↓
-[User] → Xác nhận hoặc chỉnh sửa
+[User] → Chọn linh kiện để phân tích (hoặc skip)
+   │
+   ├─ Option 1: Chọn phân tích cho linh kiện (e.g., engine_oil)
+   │   ↓
+   │  [System] → Lấy DefaultSchedule cho linh kiện đó
+   │   ↓
+   │  [Frontend] → Hiển thị câu hỏi cụ thể cho linh kiện
+   │   ↓
+   │  [User] → Trả lời câu hỏi
+   │   ↓
+   │  [AI] → Phân tích và đề xuất (1 linh kiện/request)
+   │   ↓
+   │  [User] → Review và xác nhận
+   │   ↓
+   │  [System] → Update VehiclePartTracking cho linh kiện đó
+   │   ↓
+   │  [User] → Tiếp tục với linh kiện khác hoặc skip
+   │
+   └─ Option 2: Skip phân tích
+       ↓
+      [System] → Giữ default tracking (không có LastReplacement)
    ↓
-[System] → Tạo xe + Tracking + Reminders
+[User] → Hoàn tất onboarding (có thể đã phân tích 0, 1, hoặc nhiều linh kiện)
+   ↓
+[System] → Set NeedsOnboarding = false (optional)
 ```
 
-### Bước 1: Form Thông Tin Cơ Bản
+### Bước 1: Tạo UserVehicle Với Default Tracking
 
 ```json
-POST /api/user-vehicles/initialize
+POST /api/v1/user-vehicles
 {
   "vehicleVariantId": "guid-honda-wave-alpha-red",
   "licensePlate": "59H1-12345",
   "vinNumber": "MLHJF1234567890",
-  "purchaseDate": "2024-01-15"
+  "purchaseDate": "2024-01-15",
+  "currentOdometer": 8500
 }
 
 Response:
 {
-  "sessionId": "temp-session-guid",
-  "vehicle": {
-    "model": "Honda Wave Alpha",
-    "variant": "Đỏ",
-    "year": 2024
-  },
-  "defaultParts": [
-    {
-      "partCategoryId": "oil-guid",
-      "name": "Dầu máy",
-      "defaultInterval": "2000 km hoặc 6 tháng"
-    },
-    {
-      "partCategoryId": "tire-guid",
-      "name": "Lốp xe",
-      "defaultInterval": "15000 km hoặc 2 năm"
-    },
-    {
-      "partCategoryId": "brake-pad-guid",
-      "name": "Má phanh",
-      "defaultInterval": "10000 km hoặc 1 năm"
+  "isSuccess": true,
+  "data": {
+    "id": "user-vehicle-guid",
+    "userId": "user-guid",
+    "licensePlate": "59H1-12345",
+    "vinNumber": "MLHJF1234567890",
+    "purchaseDate": "2024-01-15T00:00:00Z",
+    "currentOdometer": 8500,
+    "userVehicleVariant": {
+      "variantName": "Đỏ",
+      "modelName": "Honda Wave Alpha",
+      "brandName": "Honda"
     }
-  ],
-  "aiQuestions": "Hãy mô tả tình trạng xe của bạn hiện tại..."
+  },
+  "message": "Thêm xe thành công"
+}
+
+// System tự động tạo:
+// 1. OdometerHistory: initial 8500km
+// 2. VehiclePartTracking cho tất cả parts với default intervals:
+//    - engine_oil: CustomKmInterval=2000, CustomMonthsInterval=6, LastReplacement=null
+//    - oil_filter: CustomKmInterval=4000, CustomMonthsInterval=6, LastReplacement=null
+//    - air_filter: CustomKmInterval=6000, CustomMonthsInterval=12, LastReplacement=null
+//    - brake_pad: CustomKmInterval=10000, CustomMonthsInterval=12, LastReplacement=null
+```
+
+### Bước 2: Frontend Lấy Default Schedule Cho Linh Kiện
+
+**Ví dụ: User chọn phân tích engine_oil**
+
+```json
+GET /api/v1/vehicle-models/{vehicleModelId}/part-categories/engine_oil/default-schedule
+
+Response:
+{
+  "isSuccess": true,
+  "data": {
+    "id": "schedule-guid",
+    "partCategoryId": "engine-oil-guid",
+    "partCategoryCode": "engine_oil",
+    "partCategoryName": "Dầu động cơ",
+    "partCategoryDescription": "Dầu bôi trơn động cơ",
+    "iconUrl": "https://...",
+    "initialKm": 1000,
+    "kmInterval": 2000,
+    "monthsInterval": 6,
+    "requiresOdometerTracking": true,
+    "requiresTimeTracking": true,
+    "displayOrder": 1
+  },
+  "message": "Lấy lịch bảo dưỡng thành công"
 }
 ```
 
-### Bước 2: User Trả Lời Câu Hỏi AI
+### Bước 3: User Trả Lời Câu Hỏi Cho Linh Kiện
 
-**Frontend hiển thị form:**
+**Frontend hiển thị form cho engine_oil:**
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ 🤖 AI sẽ giúp bạn đánh giá tình trạng xe                │
+│ 🛢️ Dầu động cơ (engine_oil)                             │
 │                                                          │
-│ Vui lòng mô tả tình trạng xe của bạn:                   │
+│ Lịch chuẩn: Lần đầu 1000km, sau đó 2000km/6 tháng       │
+│                                                          │
+│ 🤖 Trả lời câu hỏi để AI ước tính chính xác:            │
 │ ┌────────────────────────────────────────────────────┐ │
-│ │ - Xe đã chạy bao nhiêu km?                         │ │
-│ │ - Lần cuối thay dầu, lốp, phanh là khi nào?       │ │
-│ │ - Có phần nào vừa mới thay không?                 │ │
-│ │ - Xe có vấn đề gì cần lưu ý không?                │ │
+│ │ Khi nào thay dầu gần nhất?                        │ │
+│ │ [Cách đây 1 tháng]                                │ │
 │ │                                                    │ │
-│ │ [User nhập text tự do...]                         │ │
+│ │ Xe chạy bao nhiêu km khi thay?                    │ │
+│ │ [7200km]                                          │ │
+│ │                                                    │ │
+│ │ Loại dầu đã sử dụng?                              │ │
+│ │ [Castrol 10W-40]                                  │ │
 │ └────────────────────────────────────────────────────┘ │
 │                                                          │
-│ [Bỏ qua - Dùng mặc định]  [Phân tích với AI] →          │
+│ [Bỏ qua]  [Phân tích với AI] →                          │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Ví dụ user nhập:**
-```
-"Xe mình mua xe đã qua sử dụng, hiện tại đồng hồ đang 8500km.
-Lần cuối thay dầu là cách đây 1 tháng lúc 7200km, dùng dầu Castrol.
-Lốp thì còn mới, chủ cũ thay lúc 6000km.
-Má phanh chưa thay bao giờ, phanh hơi kêu kẹt kẹt."
-```
-
-### Bước 3: Gửi Lên AI Service
+### Bước 4: Gửi Lên AI Service (1 Linh Kiện)
 
 ```json
-POST /api/user-vehicles/analyze-condition
+POST /api/v1/ai/vehicle-questionnaire/analyze
 {
-  "sessionId": "temp-session-guid",
-  "vehicleVariantId": "guid-honda-wave-alpha-red",
-  "userDescription": "Xe mình mua xe đã qua sử dụng...",
-  "defaultParts": [
+  "userId": "user-guid", // Tự động từ JWT
+  "userVehicleId": "user-vehicle-guid",
+  "vehicleInfo": {
+    "brand": "Honda",
+    "model": "Wave Alpha",
+    "variant": "Đỏ",
+    "isUsedVehicle": true,
+    "currentOdometer": 8500,
+    "purchaseDate": "2024-01-15"
+  },
+  "defaultSchedules": [
     {
-      "partCategoryId": "oil-guid",
-      "name": "Dầu máy",
-      "defaultKmInterval": 2000,
-      "defaultMonthsInterval": 6
-    },
-    {
-      "partCategoryId": "tire-guid",
-      "name": "Lốp xe",
-      "defaultKmInterval": 15000,
-      "defaultMonthsInterval": 24
-    },
-    {
-      "partCategoryId": "brake-pad-guid",
-      "name": "Má phanh",
-      "defaultKmInterval": 10000,
-      "defaultMonthsInterval": 12
-    }
-  ]
-}
-```
-
-### Bước 4: AI Phân Tích (Backend)
-
-**Prompt gửi cho AI (Claude/GPT):**
-```
-Bạn là chuyên gia bảo dưỡng xe máy. Hãy phân tích mô tả sau của người dùng về xe Honda Wave Alpha:
-
-User description: "Xe mình mua xe đã qua sử dụng, hiện tại đồng hồ đang 8500km.
-Lần cuối thay dầu là cách đây 1 tháng lúc 7200km, dùng dầu Castrol.
-Lốp thì còn mới, chủ cũ thay lúc 6000km.
-Má phanh chưa thay bao giờ, phanh hơi kêu kẹt kẹt."
-
-Default maintenance schedule:
-- Dầu máy: 2000km hoặc 6 tháng
-- Lốp xe: 15000km hoặc 24 tháng
-- Má phanh: 10000km hoặc 12 tháng
-
-Hãy trả về JSON với format:
-{
-  "currentOdometer": <số km hiện tại>,
-  "analysisNotes": "<ghi chú tổng quan>",
-  "parts": [
-    {
-      "partCategoryId": "oil-guid",
-      "partName": "Dầu máy",
-      "status": "GOOD|WARNING|URGENT|OVERDUE",
-      "lastReplacementOdometer": <số km lần thay cuối>,
-      "lastReplacementDate": "YYYY-MM-DD",
-      "partProductName": "<tên sản phẩm nếu có>",
-      "kmUntilNext": <km còn lại>,
-      "predictedNextOdometer": <km dự kiến thay tiếp>,
-      "predictedNextDate": "YYYY-MM-DD",
-      "reasoningNote": "<lý do phân tích>",
-      "urgencyScore": 0-100
+      "partCategoryCode": "engine_oil",
+      "partCategoryName": "Dầu động cơ",
+      "initialKm": 1000,
+      "kmInterval": 2000,
+      "monthsInterval": 6
     }
   ],
-  "recommendations": [
-    "<khuyến nghị 1>",
-    "<khuyến nghị 2>"
+  "answers": [
+    {
+      "question": "Khi nào thay dầu gần nhất?",
+      "value": "Cách đây 1 tháng"
+    },
+    {
+      "question": "Xe chạy bao nhiêu km khi thay?",
+      "value": "7200km"
+    },
+    {
+      "question": "Loại dầu đã sử dụng?",
+      "value": "Castrol 10W-40"
+    }
   ]
 }
 ```
 
-**AI Response:**
+**Validation:**
+- Chỉ chấp nhận 1 linh kiện trong `defaultSchedules`
+- Nếu >1: "Chỉ hỗ trợ phân tích 1 linh kiện trong mỗi request"
+
+### Bước 5: AI Phân Tích (Backend - Gemini 2.0-flash)
+
+**Prompt gửi cho Gemini (tiếng Việt để tiết kiệm token):**
+```
+Hôm nay: 2025-01-25
+
+XE:
+Honda Wave Alpha Đỏ - Xe cũ - 8,500km - Mua: 2024-01-15
+
+LỊCH CHUẨN:
+- engine_oil: Lần đầu 1000km, sau đó 2000km/6 tháng
+
+THÔNG TIN TỪ NGƯỜI DÙNG:
+- Khi nào thay dầu gần nhất?: Cách đây 1 tháng
+- Xe chạy bao nhiêu km khi thay?: 7200km
+- Loại dầu đã sử dụng?: Castrol 10W-40
+
+YÊU CẦU:
+Phân tích để ước tính lần thay cuối và lần thay tiếp theo cho linh kiện.
+- Ưu tiên: Câu trả lời người dùng > Tính theo km > Lịch chuẩn
+- Nếu "thay gần đây", tính thời gian tương đối từ hôm nay
+- Nếu "không nhớ", ước tính dựa trên tổng km và chu kỳ
+
+Trả về JSON:
+{
+  "recommendations": [
+    {
+      "partCategoryCode": "mã_linh_kiện",
+      "lastServiceOdometer": số_km,
+      "lastServiceDate": "yyyy-MM-dd",
+      "predictedNextOdometer": số_km,
+      "predictedNextDate": "yyyy-MM-dd",
+      "confidenceScore": 0.0-1.0,
+      "reasoning": "lý_do_ngắn_gọn",
+      "needsImmediateAttention": true/false
+    }
+  ],
+  "warnings": []
+}
+```
+
+**AI Response (Gemini):**
 ```json
 {
-  "currentOdometer": 8500,
-  "analysisNotes": "Xe đã qua sử dụng với số km vừa phải. Có một số phụ tùng cần chú ý kiểm tra.",
-  "parts": [
-    {
-      "partCategoryId": "oil-guid",
-      "partName": "Dầu máy",
-      "status": "GOOD",
-      "lastReplacementOdometer": 7200,
-      "lastReplacementDate": "2024-12-23",
-      "partProductName": "Castrol 10W-40",
-      "kmUntilNext": 800,
-      "predictedNextOdometer": 9200,
-      "predictedNextDate": "2025-06-23",
-      "reasoningNote": "Dầu vừa thay cách đây 1 tháng và 1300km. Còn 800km nữa đến lần thay tiếp theo theo chu kỳ 2000km.",
-      "urgencyScore": 35
-    },
-    {
-      "partCategoryId": "tire-guid",
-      "partName": "Lốp xe",
-      "status": "GOOD",
-      "lastReplacementOdometer": 6000,
-      "lastReplacementDate": "2024-06-15",
-      "partProductName": null,
-      "kmUntilNext": 12500,
-      "predictedNextOdometer": 21000,
-      "predictedNextDate": "2026-06-15",
-      "reasoningNote": "Lốp thay lúc 6000km, hiện tại 8500km mới chạy 2500km. Còn rất mới và đủ tuổi thọ.",
-      "urgencyScore": 15
-    },
-    {
-      "partCategoryId": "brake-pad-guid",
-      "partName": "Má phanh",
-      "status": "WARNING",
-      "lastReplacementOdometer": 0,
-      "lastReplacementDate": "2024-01-15",
-      "partProductName": null,
-      "kmUntilNext": 1500,
-      "predictedNextOdometer": 10000,
-      "predictedNextDate": "2025-01-15",
-      "reasoningNote": "Má phanh chưa từng thay và đã 8500km. Có dấu hiệu kêu kẹt, nên kiểm tra và thay trong 1500km tới.",
-      "urgencyScore": 65
+  "isSuccess": true,
+  "data": {
+    "recommendations": [
+      {
+        "partCategoryCode": "engine_oil",
+        "partCategoryName": "Dầu động cơ",
+        "lastReplacementOdometer": 7200,
+        "lastReplacementDate": "2024-12-25",
+        "predictedNextOdometer": 9200,
+        "predictedNextDate": "2025-06-25",
+        "confidenceScore": 0.85,
+        "reasoning": "Dầu thay cách đây 1 tháng lúc 7200km, đã chạy 1300km. Dự kiến thay tiếp ở 9200km (7200+2000) hoặc 6 tháng sau (2025-06-25).",
+        "needsImmediateAttention": false
+      }
+    ],
+    "warnings": [],
+    "metadata": {
+      "model": "gemini-2.0-flash",
+      "totalTokens": 450,
+      "totalCost": 0.000225,
+      "responseTimeMs": 850
     }
-  ],
-  "recommendations": [
-    "🔧 Má phanh cần kiểm tra gấp do có tiếng kêu bất thường",
-    "✅ Dầu máy tình trạng tốt, còn 800km nữa mới cần thay",
-    "✅ Lốp xe còn mới, không cần lo lắng trong thời gian tới",
-    "📅 Nên đặt lịch kiểm tra má phanh trong tuần tới"
-  ]
+  },
+  "message": "Phân tích thành công"
 }
 ```
 
-### Bước 5: Frontend Hiển Thị Kết Quả AI
+**Validation:**
+- AI phải trả về đúng 1 recommendation
+- Nếu AI trả về nhiều hơn: "AI trả về 2 khuyến nghị thay vì 1. Vui lòng thử lại."
+
+### Bước 6: Frontend Hiển Thị Kết Quả AI (1 Linh Kiện)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ 🤖 AI đã phân tích xong!                                 │
+│ 🤖 AI đã phân tích xong - Dầu động cơ                   │
 │                                                          │
-│ 📊 Tình trạng xe: Honda Wave Alpha - 8500 km            │
-│ "Xe đã qua sử dụng với số km vừa phải..."              │
-│                                                          │
+│ 🛢️ Kết quả phân tích:                                   │
 │ ┌─────────────────────────────────────────────────┐    │
-│ │ ✅ Dầu máy - TÌNH TRẠNG TỐT (35%)               │    │
-│ │ • Thay lần cuối: 7200km (23/12/2024)            │    │
-│ │ • Sản phẩm: Castrol 10W-40                      │    │
-│ │ • Còn lại: 800km (~2 tháng)                     │    │
-│ │ • Thay tiếp: ~9200km (23/06/2025)               │    │
-│ │ [────────────────████████████] 35%              │    │
-│ │ ✏️ Sửa                                           │    │
+│ │ ✅ Dầu động cơ - Confidence: 85%                │    │
+│ │                                                  │    │
+│ │ Thay lần cuối:                                   │    │
+│ │ • 7200 km (25/12/2024)                           │    │
+│ │                                                  │    │
+│ │ Dự kiến thay tiếp:                               │    │
+│ │ • 9200 km hoặc 25/06/2025                        │    │
+│ │                                                  │    │
+│ │ 📝 Lý do:                                        │    │
+│ │ "Dầu thay cách đây 1 tháng lúc 7200km, đã      │    │
+│ │  chạy 1300km. Dự kiến thay tiếp ở 9200km       │    │
+│ │  (7200+2000) hoặc 6 tháng sau (2025-06-25)."   │    │
+│ │                                                  │    │
+│ │ ⚠️ Cần chú ý ngay: Không                         │    │
 │ └─────────────────────────────────────────────────┘    │
 │                                                          │
-│ ┌─────────────────────────────────────────────────┐    │
-│ │ ⚠️ Má phanh - CẦN CHÚ Ý (65%)                   │    │
-│ │ • Chưa thay lần nào                              │    │
-│ │ • Đã chạy: 8500km                                │    │
-│ │ • Còn lại: 1500km (~3 tháng)                    │    │
-│ │ • Có tiếng kêu bất thường                        │    │
-│ │ [──────────██████████████████] 65%              │    │
-│ │ ✏️ Sửa                                           │    │
-│ └─────────────────────────────────────────────────┘    │
-│                                                          │
-│ ┌─────────────────────────────────────────────────┐    │
-│ │ ✅ Lốp xe - TÌNH TRẠNG TỐT (15%)                │    │
-│ │ • Thay lần cuối: 6000km (15/06/2024)            │    │
-│ │ • Còn lại: 12500km (~2 năm)                     │    │
-│ │ [───████████████████████████] 15%               │    │
-│ │ ✏️ Sửa                                           │    │
-│ └─────────────────────────────────────────────────┘    │
-│                                                          │
-│ 💡 Khuyến nghị:                                          │
-│ • 🔧 Má phanh cần kiểm tra gấp do có tiếng kêu          │
-│ • 📅 Nên đặt lịch kiểm tra má phanh trong tuần tới     │
-│                                                          │
-│ [Sửa lại]  [Xác nhận và tạo xe] →                      │
+│ [Sửa lại]  [Xác nhận] →                                 │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### Bước 6: User Xác Nhận và Tạo Xe
+### Bước 7: User Xác Nhận và Apply Tracking Config
 
 ```json
-POST /api/user-vehicles/confirm
+POST /api/v1/user-vehicles/{userVehicleId}/apply-tracking
 {
-  "sessionId": "temp-session-guid",
-  "confirmed": true,
-  "adjustments": [] // hoặc user có thể sửa
+  "partCategoryCode": "engine_oil",
+  "lastReplacementOdometer": 7200,
+  "lastReplacementDate": "2024-12-25",
+  "predictedNextOdometer": 9200,
+  "predictedNextDate": "2025-06-25",
+  "aiReasoning": "Dầu thay cách đây 1 tháng lúc 7200km...",
+  "confidenceScore": 0.85
+}
+
+Response:
+{
+  "isSuccess": true,
+  "data": {
+    "id": "tracking-guid",
+    "partCategoryId": "engine-oil-guid",
+    "partCategoryName": "Dầu động cơ",
+    "partCategoryCode": "engine_oil",
+    "lastReplacementOdometer": 7200,
+    "lastReplacementDate": "2024-12-25",
+    "customKmInterval": 2000,
+    "customMonthsInterval": 6,
+    "predictedNextOdometer": 9200,
+    "predictedNextDate": "2025-06-25",
+    "aiAnalysisResult": "{\"reasoning\":\"...\",\"confidenceScore\":0.85,\"analyzedAt\":\"2025-01-25T10:30:00Z\"}"
+  },
+  "message": "Áp dụng cấu hình tracking thành công"
 }
 ```
 
-### Bước 7: Backend Tạo Xe + Tracking với AI Data
-
-**Flow tạo data:**
+**System update:**
 ```
-1. Tạo UserVehicle
-   ├─ CurrentOdometer = 8500 (từ AI)
-   ├─ PurchaseDate = user input
-   └─ AverageKmPerDay = calculated
+VehiclePartTracking (engine_oil):
+├─ LastReplacementOdometer: null → 7200
+├─ LastReplacementDate: null → 2024-12-25
+├─ PredictedNextOdometer: null → 9200
+├─ PredictedNextDate: null → 2025-06-25
+└─ AiAnalysisResult: null → JSON với reasoning và confidence
+```
 
-2. Tạo OdometerHistory
-   └─ Initial record: 8500km
+### Bước 8: Lặp Lại Cho Linh Kiện Khác (Optional)
 
-3. Tạo VehiclePartTracking (từ AI analysis)
-   ├─ Dầu máy:
-   │  ├─ LastReplacementOdometer = 7200
-   │  ├─ LastReplacementDate = 2024-12-23
-   │  ├─ CurrentPartProductId = Castrol-guid
-   │  └─ PredictedNext = 9200km / 2025-06-23
-   │
-   ├─ Má phanh:
-   │  ├─ LastReplacementOdometer = 0
-   │  ├─ LastReplacementDate = 2024-01-15
-   │  └─ PredictedNext = 10000km / 2025-01-15
-   │
-   └─ Lốp xe:
-      ├─ LastReplacementOdometer = 6000
-      ├─ LastReplacementDate = 2024-06-15
-      └─ PredictedNext = 21000km / 2026-06-15
+```
+[User] → Chọn linh kiện tiếp theo (e.g., brake_pad)
+   ↓
+Lặp lại Bước 2-7 cho brake_pad
+   ↓
+[User] → Skip các linh kiện còn lại
+   ↓
+[System] → Các linh kiện skip giữ default (LastReplacement = null)
+```
 
-4. Tạo MaintenanceReminder (từ AI urgency)
-   ├─ Má phanh: WARNING (65% urgency)
-   └─ Dầu máy: LOW (35% urgency)
+**Kết quả cuối:**
+```
+VehiclePartTracking:
+├─ engine_oil: ✅ Analyzed by AI (có LastReplacement từ AI)
+├─ brake_pad: ✅ Analyzed by AI (có LastReplacement từ AI)
+├─ oil_filter: ❌ Skipped (LastReplacement = null, dùng default)
+└─ air_filter: ❌ Skipped (LastReplacement = null, dùng default)
 ```
 
 ---

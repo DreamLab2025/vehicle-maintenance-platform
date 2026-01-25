@@ -7,20 +7,20 @@ namespace Verendar.Ai.Apis;
 
 public static class VehicleMaintenanceApis
 {
-    public static IEndpointRouteBuilder MapVehicleMaintenanceApi(this IEndpointRouteBuilder builder)
+    public static IEndpointRouteBuilder MapVehicleQuestionnaireApi(this IEndpointRouteBuilder builder)
     {
-        builder.MapGroup("/api/v1/vehicle-maintenance")
-            .MapVehicleMaintenanceRoutes()
-            .WithTags("Vehicle Maintenance Analysis Api")
+        builder.MapGroup("/api/v1/ai/vehicle-questionnaire")
+            .MapVehicleQuestionnaireRoutes()
+            .WithTags("Vehicle Questionnaire Analysis Api")
             .RequireRateLimiting("Fixed");
 
         return builder;
     }
 
-    public static RouteGroupBuilder MapVehicleMaintenanceRoutes(this RouteGroupBuilder group)
+    public static RouteGroupBuilder MapVehicleQuestionnaireRoutes(this RouteGroupBuilder group)
     {
-        group.MapPost("/analyze-questionnaire", AnalyzeQuestionnaire)
-            .WithName("AnalyzeVehicleQuestionnaire")
+        group.MapPost("/analyze", AnalyzeQuestionnaire)
+            .WithName("AnalyzeQuestionnaire")
             .WithOpenApi(operation =>
             {
                 operation.Summary = "Phân tích câu hỏi về xe và đưa ra khuyến nghị bảo dưỡng";

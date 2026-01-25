@@ -2,7 +2,8 @@ using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
-using Verendar.Ai.Application.Prompts;
+using Verendar.Ai.Application.Helpers;
+using Verendar.Ai.Application.Mappings;
 using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Domain.Enums;
 using Verendar.Common.Shared;
@@ -28,43 +29,26 @@ public class VehicleMaintenanceAnalysisService : IVehicleMaintenanceAnalysisServ
     {
         try
         {
-            // Validate request
-            if (request.VehicleInfo == null)
+            // Validate: Only 1 part category per request for accurate analysis
+            if (request.DefaultSchedules == null || request.DefaultSchedules.Count == 0)
             {
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
-                    "Thông tin xe không hợp lệ");
+                    "Vui lòng cung cấp lịch bảo dưỡng cho ít nhất 1 linh kiện");
             }
 
-            if (!request.DefaultSchedules.Any())
+            if (request.DefaultSchedules.Count > 1)
             {
+                _logger.LogWarning(
+                    "Multiple part categories in request ({Count}). Recommend sending 1 part per request for accuracy.",
+                    request.DefaultSchedules.Count);
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
-                    "Chưa có lịch bảo dưỡng mặc định");
+                    "Chỉ hỗ trợ phân tích 1 linh kiện trong mỗi request. Vui lòng gửi riêng cho từng linh kiện.");
             }
 
-            _logger.LogInformation(
-                "Analyzing vehicle questionnaire for user {UserId}, vehicle {VehicleId}",
-                request.UserId, request.UserVehicleId);
+            var prompt = PromptGenerator.CreateVehicleMaintenancePrompt(request.VehicleInfo, request.DefaultSchedules, request.Answers);
 
-            // Build prompt using VehicleMaintenancePromptBuilder
-            var promptBuilder = new VehicleMaintenancePromptBuilder(request.VehicleInfo);
+            _logger.LogInformation("Generated prompt: {Prompt}", prompt);
 
-            // Add default schedules
-            foreach (var schedule in request.DefaultSchedules)
-            {
-                promptBuilder.AddSchedules(request.DefaultSchedules);
-            }
-
-            // Add user answers
-            foreach (var answer in request.Answers)
-            {
-                promptBuilder.AddAnswers(request.Answers);
-            }
-
-            var prompt = promptBuilder.Build();
-
-            _logger.LogDebug("Generated prompt: {Prompt}", prompt);
-
-            // Call AI service
             var aiResponse = await _aiService.GenerateContentAsync(
                 prompt,
                 AiOperation.GenerateText,
@@ -74,13 +58,13 @@ public class VehicleMaintenanceAnalysisService : IVehicleMaintenanceAnalysisServ
 
             if (!aiResponse.IsSuccess || aiResponse.Data == null)
             {
-                _logger.LogError("AI service failed: {Message}", aiResponse.Message);
+                _logger.LogError("AI service failed: {Content}", aiResponse.Data?.Content);
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
-                    aiResponse.Message ?? "Không thể phân tích dữ liệu");
+                    aiResponse.Data?.Content ?? "Không thể phân tích dữ liệu");
             }
 
             var content = aiResponse.Data.Content;
-            _logger.LogDebug("AI raw response: {Content}", content);
+            _logger.LogInformation("AI raw response: {Content}", content);
 
             GeminiVehicleAnalysisResult? analysisResult;
             try
@@ -93,7 +77,7 @@ public class VehicleMaintenanceAnalysisService : IVehicleMaintenanceAnalysisServ
             {
                 _logger.LogError(ex, "Failed to parse AI response JSON: {Content}", content);
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
-                    "Không thể phân tích kết quả từ AI");
+                    $"Không thể phân tích kết quả từ AI: {ex.Message}");
             }
 
             if (analysisResult == null || !analysisResult.Recommendations.Any())
@@ -103,29 +87,21 @@ public class VehicleMaintenanceAnalysisService : IVehicleMaintenanceAnalysisServ
                     "AI không thể đưa ra khuyến nghị");
             }
 
-            var response = new VehicleQuestionnaireResponse
+            // Validate: AI should return exactly 1 recommendation for 1 part request
+            if (analysisResult.Recommendations.Count != 1)
             {
-                Recommendations = analysisResult.Recommendations.Select(r => new PartTrackingRecommendation
-                {
-                    PartCategoryCode = r.PartCategoryCode,
-                    PartCategoryName = GetPartCategoryName(r.PartCategoryCode, request.DefaultSchedules),
-                    LastReplacementOdometer = r.LastServiceOdometer,
-                    LastReplacementDate = ParseDateOnly(r.LastServiceDate),
-                    PredictedNextOdometer = r.PredictedNextOdometer,
-                    PredictedNextDate = ParseDateOnly(r.PredictedNextDate),
-                    ConfidenceScore = r.ConfidenceScore,
-                    Reasoning = r.Reasoning,
-                    NeedsImmediateAttention = r.NeedsImmediateAttention
-                }).ToList(),
-                Warnings = analysisResult.Warnings,
-                Metadata = new AiAnalysisMetadata
-                {
-                    Model = aiResponse.Data.Model,
-                    TotalTokens = aiResponse.Data.TotalTokens,
-                    TotalCost = aiResponse.Data.TotalCost,
-                    ResponseTimeMs = aiResponse.Data.ResponseTimeMs
-                }
-            };
+                _logger.LogWarning(
+                    "AI returned {Count} recommendations, expected 1. Requested part: {PartCode}",
+                    analysisResult.Recommendations.Count,
+                    request.DefaultSchedules.First().PartCategoryCode);
+                return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
+                    $"AI trả về {analysisResult.Recommendations.Count} khuyến nghị thay vì 1. Vui lòng thử lại.");
+            }
+
+            var response = analysisResult.ToResponse(
+                request.DefaultSchedules,
+                aiResponse.Data
+            );
 
             _logger.LogInformation(
                 "Successfully analyzed vehicle questionnaire - {Count} recommendations, {WarningCount} warnings",
@@ -139,24 +115,5 @@ public class VehicleMaintenanceAnalysisService : IVehicleMaintenanceAnalysisServ
             return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
                 "Có lỗi xảy ra khi phân tích dữ liệu");
         }
-    }
-
-    private static string GetPartCategoryName(string partCode, List<DefaultScheduleDto> schedules)
-    {
-        return schedules.FirstOrDefault(s => s.PartCategoryCode == partCode)?.PartCategoryName ?? partCode;
-    }
-
-    private static DateOnly? ParseDateOnly(string? dateString)
-    {
-        if (string.IsNullOrWhiteSpace(dateString))
-            return null;
-
-        if (DateOnly.TryParseExact(dateString, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-            return date;
-
-        if (DateOnly.TryParse(dateString, out date))
-            return date;
-
-        return null;
     }
 }
