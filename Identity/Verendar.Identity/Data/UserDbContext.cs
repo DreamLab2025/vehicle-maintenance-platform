@@ -5,12 +5,8 @@ using Verendar.Identity.Entities;
 
 namespace Verendar.Identity.Data
 {
-    public class UserDbContext : BaseDbContext
+    public class UserDbContext(DbContextOptions<UserDbContext> options) : BaseDbContext(options)
     {
-        public UserDbContext(DbContextOptions<UserDbContext> options) : base(options)
-        {
-        }
-
         public DbSet<User> Users { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

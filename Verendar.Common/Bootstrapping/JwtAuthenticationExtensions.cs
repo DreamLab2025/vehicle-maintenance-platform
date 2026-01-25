@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Verendar.Common.Jwt;
@@ -57,10 +58,24 @@ namespace Verendar.Common.Bootstrapping
                 {
                     OnAuthenticationFailed = context =>
                     {
-                        if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<InvalidProgramException>>();
+                        logger.LogError(context.Exception, "JWT Authentication Failed. Token: {Token}",
+                            context.Request.Headers.Authorization.ToString());
+
+                        if (context.Exception is SecurityTokenInvalidAudienceException)
                         {
-                            context.Response.Headers.Add("Token-Expired", "true");
+                            logger.LogError("Lỗi Audience: Token Audience không khớp với Config.");
                         }
+                        else if (context.Exception is SecurityTokenInvalidIssuerException)
+                        {
+                            logger.LogError("Lỗi Issuer: Token Issuer không khớp với Config.");
+                        }
+                        else if (context.Exception is SecurityTokenExpiredException)
+                        {
+                            context.Response.Headers.Append("Token-Expired", "true");
+                            logger.LogError("Lỗi Hết hạn: Token đã hết hạn.");
+                        }
+
                         return Task.CompletedTask;
                     },
                     OnChallenge = context =>
@@ -68,15 +83,13 @@ namespace Verendar.Common.Bootstrapping
                         context.HandleResponse();
                         context.Response.StatusCode = 401;
                         context.Response.ContentType = "application/json";
-                        var result = System.Text.Json.JsonSerializer.Serialize(new
-                        {
-                            error = "Unauthorized",
-                            message = "You are not authorized to access this resource"
-                        });
+
+                        var errorMessage = "You are not authorized to access this resource";
+
                         return context.Response.WriteAsJsonAsync(new
                         {
                             error = "Unauthorized",
-                            message = "You are not authorized to access this resource"
+                            message = errorMessage
                         });
                     }
                 };

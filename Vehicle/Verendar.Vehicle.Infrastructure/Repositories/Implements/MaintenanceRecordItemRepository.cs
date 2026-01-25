@@ -6,12 +6,8 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class MaintenanceRecordItemRepository : PostgresRepository<MaintenanceRecordItem>, IMaintenanceRecordItemRepository
+    public class MaintenanceRecordItemRepository(VehicleDbContext context) : PostgresRepository<MaintenanceRecordItem>(context), IMaintenanceRecordItemRepository
     {
-        public MaintenanceRecordItemRepository(VehicleDbContext context) : base(context)
-        {
-        }
-
         public async Task<IEnumerable<MaintenanceRecordItem>> GetByMaintenanceRecordIdAsync(Guid maintenanceRecordId, CancellationToken cancellationToken = default)
         {
             return await _dbSet

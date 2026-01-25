@@ -7,21 +7,13 @@
         public bool? IsDescending { get; set; }
     }
 
-    public class PagingMetadata
+    public class PagingMetadata(int totalItems, int pageNumber, int pageSize)
     {
-        public int PageNumber { get; set; }
-        public int PageSize { get; set; }
-        public int TotalItems { get; set; }
-        public int TotalPages { get; set; }
+        public int PageNumber { get; set; } = pageNumber;
+        public int PageSize { get; set; } = pageSize;
+        public int TotalItems { get; set; } = totalItems;
+        public int TotalPages { get; set; } = (int)Math.Ceiling(totalItems / (double)pageSize);
         public bool HasNextPage => PageNumber < TotalPages;
         public bool HasPreviousPage => PageNumber > 1;
-
-        public PagingMetadata(int totalItems, int pageNumber, int pageSize)
-        {
-            TotalItems = totalItems;
-            PageNumber = pageNumber;
-            PageSize = pageSize;
-            TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-        }
     }
 }

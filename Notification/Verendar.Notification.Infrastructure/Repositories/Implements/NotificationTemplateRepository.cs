@@ -4,9 +4,6 @@ using Verendar.Notification.Infrastructure.Data;
 
 namespace Verendar.Notification.Infrastructure.Repositories.Implements;
 
-public class NotificationTemplateRepository : PostgresRepository<Domain.Entities.NotificationTemplate>, INotificationTemplateRepository
+public class NotificationTemplateRepository(NotificationDbContext context) : PostgresRepository<Domain.Entities.NotificationTemplate>(context), INotificationTemplateRepository
 {
-    public NotificationTemplateRepository(NotificationDbContext context) : base(context)
-    {
-    }
 }

@@ -14,8 +14,6 @@ public class PartTrackingRecommendation
 {
     public string PartCategoryCode { get; set; } = string.Empty;
 
-    public string PartCategoryName { get; set; } = string.Empty;
-
     public int? LastReplacementOdometer { get; set; }
 
     public DateOnly? LastReplacementDate { get; set; }

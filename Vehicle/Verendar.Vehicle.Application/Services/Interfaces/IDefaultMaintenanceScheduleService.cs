@@ -5,10 +5,6 @@ namespace Verendar.Vehicle.Application.Services.Interfaces
 {
     public interface IDefaultMaintenanceScheduleService
     {
-        Task<ApiResponse<List<DefaultMaintenanceScheduleResponse>>> GetByVehicleModelIdAsync(
-            Guid vehicleModelId,
-            CancellationToken cancellationToken = default);
-
         Task<ApiResponse<DefaultMaintenanceScheduleResponse>> GetByVehicleModelAndPartCategoryAsync(
             Guid vehicleModelId,
             string partCategoryCode,

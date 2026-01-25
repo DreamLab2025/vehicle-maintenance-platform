@@ -7,16 +7,10 @@ using Verendar.Media.Infrastructure.Configuration;
 
 namespace Verendar.Media.Infrastructure.Storage
 {
-    public class AwsS3StorageService : IStorageService
+    public class AwsS3StorageService(IAmazonS3 s3Client, IOptions<S3Settings> s3Settings) : IStorageService
     {
-        private readonly IAmazonS3 _s3Client;
-        private readonly S3Settings _s3settings;
-
-        public AwsS3StorageService(IAmazonS3 s3Client, IOptions<S3Settings> s3Settings)
-        {
-            _s3Client = s3Client;
-            _s3settings = s3Settings.Value;
-        }
+        private readonly IAmazonS3 _s3Client = s3Client;
+        private readonly S3Settings _s3settings = s3Settings.Value;
 
         public async Task DeleteFileAsync(string fileKey)
         {

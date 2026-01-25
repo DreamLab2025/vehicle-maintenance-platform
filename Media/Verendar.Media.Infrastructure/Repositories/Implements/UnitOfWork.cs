@@ -4,12 +4,9 @@ using Verendar.Media.Infrastructure.Data;
 
 namespace Verendar.Media.Infrastructure.Repositories.Implements
 {
-    public class UnitOfWork : BaseUnitOfWork<MediaDbContext>, IUnitOfWork
+    public class UnitOfWork(MediaDbContext context) : BaseUnitOfWork<MediaDbContext>(context), IUnitOfWork
     {
         private IMediaFileRepository? _mediaFileRepository;
-        public UnitOfWork(MediaDbContext context) : base(context)
-        {
-        }
 
         public IMediaFileRepository MediaFileRepository =>
             _mediaFileRepository ??= new MediaFileRepository(Context);

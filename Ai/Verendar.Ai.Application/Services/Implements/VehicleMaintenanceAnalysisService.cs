@@ -1,6 +1,6 @@
-using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 using Verendar.Ai.Application.Helpers;
 using Verendar.Ai.Application.Mappings;
@@ -10,49 +10,62 @@ using Verendar.Common.Shared;
 
 namespace Verendar.Ai.Application.Services.Implements;
 
-public class VehicleMaintenanceAnalysisService : IVehicleMaintenanceAnalysisService
+public class VehicleMaintenanceAnalysisService(
+    IGenerativeAiService aiService,
+    IVehicleServiceClient vehicleServiceClient,
+    ILogger<VehicleMaintenanceAnalysisService> logger) : IVehicleMaintenanceAnalysisService
 {
-    private readonly IGenerativeAiService _aiService;
-    private readonly ILogger<VehicleMaintenanceAnalysisService> _logger;
-
-    public VehicleMaintenanceAnalysisService(
-        IGenerativeAiService aiService,
-        ILogger<VehicleMaintenanceAnalysisService> logger)
-    {
-        _aiService = aiService;
-        _logger = logger;
-    }
+    private readonly IGenerativeAiService _aiService = aiService;
+    private readonly IVehicleServiceClient _vehicleServiceClient = vehicleServiceClient;
+    private readonly ILogger<VehicleMaintenanceAnalysisService> _logger = logger;
 
     public async Task<ApiResponse<VehicleQuestionnaireResponse>> AnalyzeQuestionnaireAsync(
+        Guid userId,
         VehicleQuestionnaireRequest request,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            // Validate: Only 1 part category per request for accurate analysis
-            if (request.DefaultSchedules == null || request.DefaultSchedules.Count == 0)
+            // Fetch vehicle info from Vehicle Service
+            _logger.LogInformation("Fetching vehicle info from Vehicle Service for UserVehicleId: {UserVehicleId}", request.UserVehicleId);
+            var vehicleResponse = await _vehicleServiceClient.GetUserVehicleByIdAsync(request.UserVehicleId, cancellationToken);
+
+            if (!vehicleResponse.IsSuccess || vehicleResponse.Data == null)
             {
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
-                    "Vui lòng cung cấp lịch bảo dưỡng cho ít nhất 1 linh kiện");
+                    vehicleResponse.Message ?? "Không thể lấy thông tin xe từ Vehicle Service");
             }
 
-            if (request.DefaultSchedules.Count > 1)
+            var vehicle = vehicleResponse.Data;
+            var vehicleInfo = vehicle.ToVehicleInfoDto();
+
+            // Fetch default schedule from Vehicle Service
+            _logger.LogInformation(
+                "Fetching default schedule from Vehicle Service for VehicleModelId: {VehicleModelId}, PartCategoryCode: {PartCategoryCode}",
+                request.VehicleModelId, request.PartCategoryCode);
+
+            var scheduleResponse = await _vehicleServiceClient.GetDefaultScheduleAsync(
+                request.VehicleModelId,
+                request.PartCategoryCode,
+                cancellationToken);
+
+            if (!scheduleResponse.IsSuccess || scheduleResponse.Data == null)
             {
-                _logger.LogWarning(
-                    "Multiple part categories in request ({Count}). Recommend sending 1 part per request for accuracy.",
-                    request.DefaultSchedules.Count);
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
-                    "Chỉ hỗ trợ phân tích 1 linh kiện trong mỗi request. Vui lòng gửi riêng cho từng linh kiện.");
+                    scheduleResponse.Message ?? "Không thể lấy lịch bảo dưỡng chuẩn từ Vehicle Service");
             }
 
-            var prompt = PromptGenerator.CreateVehicleMaintenancePrompt(request.VehicleInfo, request.DefaultSchedules, request.Answers);
+            var schedule = scheduleResponse.Data;
+            var defaultSchedule = schedule.ToDefaultScheduleDto(request.PartCategoryCode);
+
+            var prompt = PromptGenerator.CreateVehicleMaintenancePrompt(vehicleInfo, defaultSchedule, request.Answers);
 
             _logger.LogInformation("Generated prompt: {Prompt}", prompt);
 
             var aiResponse = await _aiService.GenerateContentAsync(
                 prompt,
                 AiOperation.GenerateText,
-                request.UserId,
+                userId,
                 temperature: 0.3m
             );
 
@@ -93,13 +106,12 @@ public class VehicleMaintenanceAnalysisService : IVehicleMaintenanceAnalysisServ
                 _logger.LogWarning(
                     "AI returned {Count} recommendations, expected 1. Requested part: {PartCode}",
                     analysisResult.Recommendations.Count,
-                    request.DefaultSchedules.First().PartCategoryCode);
+                    defaultSchedule.PartCategoryCode);
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
                     $"AI trả về {analysisResult.Recommendations.Count} khuyến nghị thay vì 1. Vui lòng thử lại.");
             }
 
             var response = analysisResult.ToResponse(
-                request.DefaultSchedules,
                 aiResponse.Data
             );
 

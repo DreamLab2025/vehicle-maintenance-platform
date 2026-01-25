@@ -43,9 +43,13 @@ public static class VehicleMaintenanceApis
         ICurrentUserService currentUserService,
         CancellationToken cancellationToken)
     {
-        request.UserId = currentUserService.UserId;
+        var userId = currentUserService.UserId;
+        if (userId == Guid.Empty)
+        {
+            return Results.Unauthorized();
+        }
 
-        var result = await analysisService.AnalyzeQuestionnaireAsync(request, cancellationToken);
+        var result = await analysisService.AnalyzeQuestionnaireAsync(userId, request, cancellationToken);
 
         return result.IsSuccess
             ? Results.Ok(result)

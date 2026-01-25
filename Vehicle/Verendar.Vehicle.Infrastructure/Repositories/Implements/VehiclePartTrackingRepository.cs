@@ -6,12 +6,8 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class VehiclePartTrackingRepository : PostgresRepository<VehiclePartTracking>, IVehiclePartTrackingRepository
+    public class VehiclePartTrackingRepository(VehicleDbContext context) : PostgresRepository<VehiclePartTracking>(context), IVehiclePartTrackingRepository
     {
-        public VehiclePartTrackingRepository(VehicleDbContext context) : base(context)
-        {
-        }
-
         public async Task<IEnumerable<VehiclePartTracking>> GetByUserVehicleIdAsync(Guid userVehicleId, CancellationToken cancellationToken = default)
         {
             return await _dbSet
@@ -38,7 +34,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
             return await _dbSet
                 .Include(x => x.PartCategory)
                 .Include(x => x.CurrentPartProduct)
-                .Where(x => x.UserVehicleId == userVehicleId && !x.IsIgnored)
+                .Where(x => x.UserVehicleId == userVehicleId && !x.IsDeclared)
                 .ToListAsync(cancellationToken);
         }
     }

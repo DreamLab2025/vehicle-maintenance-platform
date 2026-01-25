@@ -1,7 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Verendar.Ai.Apis;
+using Verendar.Ai.Application.Handlers;
 using Verendar.Ai.Application.Services.Implements;
 using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Domain.Repositories.Interfaces;
@@ -30,10 +28,16 @@ namespace Verendar.Ai.Bootstrapping
             builder.Services.Configure<GeminiSettings>(
                 builder.Configuration.GetSection(GeminiSettings.SectionName));
 
+            // Register external service clients
+            builder.AddClients();
+
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             builder.Services.AddScoped<IGenerativeAiService, GeminiService>();
             builder.Services.AddScoped<IVehicleMaintenanceAnalysisService, VehicleMaintenanceAnalysisService>();
+
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<ForwardAuthorizationHandler>();
 
             return builder;
         }

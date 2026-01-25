@@ -9,18 +9,11 @@ namespace Verendar.Vehicle.Application.Mappings
         {
             return new DefaultMaintenanceScheduleResponse
             {
-                Id = schedule.Id,
-                PartCategoryId = schedule.PartCategoryId,
-                PartCategoryCode = schedule.PartCategory.Code,
-                PartCategoryName = schedule.PartCategory.Name,
-                PartCategoryDescription = schedule.PartCategory.Description,
-                IconUrl = schedule.PartCategory.IconUrl,
                 InitialKm = schedule.InitialKm,
                 KmInterval = schedule.KmInterval,
                 MonthsInterval = schedule.MonthsInterval,
                 RequiresOdometerTracking = schedule.PartCategory.RequiresOdometerTracking,
-                RequiresTimeTracking = schedule.PartCategory.RequiresTimeTracking,
-                DisplayOrder = schedule.PartCategory.DisplayOrder
+                RequiresTimeTracking = schedule.PartCategory.RequiresTimeTracking
             };
         }
 

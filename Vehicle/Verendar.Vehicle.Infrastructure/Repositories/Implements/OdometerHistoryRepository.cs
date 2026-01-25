@@ -6,12 +6,8 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class OdometerHistoryRepository : PostgresRepository<OdometerHistory>, IOdometerHistoryRepository
+    public class OdometerHistoryRepository(VehicleDbContext context) : PostgresRepository<OdometerHistory>(context), IOdometerHistoryRepository
     {
-        public OdometerHistoryRepository(VehicleDbContext context) : base(context)
-        {
-        }
-
         public async Task<int> GetCurrentStreakAsync(Guid userVehicleId)
         {
             var logDates = await _dbSet

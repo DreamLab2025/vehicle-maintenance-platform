@@ -7,12 +7,8 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class MaintenanceReminderRepository : PostgresRepository<MaintenanceReminder>, IMaintenanceReminderRepository
+    public class MaintenanceReminderRepository(VehicleDbContext context) : PostgresRepository<MaintenanceReminder>(context), IMaintenanceReminderRepository
     {
-        public MaintenanceReminderRepository(VehicleDbContext context) : base(context)
-        {
-        }
-
         public async Task<IEnumerable<MaintenanceReminder>> GetByUserVehicleIdAsync(Guid userVehicleId, CancellationToken cancellationToken = default)
         {
             return await _dbSet

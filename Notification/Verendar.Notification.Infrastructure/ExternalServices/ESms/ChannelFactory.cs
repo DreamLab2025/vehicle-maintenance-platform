@@ -3,10 +3,9 @@ using Verendar.Notification.Domain.Enums;
 
 namespace Verendar.Notification.Infrastructure.ExternalServices.ESms;
 
-public class ChannelFactory : IChannelFactory
+public class ChannelFactory(IEnumerable<INotificationChannel> channels) : IChannelFactory
 {
-    private readonly IEnumerable<INotificationChannel> _channels;
-    public ChannelFactory(IEnumerable<INotificationChannel> channels) => _channels = channels;
+    private readonly IEnumerable<INotificationChannel> _channels = channels;
 
     public INotificationChannel GetChannel(NotificationChannel type)
     {

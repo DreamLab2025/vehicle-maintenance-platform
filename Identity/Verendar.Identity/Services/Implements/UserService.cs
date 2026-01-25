@@ -7,16 +7,10 @@ using Verendar.Identity.Services.Interfaces;
 
 namespace Verendar.Identity.Services.Implements
 {
-    public class UserService : IUserService
+    public class UserService(ILogger<UserService> logger, IUnitOfWork unitOfWork) : IUserService
     {
-        private readonly ILogger<UserService> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public UserService(ILogger<UserService> logger, IUnitOfWork unitOfWork)
-        {
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-        }
+        private readonly ILogger<UserService> _logger = logger;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(PaginationRequest paginationRequest)
         {

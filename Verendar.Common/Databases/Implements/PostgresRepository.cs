@@ -4,16 +4,10 @@ using Verendar.Common.Databases.Interfaces;
 
 namespace Verendar.Common.Databases.Implements
 {
-    public class PostgresRepository<T> : IGenericRepository<T> where T : class, IEntity
+    public class PostgresRepository<T>(DbContext context) : IGenericRepository<T> where T : class, IEntity
     {
-        protected readonly DbSet<T> _dbSet;
-        protected readonly DbContext _context;
-
-        public PostgresRepository(DbContext context)
-        {
-            _context = context;
-            _dbSet = context.Set<T>();
-        }
+        protected readonly DbSet<T> _dbSet = context.Set<T>();
+        protected readonly DbContext _context = context;
 
         public async Task<T> AddAsync(T entity)
         {

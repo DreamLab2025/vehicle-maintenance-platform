@@ -11,24 +11,17 @@ using Verender.Identity.Contracts.Events;
 
 namespace Verendar.Notification.Application.Consumers;
 
-public partial class OtpRequestedConsumer : IConsumer<OtpRequestedEvent>
+public partial class OtpRequestedConsumer(
+    ILogger<OtpRequestedConsumer> logger,
+    IUnitOfWork unitOfWork,
+    IChannelFactory channelFactory) : IConsumer<OtpRequestedEvent>
 {
     [GeneratedRegex("^0[0-9]{9}$")]
     private static partial Regex PhoneNumberRegex();
 
-    private readonly ILogger<OtpRequestedConsumer> _logger;
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IChannelFactory _channelFactory;
-
-    public OtpRequestedConsumer(
-        ILogger<OtpRequestedConsumer> logger,
-        IUnitOfWork unitOfWork,
-        IChannelFactory channelFactory)
-    {
-        _logger = logger;
-        _unitOfWork = unitOfWork;
-        _channelFactory = channelFactory;
-    }
+    private readonly ILogger<OtpRequestedConsumer> _logger = logger;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IChannelFactory _channelFactory = channelFactory;
 
     public async Task Consume(ConsumeContext<OtpRequestedEvent> context)
     {

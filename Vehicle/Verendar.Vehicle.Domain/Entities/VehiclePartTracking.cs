@@ -28,13 +28,8 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public DateOnly? PredictedNextDate { get; set; }
 
-        public bool IsIgnored { get; set; } = false;
+        public bool IsDeclared { get; set; } = false;
 
-        [MaxLength(2000)]
-        public string? UserConditionDescription { get; set; }
-
-        [MaxLength(2000)]
-        public string? AiAnalysisResult { get; set; }
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 

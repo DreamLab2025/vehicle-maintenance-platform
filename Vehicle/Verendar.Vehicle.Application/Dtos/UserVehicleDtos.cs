@@ -69,9 +69,7 @@
         public int? CustomMonthsInterval { get; set; }
         public int? PredictedNextOdometer { get; set; }
         public DateOnly? PredictedNextDate { get; set; }
-        public bool IsIgnored { get; set; }
-        public string? UserConditionDescription { get; set; }
-        public string? AiAnalysisResult { get; set; }
+        public bool IsDeclared { get; set; }
         public List<MaintenanceReminderSummary> Reminders { get; set; } = new();
     }
 
@@ -95,5 +93,11 @@
         public int CurrentStreak { get; set; }
         public bool IsStreakActive { get; set; }
         public int DaysToNextUnlock { get; set; }
+    }
+
+    public class IsAllowedToCreateVehicleResponse
+    {
+        public bool IsAllowed { get; set; }
+        public string? Message { get; set; }
     }
 }

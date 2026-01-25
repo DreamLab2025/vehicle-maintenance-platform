@@ -43,6 +43,18 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<UserVehicleDetailResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/is-allowed-create", IsAllowedToCreateVehicle)
+                .WithName("IsAllowedToCreateVehicle")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Kiểm tra xem người dùng có được tạo xe mới không";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<IsAllowedToCreateVehicleResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<IsAllowedToCreateVehicleResponse>>(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             group.MapPost("/", CreateUserVehicle)
                 .WithName("CreateUserVehicle")
                 .WithOpenApi(operation =>
@@ -131,6 +143,19 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
+        }
+
+        private static async Task<IResult> IsAllowedToCreateVehicle(
+            ICurrentUserService currentUserService,
+            IUserVehicleService userVehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+            var result = await userVehicleService.IsAllowedToCreateVehicleAsync(userId);
+            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
         private static async Task<IResult> GetVehicleStreak(
