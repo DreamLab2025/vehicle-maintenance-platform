@@ -11,29 +11,19 @@ using Verendar.Identity.Services.Interfaces;
 
 namespace Verendar.Identity.Services.Implements
 {
-    public class AuthService : IAuthService
+    public class AuthService(
+        ILogger<AuthService> logger,
+        IUnitOfWork unitOfWork,
+        IIdentityTokenService tokenService,
+        ICacheService cacheService,
+        IPublishEndpoint publishEndpoint) : IAuthService
     {
-        private readonly ILogger<AuthService> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IIdentityTokenService _tokenService;
-        private readonly PasswordHasher<User> _passwordHasher;
-        private readonly ICacheService _cacheService;
-        private readonly IPublishEndpoint _publishEndpoint;
-
-        public AuthService(
-            ILogger<AuthService> logger,
-            IUnitOfWork unitOfWork,
-            IIdentityTokenService tokenService,
-            ICacheService cacheService,
-            IPublishEndpoint publishEndpoint)
-        {
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-            _tokenService = tokenService;
-            _passwordHasher = new PasswordHasher<User>();
-            _cacheService = cacheService;
-            _publishEndpoint = publishEndpoint;
-        }
+        private readonly ILogger<AuthService> _logger = logger;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IIdentityTokenService _tokenService = tokenService;
+        private readonly PasswordHasher<User> _passwordHasher = new PasswordHasher<User>();
+        private readonly ICacheService _cacheService = cacheService;
+        private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
         private string GetOtpCode()
         {

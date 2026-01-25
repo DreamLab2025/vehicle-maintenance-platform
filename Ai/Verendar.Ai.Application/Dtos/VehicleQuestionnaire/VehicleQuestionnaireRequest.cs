@@ -2,20 +2,22 @@ namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 
 public class VehicleQuestionnaireRequest
 {
-    public Guid UserId { get; set; }
-
     public Guid UserVehicleId { get; set; }
 
-    public VehicleInfoDto VehicleInfo { get; set; } = null!;
+    public Guid VehicleModelId { get; set; }
 
-    public List<DefaultScheduleDto> DefaultSchedules { get; set; } = new();
+    public string PartCategoryCode { get; set; } = string.Empty;
 
     public List<QuestionAnswerDto> Answers { get; set; } = new();
+
+    /// <summary>
+    /// User ID - set by API endpoint from current user context
+    /// </summary>
+    public Guid UserId { get; set; }
 }
 
 public class VehicleInfoDto
 {
-    public string Type { get; set; } = string.Empty;
     public string Brand { get; set; } = string.Empty;
     public string Model { get; set; } = string.Empty;
     public int CurrentOdometer { get; set; }
@@ -34,6 +36,10 @@ public class DefaultScheduleDto
     public int KmInterval { get; set; }
 
     public int MonthsInterval { get; set; }
+
+    public bool RequiresOdometerTracking { get; set; }
+
+    public bool RequiresTimeTracking { get; set; }
 }
 
 

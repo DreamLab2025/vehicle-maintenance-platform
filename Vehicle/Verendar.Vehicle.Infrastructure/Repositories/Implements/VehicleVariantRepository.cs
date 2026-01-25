@@ -6,12 +6,8 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class VehicleVariantRepository : PostgresRepository<VehicleVariant>, IVehicleVariantRepository
+    public class VehicleVariantRepository(VehicleDbContext context) : PostgresRepository<VehicleVariant>(context), IVehicleVariantRepository
     {
-        public VehicleVariantRepository(VehicleDbContext context) : base(context)
-        {
-        }
-
         public async Task<IEnumerable<VehicleVariant>> GetImagesByVehicleModelIdAsync(Guid vehicleModelId, CancellationToken cancellationToken = default)
         {
             return await _dbSet

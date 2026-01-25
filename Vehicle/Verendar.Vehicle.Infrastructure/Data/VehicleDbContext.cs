@@ -4,11 +4,8 @@ using Verendar.Vehicle.Domain.Entities;
 
 namespace Verendar.Vehicle.Infrastructure.Data
 {
-    public class VehicleDbContext : BaseDbContext
+    public class VehicleDbContext(DbContextOptions<VehicleDbContext> options) : BaseDbContext(options)
     {
-        public VehicleDbContext(DbContextOptions<VehicleDbContext> options) : base(options)
-        {
-        }
 
         // Vehicle Catalog
         public DbSet<VehicleType> VehicleTypes { get; set; } = null!;

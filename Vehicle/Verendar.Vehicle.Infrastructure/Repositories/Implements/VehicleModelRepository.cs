@@ -5,10 +5,7 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class VehicleModelRepository : PostgresRepository<VehicleModel>, IVehicleModelRepository
+    public class VehicleModelRepository(VehicleDbContext context) : PostgresRepository<VehicleModel>(context), IVehicleModelRepository
     {
-        public VehicleModelRepository(VehicleDbContext context) : base(context)
-        {
-        }
     }
 }

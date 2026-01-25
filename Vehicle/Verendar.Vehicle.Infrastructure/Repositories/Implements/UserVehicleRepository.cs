@@ -7,13 +7,9 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class UserVehicleRepository : PostgresRepository<UserVehicle>, IUserVehicleRepository
+    public class UserVehicleRepository(VehicleDbContext context) : PostgresRepository<UserVehicle>(context), IUserVehicleRepository
     {
-        private readonly VehicleDbContext _context;
-        public UserVehicleRepository(VehicleDbContext context) : base(context)
-        {
-            _context = context;
-        }
+        private readonly VehicleDbContext _context = context;
 
         public IQueryable<UserVehicle> GetQueryWithFullDetails()
         {

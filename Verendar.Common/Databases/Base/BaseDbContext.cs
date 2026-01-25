@@ -3,12 +3,8 @@ using Verendar.Common.Databases.Interfaces;
 
 namespace Verendar.Common.Databases.Base
 {
-    public abstract class BaseDbContext : DbContext
+    public abstract class BaseDbContext(DbContextOptions options) : DbContext(options)
     {
-        protected BaseDbContext(DbContextOptions options) : base(options)
-        {
-        }
-
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             var entries = ChangeTracker.Entries<IAuditableEntity>();

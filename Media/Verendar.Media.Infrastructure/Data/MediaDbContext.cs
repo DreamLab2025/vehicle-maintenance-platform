@@ -3,12 +3,8 @@ using Verendar.Common.Databases.Base;
 
 namespace Verendar.Media.Infrastructure.Data
 {
-    public class MediaDbContext : BaseDbContext
+    public class MediaDbContext(DbContextOptions<MediaDbContext> options) : BaseDbContext(options)
     {
-        public MediaDbContext(DbContextOptions<MediaDbContext> options) : base(options)
-        {
-        }
-
         public DbSet<Domain.Entities.MediaFile> Files { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

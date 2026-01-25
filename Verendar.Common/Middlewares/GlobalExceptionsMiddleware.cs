@@ -5,16 +5,10 @@ using System.Text.Json;
 
 namespace Verendar.Common.Middlewares
 {
-    public class GlobalExceptionsMiddleware
+    public class GlobalExceptionsMiddleware(RequestDelegate next, ILogger<GlobalExceptionsMiddleware> logger)
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<GlobalExceptionsMiddleware> _logger;
-
-        public GlobalExceptionsMiddleware(RequestDelegate next, ILogger<GlobalExceptionsMiddleware> logger)
-        {
-            _next = next;
-            _logger = logger;
-        }
+        private readonly RequestDelegate _next = next;
+        private readonly ILogger<GlobalExceptionsMiddleware> _logger = logger;
 
         public async Task InvokeAsync(HttpContext context)
         {

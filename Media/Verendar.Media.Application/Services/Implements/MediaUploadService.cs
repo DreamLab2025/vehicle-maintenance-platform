@@ -11,24 +11,16 @@ using Verendar.Media.Domain.Repositories.Interfaces;
 
 namespace Verendar.Media.Application.Services.Implements
 {
-    public class MediaUploadService : IMediaUploadService
+    public class MediaUploadService(
+        IStorageService storageService,
+        IUnitOfWork unitOfWork,
+        IOptions<FileUploadConfiguration> uploadConfig,
+        ILogger<MediaUploadService> logger) : IMediaUploadService
     {
-        private readonly IStorageService _storageService;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly FileUploadConfiguration _uploadConfig;
-        private readonly ILogger<MediaUploadService> _logger;
-
-        public MediaUploadService(
-            IStorageService storageService,
-            IUnitOfWork unitOfWork,
-            IOptions<FileUploadConfiguration> uploadConfig,
-            ILogger<MediaUploadService> logger)
-        {
-            _storageService = storageService;
-            _unitOfWork = unitOfWork;
-            _uploadConfig = uploadConfig.Value;
-            _logger = logger;
-        }
+        private readonly IStorageService _storageService = storageService;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly FileUploadConfiguration _uploadConfig = uploadConfig.Value;
+        private readonly ILogger<MediaUploadService> _logger = logger;
 
         public async Task<ApiResponse<string>> ConfirmUploadFileAsync(Guid id, Guid userId)
         {

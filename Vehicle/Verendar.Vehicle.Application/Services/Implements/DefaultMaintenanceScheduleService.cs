@@ -8,68 +8,12 @@ using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
-    public class DefaultMaintenanceScheduleService : IDefaultMaintenanceScheduleService
+    public class DefaultMaintenanceScheduleService(
+        ILogger<DefaultMaintenanceScheduleService> logger,
+        IUnitOfWork unitOfWork) : IDefaultMaintenanceScheduleService
     {
-        private readonly ILogger<DefaultMaintenanceScheduleService> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public DefaultMaintenanceScheduleService(
-            ILogger<DefaultMaintenanceScheduleService> logger,
-            IUnitOfWork unitOfWork)
-        {
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-        }
-
-        public async Task<ApiResponse<List<DefaultMaintenanceScheduleResponse>>> GetByVehicleModelIdAsync(
-            Guid vehicleModelId,
-            CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                // Validate vehicle model exists
-                var vehicleModel = await _unitOfWork.VehicleModels.GetByIdAsync(vehicleModelId);
-                if (vehicleModel == null)
-                {
-                    _logger.LogWarning("Vehicle model not found: {VehicleModelId}", vehicleModelId);
-                    return ApiResponse<List<DefaultMaintenanceScheduleResponse>>.FailureResponse(
-                        "Không tìm thấy mẫu xe");
-                }
-
-                // Get default maintenance schedules for this vehicle model
-                var schedules = await _unitOfWork.DefaultMaintenanceSchedules
-                    .GetByVehicleModelIdAsync(vehicleModelId, cancellationToken);
-
-                // Filter active schedules and order by display order
-                var activeSchedules = schedules
-                    .Where(s => s.Status == EntityStatus.Active && s.PartCategory.Status == EntityStatus.Active)
-                    .OrderBy(s => s.PartCategory.DisplayOrder)
-                    .ToList();
-
-                if (!activeSchedules.Any())
-                {
-                    _logger.LogInformation("No active maintenance schedules found for vehicle model: {VehicleModelId}", vehicleModelId);
-                    return ApiResponse<List<DefaultMaintenanceScheduleResponse>>.SuccessResponse(
-                        new List<DefaultMaintenanceScheduleResponse>(),
-                        "Chưa có lịch bảo dưỡng mặc định cho mẫu xe này");
-                }
-
-                var response = activeSchedules.ToResponseList();
-
-                _logger.LogInformation(
-                    "Retrieved {Count} default maintenance schedules for vehicle model: {VehicleModelId}",
-                    response.Count,
-                    vehicleModelId);
-
-                return ApiResponse<List<DefaultMaintenanceScheduleResponse>>.SuccessResponse(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting default maintenance schedules for vehicle model: {VehicleModelId}", vehicleModelId);
-                return ApiResponse<List<DefaultMaintenanceScheduleResponse>>.FailureResponse(
-                    "Có lỗi xảy ra khi lấy lịch bảo dưỡng mặc định");
-            }
-        }
+        private readonly ILogger<DefaultMaintenanceScheduleService> _logger = logger;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         public async Task<ApiResponse<DefaultMaintenanceScheduleResponse>> GetByVehicleModelAndPartCategoryAsync(
             Guid vehicleModelId,
@@ -95,8 +39,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
 
                 // Get all schedules for this model
-                var schedules = await _unitOfWork.DefaultMaintenanceSchedules
-                    .GetByVehicleModelIdAsync(vehicleModelId, cancellationToken);
+                var schedules = await _unitOfWork.DefaultMaintenanceSchedules.GetByVehicleModelIdAsync(vehicleModelId, cancellationToken);
 
                 // Find specific part category (case-insensitive)
                 var schedule = schedules

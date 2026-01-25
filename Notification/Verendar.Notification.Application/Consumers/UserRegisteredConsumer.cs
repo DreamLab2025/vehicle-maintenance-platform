@@ -10,21 +10,14 @@ using Verender.Identity.Contracts.Events;
 
 namespace Verendar.Notification.Application.Consumers;
 
-public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
+public class UserRegisteredConsumer(
+    ILogger<UserRegisteredConsumer> logger,
+    IUnitOfWork unitOfWork,
+    IChannelFactory channelFactory) : IConsumer<UserRegisteredEvent>
 {
-    private readonly ILogger<UserRegisteredConsumer> _logger;
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IChannelFactory _channelFactory;
-
-    public UserRegisteredConsumer(
-        ILogger<UserRegisteredConsumer> logger,
-        IUnitOfWork unitOfWork,
-        IChannelFactory channelFactory)
-    {
-        _logger = logger;
-        _unitOfWork = unitOfWork;
-        _channelFactory = channelFactory;
-    }
+    private readonly ILogger<UserRegisteredConsumer> _logger = logger;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IChannelFactory _channelFactory = channelFactory;
 
     public async Task Consume(ConsumeContext<UserRegisteredEvent> context)
     {

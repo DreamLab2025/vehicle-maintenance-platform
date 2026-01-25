@@ -4,7 +4,7 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class UnitOfWork : BaseUnitOfWork<VehicleDbContext>, IUnitOfWork
+    public class UnitOfWork(VehicleDbContext context) : BaseUnitOfWork<VehicleDbContext>(context), IUnitOfWork
     {
         // Vehicle Catalog
         private IVehicleTypeRepository? _vehicleTypes;
@@ -28,10 +28,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         // Maintenance History
         private IMaintenanceRecordRepository? _maintenanceRecords;
         private IMaintenanceRecordItemRepository? _maintenanceRecordItems;
-
-        public UnitOfWork(VehicleDbContext context) : base(context)
-        {
-        }
 
         // Vehicle Catalog
         public IVehicleTypeRepository VehicleTypes =>

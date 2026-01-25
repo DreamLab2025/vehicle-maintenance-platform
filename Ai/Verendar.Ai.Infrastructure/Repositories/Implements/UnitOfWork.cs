@@ -5,13 +5,9 @@ using Verendar.Common.Databases.UnitOfWork;
 
 namespace Verendar.Ai.Infrastructure.Repositories.Implements;
 
-public class UnitOfWork : BaseUnitOfWork<AiDbContext>, IUnitOfWork
+public class UnitOfWork(AiDbContext context) : BaseUnitOfWork<AiDbContext>(context), IUnitOfWork
 {
     private IAiUsageRepository? _aiUsages;
-
-    public UnitOfWork(AiDbContext context) : base(context)
-    {
-    }
 
     public IAiUsageRepository AiUsages => _aiUsages ??= new AiUsageRepository(Context);
 }

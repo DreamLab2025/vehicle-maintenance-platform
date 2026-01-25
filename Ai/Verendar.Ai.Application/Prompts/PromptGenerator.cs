@@ -1,4 +1,3 @@
-using System.Text;
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 
 namespace Verendar.Ai.Application.Helpers;
@@ -22,13 +21,13 @@ public static class PromptGenerator
                                    .Select(a => $"- {a.Question}: {a.Value}"))
         : "(Không có thông tin)";
 
-    var vehicleName = $"{vehicleInfo.Brand} {vehicleInfo.Model} {(vehicleInfo.Type ?? "")}".Trim();
+    var vehicleName = $"{vehicleInfo.Brand} {vehicleInfo.Model}".Trim();
 
     return $@"
 Hôm nay: {today}
 
 THÔNG TIN XE:
-- Xe: {vehicleName} ({vehicleInfo.Type})
+- Xe: {vehicleName}
 - Số km hiện tại: {vehicleInfo.CurrentOdometer:N0}km
 - Ngày mua: {vehicleInfo.PurchaseDate:yyyy-MM-dd}
 

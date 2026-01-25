@@ -1,5 +1,7 @@
+using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Domain.Entities;
+using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Application.Mappings
 {
@@ -84,9 +86,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 CustomMonthsInterval = entity.CustomMonthsInterval,
                 PredictedNextOdometer = entity.PredictedNextOdometer,
                 PredictedNextDate = entity.PredictedNextDate,
-                IsIgnored = entity.IsIgnored,
-                UserConditionDescription = entity.UserConditionDescription,
-                AiAnalysisResult = entity.AiAnalysisResult,
+                IsDeclared = entity.IsDeclared,
                 Reminders = entity.Reminders?.Select(r => r.ToSummary()).ToList() ?? new()
             };
         }
@@ -141,6 +141,37 @@ namespace Verendar.Vehicle.Application.Mappings
                 CurrentStreak = streak,
                 IsStreakActive = streak > 0,
                 DaysToNextUnlock = streak > 0 ? 7 - (streak % 7) : 7
+            };
+        }
+
+        public static IsAllowedToCreateVehicleResponse ToIsAllowedToCreateVehicleResponse(this bool isAllowed, string message)
+        {
+            return new IsAllowedToCreateVehicleResponse
+            {
+                IsAllowed = isAllowed,
+                Message = message
+            };
+        }
+
+        public static VehiclePartTracking ToInitializePartTracking(this Guid userVehicleId, Guid partCategoryId)
+        {
+            return new VehiclePartTracking
+            {
+                UserVehicleId = userVehicleId,
+                PartCategoryId = partCategoryId,
+                Status = EntityStatus.Active,
+                IsDeclared = false,
+            };
+        }
+
+        public static OdometerHistory ToOdometerHistory(this Guid userVehicleId, int odometerValue)
+        {
+            return new OdometerHistory
+            {
+                UserVehicleId = userVehicleId,
+                OdometerValue = odometerValue,
+                RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                Source = OdometerSource.ManualInput
             };
         }
     }

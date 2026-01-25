@@ -4,17 +4,13 @@ using Verendar.Notification.Infrastructure.Data;
 
 namespace Verendar.Notification.Infrastructure.Repositories.Implements;
 
-public class UnitOfWork : BaseUnitOfWork<NotificationDbContext>, IUnitOfWork
+public class UnitOfWork(NotificationDbContext context) : BaseUnitOfWork<NotificationDbContext>(context), IUnitOfWork
 {
     private INotificationRepository? _notifications;
     private INotificationTemplateRepository? _notificationTemplates;
     private INotificationDeliveryRepository? _notificationDeliveries;
     private INotificationPreferenceRepository? _notificationPreferences;
     private INotificationTemplateChannelRepository? _notificationTemplateChannels;
-
-    public UnitOfWork(NotificationDbContext context) : base(context)
-    {
-    }
 
     public INotificationRepository Notifications => _notifications ??= new NotificationRepository(Context);
     public INotificationTemplateRepository NotificationTemplates => _notificationTemplates ??= new NotificationTemplateRepository(Context);

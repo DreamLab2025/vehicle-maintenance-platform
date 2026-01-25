@@ -5,9 +5,6 @@ using Verendar.Common.Databases.Implements;
 
 namespace Verendar.Ai.Infrastructure.Repositories.Implements;
 
-public class AiUsageRepository : PostgresRepository<AiUsage>, IAiUsageRepository
+public class AiUsageRepository(AiDbContext context) : PostgresRepository<AiUsage>(context), IAiUsageRepository
 {
-    public AiUsageRepository(AiDbContext context) : base(context)
-    {
-    }
 }

@@ -5,10 +5,7 @@ using Verendar.Identity.Repositories.Interfaces;
 
 namespace Verendar.Identity.Repositories.Implements
 {
-    public class UserRepository : PostgresRepository<User>, IUserRepository
+    public class UserRepository(UserDbContext context) : PostgresRepository<User>(context), IUserRepository
     {
-        public UserRepository(UserDbContext context) : base(context)
-        {
-        }
     }
 }

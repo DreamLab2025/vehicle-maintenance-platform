@@ -1,0 +1,40 @@
+using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
+using Verendar.Ai.Application.Dtos.VehicleService;
+
+namespace Verendar.Ai.Application.Mappings;
+
+public static class VehicleServiceMappings
+{
+    /// <summary>
+    /// Maps VehicleServiceUserVehicleResponse to VehicleInfoDto
+    /// </summary>
+    public static VehicleInfoDto ToVehicleInfoDto(this VehicleServiceUserVehicleResponse vehicle)
+    {
+        return new VehicleInfoDto
+        {
+            Brand = vehicle.UserVehicleVariant.Model.BrandName,
+            Model = vehicle.UserVehicleVariant.Model.Name,
+            CurrentOdometer = vehicle.CurrentOdometer,
+            PurchaseDate = vehicle.PurchaseDate ?? DateTime.UtcNow
+        };
+    }
+
+    /// <summary>
+    /// Maps VehicleServiceDefaultScheduleResponse to DefaultScheduleDto
+    /// </summary>
+    public static DefaultScheduleDto ToDefaultScheduleDto(
+        this VehicleServiceDefaultScheduleResponse schedule,
+        string partCategoryCode)
+    {
+        return new DefaultScheduleDto
+        {
+            PartCategoryCode = partCategoryCode,
+            PartCategoryName = partCategoryCode, // Will be filled from mapping if needed
+            InitialKm = schedule.InitialKm,
+            KmInterval = schedule.KmInterval,
+            MonthsInterval = schedule.MonthsInterval,
+            RequiresOdometerTracking = schedule.RequiresOdometerTracking,
+            RequiresTimeTracking = schedule.RequiresTimeTracking
+        };
+    }
+}

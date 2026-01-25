@@ -1,23 +1,33 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Verendar.Common.Databases.Base;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
+using Verendar.Vehicle.Domain.Entities;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
-    public class UserVehicleService : IUserVehicleService
+    public class UserVehicleService(ILogger<UserVehicleService> logger, IUnitOfWork unitOfWork) : IUserVehicleService
     {
-        private readonly ILogger<UserVehicleService> _logger;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<UserVehicleService> _logger = logger;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-        public UserVehicleService(ILogger<UserVehicleService> logger, IUnitOfWork unitOfWork)
+        public async Task<ApiResponse<IsAllowedToCreateVehicleResponse>> IsAllowedToCreateVehicleAsync(Guid userId)
         {
-            _logger = logger;
-            _unitOfWork = unitOfWork;
+            try
+            {
+                var (isAllowed, message) = await _unitOfWork.UserVehicles.CheckCanCreateVehicleAsync(userId);
+                return ApiResponse<IsAllowedToCreateVehicleResponse>.SuccessResponse(
+                    isAllowed.ToIsAllowedToCreateVehicleResponse(message),
+                    "Kiểm tra xem người dùng có được tạo xe mới không thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if user is allowed to create vehicle for user: {UserId}", userId);
+                return ApiResponse<IsAllowedToCreateVehicleResponse>.FailureResponse("Lỗi khi kiểm tra xem người dùng có được tạo xe mới không");
+            }
         }
 
         public async Task<ApiResponse<UserVehicleResponse>> CreateUserVehicleAsync(Guid userId, UserVehicleRequest request)
@@ -27,7 +37,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 // Get vehicle variant with model info
                 var vehicleVariant = await _unitOfWork.VehicleVariants.AsQueryable()
                     .Include(v => v.VehicleModel)
-                    .FirstOrDefaultAsync(v => v.Id == request.VehicleVariantId && v.DeletedAt == null);
+                    .FirstOrDefaultAsync(v => v.Id == request.VehicleVariantId);
 
                 if (vehicleVariant == null)
                 {
@@ -43,7 +53,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 // }
 
                 var existingVehicle = await _unitOfWork.UserVehicles
-                    .FindOneAsync(v => v.UserId == userId && v.LicensePlate == request.LicensePlate && v.DeletedAt == null);
+                    .FindOneAsync(v => v.UserId == userId && v.LicensePlate == request.LicensePlate);
 
                 if (existingVehicle != null)
                 {
@@ -57,18 +67,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 await _unitOfWork.SaveChangesAsync();
 
                 // Create initial odometer history
-                var initialOdometerHistory = new Domain.Entities.OdometerHistory
-                {
-                    UserVehicleId = userVehicle.Id,
-                    OdometerValue = request.CurrentOdometer,
-                    RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                    Source = Domain.Enums.OdometerSource.ManualInput
-                };
+                var initialOdometerHistory = userVehicle.Id.ToOdometerHistory(request.CurrentOdometer);
 
                 await _unitOfWork.OdometerHistories.AddAsync(initialOdometerHistory);
                 await _unitOfWork.SaveChangesAsync();
 
-                // Don't initialize part tracking - only create when user analyzes specific parts
+                await InitializePartTrackingAsync(userVehicle.Id);
+
                 var createdVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(userVehicle.Id);
 
                 _logger.LogInformation("Created user vehicle with ID: {VehicleId} for user: {UserId}", userVehicle.Id, userId);
@@ -89,7 +94,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 var vehicle = await _unitOfWork.UserVehicles
-                    .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId && v.DeletedAt == null);
+                    .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId);
 
                 if (vehicle == null)
                 {
@@ -189,7 +194,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 var vehicle = await _unitOfWork.UserVehicles
-                    .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId && v.DeletedAt == null);
+                    .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId);
 
                 if (vehicle == null)
                 {
@@ -205,13 +210,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 if (request.CurrentOdometer != vehicle.CurrentOdometer)
                 {
                     // Create odometer history record
-                    var odometerHistory = new Domain.Entities.OdometerHistory
-                    {
-                        UserVehicleId = vehicleId,
-                        OdometerValue = request.CurrentOdometer,
-                        RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                        Source = Domain.Enums.OdometerSource.ManualInput
-                    };
+                    var odometerHistory = vehicleId.ToOdometerHistory(request.CurrentOdometer);
 
                     await _unitOfWork.OdometerHistories.AddAsync(odometerHistory);
 
@@ -243,7 +242,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 var vehicle = await _unitOfWork.UserVehicles
-                    .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId && v.DeletedAt == null);
+                    .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId);
 
                 if (vehicle == null)
                 {
@@ -262,7 +261,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     .FindOneAsync(v => v.UserId == userId
                                     && v.LicensePlate == request.LicensePlate
                                     && v.Id != vehicleId
-                                    && v.DeletedAt == null);
+                                    );
 
                 if (existingVehicle != null)
                 {
@@ -295,11 +294,10 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             try
             {
-                // Validate user owns the vehicle
                 var vehicle = await _unitOfWork.UserVehicles.AsQueryable()
                     .Include(v => v.Variant)
                         .ThenInclude(vv => vv.VehicleModel)
-                    .FirstOrDefaultAsync(v => v.Id == vehicleId && v.UserId == userId && v.DeletedAt == null);
+                    .FirstOrDefaultAsync(v => v.Id == vehicleId && v.UserId == userId);
 
                 if (vehicle == null)
                 {
@@ -308,7 +306,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 // Find the PartCategory by code
                 var partCategory = await _unitOfWork.PartCategories.AsQueryable()
-                    .FirstOrDefaultAsync(pc => pc.Code == request.PartCategoryCode && pc.DeletedAt == null);
+                    .FirstOrDefaultAsync(pc => pc.Code == request.PartCategoryCode);
 
                 if (partCategory == null)
                 {
@@ -316,61 +314,22 @@ namespace Verendar.Vehicle.Application.Services.Implements
                         $"Không tìm thấy linh kiện với mã '{request.PartCategoryCode}'");
                 }
 
-                // Get default schedule for this part to get custom intervals
-                var defaultSchedule = await _unitOfWork.DefaultMaintenanceSchedules.AsQueryable()
-                    .FirstOrDefaultAsync(s => s.VehicleModelId == vehicle.Variant.VehicleModelId
-                        && s.PartCategoryId == partCategory.Id
-                        && s.DeletedAt == null
-                        && s.Status == EntityStatus.Active);
-
-                if (defaultSchedule == null)
-                {
-                    return ApiResponse<VehiclePartTrackingSummary>.FailureResponse(
-                        $"Không tìm thấy lịch bảo dưỡng chuẩn cho linh kiện '{request.PartCategoryCode}'");
-                }
 
                 // Find existing tracking record for this part
                 var existingTracking = await _unitOfWork.VehiclePartTrackings.AsQueryable()
                     .Include(t => t.PartCategory)
                     .FirstOrDefaultAsync(t => t.UserVehicleId == vehicleId
-                        && t.PartCategoryId == partCategory.Id
-                        && t.DeletedAt == null);
+                        && t.PartCategoryId == partCategory.Id);
 
-                Domain.Entities.VehiclePartTracking tracking;
+                VehiclePartTracking tracking;
 
                 if (existingTracking == null)
                 {
-                    // Create new tracking if not exists
-                    tracking = new Domain.Entities.VehiclePartTracking
-                    {
-                        UserVehicleId = vehicleId,
-                        PartCategoryId = partCategory.Id,
-                        InstanceIdentifier = null,
-                        CustomKmInterval = defaultSchedule.KmInterval,
-                        CustomMonthsInterval = defaultSchedule.MonthsInterval,
-                        LastReplacementOdometer = request.LastReplacementOdometer,
-                        LastReplacementDate = request.LastReplacementDate,
-                        PredictedNextOdometer = request.PredictedNextOdometer,
-                        PredictedNextDate = request.PredictedNextDate,
-                        Status = EntityStatus.Active
-                    };
-
-                    // Store AI analysis result with confidence score
-                    if (!string.IsNullOrWhiteSpace(request.AiReasoning))
-                    {
-                        var analysisData = new
-                        {
-                            reasoning = request.AiReasoning,
-                            confidenceScore = request.ConfidenceScore,
-                            analyzedAt = DateTime.UtcNow
-                        };
-                        tracking.AiAnalysisResult = System.Text.Json.JsonSerializer.Serialize(analysisData);
-                    }
+                    tracking = vehicleId.ToInitializePartTracking(partCategory.Id);
 
                     await _unitOfWork.VehiclePartTrackings.AddAsync(tracking);
                     await _unitOfWork.SaveChangesAsync();
 
-                    // Load PartCategory for response
                     tracking.PartCategory = partCategory;
 
                     _logger.LogInformation(
@@ -379,23 +338,11 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
                 else
                 {
-                    // Update existing tracking with AI recommendations
                     existingTracking.LastReplacementOdometer = request.LastReplacementOdometer;
                     existingTracking.LastReplacementDate = request.LastReplacementDate;
                     existingTracking.PredictedNextOdometer = request.PredictedNextOdometer;
                     existingTracking.PredictedNextDate = request.PredictedNextDate;
-
-                    // Store AI analysis result with confidence score
-                    if (!string.IsNullOrWhiteSpace(request.AiReasoning))
-                    {
-                        var analysisData = new
-                        {
-                            reasoning = request.AiReasoning,
-                            confidenceScore = request.ConfidenceScore,
-                            analyzedAt = DateTime.UtcNow
-                        };
-                        existingTracking.AiAnalysisResult = System.Text.Json.JsonSerializer.Serialize(analysisData);
-                    }
+                    existingTracking.IsDeclared = true;
 
                     await _unitOfWork.VehiclePartTrackings.UpdateAsync(existingTracking.Id, existingTracking);
                     await _unitOfWork.SaveChangesAsync();
@@ -408,28 +355,11 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
 
                 // Return tracking summary
-                var response = new VehiclePartTrackingSummary
-                {
-                    Id = tracking.Id,
-                    PartCategoryId = tracking.PartCategoryId,
-                    PartCategoryName = tracking.PartCategory.Name,
-                    PartCategoryCode = tracking.PartCategory.Code,
-                    InstanceIdentifier = tracking.InstanceIdentifier,
-                    LastReplacementOdometer = tracking.LastReplacementOdometer,
-                    LastReplacementDate = tracking.LastReplacementDate,
-                    CustomKmInterval = tracking.CustomKmInterval,
-                    CustomMonthsInterval = tracking.CustomMonthsInterval,
-                    PredictedNextOdometer = tracking.PredictedNextOdometer,
-                    PredictedNextDate = tracking.PredictedNextDate,
-                    IsIgnored = tracking.IsIgnored,
-                    UserConditionDescription = tracking.UserConditionDescription,
-                    AiAnalysisResult = tracking.AiAnalysisResult,
-                    Reminders = new List<MaintenanceReminderSummary>()
-                };
+                var response = tracking.ToSummary();
 
                 return ApiResponse<VehiclePartTrackingSummary>.SuccessResponse(
                     response,
-                    "Áp dụng cấu hình tracking thành công");
+                    "Áp dụng cấu hình theo dõi thành công");
             }
             catch (Exception ex)
             {
@@ -437,7 +367,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     "Error applying tracking config for vehicle {VehicleId}, part {PartCode}",
                     vehicleId, request.PartCategoryCode);
                 return ApiResponse<VehiclePartTrackingSummary>.FailureResponse(
-                    "Lỗi khi áp dụng cấu hình tracking");
+                    "Lỗi khi áp dụng cấu hình theo dõi");
             }
         }
 
@@ -446,7 +376,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 var vehicle = await _unitOfWork.UserVehicles
-                    .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId && v.DeletedAt == null);
+                    .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId);
 
                 if (vehicle == null)
                 {
@@ -470,6 +400,22 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 _logger.LogError(ex, "Error completing onboarding for vehicle: {VehicleId}", vehicleId);
                 return ApiResponse<UserVehicleResponse>.FailureResponse("Lỗi khi hoàn thành onboarding");
             }
+        }
+
+        private async Task InitializePartTrackingAsync(Guid userVehicleId)
+        {
+            var partCategories = await _unitOfWork.PartCategories.AsQueryable()
+                .Where(pc => pc.DeletedAt == null)
+                .ToListAsync();
+
+            foreach (var partCategory in partCategories)
+            {
+                var tracking = userVehicleId.ToInitializePartTracking(partCategory.Id);
+
+                await _unitOfWork.VehiclePartTrackings.AddAsync(tracking);
+            }
+
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

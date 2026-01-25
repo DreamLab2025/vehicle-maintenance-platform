@@ -4,12 +4,8 @@ using Verendar.Notification.Domain.Entities;
 
 namespace Verendar.Notification.Infrastructure.Data;
 
-public class NotificationDbContext : BaseDbContext
+public class NotificationDbContext(DbContextOptions<NotificationDbContext> options) : BaseDbContext(options)
 {
-    public NotificationDbContext(DbContextOptions<NotificationDbContext> options) : base(options)
-    {
-    }
-
     public DbSet<Domain.Entities.Notification> Notifications { get; set; } = null!;
     public DbSet<NotificationDelivery> NotificationDeliveries { get; set; } = null!;
     public DbSet<NotificationPreference> NotificationPreferences { get; set; } = null!;
