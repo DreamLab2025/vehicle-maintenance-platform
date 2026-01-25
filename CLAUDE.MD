@@ -194,7 +194,7 @@ AI analyzes user responses to part-specific questionnaires to estimate the actua
 1. **Create Vehicle** (Required)
    - User creates UserVehicle via POST `/api/v1/user-vehicles`
    - System sets `NeedsOnboarding = true`
-   - All part trackings initialized with default manufacturer schedules (no LastReplacement dates)
+   - **NO tracking created** - trackings only created when user analyzes specific parts
 
 2. **Get Part Schedule** (Optional - Per Part)
    - Frontend calls GET `/api/v1/vehicle-models/{vehicleModelId}/part-categories/{partCategoryCode}/default-schedule`
@@ -204,7 +204,7 @@ AI analyzes user responses to part-specific questionnaires to estimate the actua
 3. **Show Questionnaire** (Optional - Per Part)
    - Frontend displays part-specific questionnaire
    - Questions configured by frontend (e.g., "Khi nào thay nhớt gần nhất?", "Xe đã chạy bao nhiêu km khi thay?")
-   - User can skip questionnaire for any part
+   - User can skip any part they don't want to track
 
 4. **AI Analysis** (Optional - Per Part)
    - Frontend sends to POST `/api/v1/ai/vehicle-questionnaire/analyze`
@@ -220,31 +220,35 @@ AI analyzes user responses to part-specific questionnaires to estimate the actua
 5. **Review & Apply** (Optional - Per Part)
    - Frontend shows AI recommendation to user
    - If user confirms, frontend calls POST `/api/v1/user-vehicles/{id}/apply-tracking`
-   - System updates VehiclePartTracking with AI recommendations
+   - System **CREATES NEW** VehiclePartTracking with AI recommendations (if not exists)
+   - Or updates existing tracking if part was already analyzed
    - Stores AI reasoning and confidence score for audit trail
 
-6. **Repeat or Skip** (Optional)
+6. **Repeat for Other Parts** (Optional)
    - User can repeat steps 2-5 for other parts (oil_filter, air_filter, etc.)
-   - Or skip remaining parts entirely
-   - Skipped parts keep default tracking (no LastReplacement, uses manufacturer schedule)
+   - User can return later to add tracking for additional parts
+   - Only analyzed parts have tracking records
 
 7. **Complete Onboarding** (Optional)
    - User finishes onboarding (may have analyzed 0, some, or all parts)
-   - Frontend can update `NeedsOnboarding = false` via PUT `/api/v1/user-vehicles/{id}`
+   - Frontend calls PATCH `/api/v1/user-vehicles/{id}/complete-onboarding` to set `NeedsOnboarding = false`
 
 ### Key Design Decisions
 
+- **Lazy Tracking Creation**: Tracking records only created when user explicitly chooses to analyze a part
 - **Single-Part Analysis**: AI analyzes ONE part per request for accuracy (validated on both request and response)
-- **Partial Onboarding**: Users can skip questionnaires; unanalyzed parts use default schedules
-- **Optional Flow**: Users can skip entire onboarding and rely on manufacturer defaults
+- **Selective Tracking**: Users choose which parts to track; untracked parts have no reminder system
+- **Extendable**: Users can return later to add tracking for additional parts
 - **Vietnamese Prompts**: AI prompts optimized in Vietnamese to reduce token costs
 - **Audit Trail**: AI reasoning stored in `VehiclePartTracking.AiAnalysisResult` as JSON
 
 ### Key Endpoints
 
+- `POST /api/v1/user-vehicles` - Create vehicle (no tracking created initially)
 - `GET /api/v1/vehicle-models/{vehicleModelId}/part-categories/{partCategoryCode}/default-schedule` - Get manufacturer schedule for specific part
 - `POST /api/v1/ai/vehicle-questionnaire/analyze` - AI analyzes questionnaire (1 part only)
-- `POST /api/v1/user-vehicles/{id}/apply-tracking` - Apply AI recommendation to part tracking
+- `POST /api/v1/user-vehicles/{id}/apply-tracking` - Create/update tracking with AI recommendations
+- `PATCH /api/v1/user-vehicles/{id}/complete-onboarding` - Mark onboarding as complete
 
 ## Notes for AI Assistants
 

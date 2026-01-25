@@ -11,35 +11,27 @@
    ↓
 [System] → Tạo UserVehicle với NeedsOnboarding = true
    ↓
-[System] → Tạo default VehiclePartTracking cho tất cả linh kiện
+[System] → KHÔNG tạo tracking - đợi user chọn part
    ↓
-[Frontend] → Hiển thị danh sách linh kiện cần onboarding
+[Frontend] → Hiển thị danh sách parts có thể track
    ↓
-[User] → Chọn linh kiện để phân tích (hoặc skip)
-   │
-   ├─ Option 1: Chọn phân tích cho linh kiện (e.g., engine_oil)
-   │   ↓
-   │  [System] → Lấy DefaultSchedule cho linh kiện đó
-   │   ↓
-   │  [Frontend] → Hiển thị câu hỏi cụ thể cho linh kiện
-   │   ↓
-   │  [User] → Trả lời câu hỏi
-   │   ↓
-   │  [AI] → Phân tích và đề xuất (1 linh kiện/request)
-   │   ↓
-   │  [User] → Review và xác nhận
-   │   ↓
-   │  [System] → Update VehiclePartTracking cho linh kiện đó
-   │   ↓
-   │  [User] → Tiếp tục với linh kiện khác hoặc skip
-   │
-   └─ Option 2: Skip phân tích
-       ↓
-      [System] → Giữ default tracking (không có LastReplacement)
+[User] → Chọn part để phân tích (e.g., engine_oil)
    ↓
-[User] → Hoàn tất onboarding (có thể đã phân tích 0, 1, hoặc nhiều linh kiện)
+[System] → Lấy DefaultSchedule cho part đó
    ↓
-[System] → Set NeedsOnboarding = false (optional)
+[Frontend] → Hiển thị câu hỏi cụ thể cho part
+   ↓
+[User] → Trả lời câu hỏi
+   ↓
+[AI] → Phân tích và đề xuất (1 part/request)
+   ↓
+[User] → Review và xác nhận
+   ↓
+[System] → TẠO MỚI VehiclePartTracking cho part đó (nếu chưa có)
+   ↓
+[User] → Có thể quay lại chọn part khác để track sau
+   ↓
+[System] → Set NeedsOnboarding = false khi user hoàn tất (optional)
 ```
 
 ### Bước 1: Tạo UserVehicle Với Default Tracking
@@ -64,6 +56,7 @@ Response:
     "vinNumber": "MLHJF1234567890",
     "purchaseDate": "2024-01-15T00:00:00Z",
     "currentOdometer": 8500,
+    "needsOnboarding": true,
     "userVehicleVariant": {
       "variantName": "Đỏ",
       "modelName": "Honda Wave Alpha",
@@ -75,11 +68,7 @@ Response:
 
 // System tự động tạo:
 // 1. OdometerHistory: initial 8500km
-// 2. VehiclePartTracking cho tất cả parts với default intervals:
-//    - engine_oil: CustomKmInterval=2000, CustomMonthsInterval=6, LastReplacement=null
-//    - oil_filter: CustomKmInterval=4000, CustomMonthsInterval=6, LastReplacement=null
-//    - air_filter: CustomKmInterval=6000, CustomMonthsInterval=12, LastReplacement=null
-//    - brake_pad: CustomKmInterval=10000, CustomMonthsInterval=12, LastReplacement=null
+// 2. KHÔNG tạo VehiclePartTracking - sẽ tạo khi user chọn phân tích part
 ```
 
 ### Bước 2: Frontend Lấy Default Schedule Cho Linh Kiện
@@ -319,34 +308,72 @@ Response:
 
 **System update:**
 ```
-VehiclePartTracking (engine_oil):
-├─ LastReplacementOdometer: null → 7200
-├─ LastReplacementDate: null → 2024-12-25
-├─ PredictedNextOdometer: null → 9200
-├─ PredictedNextDate: null → 2025-06-25
-└─ AiAnalysisResult: null → JSON với reasoning và confidence
+CREATED NEW VehiclePartTracking (engine_oil):
+├─ CustomKmInterval: 2000 (từ default schedule)
+├─ CustomMonthsInterval: 6 (từ default schedule)
+├─ LastReplacementOdometer: 7200 (từ AI)
+├─ LastReplacementDate: 2024-12-25 (từ AI)
+├─ PredictedNextOdometer: 9200 (từ AI)
+├─ PredictedNextDate: 2025-06-25 (từ AI)
+└─ AiAnalysisResult: JSON với reasoning và confidence
 ```
 
-### Bước 8: Lặp Lại Cho Linh Kiện Khác (Optional)
+### Bước 8: Lặp Lại Cho Part Khác (Optional)
 
 ```
-[User] → Chọn linh kiện tiếp theo (e.g., brake_pad)
+[User] → Chọn part tiếp theo (e.g., brake_pad)
    ↓
 Lặp lại Bước 2-7 cho brake_pad
    ↓
-[User] → Skip các linh kiện còn lại
+[User] → Không chọn part nào khác
    ↓
-[System] → Các linh kiện skip giữ default (LastReplacement = null)
+[System] → Chỉ có parts đã chọn mới có tracking
 ```
 
 **Kết quả cuối:**
 ```
 VehiclePartTracking:
-├─ engine_oil: ✅ Analyzed by AI (có LastReplacement từ AI)
-├─ brake_pad: ✅ Analyzed by AI (có LastReplacement từ AI)
-├─ oil_filter: ❌ Skipped (LastReplacement = null, dùng default)
-└─ air_filter: ❌ Skipped (LastReplacement = null, dùng default)
+├─ engine_oil: ✅ Tracked (có LastReplacement từ AI)
+├─ brake_pad: ✅ Tracked (có LastReplacement từ AI)
+├─ oil_filter: ❌ KHÔNG CÓ TRACKING (user chưa chọn)
+└─ air_filter: ❌ KHÔNG CÓ TRACKING (user chưa chọn)
 ```
+
+**Lưu ý quan trọng:**
+- Tracking chỉ được tạo khi user chọn phân tích part
+- User có thể quay lại sau để thêm tracking cho part khác
+- Không có tracking = không có reminder cho part đó
+
+### Bước 9: Hoàn Thành Onboarding (Optional)
+
+**Khi user hoàn thành hoặc muốn skip onboarding:**
+
+```json
+PATCH /api/v1/user-vehicles/{userVehicleId}/complete-onboarding
+
+Response:
+{
+  "isSuccess": true,
+  "data": {
+    "id": "user-vehicle-guid",
+    "userId": "user-guid",
+    "licensePlate": "59H1-12345",
+    "currentOdometer": 8500,
+    "needsOnboarding": false,  // Changed to false
+    "userVehicleVariant": {
+      "variantName": "Đỏ",
+      "modelName": "Honda Wave Alpha",
+      "brandName": "Honda"
+    }
+  },
+  "message": "Hoàn thành onboarding thành công"
+}
+```
+
+**Note:**
+- Endpoint này đặt `NeedsOnboarding = false`
+- Frontend có thể dùng để ẩn onboarding wizard sau khi user hoàn thành
+- User có thể hoàn thành onboarding dù đã phân tích 0, 1 hoặc nhiều linh kiện
 
 ---
 
