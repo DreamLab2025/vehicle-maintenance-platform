@@ -2,10 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace Verendar.Ai.Infrastructure.ExternalServices.Gemini;
 
-/// <summary>
-/// Request model for Gemini API
-/// https://ai.google.dev/api/rest/v1beta/models/generateContent
-/// </summary>
 public class GeminiRequest
 {
     [JsonPropertyName("contents")]
@@ -48,9 +44,6 @@ public class GeminiGenerationConfig
     public string? ResponseMimeType { get; set; }
 }
 
-/// <summary>
-/// Response model from Gemini API
-/// </summary>
 public class GeminiResponse
 {
     [JsonPropertyName("candidates")]
@@ -84,9 +77,6 @@ public class GeminiUsageMetadata
     public int TotalTokenCount { get; set; }
 }
 
-/// <summary>
-/// Error response from Gemini API
-/// </summary>
 public class GeminiErrorResponse
 {
     [JsonPropertyName("error")]

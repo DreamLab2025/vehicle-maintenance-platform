@@ -2,10 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 
-/// <summary>
-/// Raw JSON response from Gemini for vehicle maintenance analysis
-/// This matches the JSON structure that Gemini returns
-/// </summary>
 public class GeminiVehicleAnalysisResult
 {
     [JsonPropertyName("recommendations")]

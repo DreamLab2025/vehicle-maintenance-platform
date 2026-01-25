@@ -22,42 +22,56 @@ public static class PromptGenerator
                                    .Select(a => $"- {a.Question}: {a.Value}"))
         : "(Không có thông tin)";
 
-    var vehicleName = $"{vehicleInfo.Brand} {vehicleInfo.Model} {(vehicleInfo.Variant ?? "")}".Trim();
-    var vehicleType = vehicleInfo.IsUsedVehicle ? "Xe cũ" : "Xe mới";
+    var vehicleName = $"{vehicleInfo.Brand} {vehicleInfo.Model} {(vehicleInfo.Type ?? "")}".Trim();
 
     return $@"
 Hôm nay: {today}
 
-XE:
-{vehicleName} - {vehicleType} - {vehicleInfo.CurrentOdometer:N0}km - Mua: {vehicleInfo.PurchaseDate:yyyy-MM-dd}
+THÔNG TIN XE:
+- Xe: {vehicleName} ({vehicleInfo.Type})
+- Số km hiện tại: {vehicleInfo.CurrentOdometer:N0}km
+- Ngày mua: {vehicleInfo.PurchaseDate:yyyy-MM-dd}
 
-LỊCH CHUẨN:
+LỊCH BẢO DƯỠNG CHUẨN:
 {scheduleBlock}
 
 THÔNG TIN TỪ NGƯỜI DÙNG:
 {answerBlock}
 
-YÊU CẦU:
-Phân tích để ước tính lần thay cuối và lần thay tiếp theo cho linh kiện.
-- Ưu tiên: Câu trả lời người dùng > Tính theo km > Lịch chuẩn
-- Nếu ""thay gần đây"", tính thời gian tương đối từ hôm nay
-- Nếu ""không nhớ"", ước tính dựa trên tổng km và chu kỳ
+YÊU CẦU TÍNH TOÁN:
+1. Xác định số km lần thay cuối (lastServiceOdometer):
+   - Nếu người dùng nói ""thay cách đây X km"": lastServiceOdometer = currentOdometer - X
+   - Nếu người dùng nói thời gian (VD: ""1 tháng trước""): ước tính km dựa trên thời gian
+   - KHÔNG được tự giả định giá trị nếu không có thông tin
 
-Trả về JSON:
+2. Xác định ngày thay cuối (lastServiceDate):
+   - Nếu người dùng nói thời gian tương đối: tính từ hôm nay ngược lại
+   - Ví dụ: ""1 tháng trước"" → {today} trừ 1 tháng
+
+3. Tính lần thay tiếp theo:
+   - predictedNextOdometer = lastServiceOdometer + kmInterval
+   - predictedNextDate = lastServiceDate + monthsInterval
+
+CHÚ Ý:
+- ĐỌC KỸ câu trả lời người dùng để trích xuất số km chính xác
+- KHÔNG tự nghĩ ra số liệu khi người dùng không cung cấp
+- Nếu thiếu thông tin, đặt giá trị null và ghi vào warnings
+
+Trả về JSON (CHỈ JSON, không text khác):
 {{
   ""recommendations"": [
     {{
       ""partCategoryCode"": ""mã_linh_kiện"",
-      ""lastServiceOdometer"": số_km,
-      ""lastServiceDate"": ""yyyy-MM-dd"",
-      ""predictedNextOdometer"": số_km,
-      ""predictedNextDate"": ""yyyy-MM-dd"",
+      ""lastServiceOdometer"": số_km_hoặc_null,
+      ""lastServiceDate"": ""yyyy-MM-dd""_hoặc_null,
+      ""predictedNextOdometer"": số_km_hoặc_null,
+      ""predictedNextDate"": ""yyyy-MM-dd""_hoặc_null,
       ""confidenceScore"": 0.0-1.0,
-      ""reasoning"": ""lý_do_ngắn_gọn"",
+      ""reasoning"": ""giải_thích_ngắn"",
       ""needsImmediateAttention"": true/false
     }}
   ],
-  ""warnings"": []
+  ""warnings"": [""cảnh_báo_nếu_thiếu_thông_tin""]
 }}";
   }
 }
