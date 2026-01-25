@@ -1,4 +1,3 @@
-using System;
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Services.Interfaces;
 using Microsoft.Extensions.Logging;

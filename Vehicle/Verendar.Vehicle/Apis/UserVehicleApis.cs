@@ -102,6 +102,21 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<VehicleStreakResponse>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapPost("/{id:guid}/apply-tracking", ApplyTrackingConfig)
+                .WithName("ApplyTrackingConfig")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Áp dụng cấu hình tracking từ AI cho một linh kiện";
+                    operation.Description = "Sau khi AI phân tích questionnaire, frontend gọi endpoint này " +
+                                          "để áp dụng khuyến nghị của AI vào VehiclePartTracking. " +
+                                          "Endpoint này cập nhật LastReplacement và PredictedNext từ AI.";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<VehiclePartTrackingSummary>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<VehiclePartTrackingSummary>>(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             return group;
         }
 
@@ -203,6 +218,22 @@ namespace Verendar.Vehicle.Apis
             }
 
             var result = await vehicleService.DeleteUserVehicleAsync(userId, id);
+            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+        }
+
+        private static async Task<IResult> ApplyTrackingConfig(
+            Guid id,
+            ApplyTrackingConfigRequest request,
+            ICurrentUserService currentUserService,
+            IUserVehicleService vehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await vehicleService.ApplyTrackingConfigAsync(userId, id, request);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
     }

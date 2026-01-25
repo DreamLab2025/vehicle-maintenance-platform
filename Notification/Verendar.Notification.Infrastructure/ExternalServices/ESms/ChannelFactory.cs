@@ -1,4 +1,3 @@
-using System;
 using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Notification.Domain.Enums;
 

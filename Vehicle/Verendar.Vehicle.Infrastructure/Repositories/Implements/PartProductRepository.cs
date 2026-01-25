@@ -20,12 +20,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<PartProduct?> GetBySKUAsync(string sku, CancellationToken cancellationToken = default)
-        {
-            return await _dbSet
-                .FirstOrDefaultAsync(x => x.SKU == sku, cancellationToken);
-        }
-
         public async Task<IEnumerable<PartProduct>> GetByBrandAsync(string brand, CancellationToken cancellationToken = default)
         {
             return await _dbSet

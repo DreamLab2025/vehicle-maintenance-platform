@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using Verendar.Common.Databases.Base;
 
 namespace Verendar.Vehicle.Domain.Entities
@@ -12,35 +11,24 @@ namespace Verendar.Vehicle.Domain.Entities
         [Required]
         public Guid VehicleVariantId { get; set; }
 
-        // Registration info
         [MaxLength(20)]
         public string? LicensePlate { get; set; }
 
         [MaxLength(17)]
         public string? VIN { get; set; }
 
-        [MaxLength(50)]
-        public string? EngineNumber { get; set; }
-
         public DateOnly? PurchaseDate { get; set; }
 
-        // Current status
         public int CurrentOdometer { get; set; }
 
         public DateOnly? LastOdometerUpdate { get; set; }
 
-        /// <summary>
-        /// Trung bình km/ngày, dùng để predict ngày cần thay phụ tùng
-        /// Tự động tính từ OdometerHistory
-        /// </summary>
         public int? AverageKmPerDay { get; set; }
+
+        public bool NeedsOnboarding { get; set; } = true;
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        [MaxLength(1000)]
-        public string? Notes { get; set; }
-
-        // Navigation properties
         public VehicleVariant Variant { get; set; } = null!;
 
         public ICollection<OdometerHistory> OdometerHistory { get; set; } = new List<OdometerHistory>();

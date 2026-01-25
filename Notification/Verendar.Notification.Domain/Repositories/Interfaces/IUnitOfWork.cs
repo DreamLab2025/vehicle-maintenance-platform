@@ -1,4 +1,3 @@
-using System;
 using Verendar.Common.Databases.UnitOfWork;
 
 namespace Verendar.Notification.Domain.Repositories.Interfaces;

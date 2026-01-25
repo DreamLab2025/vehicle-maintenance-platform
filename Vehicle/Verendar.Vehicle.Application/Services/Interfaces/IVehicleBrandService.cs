@@ -10,6 +10,5 @@ namespace Verendar.Vehicle.Application.Services.Interfaces
         Task<ApiResponse<BrandResponse>> CreateBrandAsync(BrandRequest request);
         Task<ApiResponse<BrandResponse>> UpdateBrandAsync(Guid id, BrandRequest request);
         Task<ApiResponse<string>> DeleteBrandAsync(Guid id);
-        Task<ApiResponse<BulkBrandResponse>> BulkCreateBrandsAsync(BulkBrandRequest request);
     }
 }

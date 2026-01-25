@@ -9,7 +9,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         // Vehicle Catalog
         private IVehicleTypeRepository? _vehicleTypes;
         private IVehicleBrandRepository? _vehicleBrands;
-        private IVehicleTypeBrandRepository? _vehicleTypeBrands;
         private IVehicleModelRepository? _vehicleModels;
         private IVehicleVariantRepository? _vehicleVariants;
 
@@ -40,9 +39,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 
         public IVehicleBrandRepository VehicleBrands =>
             _vehicleBrands ??= new VehicleBrandRepository(Context);
-
-        public IVehicleTypeBrandRepository VehicleTypeBrands =>
-            _vehicleTypeBrands ??= new VehicleTypeBrandRepository(Context);
 
         public IVehicleModelRepository VehicleModels =>
             _vehicleModels ??= new VehicleModelRepository(Context);

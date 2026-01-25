@@ -1,31 +1,32 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Verendar.Vehicle.Application.Dtos
+﻿namespace Verendar.Vehicle.Application.Dtos
 {
     public class UserVehicleRequest
     {
-        [Required(ErrorMessage = "Vui lòng chọn phiên bản màu sắc của xe")]
         public Guid VehicleVariantId { get; set; }
 
-        [Required(ErrorMessage = "Biển số xe không được để trống")]
-        [MaxLength(20, ErrorMessage = "Biển số xe không được vượt quá 20 ký tự")]
         public string LicensePlate { get; set; } = null!;
 
-        [MaxLength(17, ErrorMessage = "Số VIN không được vượt quá 17 ký tự")]
         public string? VinNumber { get; set; }
 
         public DateTime? PurchaseDate { get; set; }
 
-        [Required(ErrorMessage = "Số km hiện tại không được để trống")]
-        [Range(0, int.MaxValue, ErrorMessage = "Số km phải lớn hơn hoặc bằng 0")]
         public int CurrentOdometer { get; set; }
     }
 
     public class UpdateOdometerRequest
     {
-        [Required(ErrorMessage = "Số km hiện tại không được để trống")]
-        [Range(0, int.MaxValue, ErrorMessage = "Số km phải lớn hơn hoặc bằng 0")]
         public int CurrentOdometer { get; set; }
+    }
+
+    public class ApplyTrackingConfigRequest
+    {
+        public string PartCategoryCode { get; set; } = string.Empty;
+        public int? LastReplacementOdometer { get; set; }
+        public DateOnly? LastReplacementDate { get; set; }
+        public int? PredictedNextOdometer { get; set; }
+        public DateOnly? PredictedNextDate { get; set; }
+        public string? AiReasoning { get; set; }
+        public double? ConfidenceScore { get; set; }
     }
 
     public class UserVehicleResponse
@@ -49,6 +50,42 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateTime? LastMaintenanceDate { get; set; }
         public int DaysSincePurchase { get; set; }
         public int TotalKmDriven { get; set; }
+        public List<VehiclePartTrackingSummary> PartTrackings { get; set; } = new();
+    }
+
+    public class VehiclePartTrackingSummary
+    {
+        public Guid Id { get; set; }
+        public Guid PartCategoryId { get; set; }
+        public string PartCategoryName { get; set; } = null!;
+        public string PartCategoryCode { get; set; } = null!;
+        public string? InstanceIdentifier { get; set; }
+        public Guid? CurrentPartProductId { get; set; }
+        public string? CurrentPartProductName { get; set; }
+        public int? LastReplacementOdometer { get; set; }
+        public DateOnly? LastReplacementDate { get; set; }
+        public int? CustomKmInterval { get; set; }
+        public int? CustomMonthsInterval { get; set; }
+        public int? PredictedNextOdometer { get; set; }
+        public DateOnly? PredictedNextDate { get; set; }
+        public bool IsIgnored { get; set; }
+        public string? UserConditionDescription { get; set; }
+        public string? AiAnalysisResult { get; set; }
+        public List<MaintenanceReminderSummary> Reminders { get; set; } = new();
+    }
+
+    public class MaintenanceReminderSummary
+    {
+        public Guid Id { get; set; }
+        public string Level { get; set; } = null!;
+        public int CurrentOdometer { get; set; }
+        public int TargetOdometer { get; set; }
+        public DateOnly? TargetDate { get; set; }
+        public decimal PercentageRemaining { get; set; }
+        public bool IsNotified { get; set; }
+        public DateOnly? NotifiedDate { get; set; }
+        public bool IsDismissed { get; set; }
+        public DateOnly? DismissedDate { get; set; }
     }
 
     public class VehicleStreakResponse

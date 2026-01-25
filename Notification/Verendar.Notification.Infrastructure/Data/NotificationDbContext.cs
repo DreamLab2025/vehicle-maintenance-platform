@@ -1,4 +1,3 @@
-using System;
 using Microsoft.EntityFrameworkCore;
 using Verendar.Common.Databases.Base;
 using Verendar.Notification.Domain.Entities;

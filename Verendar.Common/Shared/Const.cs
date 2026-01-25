@@ -13,6 +13,8 @@
         public const string MediaDatabase = "media-db";
 
         public const string NotificationDatabase = "notification-db";
+
+        public const string AiDatabase = "ai-db";
     }
 
     public enum RoleType

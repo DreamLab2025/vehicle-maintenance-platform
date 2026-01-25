@@ -1,5 +1,3 @@
-using System;
-using System.Text.Json;
 using Verender.Identity.Contracts.Events;
 namespace Verendar.Notification.Application.Mapping;
 

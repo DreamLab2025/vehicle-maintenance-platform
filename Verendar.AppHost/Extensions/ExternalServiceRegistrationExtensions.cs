@@ -30,6 +30,7 @@ namespace Verendar.AppHost.Extensions
             var vehicleDb = postgres.AddDatabase("vehicle-db", "Vehicles");
             var mediaDb = postgres.AddDatabase("media-db", "Media");
             var notificationDb = postgres.AddDatabase("notification-db", "Notifications");
+            var aiDb = postgres.AddDatabase("ai-db", "Ais");
 
             var identityService = builder.AddProject<Projects.Verendar_Identity>("Verendar-identity")
                 .WithReference(identityDb)
@@ -57,6 +58,12 @@ namespace Verendar.AppHost.Extensions
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
 
+            var aiService = builder.AddProject<Projects.Verendar_Ai>("Verendar-ai")
+                .WithReference(aiDb)
+                .WithReference(rabbitMq)
+                .WaitFor(postgres)
+                .WaitFor(rabbitMq);
+
 
             var apiGateway = builder.AddYarp("api-gateway")
                             .WithContainerName("ApiGateway")
@@ -78,15 +85,15 @@ namespace Verendar.AppHost.Extensions
 
                                 var notificationCluster = yarp.AddProjectCluster(notificationService);
                                 yarp.AddRoute("/api/v1/notifications/{**catch-all}", notificationCluster);
+
+                                var aiCluster = yarp.AddProjectCluster(aiService);
+                                yarp.AddRoute("/api/v1/ai/vehicle-questionnaire/{**catch-all}", aiCluster);
                             })
                             .WaitFor(identityService)
                             .WaitFor(vehicleService)
                             .WaitFor(mediaService)
-                            .WaitFor(notificationService);
-
-            //var scalarDocs = builder.AddScalarApiReference()
-            //    .WithContainerName("ScalarDocs")
-            //    .WithApiReference(identityService);
+                            .WaitFor(notificationService)
+                            .WaitFor(aiService);
 
             return builder;
         }

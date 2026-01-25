@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
-using Verendar.Common.Shared;
+﻿using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Services.Interfaces;
 
@@ -44,28 +42,6 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/bulk", BulkCreateModels)
-                .WithName("BulkCreateModels")
-                .WithOpenApi(operation =>
-                {
-                    operation.Summary = "Tạo hàng loạt mẫu xe từ JSON body (Admin)";
-                    operation.Description = "Gửi JSON body chứa BrandId, TypeId và danh sách models";
-                    return operation;
-                })
-                .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
-                .Produces<ApiResponse<BulkModelResponse>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<BulkModelResponse>>(StatusCodes.Status400BadRequest)
-                .Produces(StatusCodes.Status401Unauthorized)
-                .DisableAntiforgery();
-
-            group.MapPost("/bulk/upload", BulkCreateModelsFromFile)
-                .WithName("BulkCreateModelsFromFile")
-                .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
-                .Produces<ApiResponse<BulkModelResponse>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<BulkModelResponse>>(StatusCodes.Status400BadRequest)
-                .Produces(StatusCodes.Status401Unauthorized)
-                .DisableAntiforgery();
-
             group.MapPut("/{id:guid}", UpdateVehicleModel)
                 .WithName("UpdateModel")
                 .WithOpenApi(operation =>
@@ -103,50 +79,6 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
-        }
-
-        private static async Task<IResult> BulkCreateModels(BulkModelRequest request, IVehicleModelService modelService)
-        {
-            var result = await modelService.BulkCreateModelsAsync(request);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
-        }
-
-        private static async Task<IResult> BulkCreateModelsFromFile([FromForm] IFormFile file, IVehicleModelService modelService)
-        {
-            if (file == null || file.Length == 0)
-            {
-                return Results.BadRequest(ApiResponse<BulkModelResponse>.FailureResponse("File không được để trống"));
-            }
-
-            if (!file.FileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-            {
-                return Results.BadRequest(ApiResponse<BulkModelResponse>.FailureResponse("Chỉ chấp nhận file JSON"));
-            }
-
-            try
-            {
-                using var stream = file.OpenReadStream();
-                var bulkRequest = await JsonSerializer.DeserializeAsync<BulkModelFileRequest>(stream, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                if (bulkRequest == null || bulkRequest.Models == null || !bulkRequest.Models.Any())
-                {
-                    return Results.BadRequest(ApiResponse<BulkModelResponse>.FailureResponse("File JSON không hợp lệ hoặc rỗng"));
-                }
-
-                var result = await modelService.BulkCreateModelsFromFileAsync(bulkRequest);
-                return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
-            }
-            catch (JsonException)
-            {
-                return Results.BadRequest(ApiResponse<BulkModelResponse>.FailureResponse("File JSON không đúng định dạng"));
-            }
-            catch (Exception ex)
-            {
-                return Results.BadRequest(ApiResponse<BulkModelResponse>.FailureResponse($"Lỗi khi xử lý file: {ex.Message}"));
-            }
         }
 
         private static async Task<IResult> DeleteVehicleModel(Guid id, IVehicleModelService modelService)

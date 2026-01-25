@@ -1,4 +1,3 @@
-using System;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Verendar.Notification.Application.Dtos.Notifications;

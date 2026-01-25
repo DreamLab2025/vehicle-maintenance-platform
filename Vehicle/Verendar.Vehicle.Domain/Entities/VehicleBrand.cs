@@ -27,9 +27,7 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        // Navigation properties
         public VehicleType VehicleType { get; set; } = null!;
-        public List<VehicleTypeBrand> VehicleTypeBrands { get; set; } = [];
         public List<VehicleModel> VehicleModels { get; set; } = [];
     }
 }

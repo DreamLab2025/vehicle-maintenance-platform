@@ -60,7 +60,49 @@ namespace Verendar.Vehicle.Application.Mappings
                 TotalMaintenanceActivities = totalMaintenanceActivities,
                 LastMaintenanceDate = lastMaintenanceDate,
                 DaysSincePurchase = daysSincePurchase,
-                TotalKmDriven = entity.CurrentOdometer
+                TotalKmDriven = entity.CurrentOdometer,
+                PartTrackings = entity.PartTrackings?.Select(pt => pt.ToSummary()).ToList() ?? new()
+            };
+        }
+
+        public static VehiclePartTrackingSummary ToSummary(this VehiclePartTracking entity)
+        {
+            return new VehiclePartTrackingSummary
+            {
+                Id = entity.Id,
+                PartCategoryId = entity.PartCategoryId,
+                PartCategoryName = entity.PartCategory?.Name ?? string.Empty,
+                PartCategoryCode = entity.PartCategory?.Code ?? string.Empty,
+                InstanceIdentifier = entity.InstanceIdentifier,
+                CurrentPartProductId = entity.CurrentPartProductId,
+                CurrentPartProductName = entity.CurrentPartProduct?.Name,
+                LastReplacementOdometer = entity.LastReplacementOdometer,
+                LastReplacementDate = entity.LastReplacementDate,
+                CustomKmInterval = entity.CustomKmInterval,
+                CustomMonthsInterval = entity.CustomMonthsInterval,
+                PredictedNextOdometer = entity.PredictedNextOdometer,
+                PredictedNextDate = entity.PredictedNextDate,
+                IsIgnored = entity.IsIgnored,
+                UserConditionDescription = entity.UserConditionDescription,
+                AiAnalysisResult = entity.AiAnalysisResult,
+                Reminders = entity.Reminders?.Select(r => r.ToSummary()).ToList() ?? new()
+            };
+        }
+
+        public static MaintenanceReminderSummary ToSummary(this MaintenanceReminder entity)
+        {
+            return new MaintenanceReminderSummary
+            {
+                Id = entity.Id,
+                Level = entity.Level.ToString(),
+                CurrentOdometer = entity.CurrentOdometer,
+                TargetOdometer = entity.TargetOdometer,
+                TargetDate = entity.TargetDate,
+                PercentageRemaining = entity.PercentageRemaining,
+                IsNotified = entity.IsNotified,
+                NotifiedDate = entity.NotifiedDate,
+                IsDismissed = entity.IsDismissed,
+                DismissedDate = entity.DismissedDate
             };
         }
 

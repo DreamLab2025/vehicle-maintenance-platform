@@ -15,8 +15,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         public async Task<VehicleBrand?> GetByIdWithTypesAsync(Guid id)
         {
             return await _context.Set<VehicleBrand>()
-                .Include(b => b.VehicleTypeBrands)
-                    .ThenInclude(vtb => vtb.VehicleType)
+                .Include(b => b.VehicleType)
                 .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null);
         }
     }
