@@ -13,5 +13,6 @@ namespace Verendar.Vehicle.Application.Services.Interfaces
         Task<ApiResponse<string>> DeleteUserVehicleAsync(Guid userId, Guid vehicleId);
         Task<ApiResponse<VehicleStreakResponse>> GetVehicleStreakAsync(Guid userVehicleId);
         Task<ApiResponse<VehiclePartTrackingSummary>> ApplyTrackingConfigAsync(Guid userId, Guid vehicleId, ApplyTrackingConfigRequest request);
+        Task<ApiResponse<UserVehicleResponse>> CompleteOnboardingAsync(Guid userId, Guid vehicleId);
     }
 }

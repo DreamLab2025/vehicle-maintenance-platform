@@ -33,6 +33,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 CurrentOdometer = entity.CurrentOdometer,
                 LastOdometerUpdateAt = entity.LastOdometerUpdate?.ToDateTime(TimeOnly.MinValue),
                 AverageKmPerDay = entity.AverageKmPerDay,
+                NeedsOnboarding = entity.NeedsOnboarding,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -55,6 +56,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 CurrentOdometer = entity.CurrentOdometer,
                 LastOdometerUpdateAt = entity.LastOdometerUpdate?.ToDateTime(TimeOnly.MinValue),
                 AverageKmPerDay = entity.AverageKmPerDay,
+                NeedsOnboarding = entity.NeedsOnboarding,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt,
                 TotalMaintenanceActivities = totalMaintenanceActivities,

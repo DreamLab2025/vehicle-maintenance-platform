@@ -39,6 +39,7 @@
         public int CurrentOdometer { get; set; }
         public DateTime? LastOdometerUpdateAt { get; set; }
         public int? AverageKmPerDay { get; set; }
+        public bool NeedsOnboarding { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public UserVehicleVariantResponse UserVehicleVariant { get; set; } = null!;

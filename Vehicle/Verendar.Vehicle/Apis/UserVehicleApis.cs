@@ -117,6 +117,19 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<VehiclePartTrackingSummary>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapPatch("/{id:guid}/complete-onboarding", CompleteOnboarding)
+                .WithName("CompleteOnboarding")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Đánh dấu hoàn thành onboarding";
+                    operation.Description = "Đặt NeedsOnboarding = false khi user hoàn thành hoặc skip AI onboarding flow.";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             return group;
         }
 
@@ -234,6 +247,21 @@ namespace Verendar.Vehicle.Apis
             }
 
             var result = await vehicleService.ApplyTrackingConfigAsync(userId, id, request);
+            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+        }
+
+        private static async Task<IResult> CompleteOnboarding(
+            Guid id,
+            ICurrentUserService currentUserService,
+            IUserVehicleService vehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await vehicleService.CompleteOnboardingAsync(userId, id);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
     }
