@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Verendar.Common.Databases.Base;
 using Verendar.Common.Databases.Implements;
 using Verendar.Vehicle.Domain.Entities;
@@ -27,6 +27,16 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .Where(v => v.DeletedAt == null);
         }
 
+        public IQueryable<UserVehicle> GetQueryWithoutPartTrackings()
+        {
+            return _dbSet
+                .Include(v => v.Variant)
+                    .ThenInclude(vv => vv.VehicleModel)
+                        .ThenInclude(vm => vm.Brand)
+                            .ThenInclude(b => b.VehicleType)
+                .Where(v => v.DeletedAt == null);
+        }
+
         public async Task<UserVehicle?> GetByIdWithFullDetailsAsync(Guid id)
         {
             return await GetQueryWithFullDetails()
@@ -36,6 +46,12 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         public async Task<UserVehicle?> GetByIdAndUserIdWithFullDetailsAsync(Guid id, Guid userId)
         {
             return await GetQueryWithFullDetails()
+                .FirstOrDefaultAsync(v => v.Id == id && v.UserId == userId);
+        }
+
+        public async Task<UserVehicle?> GetByIdAndUserIdWithoutPartTrackingsAsync(Guid id, Guid userId)
+        {
+            return await GetQueryWithoutPartTrackings()
                 .FirstOrDefaultAsync(v => v.Id == id && v.UserId == userId);
         }
 

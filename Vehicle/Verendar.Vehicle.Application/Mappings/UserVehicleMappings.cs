@@ -64,8 +64,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 TotalMaintenanceActivities = totalMaintenanceActivities,
                 LastMaintenanceDate = lastMaintenanceDate,
                 DaysSincePurchase = daysSincePurchase,
-                TotalKmDriven = entity.CurrentOdometer,
-                PartTrackings = entity.PartTrackings?.Select(pt => pt.ToSummary()).ToList() ?? new()
+                TotalKmDriven = entity.CurrentOdometer
             };
         }
 
