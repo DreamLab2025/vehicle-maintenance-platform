@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Verendar.Common.Shared;
 using Verendar.Media.Application.Configuration;
@@ -36,6 +36,13 @@ namespace Verendar.Media.Application.Services.Implements
                 {
                     _logger.LogWarning("User {UserId} attempted to confirm upload for file {FileId} they do not own", userId, id);
                     return ApiResponse<string>.FailureResponse("Bạn không có quyền xác nhận file này");
+                }
+
+                var existsOnStorage = await _storageService.ExistsAsync(mediaFile.FilePath);
+                if (!existsOnStorage)
+                {
+                    _logger.LogWarning("File {FileId} (key: {FileKey}) chưa tồn tại trên S3", id, mediaFile.FilePath);
+                    return ApiResponse<string>.FailureResponse("File chưa được upload lên storage. Vui lòng upload file lên Presigned URL trước khi xác nhận.");
                 }
 
                 mediaFile.Status = FileStatus.Uploaded;
@@ -100,10 +107,17 @@ namespace Verendar.Media.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<InitUploadResponse>> InitiateUploadAsync(InitUploadRequest request, Guid userId)
+        public async Task<ApiResponse<InitUploadResponse>> InitiateUploadAsync(InitUploadRequest request, Guid userId, string folderKey)
         {
             try
             {
+                var fileType = ParseFolderKeyToFileType(folderKey);
+                if (fileType == null)
+                {
+                    return ApiResponse<InitUploadResponse>.FailureResponse(
+                        $"Folder key không hợp lệ: '{folderKey}'. Cho phép: avatar, vehicle-types, vehicle-brands, vehicle-models, consumables, misc");
+                }
+
                 if (!_uploadConfig.IsContentTypeAllowed(request.ContentType))
                 {
                     return ApiResponse<InitUploadResponse>.FailureResponse(
@@ -123,17 +137,17 @@ namespace Verendar.Media.Application.Services.Implements
                     return ApiResponse<InitUploadResponse>.FailureResponse("Kích thước file phải lớn hơn 0");
                 }
 
-                string fileKey = GenerateFilePath(request.FileType, userId, request.FileName);
+                string fileKey = GenerateFilePath(fileType.Value, userId, request.FileName);
 
                 var presignedUrl = await _storageService.GeneratePresignedUrlAsync(fileKey, request.ContentType);
 
-                var mediaFile = request.ToEntity(userId, fileKey);
+                var mediaFile = request.ToEntity(userId, fileKey, fileType.Value);
 
                 await _unitOfWork.MediaFileRepository.AddAsync(mediaFile);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation("Initiated upload for file {FileName} (Type: {FileType}) with ID: {FileId}",
-                    request.FileName, request.FileType, mediaFile.Id);
+                _logger.LogInformation("Initiated upload for file {FileName} (Folder: {FolderKey}) with ID: {FileId}",
+                    request.FileName, folderKey, mediaFile.Id);
 
                 return ApiResponse<InitUploadResponse>.SuccessResponse(
                     mediaFile.ToInitUploadResponse(presignedUrl),
@@ -144,6 +158,20 @@ namespace Verendar.Media.Application.Services.Implements
                 _logger.LogError(ex, "Error initiating upload for file {FileName}", request.FileName);
                 return ApiResponse<InitUploadResponse>.FailureResponse("Lỗi khi khởi tạo upload");
             }
+        }
+
+        private static FileType? ParseFolderKeyToFileType(string folderKey)
+        {
+            return folderKey?.ToLowerInvariant() switch
+            {
+                "avatar" => FileType.Avatar,
+                "vehicle-types" => FileType.VehicleType,
+                "vehicle-brands" => FileType.VehicleBrand,
+                "vehicle-models" => FileType.VehicleModel,
+                "consumables" => FileType.ConsumableItem,
+                "misc" => FileType.Other,
+                _ => null
+            };
         }
 
         private string GenerateFilePath(FileType fileType, Guid userId, string fileName)
