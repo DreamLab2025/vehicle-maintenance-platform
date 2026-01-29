@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
@@ -187,6 +187,32 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             var streak = await _unitOfWork.OdometerHistories.GetCurrentStreakAsync(userVehicleId);
             return ApiResponse<VehicleStreakResponse>.SuccessResponse(streak.ToStreakResponse(userVehicleId), "Lấy chuỗi xe thành công");
+        }
+
+        public async Task<ApiResponse<List<UserVehiclePartSummary>>> GetPartsByUserVehicleAsync(Guid userId, Guid userVehicleId)
+        {
+            try
+            {
+                var vehicle = await _unitOfWork.UserVehicles
+                    .FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
+
+                if (vehicle == null)
+                {
+                    return ApiResponse<List<UserVehiclePartSummary>>.FailureResponse("Không tìm thấy xe");
+                }
+
+                var trackings = await _unitOfWork.VehiclePartTrackings.GetByUserVehicleIdAsync(userVehicleId);
+                var summaries = trackings.Select(t => t.ToUserVehiclePartSummary()).ToList();
+
+                return ApiResponse<List<UserVehiclePartSummary>>.SuccessResponse(
+                    summaries,
+                    "Lấy danh sách phụ tùng xe thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting parts for user vehicle {UserVehicleId}", userVehicleId);
+                return ApiResponse<List<UserVehiclePartSummary>>.FailureResponse("Lỗi khi lấy danh sách phụ tùng xe");
+            }
         }
 
         public async Task<ApiResponse<UserVehicleResponse>> UpdateOdometerAsync(Guid userId, Guid vehicleId, UpdateOdometerRequest request)

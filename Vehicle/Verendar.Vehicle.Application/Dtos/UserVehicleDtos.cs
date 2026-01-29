@@ -1,4 +1,4 @@
-﻿namespace Verendar.Vehicle.Application.Dtos
+namespace Verendar.Vehicle.Application.Dtos
 {
     public class UserVehicleRequest
     {
@@ -52,6 +52,18 @@
         public int DaysSincePurchase { get; set; }
         public int TotalKmDriven { get; set; }
         public List<VehiclePartTrackingSummary> PartTrackings { get; set; } = new();
+    }
+
+
+    public class UserVehiclePartSummary
+    {
+        public Guid Id { get; set; }
+        public Guid PartCategoryId { get; set; }
+        public string PartCategoryName { get; set; } = null!;
+        public string PartCategoryCode { get; set; } = null!;
+        public string? IconUrl { get; set; }
+        public bool IsDeclared { get; set; }
+        public string? Description { get; set; }
     }
 
     public class VehiclePartTrackingSummary

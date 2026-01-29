@@ -13,6 +13,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
             return await _dbSet
                 .Include(x => x.PartCategory)
                 .Include(x => x.CurrentPartProduct)
+                .Include(x => x.Reminders)
                 .Where(x => x.UserVehicleId == userVehicleId)
                 .ToListAsync(cancellationToken);
         }
