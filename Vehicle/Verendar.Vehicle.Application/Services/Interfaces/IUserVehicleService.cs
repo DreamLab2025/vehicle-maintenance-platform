@@ -14,6 +14,7 @@ namespace Verendar.Vehicle.Application.Services.Interfaces
         Task<ApiResponse<VehicleStreakResponse>> GetVehicleStreakAsync(Guid userVehicleId);
         Task<ApiResponse<VehiclePartTrackingSummary>> ApplyTrackingConfigAsync(Guid userId, Guid vehicleId, ApplyTrackingConfigRequest request);
         Task<ApiResponse<List<UserVehiclePartSummary>>> GetPartsByUserVehicleAsync(Guid userId, Guid userVehicleId);
+        Task<ApiResponse<List<UserVehiclePartSummary>>> GetDeclaredTrackingsByUserVehicleAsync(Guid userId, Guid userVehicleId);
         Task<ApiResponse<UserVehicleResponse>> CompleteOnboardingAsync(Guid userId, Guid vehicleId);
         Task<ApiResponse<IsAllowedToCreateVehicleResponse>> IsAllowedToCreateVehicleAsync(Guid userId);
     }

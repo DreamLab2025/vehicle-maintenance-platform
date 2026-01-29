@@ -121,7 +121,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             try
             {
-                var vehicle = await _unitOfWork.UserVehicles.GetByIdAndUserIdWithFullDetailsAsync(vehicleId, userId);
+                var vehicle = await _unitOfWork.UserVehicles.GetByIdAndUserIdWithoutPartTrackingsAsync(vehicleId, userId);
 
                 if (vehicle == null)
                 {
@@ -212,6 +212,32 @@ namespace Verendar.Vehicle.Application.Services.Implements
             {
                 _logger.LogError(ex, "Error getting parts for user vehicle {UserVehicleId}", userVehicleId);
                 return ApiResponse<List<UserVehiclePartSummary>>.FailureResponse("Lỗi khi lấy danh sách phụ tùng xe");
+            }
+        }
+
+        public async Task<ApiResponse<List<UserVehiclePartSummary>>> GetDeclaredTrackingsByUserVehicleAsync(Guid userId, Guid userVehicleId)
+        {
+            try
+            {
+                var vehicle = await _unitOfWork.UserVehicles
+                    .FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
+
+                if (vehicle == null)
+                {
+                    return ApiResponse<List<UserVehiclePartSummary>>.FailureResponse("Không tìm thấy xe");
+                }
+
+                var trackings = await _unitOfWork.VehiclePartTrackings.GetDeclaredByUserVehicleIdAsync(userVehicleId);
+                var summaries = trackings.Select(t => t.ToUserVehiclePartSummary()).ToList();
+
+                return ApiResponse<List<UserVehiclePartSummary>>.SuccessResponse(
+                    summaries,
+                    "Lấy danh sách tracking đã khai báo thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting declared trackings for user vehicle {UserVehicleId}", userVehicleId);
+                return ApiResponse<List<UserVehiclePartSummary>>.FailureResponse("Lỗi khi lấy danh sách tracking đã khai báo");
             }
         }
 

@@ -55,6 +55,18 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<List<UserVehiclePartSummary>>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/{userVehicleId:guid}/trackings", GetUserVehicleDeclaredTrackings)
+                .WithName("GetUserVehicleDeclaredTrackings")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách tracking đã khai báo (IsDeclared = true) của xe";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<UserVehiclePartSummary>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<UserVehiclePartSummary>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             group.MapGet("/is-allowed-create", IsAllowedToCreateVehicle)
                 .WithName("IsAllowedToCreateVehicle")
                 .WithOpenApi(operation =>
@@ -208,6 +220,21 @@ namespace Verendar.Vehicle.Apis
             }
 
             var result = await vehicleService.GetPartsByUserVehicleAsync(userId, userVehicleId);
+            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+        }
+
+        private static async Task<IResult> GetUserVehicleDeclaredTrackings(
+            Guid userVehicleId,
+            ICurrentUserService currentUserService,
+            IUserVehicleService vehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await vehicleService.GetDeclaredTrackingsByUserVehicleAsync(userId, userVehicleId);
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 

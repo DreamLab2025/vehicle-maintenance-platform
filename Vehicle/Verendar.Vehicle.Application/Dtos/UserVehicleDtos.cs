@@ -45,13 +45,16 @@ namespace Verendar.Vehicle.Application.Dtos
         public UserVehicleVariantResponse UserVehicleVariant { get; set; } = null!;
     }
 
+    /// <summary>
+    /// Chi tiết xe không kèm danh sách tracking (dùng cho GET by id).
+    /// Để lấy tracking có IsDeclared = true dùng GET /user-vehicles/{id}/trackings.
+    /// </summary>
     public class UserVehicleDetailResponse : UserVehicleResponse
     {
         public int TotalMaintenanceActivities { get; set; }
         public DateTime? LastMaintenanceDate { get; set; }
         public int DaysSincePurchase { get; set; }
         public int TotalKmDriven { get; set; }
-        public List<VehiclePartTrackingSummary> PartTrackings { get; set; } = new();
     }
 
 
