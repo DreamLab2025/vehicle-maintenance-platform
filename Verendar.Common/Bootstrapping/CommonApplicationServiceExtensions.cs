@@ -186,6 +186,7 @@ namespace Verendar.Common.Bootstrapping
             {
                 app.UseDefaultSwagger();
             }
+            
             app.UseCors("AllowAllClients");
             app.UseMiddleware<GlobalExceptionsMiddleware>();
             app.UseAuthentication();

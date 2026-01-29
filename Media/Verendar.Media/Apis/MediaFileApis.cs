@@ -27,7 +27,7 @@ namespace Verendar.Media.Apis
             MapInitUploadRoute(group, "/init-upload/consumables", "InitUploadConsumables", "Lấy Presigned URL upload ảnh consumable", "consumables");
             MapInitUploadRoute(group, "/init-upload/misc", "InitUploadMisc", "Lấy Presigned URL upload file khác", "misc");
 
-            group.MapPut("{id}/confirm", ConfirmUploadFile)
+            group.MapPut("{id:guid}/confirm", ConfirmUploadFile)
                 .WithName("Confirm Upload File")
                 .WithOpenApi(operation =>
                 {

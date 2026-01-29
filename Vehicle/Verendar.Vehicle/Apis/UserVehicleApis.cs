@@ -194,7 +194,7 @@ namespace Verendar.Vehicle.Apis
         }
 
         private static async Task<IResult> GetUserVehicleById(
-            Guid id,
+            Guid userVehicleId,
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
         {
@@ -204,7 +204,7 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
             }
 
-            var result = await vehicleService.GetUserVehicleByIdAsync(userId, id);
+            var result = await vehicleService.GetUserVehicleByIdAsync(userId, userVehicleId);
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 
@@ -254,7 +254,7 @@ namespace Verendar.Vehicle.Apis
         }
 
         private static async Task<IResult> UpdateUserVehicle(
-            Guid id,
+            Guid userVehicleId,
             UserVehicleRequest request,
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
@@ -265,12 +265,12 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
             }
 
-            var result = await vehicleService.UpdateUserVehicleAsync(userId, id, request);
+            var result = await vehicleService.UpdateUserVehicleAsync(userId, userVehicleId, request);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
         private static async Task<IResult> UpdateOdometer(
-            Guid id,
+            Guid userVehicleId,
             UpdateOdometerRequest request,
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
@@ -281,12 +281,12 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
             }
 
-            var result = await vehicleService.UpdateOdometerAsync(userId, id, request);
+            var result = await vehicleService.UpdateOdometerAsync(userId, userVehicleId, request);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
         private static async Task<IResult> DeleteUserVehicle(
-            Guid id,
+            Guid userVehicleId,
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
         {
@@ -296,12 +296,12 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
             }
 
-            var result = await vehicleService.DeleteUserVehicleAsync(userId, id);
+            var result = await vehicleService.DeleteUserVehicleAsync(userId, userVehicleId);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
         private static async Task<IResult> ApplyTrackingConfig(
-            Guid id,
+            Guid userVehicleId,
             ApplyTrackingConfigRequest request,
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
@@ -312,7 +312,7 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
             }
 
-            var result = await vehicleService.ApplyTrackingConfigAsync(userId, id, request);
+            var result = await vehicleService.ApplyTrackingConfigAsync(userId, userVehicleId, request);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
     }
