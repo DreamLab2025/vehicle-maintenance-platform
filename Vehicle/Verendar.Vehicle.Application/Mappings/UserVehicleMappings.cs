@@ -69,6 +69,20 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
+        public static UserVehiclePartSummary ToUserVehiclePartSummary(this VehiclePartTracking entity)
+        {
+            return new UserVehiclePartSummary
+            {
+                Id = entity.Id,
+                PartCategoryId = entity.PartCategoryId,
+                PartCategoryName = entity.PartCategory?.Name ?? string.Empty,
+                PartCategoryCode = entity.PartCategory?.Code ?? string.Empty,
+                IconUrl = entity.PartCategory?.IconUrl,
+                IsDeclared = entity.IsDeclared,
+                Description = entity.PartCategory?.Description
+            };
+        }
+
         public static VehiclePartTrackingSummary ToSummary(this VehiclePartTracking entity)
         {
             return new VehiclePartTrackingSummary
