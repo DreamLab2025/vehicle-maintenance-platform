@@ -16,7 +16,9 @@ namespace Verendar.Vehicle.Application.Mappings
                 DisplayOrder = request.DisplayOrder,
                 RequiresOdometerTracking = request.RequiresOdometerTracking,
                 RequiresTimeTracking = request.RequiresTimeTracking,
-                AllowsMultipleInstances = request.AllowsMultipleInstances
+                AllowsMultipleInstances = request.AllowsMultipleInstances,
+                IdentificationSigns = request.IdentificationSigns,
+                ConsequencesIfNotHandled = request.ConsequencesIfNotHandled
             };
         }
 
@@ -34,6 +36,8 @@ namespace Verendar.Vehicle.Application.Mappings
                 RequiresOdometerTracking = entity.RequiresOdometerTracking,
                 RequiresTimeTracking = entity.RequiresTimeTracking,
                 AllowsMultipleInstances = entity.AllowsMultipleInstances,
+                IdentificationSigns = entity.IdentificationSigns,
+                ConsequencesIfNotHandled = entity.ConsequencesIfNotHandled,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -49,6 +53,8 @@ namespace Verendar.Vehicle.Application.Mappings
             entity.RequiresOdometerTracking = request.RequiresOdometerTracking;
             entity.RequiresTimeTracking = request.RequiresTimeTracking;
             entity.AllowsMultipleInstances = request.AllowsMultipleInstances;
+            entity.IdentificationSigns = request.IdentificationSigns;
+            entity.ConsequencesIfNotHandled = request.ConsequencesIfNotHandled;
         }
     }
 

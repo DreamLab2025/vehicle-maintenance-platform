@@ -143,14 +143,35 @@ namespace Verendar.Vehicle.Apis
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Áp dụng cấu hình tracking từ AI cho một linh kiện";
-                    operation.Description = "Sau khi AI phân tích questionnaire, frontend gọi endpoint này " +
-                                          "để áp dụng khuyến nghị của AI vào VehiclePartTracking. " +
-                                          "Endpoint này cập nhật LastReplacement và PredictedNext từ AI.";
                     return operation;
                 })
                 .RequireAuthorization()
                 .Produces<ApiResponse<VehiclePartTrackingSummary>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<VehiclePartTrackingSummary>>(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/{userVehicleId:guid}/reminders", GetReminders)
+                .WithName("GetReminders")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách nhắc bảo trì (level cao → thấp) kèm thông tin PartCategory";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<ReminderWithPartCategoryDto>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<ReminderWithPartCategoryDto>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/{userVehicleId:guid}/odometer-history", GetOdometerHistory)
+                .WithName("GetOdometerHistory")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy lịch sử số km phân trang (có lọc theo FromDate/ToDate)";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<OdometerHistoryItemDto>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<OdometerHistoryItemDto>>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
@@ -298,6 +319,37 @@ namespace Verendar.Vehicle.Apis
 
             var result = await vehicleService.DeleteUserVehicleAsync(userId, userVehicleId);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+        }
+
+        private static async Task<IResult> GetReminders(
+            Guid userVehicleId,
+            ICurrentUserService currentUserService,
+            IUserVehicleService vehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await vehicleService.GetRemindersAsync(userId, userVehicleId);
+            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+        }
+
+        private static async Task<IResult> GetOdometerHistory(
+            Guid userVehicleId,
+            [AsParameters] OdometerHistoryQueryRequest query,
+            ICurrentUserService currentUserService,
+            IUserVehicleService vehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await vehicleService.GetOdometerHistoryPagedAsync(userId, userVehicleId, query);
+            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 
         private static async Task<IResult> ApplyTrackingConfig(

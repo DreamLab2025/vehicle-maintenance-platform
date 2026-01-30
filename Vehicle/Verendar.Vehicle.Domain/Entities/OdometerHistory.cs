@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Domain.Enums;
 
@@ -14,6 +14,8 @@ namespace Verendar.Vehicle.Domain.Entities
         public DateOnly RecordedDate { get; set; }
 
         public OdometerSource Source { get; set; } = OdometerSource.ManualInput;
+
+        public int? KmOnRecordedDate { get; set; }
 
         public UserVehicle UserVehicle { get; set; } = null!;
     }
