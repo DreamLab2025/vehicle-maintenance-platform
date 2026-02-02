@@ -216,32 +216,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<UserVehiclePartSummary>>> GetDeclaredTrackingsByUserVehicleAsync(Guid userId, Guid userVehicleId)
-        {
-            try
-            {
-                var vehicle = await _unitOfWork.UserVehicles
-                    .FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
-
-                if (vehicle == null)
-                {
-                    return ApiResponse<List<UserVehiclePartSummary>>.FailureResponse("Không tìm thấy xe");
-                }
-
-                var trackings = await _unitOfWork.VehiclePartTrackings.GetDeclaredByUserVehicleIdAsync(userVehicleId);
-                var summaries = trackings.Select(t => t.ToUserVehiclePartSummary()).ToList();
-
-                return ApiResponse<List<UserVehiclePartSummary>>.SuccessResponse(
-                    summaries,
-                    "Lấy danh sách tracking đã khai báo thành công");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting declared trackings for user vehicle {UserVehicleId}", userVehicleId);
-                return ApiResponse<List<UserVehiclePartSummary>>.FailureResponse("Lỗi khi lấy danh sách tracking đã khai báo");
-            }
-        }
-
         public async Task<ApiResponse<List<ReminderWithPartCategoryDto>>> GetRemindersAsync(Guid userId, Guid userVehicleId)
         {
             try
@@ -468,6 +442,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
                         vehicleId, request.PartCategoryCode);
                 }
 
+                // Sync reminders (quay về Normal khi thay phụ tùng với Last*/PredictedNext* mới)
+                await SyncMaintenanceRemindersAsync(vehicleId, vehicle.CurrentOdometer, userId);
+
                 // Return tracking summary
                 var response = tracking.ToSummary();
 
@@ -556,33 +533,40 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     continue;
 
                 var targetOdometer = tracking.PredictedNextOdometer ?? currentOdometer;
+                var level = GetLevelFromPercentage(percentageRemaining.Value);
 
-                foreach (ReminderLevel level in Enum.GetValues<ReminderLevel>())
+                var existingReminders = await _unitOfWork.MaintenanceReminders.AsQueryable()
+                    .Where(r => r.VehiclePartTrackingId == tracking.Id)
+                    .OrderByDescending(r => r.Level)
+                    .ToListAsync();
+
+                var toKeep = existingReminders.FirstOrDefault();
+                if (toKeep != null)
                 {
-                    var existing = await _unitOfWork.MaintenanceReminders.AsQueryable()
-                        .FirstOrDefaultAsync(r => r.VehiclePartTrackingId == tracking.Id && r.Level == level);
+                    toKeep.CurrentOdometer = currentOdometer;
+                    toKeep.TargetOdometer = targetOdometer;
+                    toKeep.TargetDate = targetDate;
+                    toKeep.Level = level;
+                    toKeep.PercentageRemaining = percentageRemaining.Value;
+                    await _unitOfWork.MaintenanceReminders.UpdateAsync(toKeep.Id, toKeep);
 
-                    if (existing != null)
+                    foreach (var duplicate in existingReminders.Skip(1))
                     {
-                        existing.CurrentOdometer = currentOdometer;
-                        existing.TargetOdometer = targetOdometer;
-                        existing.TargetDate = targetDate;
-                        existing.PercentageRemaining = percentageRemaining.Value;
-                        await _unitOfWork.MaintenanceReminders.UpdateAsync(existing.Id, existing);
+                        await _unitOfWork.MaintenanceReminders.DeleteAsync(duplicate.Id);
                     }
-                    else
+                }
+                else
+                {
+                    var reminder = new MaintenanceReminder
                     {
-                        var reminder = new MaintenanceReminder
-                        {
-                            VehiclePartTrackingId = tracking.Id,
-                            CurrentOdometer = currentOdometer,
-                            TargetOdometer = targetOdometer,
-                            TargetDate = targetDate,
-                            Level = level,
-                            PercentageRemaining = percentageRemaining.Value,
-                        };
-                        await _unitOfWork.MaintenanceReminders.AddAsync(reminder);
-                    }
+                        VehiclePartTrackingId = tracking.Id,
+                        CurrentOdometer = currentOdometer,
+                        TargetOdometer = targetOdometer,
+                        TargetDate = targetDate,
+                        Level = level,
+                        PercentageRemaining = percentageRemaining.Value,
+                    };
+                    await _unitOfWork.MaintenanceReminders.AddAsync(reminder);
                 }
             }
 
@@ -612,6 +596,18 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return null;
 
             return Math.Round((decimal)totalKm / totalDays, 2);
+        }
+
+        /// <summary>
+        /// Flow: Normal (&gt;40%) → Low (25–40%) → Medium (15–25%) → High (5–15%) → Urgent (&lt;5%).
+        /// </summary>
+        private static ReminderLevel GetLevelFromPercentage(decimal percentageRemaining)
+        {
+            if (percentageRemaining > 40) return ReminderLevel.Normal;
+            if (percentageRemaining > 25) return ReminderLevel.Low;
+            if (percentageRemaining > 15) return ReminderLevel.Medium;
+            if (percentageRemaining > 5) return ReminderLevel.High;
+            return ReminderLevel.Urgent;
         }
 
         private static (decimal? PercentageRemaining, DateOnly? TargetDate) ComputeReminderData(
