@@ -1,6 +1,7 @@
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Services.Interfaces;
+using Verendar.Vehicle.Filters;
 
 namespace Verendar.Vehicle.Apis
 {
@@ -31,6 +32,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<PartCategoryResponse>>(StatusCodes.Status200OK);
 
             group.MapPost("/categories", CreateCategory)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<PartCategoryRequest>())
                 .WithName("CreatePartCategory")
                 .WithOpenApi(op => { op.Summary = "Create part category (Admin)"; return op; })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
@@ -38,6 +40,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<PartCategoryResponse>>(StatusCodes.Status400BadRequest);
 
             group.MapPut("/categories/{id:guid}", UpdateCategory)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<PartCategoryRequest>())
                 .WithName("UpdatePartCategory")
                 .WithOpenApi(op => { op.Summary = "Update part category (Admin)"; return op; })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
@@ -65,6 +68,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<PartProductResponse>>(StatusCodes.Status200OK);
 
             group.MapPost("/products", CreateProduct)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<PartProductRequest>())
                 .WithName("CreatePartProduct")
                 .WithOpenApi(op => { op.Summary = "Create part product (Admin)"; return op; })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
@@ -72,6 +76,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<PartProductResponse>>(StatusCodes.Status400BadRequest);
 
             group.MapPut("/products/{id:guid}", UpdateProduct)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<PartProductRequest>())
                 .WithName("UpdatePartProduct")
                 .WithOpenApi(op => { op.Summary = "Update part product (Admin)"; return op; })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))

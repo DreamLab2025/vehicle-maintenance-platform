@@ -2,6 +2,7 @@ using Verendar.Common.Jwt;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Services.Interfaces;
+using Verendar.Vehicle.Filters;
 
 namespace Verendar.Vehicle.Apis
 {
@@ -68,6 +69,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateUserVehicle)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<UserVehicleRequest>())
                 .WithName("CreateUserVehicle")
                 .WithOpenApi(operation =>
                 {
@@ -80,6 +82,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{userVehicleId:guid}", UpdateUserVehicle)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<UserVehicleRequest>())
                 .WithName("UpdateUserVehicle")
                 .WithOpenApi(operation =>
                 {
@@ -92,6 +95,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPatch("/{userVehicleId:guid}/odometer", UpdateOdometer)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<UpdateOdometerRequest>())
                 .WithName("UpdateOdometer")
                 .WithOpenApi(operation =>
                 {
@@ -127,6 +131,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/{userVehicleId:guid}/apply-tracking", ApplyTrackingConfig)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<ApplyTrackingConfigRequest>())
                 .WithName("ApplyTrackingConfig")
                 .WithOpenApi(operation =>
                 {
@@ -151,6 +156,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/{userVehicleId:guid}/odometer-history", GetOdometerHistory)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<OdometerHistoryQueryRequest>())
                 .WithName("GetOdometerHistory")
                 .WithOpenApi(operation =>
                 {

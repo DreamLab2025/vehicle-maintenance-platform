@@ -1,6 +1,7 @@
-﻿using Verendar.Common.Shared;
+using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Services.Interfaces;
+using Verendar.Vehicle.Filters;
 
 namespace Verendar.Vehicle.Apis
 {
@@ -42,6 +43,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateVehicleBrand)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<BrandRequest>())
                 .WithName("CreateBrand")
                 .WithOpenApi(operation =>
                 {
@@ -54,6 +56,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{id:guid}", UpdateVehicleBrand)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<BrandRequest>())
                 .WithName("UpdateBrand")
                 .WithOpenApi(operation =>
                 {
