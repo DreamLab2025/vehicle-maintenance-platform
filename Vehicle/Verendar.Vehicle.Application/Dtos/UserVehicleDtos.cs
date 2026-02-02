@@ -1,3 +1,5 @@
+using Verendar.Common.Shared;
+
 namespace Verendar.Vehicle.Application.Dtos
 {
     public class UserVehicleRequest
@@ -45,10 +47,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public UserVehicleVariantResponse UserVehicleVariant { get; set; } = null!;
     }
 
-    /// <summary>
-    /// Chi tiết xe không kèm danh sách tracking (dùng cho GET by id).
-    /// Để lấy tracking có IsDeclared = true dùng GET /user-vehicles/{id}/trackings.
-    /// </summary>
+
     public class UserVehicleDetailResponse : UserVehicleResponse
     {
         public int TotalMaintenanceActivities { get; set; }
@@ -114,5 +113,51 @@ namespace Verendar.Vehicle.Application.Dtos
     {
         public bool IsAllowed { get; set; }
         public string? Message { get; set; }
+    }
+
+    public class ReminderWithPartCategoryDto
+    {
+        public Guid Id { get; set; }
+        public Guid VehiclePartTrackingId { get; set; }
+        public string Level { get; set; } = null!;
+        public int CurrentOdometer { get; set; }
+        public int TargetOdometer { get; set; }
+        public DateOnly? TargetDate { get; set; }
+        public decimal PercentageRemaining { get; set; }
+        public bool IsNotified { get; set; }
+        public DateOnly? NotifiedDate { get; set; }
+        public bool IsDismissed { get; set; }
+        public DateOnly? DismissedDate { get; set; }
+        public PartCategoryInfoDto PartCategory { get; set; } = null!;
+    }
+
+    public class PartCategoryInfoDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string Code { get; set; } = null!;
+        public string? Description { get; set; }
+        public string? IconUrl { get; set; }
+        public string? IdentificationSigns { get; set; }
+        public string? ConsequencesIfNotHandled { get; set; }
+    }
+
+    public class OdometerHistoryQueryRequest : PaginationRequest
+    {
+        /// <summary>Lọc từ ngày (RecordedDate >= FromDate).</summary>
+        public DateOnly? FromDate { get; set; }
+        /// <summary>Lọc đến ngày (RecordedDate <= ToDate).</summary>
+        public DateOnly? ToDate { get; set; }
+    }
+
+    public class OdometerHistoryItemDto
+    {
+        public Guid Id { get; set; }
+        public Guid UserVehicleId { get; set; }
+        public int OdometerValue { get; set; }
+        public DateOnly RecordedDate { get; set; }
+        /// <summary>Số km chạy trong ngày đó (km ngày hôm đó). Null nếu là bản ghi đầu tiên.</summary>
+        public int? KmOnRecordedDate { get; set; }
+        public string Source { get; set; } = null!;
     }
 }

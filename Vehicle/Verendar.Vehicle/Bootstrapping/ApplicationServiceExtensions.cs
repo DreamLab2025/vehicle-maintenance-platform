@@ -1,6 +1,8 @@
-﻿using Verendar.Common.Bootstrapping;
+using FluentValidation;
+using Verendar.Common.Bootstrapping;
 using Verendar.Common.Shared;
 using Verendar.ServiceDefaults;
+using Verendar.Vehicle.Application.Validators;
 using Verendar.Vehicle.Apis;
 using Verendar.Vehicle.Application.Services.Implements;
 using Verendar.Vehicle.Application.Services.Interfaces;
@@ -32,6 +34,9 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IDefaultMaintenanceScheduleService, DefaultMaintenanceScheduleService>();
             builder.Services.AddScoped<IPartCategoryService, PartCategoryService>();
             builder.Services.AddScoped<IPartProductService, PartProductService>();
+
+            // FluentValidation
+            builder.Services.AddValidatorsFromAssemblyContaining<UserVehicleRequestValidator>();
 
             return builder;
         }

@@ -271,6 +271,8 @@ namespace Verendar.Vehicle.Infrastructure.Data
                     RequiresOdometerTracking = true,
                     RequiresTimeTracking = true,
                     AllowsMultipleInstances = false,
+                    IdentificationSigns = "Dầu đen, nhớt nhớt; động cơ nóng bất thường; đèn báo dầu sáng; tiếng kêu kim loại từ động cơ.",
+                    ConsequencesIfNotHandled = "Mài mòn nhanh, kẹt piston; hỏng động cơ; chi phí sửa chữa rất cao hoặc phải thay máy.",
                     CreatedAt = FixedDate,
                     CreatedBy = SystemUserId
                 },
@@ -286,6 +288,8 @@ namespace Verendar.Vehicle.Infrastructure.Data
                     RequiresOdometerTracking = true,
                     RequiresTimeTracking = true,
                     AllowsMultipleInstances = true,
+                    IdentificationSigns = "Gai lốp mòn dưới 1.6mm; nứt rạn; phồng lốp; lốp non hơi thường xuyên; rung lái khi chạy.",
+                    ConsequencesIfNotHandled = "Trượt, mất lái khi phanh/trời mưa; nổ lốp khi chạy tốc độ cao; tai nạn nghiêm trọng.",
                     CreatedAt = FixedDate,
                     CreatedBy = SystemUserId
                 },
@@ -301,6 +305,8 @@ namespace Verendar.Vehicle.Infrastructure.Data
                     RequiresOdometerTracking = false,
                     RequiresTimeTracking = true,
                     AllowsMultipleInstances = false,
+                    IdentificationSigns = "Khởi động yếu hoặc không nổ; đèn pha mờ; ắc quy phồng, rỉ nước; xe để vài ngày là hết điện.",
+                    ConsequencesIfNotHandled = "Chết máy giữa đường; hỏng bình; ảnh hưởng bộ sạc và thiết bị điện; không khởi động được.",
                     CreatedAt = FixedDate,
                     CreatedBy = SystemUserId
                 },
@@ -316,6 +322,8 @@ namespace Verendar.Vehicle.Infrastructure.Data
                     RequiresOdometerTracking = true,
                     RequiresTimeTracking = true,
                     AllowsMultipleInstances = true,
+                    IdentificationSigns = "Tiếng kêu ken két khi phanh; phanh không ăn; tay phanh/ pedal bị trễ; đĩa phanh xước, rỗ.",
+                    ConsequencesIfNotHandled = "Mất phanh; đĩa phanh hỏng theo; va chạm, tai nạn do không dừng kịp.",
                     CreatedAt = FixedDate,
                     CreatedBy = SystemUserId
                 },
@@ -331,6 +339,8 @@ namespace Verendar.Vehicle.Infrastructure.Data
                     RequiresOdometerTracking = true,
                     RequiresTimeTracking = true,
                     AllowsMultipleInstances = false,
+                    IdentificationSigns = "Khó nổ, giật khi tăng ga; tốn xăng; động cơ rung; bugi đen, dính dầu hoặc cháy trắng đầu điện cực.",
+                    ConsequencesIfNotHandled = "Chết máy; đánh lửa kém gây cháy không hết nhiên liệu, hỏng cat; hao xăng, giảm công suất.",
                     CreatedAt = FixedDate,
                     CreatedBy = SystemUserId
                 },
@@ -346,6 +356,8 @@ namespace Verendar.Vehicle.Infrastructure.Data
                     RequiresOdometerTracking = true,
                     RequiresTimeTracking = true,
                     AllowsMultipleInstances = false,
+                    IdentificationSigns = "Xe yếu, không bốc; tốn xăng; lọc gió bẩn, rách hoặc ẩm mốc; động cơ nổ không đều.",
+                    ConsequencesIfNotHandled = "Bụi cát vào buồng đốt, mài mòn xy-lanh; giảm công suất; hỏng bugi, hao xăng lâu dài.",
                     CreatedAt = FixedDate,
                     CreatedBy = SystemUserId
                 },
@@ -361,6 +373,8 @@ namespace Verendar.Vehicle.Infrastructure.Data
                     RequiresOdometerTracking = true,
                     RequiresTimeTracking = false,
                     AllowsMultipleInstances = false,
+                    IdentificationSigns = "Xích kêu lạch cạch; xích trùng dù đã chỉnh; răng nhông mòn vẹt; xích rỉ, khô dầu.",
+                    ConsequencesIfNotHandled = "Đứt xích khi chạy, bó bánh; hỏng nhông, moay-ơ; nguy cơ té xe, hỏng hộp số.",
                     CreatedAt = FixedDate,
                     CreatedBy = SystemUserId
                 }

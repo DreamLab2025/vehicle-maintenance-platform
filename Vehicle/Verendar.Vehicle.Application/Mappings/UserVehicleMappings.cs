@@ -177,6 +177,32 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
+        public static VehiclePartTracking ToPartTracking(this Guid userVehicleId, Guid partCategoryId, ApplyTrackingConfigRequest request)
+        {
+            return new VehiclePartTracking
+            {
+                UserVehicleId = userVehicleId,
+                PartCategoryId = partCategoryId,
+                Status = EntityStatus.Active,
+                IsDeclared = true,
+                LastReplacementOdometer = request.LastReplacementOdometer,
+                LastReplacementDate = request.LastReplacementDate,
+                PredictedNextOdometer = request.PredictedNextOdometer,
+                PredictedNextDate = request.PredictedNextDate,
+            };
+        }
+
+
+        public static void ApplyTrackingConfig(this VehiclePartTracking entity, ApplyTrackingConfigRequest request)
+        {
+            entity.LastReplacementOdometer = request.LastReplacementOdometer;
+            entity.LastReplacementDate = request.LastReplacementDate;
+            entity.PredictedNextOdometer = request.PredictedNextOdometer;
+            entity.PredictedNextDate = request.PredictedNextDate;
+            entity.IsDeclared = true;
+        }
+
+        /// <summary>Bản ghi đầu tiên (không có km ngày đó).</summary>
         public static OdometerHistory ToOdometerHistory(this Guid userVehicleId, int odometerValue)
         {
             return new OdometerHistory
@@ -184,7 +210,67 @@ namespace Verendar.Vehicle.Application.Mappings
                 UserVehicleId = userVehicleId,
                 OdometerValue = odometerValue,
                 RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                Source = OdometerSource.ManualInput
+                Source = OdometerSource.ManualInput,
+                KmOnRecordedDate = null
+            };
+        }
+
+        /// <summary>Bản ghi có delta: km ngày đó = odometerValue - previousOdometerValue.</summary>
+        public static OdometerHistory ToOdometerHistory(this Guid userVehicleId, int odometerValue, int previousOdometerValue)
+        {
+            return new OdometerHistory
+            {
+                UserVehicleId = userVehicleId,
+                OdometerValue = odometerValue,
+                RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                Source = OdometerSource.ManualInput,
+                KmOnRecordedDate = odometerValue - previousOdometerValue
+            };
+        }
+
+        public static ReminderWithPartCategoryDto ToReminderWithPartCategoryDto(this MaintenanceReminder entity)
+        {
+            return new ReminderWithPartCategoryDto
+            {
+                Id = entity.Id,
+                VehiclePartTrackingId = entity.VehiclePartTrackingId,
+                Level = entity.Level.ToString(),
+                CurrentOdometer = entity.CurrentOdometer,
+                TargetOdometer = entity.TargetOdometer,
+                TargetDate = entity.TargetDate,
+                PercentageRemaining = entity.PercentageRemaining,
+                IsNotified = entity.IsNotified,
+                NotifiedDate = entity.NotifiedDate,
+                IsDismissed = entity.IsDismissed,
+                DismissedDate = entity.DismissedDate,
+                PartCategory = entity.PartTracking?.PartCategory?.ToPartCategoryInfoDto() ?? new PartCategoryInfoDto()
+            };
+        }
+
+        public static PartCategoryInfoDto ToPartCategoryInfoDto(this PartCategory entity)
+        {
+            return new PartCategoryInfoDto
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Code = entity.Code,
+                Description = entity.Description,
+                IconUrl = entity.IconUrl,
+                IdentificationSigns = entity.IdentificationSigns,
+                ConsequencesIfNotHandled = entity.ConsequencesIfNotHandled
+            };
+        }
+
+        public static OdometerHistoryItemDto ToOdometerHistoryItemDto(this OdometerHistory entity)
+        {
+            return new OdometerHistoryItemDto
+            {
+                Id = entity.Id,
+                UserVehicleId = entity.UserVehicleId,
+                OdometerValue = entity.OdometerValue,
+                RecordedDate = entity.RecordedDate,
+                KmOnRecordedDate = entity.KmOnRecordedDate,
+                Source = entity.Source.ToString()
             };
         }
     }
