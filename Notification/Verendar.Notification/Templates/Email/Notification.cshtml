@@ -1,0 +1,22 @@
+@using Verendar.Notification.Application.Dtos.Email
+@model NotificationEmailModel
+@{
+    Layout = "_Layout";
+    ViewBag.Title = Model.Title;
+}
+
+<h2>@Model.Title</h2>
+
+<p>Xin chào @Model.UserName,</p>
+
+<div style="white-space: pre-line;">@Html.Raw(Model.Message)</div>
+
+@if (!string.IsNullOrEmpty(Model.ActionUrl) && !string.IsNullOrEmpty(Model.ActionText))
+{
+    <p style="text-align: center; margin-top: 30px;">
+        <a href="@Model.ActionUrl" class="button">@Model.ActionText</a>
+    </p>
+}
+
+<p>Trân trọng,<br>
+<strong>Đội ngũ Verendar</strong></p>
