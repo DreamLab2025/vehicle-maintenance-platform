@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RazorLight;
@@ -10,26 +9,22 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend;
 
 public class RazorEmailTemplateService : IEmailTemplateService
 {
-    private readonly IMemoryCache _cache;
     private readonly ILogger<RazorEmailTemplateService> _logger;
     private readonly ResendOptions _options;
     private readonly IWebHostEnvironment _environment;
     private readonly RazorLightEngine _razorEngine;
-    private static readonly object _lockObject = new();
 
     public RazorEmailTemplateService(
-        IMemoryCache cache,
         ILogger<RazorEmailTemplateService> logger,
         IOptions<ResendOptions> options,
         IWebHostEnvironment environment)
     {
-        _cache = cache;
         _logger = logger;
         _options = options.Value;
         _environment = environment;
 
         var templateDirectory = GetTemplateDirectory();
-        
+
         // Ensure template directory exists
         if (!Directory.Exists(templateDirectory))
         {
@@ -51,34 +46,18 @@ public class RazorEmailTemplateService : IEmailTemplateService
     {
         try
         {
-            var cacheKey = GetCacheKey(templateKey, typeof(TModel).Name);
-
-            if (_options.EnableTemplateCache && _cache.TryGetValue(cacheKey, out string? cached))
-            {
-                _logger.LogDebug("Template cache hit for {TemplateKey}", templateKey);
-                return cached!;
-            }
-
             var templateFile = $"{templateKey}.cshtml";
             var templatePath = GetTemplatePath(templateKey);
-            
+
             if (!File.Exists(templatePath))
             {
                 throw new FileNotFoundException($"Email template not found: {templatePath}");
             }
 
-            _logger.LogDebug("Rendering template {TemplateKey} with model type {ModelType}", 
+            _logger.LogDebug("Rendering template {TemplateKey} with model type {ModelType}",
                 templateKey, typeof(TModel).Name);
 
-            // RazorLight uses relative path from the project root
-            var result = await _razorEngine.CompileRenderAsync(templateFile, model);
-
-            if (_options.EnableTemplateCache)
-            {
-                _cache.Set(cacheKey, result, TimeSpan.FromMinutes(_options.TemplateCacheExpirationMinutes));
-            }
-
-            return result;
+            return await _razorEngine.CompileRenderAsync(templateFile, model);
         }
         catch (Exception ex)
         {
@@ -94,30 +73,15 @@ public class RazorEmailTemplateService : IEmailTemplateService
     {
         try
         {
-            var cacheKey = GetCacheKey(templateKey, "dynamic");
-
-            if (_options.EnableTemplateCache && _cache.TryGetValue(cacheKey, out string? cached))
-            {
-                return cached!;
-            }
-
             var templateFile = $"{templateKey}.cshtml";
             var templatePath = GetTemplatePath(templateKey);
-            
+
             if (!File.Exists(templatePath))
             {
                 throw new FileNotFoundException($"Email template not found: {templatePath}");
             }
 
-            // RazorLight uses relative path from the project root
-            var result = await _razorEngine.CompileRenderAsync(templateFile, model ?? new { });
-
-            if (_options.EnableTemplateCache)
-            {
-                _cache.Set(cacheKey, result, TimeSpan.FromMinutes(_options.TemplateCacheExpirationMinutes));
-            }
-
-            return result;
+            return await _razorEngine.CompileRenderAsync(templateFile, model ?? new { });
         }
         catch (Exception ex)
         {
@@ -134,15 +98,7 @@ public class RazorEmailTemplateService : IEmailTemplateService
 
     public void ClearCache()
     {
-        lock (_lockObject)
-        {
-            if (_cache is MemoryCache memoryCache)
-            {
-                // Clear all template-related cache entries
-                // Note: This is a simplified approach. In production, you might want to track cache keys
-                _logger.LogInformation("Clearing email template cache");
-            }
-        }
+        // Không cache render email — không cần xóa cache.
     }
 
     private string GetTemplatePath(string templateKey)
@@ -155,10 +111,5 @@ public class RazorEmailTemplateService : IEmailTemplateService
     {
         var basePath = _environment.ContentRootPath ?? AppDomain.CurrentDomain.BaseDirectory;
         return Path.Combine(basePath, _options.TemplateBasePath);
-    }
-
-    private static string GetCacheKey(string templateKey, string modelType)
-    {
-        return $"email_template_{templateKey}_{modelType}";
     }
 }
