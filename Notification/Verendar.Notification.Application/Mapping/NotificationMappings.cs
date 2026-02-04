@@ -75,6 +75,25 @@ public static class NotificationMappings
         };
     }
 
+    public static Domain.Entities.Notification MaintenanceReminderToNotificationEntity(
+        this MaintenanceReminderEvent message,
+        string title,
+        string content,
+        NotificationType type =NotificationType.System)
+    {
+        return new Domain.Entities.Notification
+        {
+            UserId = message.UserId,
+            Title = title,
+            Message = content,
+            NotificationType = type,
+            Priority = NotificationPriority.High,
+            Status = NotificationStatus.Pending,
+            CreatedAt = DateTime.UtcNow,
+            MetadataJson = JsonSerializer.Serialize(new { Source = "MaintenanceReminder", Level = message.Level, LevelName = message.LevelName })
+        };
+    }
+
     public static NotificationDelivery CreateDelivery(
         this Domain.Entities.Notification notification,
         string? recipientAddress,

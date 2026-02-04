@@ -48,6 +48,7 @@ namespace Verendar.Vehicle.Bootstrapping
             });
 
             builder.Services.AddScoped<OdometerReminderJob>();
+            builder.Services.AddScoped<MaintenanceReminderJob>();
 
             // Register Unit of Work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -83,6 +84,11 @@ namespace Verendar.Vehicle.Bootstrapping
                 "odometer-reminder",
                 x => x.ExecuteAsync(CancellationToken.None),
                 "0 0 */3 * *");
+
+            RecurringJob.AddOrUpdate<MaintenanceReminderJob>(
+                "maintenance-reminder-urgent",
+                x => x.ExecuteAsync(CancellationToken.None),
+                "0 0 * * *");
 
             if (app.Environment.IsDevelopment())
             {

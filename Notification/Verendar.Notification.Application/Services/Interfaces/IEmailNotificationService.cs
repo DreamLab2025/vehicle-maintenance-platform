@@ -8,4 +8,6 @@ public interface IEmailNotificationService
     Task<bool> SendOtpEmailAsync(OtpRequestedEvent message, CancellationToken cancellationToken = default);
 
     Task<bool> SendOdometerReminderEmailAsync(OdometerReminderEvent message, CancellationToken cancellationToken = default);
+
+    Task<bool> SendMaintenanceReminderEmailAsync(MaintenanceReminderEvent message, CancellationToken cancellationToken = default);
 }
