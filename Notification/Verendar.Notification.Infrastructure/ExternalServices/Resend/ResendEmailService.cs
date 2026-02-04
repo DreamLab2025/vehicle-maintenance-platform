@@ -2,10 +2,8 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Resend;
 using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Notification.Infrastructure.Configuration;
-using ApplicationEmailAttachment = Verendar.Notification.Application.Services.Interfaces.EmailAttachment;
 
 namespace Verendar.Notification.Infrastructure.ExternalServices.Resend;
 

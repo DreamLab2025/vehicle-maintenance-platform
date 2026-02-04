@@ -202,7 +202,6 @@ namespace Verendar.Vehicle.Application.Mappings
             entity.IsDeclared = true;
         }
 
-        /// <summary>Bản ghi đầu tiên (không có km ngày đó).</summary>
         public static OdometerHistory ToOdometerHistory(this Guid userVehicleId, int odometerValue)
         {
             return new OdometerHistory
@@ -215,7 +214,6 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        /// <summary>Bản ghi có delta: km ngày đó = odometerValue - previousOdometerValue.</summary>
         public static OdometerHistory ToOdometerHistory(this Guid userVehicleId, int odometerValue, int previousOdometerValue)
         {
             return new OdometerHistory

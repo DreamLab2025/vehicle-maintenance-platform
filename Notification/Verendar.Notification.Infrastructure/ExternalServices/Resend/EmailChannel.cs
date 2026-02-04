@@ -34,15 +34,29 @@ public class EmailChannel : INotificationChannel
 
             ResendEmailResponse result;
 
-            // Check if we should use template-based email
             var templateKey = context.Metadata?.GetValueOrDefault("TemplateKey")?.ToString();
-            var useTemplate = !string.IsNullOrEmpty(templateKey) && 
-                             (context.TemplateParameters != null && context.TemplateParameters.Any());
+            var useTemplateModel = !string.IsNullOrEmpty(templateKey) && context.TemplateModel != null;
+            var useTemplateParams = !string.IsNullOrEmpty(templateKey) &&
+                                   (context.TemplateParameters != null && context.TemplateParameters.Any());
 
-            if (useTemplate)
+            if (useTemplateModel)
             {
-                // Use strongly-typed template models based on notification type
-                result = await SendTemplatedEmailAsync(context, templateKey!);
+                result = await _emailService.SendTemplatedEmailAsync(
+                    context.RecipientEmail!,
+                    templateKey!,
+                    context.Title,
+                    context.TemplateModel,
+                    cancellationToken: default);
+            }
+            else if (useTemplateParams)
+            {
+                var model = CreateTemplateModel(context);
+                result = await _emailService.SendTemplatedEmailAsync(
+                    context.RecipientEmail!,
+                    templateKey!,
+                    context.Title,
+                    model,
+                    cancellationToken: default);
             }
             else
             {
@@ -54,7 +68,7 @@ public class EmailChannel : INotificationChannel
                     UserName = context.Metadata?.GetValueOrDefault("UserName")?.ToString() ?? "User",
                     ActionUrl = context.Metadata?.GetValueOrDefault("ActionUrl")?.ToString()
                 };
-                
+
                 result = await _emailService.SendTemplatedEmailAsync(
                     context.RecipientEmail!,
                     "Notification",
@@ -80,21 +94,6 @@ public class EmailChannel : INotificationChannel
         }
     }
 
-    private async Task<ResendEmailResponse> SendTemplatedEmailAsync(
-        NotificationDeliveryContext context,
-        string templateKey)
-    {
-        // Map NotificationDeliveryContext to appropriate template model
-        var model = CreateTemplateModel(context);
-        
-        return await _emailService.SendTemplatedEmailAsync(
-            context.RecipientEmail!,
-            templateKey,
-            context.Title,
-            model,
-            cancellationToken: default);
-    }
-
     private object CreateTemplateModel(NotificationDeliveryContext context)
     {
         // Create appropriate model based on notification type or template key
@@ -114,10 +113,10 @@ public class EmailChannel : INotificationChannel
         {
             return new OtpEmailModel
             {
-                OtpCode = context.TemplateParameters.GetValueOrDefault("OTP") ?? 
+                OtpCode = context.TemplateParameters.GetValueOrDefault("OTP") ??
                          context.TemplateParameters.GetValueOrDefault("OtpCode") ?? string.Empty,
                 ExpiryMinutes = int.TryParse(context.TemplateParameters.GetValueOrDefault("ExpiryMinutes"), out var exp) ? exp : 10,
-                ExpiryTime = DateTime.TryParse(context.TemplateParameters.GetValueOrDefault("ExpiryTime"), out var expTime) 
+                ExpiryTime = DateTime.TryParse(context.TemplateParameters.GetValueOrDefault("ExpiryTime"), out var expTime)
                     ? expTime : DateTime.UtcNow.AddMinutes(10),
                 OtpType = context.TemplateParameters.GetValueOrDefault("Type") ?? "Verification",
                 UserName = context.Metadata?.GetValueOrDefault("UserName")?.ToString() ?? "User"
@@ -128,9 +127,9 @@ public class EmailChannel : INotificationChannel
         {
             return new WelcomeEmailModel
             {
-                FullName = context.TemplateParameters.GetValueOrDefault("FullName") ?? 
+                FullName = context.TemplateParameters.GetValueOrDefault("FullName") ??
                           context.Metadata?.GetValueOrDefault("UserName")?.ToString() ?? "User",
-                RegistrationDate = DateTime.TryParse(context.Metadata?.GetValueOrDefault("RegistrationDate")?.ToString(), out var regDate) 
+                RegistrationDate = DateTime.TryParse(context.Metadata?.GetValueOrDefault("RegistrationDate")?.ToString(), out var regDate)
                     ? regDate : DateTime.UtcNow,
                 UserName = context.Metadata?.GetValueOrDefault("UserName")?.ToString() ?? "User"
             };
@@ -161,7 +160,7 @@ public class EmailChannel : INotificationChannel
             "not found"
         };
 
-        return !nonRetryableErrors.Any(error => 
+        return !nonRetryableErrors.Any(error =>
             errorMessage.Contains(error, StringComparison.OrdinalIgnoreCase));
     }
 }

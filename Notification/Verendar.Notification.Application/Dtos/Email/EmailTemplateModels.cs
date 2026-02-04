@@ -43,6 +43,45 @@ public class NotificationEmailModel : EmailTemplateModel
     public string? ActionText { get; set; }
 }
 
+// Nhắc nhở thay linh kiện / bảo dưỡng
+public class MaintenanceReminderEmailModel : EmailTemplateModel
+{
+    public string Title { get; set; } = string.Empty;
+    public string LevelName { get; set; } = string.Empty;
+    public bool IsUrgent { get; set; }
+    public List<MaintenanceReminderItemEmailDto> Items { get; set; } = [];
+    public string? ActionUrl { get; set; }
+    public string? ActionText { get; set; }
+}
+
+public class MaintenanceReminderItemEmailDto
+{
+    public string PartCategoryName { get; set; } = string.Empty;
+    public string? VehicleDisplayName { get; set; }
+    public int CurrentOdometer { get; set; }
+    public int TargetOdometer { get; set; }
+    public decimal PercentageRemaining { get; set; }
+}
+
+// Nhắc nhở cập nhật số km
+public class OdometerReminderEmailModel : EmailTemplateModel
+{
+    public string Title { get; set; } = string.Empty;
+    public int StaleOdometerDays { get; set; }
+    public List<OdometerReminderVehicleEmailDto> Vehicles { get; set; } = [];
+    public string? ActionUrl { get; set; }
+    public string? ActionText { get; set; }
+}
+
+public class OdometerReminderVehicleEmailDto
+{
+    public string VehicleDisplayName { get; set; } = string.Empty;
+    public string? LicensePlate { get; set; }
+    public int CurrentOdometer { get; set; }
+    public string? LastOdometerUpdateFormatted { get; set; }
+    public int DaysSinceUpdate { get; set; }
+}
+
 // Order confirmation email model (example for future use)
 public class OrderConfirmationEmailModel : EmailTemplateModel
 {

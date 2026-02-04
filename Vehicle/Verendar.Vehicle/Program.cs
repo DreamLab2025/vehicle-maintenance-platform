@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Verendar.DatabaseMigrationHelpers;
 using Verendar.Vehicle.Bootstrapping;
 using Verendar.Vehicle.Infrastructure.Data;
+using Verendar.Vehicle.Infrastructure.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,13 @@ await app.MigrateDbContextAsync<VehicleDbContext>(async (database, ct) =>
         """,
         ct ?? default);
 });
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<VehicleDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await MaintenanceReminderTestDataSeeder.SeedAsync(db, logger);
+}
 
 app.UseApplicationServices();
 

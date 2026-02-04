@@ -36,23 +36,8 @@ public class UserRegisteredConsumer(
                 return;
             }
 
-            // Idempotency check: Kiểm tra xem đã có welcome notification cho user này chưa
-            var existingNotification = await _unitOfWork.Notifications
-                .FindOneAsync(n => n.UserId == message.UserId &&
-                                  n.CreatedAt > message.RegistrationDate.AddMinutes(-5) &&
-                                  (n.Title.Contains("Chao mung") || n.Title.Contains("Welcome")));
-
-            if (existingNotification != null)
-            {
-                _logger.LogWarning("Duplicate welcome notification detected - MessageId: {MessageId}, UserId: {UserId}, ExistingNotificationId: {NotificationId}",
-                    messageId, message.UserId, existingNotification.Id);
-                return;
-            }
-
-            // Tạo preference trước
             await CreateUserPreferenceAsync(message);
 
-            // Load template
             var templateCode = "WELCOME_USER";
             var notificationTemplate = await _unitOfWork.NotificationTemplates
                 .FindOneAsync(nt => nt.Code == templateCode && nt.IsActive);
@@ -73,9 +58,6 @@ public class UserRegisteredConsumer(
         {
             _logger.LogError(ex, "Error processing UserRegisteredEvent - MessageId: {MessageId}, UserId: {UserId}", 
                 messageId, message.UserId);
-            
-            // Không throw để tránh retry tạo duplicate notification
-            // Chỉ log và return vì notification đã được lưu vào DB
         }
     }
 
@@ -84,10 +66,8 @@ public class UserRegisteredConsumer(
         var messageContent = ReplaceTemplatePlaceholders(notificationTemplate.MessageTemplate, message);
         var titleContent = ReplaceTemplatePlaceholders(notificationTemplate.TitleTemplate, message);
 
-        // Welcome message luôn gửi qua SMS
         var targetChannel = NotificationChannel.SMS;
 
-        // Tạo & Lưu DB trước
         var notification = message.UserRegisteredToNotificationEntity(
             titleContent,
             messageContent,
@@ -99,7 +79,6 @@ public class UserRegisteredConsumer(
         await _unitOfWork.NotificationDeliveries.AddAsync(delivery);
         await _unitOfWork.SaveChangesAsync();
 
-        // Dùng notification.Id từ DB
         var deliveryContext = new NotificationDeliveryContext
         {
             NotificationId = notification.Id,
@@ -115,14 +94,12 @@ public class UserRegisteredConsumer(
             }
         };
 
-        // Gửi & Update Status (không throw exception nếu đã lưu vào DB)
         try
         {
             await ExecuteSendAsync(targetChannel, deliveryContext, notification, delivery);
         }
         catch (Exception ex)
         {
-            // Notification đã được lưu vào DB, không throw để tránh retry
             _logger.LogError(ex, "Failed to send welcome message after notification created - NotificationId: {NotificationId}, MessageId: {MessageId}",
                 notification.Id, messageId);
         }

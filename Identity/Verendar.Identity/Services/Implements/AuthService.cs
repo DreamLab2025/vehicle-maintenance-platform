@@ -247,18 +247,17 @@ namespace Verendar.Identity.Services.Implements
                 await _unitOfWork.Users.UpdateAsync(user.Id, user);
                 await _unitOfWork.SaveChangesAsync();
 
-                // TODO: Integrate with Notification service later
-                // _logger.LogInformation("Publishing UserRegisteredEvent for user: {Email}", request.Email);
-                // await _publishEndpoint.Publish(new UserRegisteredEvent
-                // {
-                //     UserId = user.Id,
-                //     FullName = user.FullName,
-                //     PhoneNumber = user.PhoneNumber,
-                //     PhoneNumberVerified = user.PhoneNumberVerified,
-                //     Email = user.Email,
-                //     EmailVerified = user.EmailVerified,
-                //     RegistrationDate = user.CreatedAt
-                // });
+                _logger.LogInformation("Publishing UserRegisteredEvent for user: {Email}", request.Email);
+                await _publishEndpoint.Publish(new UserRegisteredEvent
+                {
+                    UserId = user.Id,
+                    FullName = user.FullName,
+                    PhoneNumber = user.PhoneNumber ?? string.Empty,
+                    PhoneNumberVerified = user.PhoneNumberVerified,
+                    Email = user.Email,
+                    EmailVerified = user.EmailVerified,
+                    RegistrationDate = user.CreatedAt
+                });
 
                 await _cacheService.RemoveAsync(cacheKey);
                 return ApiResponse<bool>.SuccessResponse(true, "Kích hoạt tài khoản thành công. Bạn có thể đăng nhập ngay bây giờ.");
@@ -347,15 +346,15 @@ namespace Verendar.Identity.Services.Implements
                 await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
 
                 // TODO: Integrate with Notification service later
-                // _logger.LogInformation("Publishing OtpRequestedEvent for forgot password: {Email}", request.Email);
-                // await _publishEndpoint.Publish(new OtpRequestedEvent
-                // {
-                //     UserId = user.Id,
-                //     TargetValue = user.Email,
-                //     Otp = otpCode,
-                //     ExpiryTime = DateTime.UtcNow.AddMinutes(5),
-                //     Type = OtpType.Email
-                // });
+                _logger.LogInformation("Publishing OtpRequestedEvent for forgot password: {Email}", request.Email);
+                await _publishEndpoint.Publish(new OtpRequestedEvent
+                {
+                    UserId = user.Id,
+                    TargetValue = user.Email,
+                    Otp = otpCode,
+                    ExpiryTime = DateTime.UtcNow.AddMinutes(5),
+                    Type = OtpType.Email
+                });
 
                 _logger.LogInformation("Forgot password OTP code sent successfully to email: {Email}", request.Email);
                 return ApiResponse<bool>.SuccessResponse(true, "Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra email để tiếp tục quá trình đặt lại mật khẩu.");

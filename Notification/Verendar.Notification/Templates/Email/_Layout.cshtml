@@ -1,9 +1,11 @@
-@* 
-    Layout template for all emails
-    Usage: Inherit from this layout in your email templates
-*@
+@* Layout template for all emails - dùng chung cho RazorLight *@
+@using Microsoft.AspNetCore.Html
+@functions {
+    static IHtmlContent Raw(string? s) => new HtmlString(s ?? string.Empty);
+}
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,25 +20,30 @@
             margin: 0;
             padding: 0;
         }
+
         .email-container {
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
         }
+
         .email-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #ffffff;
             padding: 30px 20px;
             text-align: center;
         }
+
         .email-header h1 {
             margin: 0;
             font-size: 24px;
             font-weight: 600;
         }
+
         .email-body {
             padding: 30px 20px;
         }
+
         .email-footer {
             background-color: #f8f9fa;
             padding: 20px;
@@ -45,6 +52,7 @@
             color: #6c757d;
             border-top: 1px solid #dee2e6;
         }
+
         .button {
             display: inline-block;
             padding: 12px 30px;
@@ -55,9 +63,11 @@
             margin: 20px 0;
             font-weight: 500;
         }
+
         .button:hover {
             background-color: #5568d3;
         }
+
         .otp-code {
             font-size: 32px;
             font-weight: bold;
@@ -71,6 +81,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="email-container">
         <div class="email-header">
@@ -85,4 +96,5 @@
         </div>
     </div>
 </body>
+
 </html>

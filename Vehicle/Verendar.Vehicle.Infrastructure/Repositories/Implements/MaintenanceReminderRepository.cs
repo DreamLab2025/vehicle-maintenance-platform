@@ -40,5 +40,23 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .Where(x => x.Level == level && !x.IsNotified)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<IEnumerable<MaintenanceReminder>> GetByLevelWithDetailsAsync(
+            ReminderLevel level,
+            bool includeAlreadyNotified,
+            CancellationToken cancellationToken = default)
+        {
+            var query = _dbSet
+                .Include(x => x.PartTracking)
+                    .ThenInclude(pt => pt!.UserVehicle)
+                .Include(x => x.PartTracking)
+                    .ThenInclude(pt => pt!.PartCategory)
+                .Where(x => x.Level == level);
+
+            if (!includeAlreadyNotified)
+                query = query.Where(x => !x.IsNotified);
+
+            return await query.ToListAsync(cancellationToken);
+        }
     }
 }

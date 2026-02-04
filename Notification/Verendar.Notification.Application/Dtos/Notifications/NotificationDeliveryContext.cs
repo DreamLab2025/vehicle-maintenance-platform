@@ -13,4 +13,5 @@ public class NotificationDeliveryContext
     public NotificationType NotificationType { get; set; }
     public Dictionary<string, string>? TemplateParameters { get; set; }
     public Dictionary<string, object>? Metadata { get; set; }
+    public object? TemplateModel { get; set; }
 }

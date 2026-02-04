@@ -29,15 +29,9 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public bool AllowsMultipleInstances { get; set; } = false;
 
-        /// <summary>
-        /// Dấu hiệu nhận biết cần bảo trì/thay thế (ví dụ: dầu đen, tiếng kêu, rung).
-        /// </summary>
         [MaxLength(1000)]
         public string? IdentificationSigns { get; set; }
 
-        /// <summary>
-        /// Hậu quả nếu không xử lý kịp thời (ví dụ: hỏng động cơ, mất phanh).
-        /// </summary>
         [MaxLength(1000)]
         public string? ConsequencesIfNotHandled { get; set; }
 

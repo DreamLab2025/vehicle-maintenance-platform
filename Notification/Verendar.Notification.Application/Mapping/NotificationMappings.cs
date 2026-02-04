@@ -2,6 +2,7 @@ using System.Text.Json;
 using Verendar.Notification.Domain.Entities;
 using Verendar.Notification.Domain.Enums;
 using Verender.Identity.Contracts.Events;
+using Verendar.Vehicle.Contracts.Events;
 
 namespace Verendar.Notification.Application.Mapping;
 
@@ -52,6 +53,44 @@ public static class NotificationMappings
             {
                 IsFallback = isFallback,
             })
+        };
+    }
+
+    public static Domain.Entities.Notification OdometerReminderToNotificationEntity(
+        this OdometerReminderEvent message,
+        string title,
+        string content,
+        Domain.Enums.NotificationType type = Domain.Enums.NotificationType.System)
+    {
+        return new Domain.Entities.Notification
+        {
+            UserId = message.UserId,
+            Title = title,
+            Message = content,
+            NotificationType = type,
+            Priority = NotificationPriority.Medium,
+            Status = NotificationStatus.Pending,
+            CreatedAt = DateTime.UtcNow,
+            MetadataJson = JsonSerializer.Serialize(new { Source = "OdometerReminder" })
+        };
+    }
+
+    public static Domain.Entities.Notification MaintenanceReminderToNotificationEntity(
+        this MaintenanceReminderEvent message,
+        string title,
+        string content,
+        NotificationType type =NotificationType.System)
+    {
+        return new Domain.Entities.Notification
+        {
+            UserId = message.UserId,
+            Title = title,
+            Message = content,
+            NotificationType = type,
+            Priority = NotificationPriority.High,
+            Status = NotificationStatus.Pending,
+            CreatedAt = DateTime.UtcNow,
+            MetadataJson = JsonSerializer.Serialize(new { Source = "MaintenanceReminder", Level = message.Level, LevelName = message.LevelName })
         };
     }
 

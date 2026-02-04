@@ -9,7 +9,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
     public class UserVehicleRepository(VehicleDbContext context) : PostgresRepository<UserVehicle>(context), IUserVehicleRepository
     {
-        private readonly VehicleDbContext _context = context;
+        private readonly VehicleDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
         public IQueryable<UserVehicle> GetQueryWithFullDetails()
         {
@@ -105,6 +105,35 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .ToListAsync();
 
             return logDates.Count >= daysRequired;
+        }
+
+        public async Task<IReadOnlyList<Guid>> GetDistinctUserIdsWithStaleOdometerAsync(int olderThanDays, CancellationToken cancellationToken = default)
+        {
+            var cutoffDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-olderThanDays);
+
+            var userIds = await _dbSet
+                .Where(v => v.DeletedAt == null
+                            && v.Status == EntityStatus.Active
+                            && (v.LastOdometerUpdate == null || v.LastOdometerUpdate < cutoffDate))
+                .Select(v => v.UserId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            return userIds;
+        }
+
+        public async Task<IReadOnlyList<UserVehicle>> GetStaleOdometerVehiclesByUserAsync(Guid userId, int olderThanDays, CancellationToken cancellationToken = default)
+        {
+            var cutoffDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-olderThanDays);
+
+            return await _dbSet
+                .Include(v => v.Variant)
+                    .ThenInclude(vv => vv.VehicleModel)
+                .Where(v => v.DeletedAt == null
+                            && v.Status == EntityStatus.Active
+                            && v.UserId == userId
+                            && (v.LastOdometerUpdate == null || v.LastOdometerUpdate < cutoffDate))
+                .ToListAsync(cancellationToken);
         }
     }
 }

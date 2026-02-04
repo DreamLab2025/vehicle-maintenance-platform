@@ -5,10 +5,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Verendar.Vehicle.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    /// <summary>
-    /// Enum ReminderLevel: thêm Normal=0, shift Low->1, Medium->2, High->3, Urgent->4.
-    /// Dữ liệu cũ: 0,1,2,3 → 1,2,3,4.
-    /// </summary>
     public partial class AddNormalToReminderLevelAndShiftLevels : Migration
     {
         /// <inheritdoc />

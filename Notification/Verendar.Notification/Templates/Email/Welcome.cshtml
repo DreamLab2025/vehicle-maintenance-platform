@@ -1,13 +1,18 @@
 @using Verendar.Notification.Application.Dtos.Email
+@using Microsoft.AspNetCore.Html
 @model WelcomeEmailModel
 @{
     Layout = "_Layout";
     ViewBag.Title = "Chào mừng đến với Verendar";
 }
+@functions {
+    static IHtmlContent Raw(string? s) => new HtmlString(s ?? string.Empty);
+}
 
 <h2>Xin chào @Model.FullName!</h2>
 
-<p>Chúng tôi rất vui mừng được chào đón bạn đến với <strong>Verendar</strong> - nền tảng quản lý bảo dưỡng xe hơi hàng đầu.</p>
+<p>Chúng tôi rất vui mừng được chào đón bạn đến với <strong>Verendar</strong> - nền tảng quản lý bảo dưỡng xe hơi hàng
+    đầu.</p>
 
 <p>Bạn đã đăng ký thành công vào ngày <strong>@Model.RegistrationDate.ToString("dd/MM/yyyy")</strong>.</p>
 
@@ -27,4 +32,5 @@
 <p>Nếu bạn có bất kỳ câu hỏi nào, đừng ngần ngại liên hệ với chúng tôi.</p>
 
 <p>Trân trọng,<br>
-<strong>Đội ngũ Verendar</strong></p>
+    <strong>Đội ngũ Verendar</strong>
+</p>

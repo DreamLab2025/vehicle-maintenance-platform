@@ -1,4 +1,3 @@
-using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
