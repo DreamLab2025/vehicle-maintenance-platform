@@ -11,5 +11,6 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
         Task<UserVehicle?> GetByIdAndUserIdWithFullDetailsAsync(Guid id, Guid userId);
         Task<UserVehicle?> GetByIdAndUserIdWithoutPartTrackingsAsync(Guid id, Guid userId);
         Task<(bool IsAllowed, string Message)> CheckCanCreateVehicleAsync(Guid userId, bool isPremiumUser = false);
+        Task<IReadOnlyList<Guid>> GetDistinctUserIdsWithStaleOdometerAsync(int olderThanDays, CancellationToken cancellationToken = default);
     }
 }

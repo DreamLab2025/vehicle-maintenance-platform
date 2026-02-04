@@ -1,4 +1,4 @@
-﻿using Verendar.Common.Bootstrapping;
+using Verendar.Common.Bootstrapping;
 using Verendar.Common.Shared;
 using Verendar.Identity.Apis;
 using Verendar.Identity.Data;
@@ -48,6 +48,7 @@ namespace Verendar.Identity.Bootstrapping
 
             app.MapAuthApi();
             app.MapUserApi();
+            app.MapInternalUserApi();
 
             return app;
         }
