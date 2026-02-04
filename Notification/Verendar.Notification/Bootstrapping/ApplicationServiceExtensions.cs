@@ -11,6 +11,7 @@ using Verendar.Notification.Infrastructure.ExternalServices.ESms;
 using Verendar.Notification.Apis;
 using Verendar.Notification.Infrastructure.ExternalServices.Resend;
 using Verendar.Notification.Infrastructure.Repositories.Implements;
+using Verendar.Notification.Infrastructure.Services;
 using Verendar.ServiceDefaults;
 
 namespace Verendar.Notification.Bootstrapping;
@@ -49,6 +50,7 @@ public static class ApplicationServiceExtensions
         builder.Services.AddScoped<IChannelFactory, ChannelFactory>();
 
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+        builder.Services.AddScoped<IEmailNotificationService, EmailNotificationService>();
 
         return builder;
     }
