@@ -8,6 +8,7 @@ using Verendar.Identity.Entities;
 using Verendar.Identity.Mappings;
 using Verendar.Identity.Repositories.Interfaces;
 using Verendar.Identity.Services.Interfaces;
+using Verender.Identity.Contracts.Events;
 
 namespace Verendar.Identity.Services.Implements
 {
@@ -49,19 +50,19 @@ namespace Verendar.Identity.Services.Implements
                 await _unitOfWork.SaveChangesAsync();
 
                 var otpCode = GetOtpCode();
-                _logger.LogError("Send OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
+                _logger.LogInformation("Sending OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
                 await _cacheService.SetAsync($"otp_register:{request.Email}", otpCode, TimeSpan.FromMinutes(5));
 
-                // TODO: Integrate with Notification service later
-                // _logger.LogInformation("Publishing OtpRequestedEvent for new user registration: {Email}", request.Email);
-                // await _publishEndpoint.Publish(new OtpRequestedEvent
-                // {
-                //     UserId = user.Id,
-                //     TargetValue = user.Email,
-                //     Otp = otpCode,
-                //     ExpiryTime = DateTime.UtcNow.AddMinutes(5),
-                //     Type = OtpType.Email
-                // });
+                // Publish event to Notification service để gửi email OTP
+                _logger.LogInformation("Publishing OtpRequestedEvent for new user registration: {Email}", request.Email);
+                await _publishEndpoint.Publish(new OtpRequestedEvent
+                {
+                    UserId = user.Id,
+                    TargetValue = user.Email,
+                    Otp = otpCode,
+                    ExpiryTime = DateTime.UtcNow.AddMinutes(5),
+                    Type = OtpType.Email
+                });
 
                 _logger.LogInformation("User registered successfully: {Email}", request.Email);
                 return ApiResponse<UserDto>.SuccessResponse(
@@ -296,20 +297,20 @@ namespace Verendar.Identity.Services.Implements
                 }
 
                 var otpCode = GetOtpCode();
-                _logger.LogError("Resending OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
+                _logger.LogInformation("Resending OTP code to email: {Email} with OTP: {OtpCode}", request.Email, otpCode);
                 await _cacheService.SetAsync($"otp_register:{request.Email}", otpCode, TimeSpan.FromMinutes(5));
                 await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
 
-                // TODO: Integrate with Notification service later
-                // _logger.LogInformation("Publishing OtpRequestedEvent for resend OTP: {Email}", request.Email);
-                // await _publishEndpoint.Publish(new OtpRequestedEvent
-                // {
-                //     UserId = user.Id,
-                //     TargetValue = user.Email,
-                //     Otp = otpCode,
-                //     ExpiryTime = DateTime.UtcNow.AddMinutes(5),
-                //     Type = OtpType.Email
-                // });
+                // Publish event to Notification service để gửi lại email OTP
+                _logger.LogInformation("Publishing OtpRequestedEvent for resend OTP: {Email}", request.Email);
+                await _publishEndpoint.Publish(new OtpRequestedEvent
+                {
+                    UserId = user.Id,
+                    TargetValue = user.Email,
+                    Otp = otpCode,
+                    ExpiryTime = DateTime.UtcNow.AddMinutes(5),
+                    Type = OtpType.Email
+                });
 
                 _logger.LogInformation("OTP code resent successfully to email: {Email}", request.Email);
                 return ApiResponse<bool>.SuccessResponse(true, "Gửi lại mã OTP thành công. Vui lòng kiểm tra email của bạn.");

@@ -67,9 +67,14 @@ public partial class OtpRequestedConsumer(
 
             await SendOtpMessageAsync(message, notificationTemplate, messageId);
 
+            var channelName = message.Type == OtpType.Email ? "Email" : "SMS";
+            var maskedValue = message.Type == OtpType.Email 
+                ? MaskEmail(message.TargetValue) 
+                : MaskPhoneNumber(message.TargetValue);
+            
             _logger.LogInformation(
-                "OTP SMS processed successfully - MessageId: {MessageId}, UserId: {UserId}, Phone: {Phone}",
-                messageId, message.UserId, MaskPhoneNumber(message.TargetValue));
+                "OTP {Channel} processed successfully - MessageId: {MessageId}, UserId: {UserId}, Target: {Target}",
+                channelName, messageId, message.UserId, maskedValue);
         }
         catch (Exception ex)
         {
@@ -86,8 +91,8 @@ public partial class OtpRequestedConsumer(
         var messageContent = ReplaceTemplatePlaceholders(notificationTemplate.MessageTemplate, message);
         var titleContent = ReplaceTemplatePlaceholders(notificationTemplate.TitleTemplate, message);
 
-        // OTP luôn gửi qua SMS
-        var targetChannel = NotificationChannel.SMS;
+        // Xác định channel dựa trên OtpType
+        var targetChannel = message.Type == OtpType.Email ? NotificationChannel.EMAIL : NotificationChannel.SMS;
 
         // Tạo & Lưu DB (Pending)
         var notification = message.OtpRequestedToNotificationEntity(
@@ -102,22 +107,28 @@ public partial class OtpRequestedConsumer(
         await _unitOfWork.NotificationDeliveries.AddAsync(delivery);
         await _unitOfWork.SaveChangesAsync();
 
-        // Chuẩn bị Context cho SMS
+        // Chuẩn bị Context
         var deliveryContext = new NotificationDeliveryContext
         {
             NotificationId = notification.Id,
-            RecipientPhone = message.TargetValue,
+            RecipientEmail = message.Type == OtpType.Email ? message.TargetValue : null,
+            RecipientPhone = message.Type == OtpType.PhoneNumber ? message.TargetValue : null,
             Title = titleContent,
             Message = messageContent,
             NotificationType = notificationTemplate.NotificationType,
             TemplateParameters = new Dictionary<string, string>
             {
                 { "OTP", message.Otp },
+                { "OtpCode", message.Otp },
                 { "ExpiryMinutes", CalculateExpiryMinutes(message.ExpiryTime).ToString() },
                 { "ExpiryTime", message.ExpiryTime.ToString("HH:mm dd/MM/yyyy") },
                 { "Type", message.Type.ToString() }
             },
-            Metadata = new Dictionary<string, object> { { "IsFallback", false } }
+            Metadata = new Dictionary<string, object>
+            {
+                { "IsFallback", false },
+                { "TemplateKey", "Otp" } // Sử dụng Razor template "Otp.cshtml"
+            }
         };
 
         // Gửi & Update Status (không throw exception nếu đã lưu vào DB)
@@ -141,7 +152,7 @@ public partial class OtpRequestedConsumer(
         var fallbackMessage = $"Ma xac thuc OTP Verender cua ban la: {message.Otp}. " +
                               $"Hieu luc {expiryMinutes} phut. Khong chia se ma nay.";
 
-        var targetChannel = NotificationChannel.SMS;
+        var targetChannel = message.Type == OtpType.Email ? NotificationChannel.EMAIL : NotificationChannel.SMS;
 
         // Tạo & Lưu DB
         var notification = message.OtpRequestedToNotificationEntity(
@@ -156,22 +167,28 @@ public partial class OtpRequestedConsumer(
         await _unitOfWork.NotificationDeliveries.AddAsync(delivery);
         await _unitOfWork.SaveChangesAsync();
 
-        // Context cho Fallback SMS
+        // Context cho Fallback
         var deliveryContext = new NotificationDeliveryContext
         {
             NotificationId = notification.Id,
-            RecipientPhone = message.TargetValue,
+            RecipientEmail = message.Type == OtpType.Email ? message.TargetValue : null,
+            RecipientPhone = message.Type == OtpType.PhoneNumber ? message.TargetValue : null,
             Title = "Ma xac thuc OTP",
             Message = fallbackMessage,
             NotificationType = NotificationType.System,
             TemplateParameters = new Dictionary<string, string>
             {
                 { "OTP", message.Otp },
+                { "OtpCode", message.Otp },
                 { "ExpiryMinutes", CalculateExpiryMinutes(message.ExpiryTime).ToString() },
                 { "ExpiryTime", message.ExpiryTime.ToString("HH:mm dd/MM/yyyy") },
                 { "Type", message.Type.ToString() }
             },
-            Metadata = new Dictionary<string, object> { { "IsFallback", true } }
+            Metadata = new Dictionary<string, object>
+            {
+                { "IsFallback", true },
+                { "TemplateKey", "Otp" } // Vẫn dùng Razor template cho fallback
+            }
         };
 
         try
@@ -256,14 +273,37 @@ public partial class OtpRequestedConsumer(
 
     private static string GetTemplateCode(OtpType type)
     {
-        return "OTP_PHONE_VERIFICATION"; // Chỉ Phone
+        return type == OtpType.Email ? "OTP_EMAIL_VERIFICATION" : "OTP_PHONE_VERIFICATION";
+    }
+    
+    private string? MaskEmail(string? email)
+    {
+        if (string.IsNullOrEmpty(email)) return "N/A";
+        if (!email.Contains("@")) return "****";
+        var parts = email.Split('@');
+        if (parts.Length != 2) return "****";
+        var username = parts[0];
+        var domain = parts[1];
+        if (username.Length <= 2) return $"**@{domain}";
+        return $"{username[..2]}***@{domain}";
     }
 
     private bool ValidateMessage(OtpRequestedEvent message)
     {
         if (string.IsNullOrEmpty(message.TargetValue)) return false;
         if (message.ExpiryTime < DateTime.UtcNow) return false;
-        if (!PhoneNumberRegex().IsMatch(message.TargetValue)) return false;
-        return true;
+        
+        // Validate based on type
+        if (message.Type == OtpType.PhoneNumber)
+        {
+            return PhoneNumberRegex().IsMatch(message.TargetValue);
+        }
+        
+        if (message.Type == OtpType.Email)
+        {
+            return message.TargetValue.Contains("@") && message.TargetValue.Contains(".");
+        }
+        
+        return false;
     }
 }
