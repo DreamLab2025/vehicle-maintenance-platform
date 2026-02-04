@@ -48,19 +48,29 @@ public class MaintenanceReminderJob(
                     continue;
                 }
 
-                var items = group.Select(r => new MaintenanceReminderItemDto
+                var items = group.Select(r =>
                 {
-                    PartCategoryName = r.PartTracking!.PartCategory!.Name,
-                    UserVehicleId = r.PartTracking.UserVehicleId,
-                    ReminderId = r.Id,
-                    CurrentOdometer = r.CurrentOdometer,
-                    TargetOdometer = r.TargetOdometer
+                    var uv = r.PartTracking!.UserVehicle!;
+                    var vehicleDisplay = uv.Variant?.VehicleModel != null
+                        ? $"{uv.Variant.VehicleModel.Name}" + (string.IsNullOrEmpty(uv.LicensePlate) ? "" : $" - {uv.LicensePlate}")
+                        : uv.LicensePlate;
+                    return new MaintenanceReminderItemDto
+                    {
+                        PartCategoryName = r.PartTracking!.PartCategory!.Name,
+                        UserVehicleId = r.PartTracking.UserVehicleId,
+                        ReminderId = r.Id,
+                        CurrentOdometer = r.CurrentOdometer,
+                        TargetOdometer = r.TargetOdometer,
+                        PercentageRemaining = r.PercentageRemaining,
+                        VehicleDisplayName = vehicleDisplay
+                    };
                 }).ToList();
 
                 await publishEndpoint.Publish(new MaintenanceReminderEvent
                 {
                     UserId = userId,
                     TargetValue = email,
+                    UserName = null,
                     Level = (int)ReminderLevel.Urgent,
                     LevelName = nameof(ReminderLevel.Urgent),
                     Items = items

@@ -121,5 +121,19 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 
             return userIds;
         }
+
+        public async Task<IReadOnlyList<UserVehicle>> GetStaleOdometerVehiclesByUserAsync(Guid userId, int olderThanDays, CancellationToken cancellationToken = default)
+        {
+            var cutoffDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-olderThanDays);
+
+            return await _dbSet
+                .Include(v => v.Variant)
+                    .ThenInclude(vv => vv.VehicleModel)
+                .Where(v => v.DeletedAt == null
+                            && v.Status == EntityStatus.Active
+                            && v.UserId == userId
+                            && (v.LastOdometerUpdate == null || v.LastOdometerUpdate < cutoffDate))
+                .ToListAsync(cancellationToken);
+        }
     }
 }

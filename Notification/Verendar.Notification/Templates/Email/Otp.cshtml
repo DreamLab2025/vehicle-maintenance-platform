@@ -1,8 +1,12 @@
 @using Verendar.Notification.Application.Dtos.Email
+@using Microsoft.AspNetCore.Html
 @model OtpEmailModel
 @{
     Layout = "_Layout";
     ViewBag.Title = "Mã xác thực OTP";
+}
+@functions {
+    static IHtmlContent Raw(string? s) => new HtmlString(s ?? string.Empty);
 }
 
 <h2>Mã xác thực OTP của bạn</h2>
@@ -28,4 +32,5 @@
 </p>
 
 <p>Trân trọng,<br>
-<strong>Đội ngũ Verendar</strong></p>
+    <strong>Đội ngũ Verendar</strong>
+</p>

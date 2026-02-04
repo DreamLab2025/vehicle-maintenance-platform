@@ -83,7 +83,7 @@ namespace Verendar.Vehicle.Bootstrapping
             RecurringJob.AddOrUpdate<OdometerReminderJob>(
                 "odometer-reminder",
                 x => x.ExecuteAsync(CancellationToken.None),
-                "0 0 */3 * *");
+                "0 0 * * *");
 
             RecurringJob.AddOrUpdate<MaintenanceReminderJob>(
                 "maintenance-reminder-urgent",

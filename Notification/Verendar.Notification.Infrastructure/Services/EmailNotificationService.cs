@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Verendar.Notification.Application.Dtos.Email;
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Mapping;
 using Verendar.Notification.Application.Services.Interfaces;
@@ -106,7 +107,8 @@ public class EmailNotificationService(
             return false;
         }
 
-        var messageContent = "Bạn đã không cập nhật số km (odo) trong 3 ngày qua. "
+        var days = message.StaleOdometerDays > 0 ? message.StaleOdometerDays : 3;
+        var messageContent = $"Bạn đã không cập nhật số km (odo) trong {days} ngày qua. "
             + "Vui lòng cập nhật số km của xe để Verendar có thể theo dõi bảo dưỡng chính xác hơn.";
 
         var notification = message.OdometerReminderToNotificationEntity(
@@ -118,6 +120,22 @@ public class EmailNotificationService(
         await _unitOfWork.NotificationDeliveries.AddAsync(delivery);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        var templateModel = new OdometerReminderEmailModel
+        {
+            UserName = message.UserName,
+            UserEmail = message.TargetValue,
+            Title = OdometerReminderTitle,
+            StaleOdometerDays = days,
+            Vehicles = (message.Vehicles ?? []).Select(v => new OdometerReminderVehicleEmailDto
+            {
+                VehicleDisplayName = v.VehicleDisplayName,
+                LicensePlate = v.LicensePlate,
+                CurrentOdometer = v.CurrentOdometer,
+                LastOdometerUpdateFormatted = v.LastOdometerUpdate?.ToString("dd/MM/yyyy"),
+                DaysSinceUpdate = v.DaysSinceUpdate
+            }).ToList()
+        };
+
         var context = new NotificationDeliveryContext
         {
             NotificationId = notification.Id,
@@ -126,7 +144,8 @@ public class EmailNotificationService(
             Title = OdometerReminderTitle,
             Message = messageContent,
             NotificationType = notification.NotificationType,
-            Metadata = new Dictionary<string, object> { { "UserName", "bạn" } }
+            Metadata = new Dictionary<string, object> { { "TemplateKey", "OdometerReminder" } },
+            TemplateModel = templateModel
         };
 
         try
@@ -180,6 +199,24 @@ public class EmailNotificationService(
         await _unitOfWork.NotificationDeliveries.AddAsync(delivery);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+        const int UrgentLevel = 4;
+        var templateModel = new MaintenanceReminderEmailModel
+        {
+            UserName = message.UserName,
+            UserEmail = message.TargetValue,
+            Title = title,
+            LevelName = message.LevelName,
+            IsUrgent = message.Level >= UrgentLevel,
+            Items = (message.Items ?? []).Select(i => new MaintenanceReminderItemEmailDto
+            {
+                PartCategoryName = i.PartCategoryName,
+                VehicleDisplayName = i.VehicleDisplayName,
+                CurrentOdometer = i.CurrentOdometer,
+                TargetOdometer = i.TargetOdometer,
+                PercentageRemaining = i.PercentageRemaining
+            }).ToList()
+        };
+
         var context = new NotificationDeliveryContext
         {
             NotificationId = notification.Id,
@@ -188,7 +225,8 @@ public class EmailNotificationService(
             Title = title,
             Message = messageContent,
             NotificationType = notification.NotificationType,
-            Metadata = new Dictionary<string, object> { { "UserName", "bạn" }, { "Level", message.Level }, { "LevelName", message.LevelName } }
+            Metadata = new Dictionary<string, object> { { "TemplateKey", "MaintenanceReminder" } },
+            TemplateModel = templateModel
         };
 
         try

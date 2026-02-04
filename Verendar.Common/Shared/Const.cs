@@ -1,4 +1,4 @@
-﻿namespace Verendar.Common.Shared
+namespace Verendar.Common.Shared
 {
     public class Const
     {

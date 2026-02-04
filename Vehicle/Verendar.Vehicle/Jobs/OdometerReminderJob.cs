@@ -28,6 +28,8 @@ public class OdometerReminderJob(
 
         logger.LogInformation("OdometerReminderJob: Publishing reminder events for {Count} users", userIds.Count);
 
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
         foreach (var userId in userIds)
         {
             try
@@ -39,13 +41,35 @@ public class OdometerReminderJob(
                     continue;
                 }
 
+                var vehicles = await unitOfWork.UserVehicles.GetStaleOdometerVehiclesByUserAsync(userId, StaleOdometerDays, cancellationToken);
+                var vehicleDtos = vehicles.Select(v =>
+                {
+                    var lastUpdate = v.LastOdometerUpdate;
+                    var daysSince = lastUpdate.HasValue ? today.DayNumber - lastUpdate.Value.DayNumber : (int?)null;
+                    var displayName = v.Variant?.VehicleModel != null
+                        ? $"{v.Variant.VehicleModel.Name}" + (string.IsNullOrEmpty(v.LicensePlate) ? "" : $" - {v.LicensePlate}")
+                        : v.LicensePlate ?? "Xe của bạn";
+                    return new OdometerReminderVehicleDto
+                    {
+                        UserVehicleId = v.Id,
+                        VehicleDisplayName = displayName,
+                        LicensePlate = v.LicensePlate,
+                        CurrentOdometer = v.CurrentOdometer,
+                        LastOdometerUpdate = v.LastOdometerUpdate,
+                        DaysSinceUpdate = daysSince ?? StaleOdometerDays
+                    };
+                }).ToList();
+
                 await publishEndpoint.Publish(new OdometerReminderEvent
                 {
                     UserId = userId,
-                    TargetValue = email
+                    TargetValue = email,
+                    UserName = null,
+                    StaleOdometerDays = StaleOdometerDays,
+                    Vehicles = vehicleDtos
                 }, cancellationToken);
 
-                logger.LogDebug("OdometerReminderJob: Published OdometerReminderEvent for user {UserId}", userId);
+                logger.LogDebug("OdometerReminderJob: Published OdometerReminderEvent for user {UserId}, {VehicleCount} vehicles", userId, vehicleDtos.Count);
             }
             catch (Exception ex)
             {

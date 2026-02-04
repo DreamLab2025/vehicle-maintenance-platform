@@ -1,15 +1,19 @@
 @using Verendar.Notification.Application.Dtos.Email
+@using Microsoft.AspNetCore.Html
 @model NotificationEmailModel
 @{
     Layout = "_Layout";
     ViewBag.Title = Model.Title;
+}
+@functions {
+    static IHtmlContent Raw(string? s) => new HtmlString(s ?? string.Empty);
 }
 
 <h2>@Model.Title</h2>
 
 <p>Xin chào @Model.UserName,</p>
 
-<div style="white-space: pre-line;">@Html.Raw(Model.Message)</div>
+<div style="white-space: pre-line;">@Raw(Model.Message)</div>
 
 @if (!string.IsNullOrEmpty(Model.ActionUrl) && !string.IsNullOrEmpty(Model.ActionText))
 {
@@ -19,4 +23,5 @@
 }
 
 <p>Trân trọng,<br>
-<strong>Đội ngũ Verendar</strong></p>
+    <strong>Đội ngũ Verendar</strong>
+</p>

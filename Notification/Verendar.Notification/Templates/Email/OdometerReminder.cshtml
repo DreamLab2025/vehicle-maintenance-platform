@@ -1,0 +1,52 @@
+@using Verendar.Notification.Application.Dtos.Email
+@using Microsoft.AspNetCore.Html
+@model OdometerReminderEmailModel
+@{
+    Layout = "_Layout";
+    ViewBag.Title = Model.Title;
+}
+@functions {
+    static IHtmlContent Raw(string? s) => new HtmlString(s ?? string.Empty);
+}
+
+<h2>@Model.Title</h2>
+
+<p>Xin chào @(string.IsNullOrEmpty(Model.UserName) ? "bạn" : Model.UserName),</p>
+
+<p>Bạn đã <strong>không cập nhật số km (odo)</strong> trong <strong>@Model.StaleOdometerDays ngày</strong> qua. Cập nhật số km giúp Verendar theo dõi bảo dưỡng chính xác và nhắc bạn đúng lúc.</p>
+
+<p><strong>Danh sách xe cần cập nhật số km:</strong></p>
+<table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+    <thead>
+        <tr style="background-color: #f8f9fa;">
+            <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Xe</th>
+            <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Biển số</th>
+            <th style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">Số km hiện tại</th>
+            <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Cập nhật lần cuối</th>
+            <th style="padding: 10px; text-align: center; border: 1px solid #dee2e6;">Chưa cập nhật</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var v in Model.Vehicles)
+        {
+            <tr>
+                <td style="padding: 10px; border: 1px solid #dee2e6;">@v.VehicleDisplayName</td>
+                <td style="padding: 10px; border: 1px solid #dee2e6;">@(v.LicensePlate ?? "—")</td>
+                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">@v.CurrentOdometer.ToString("N0") km</td>
+                <td style="padding: 10px; border: 1px solid #dee2e6;">@(v.LastOdometerUpdateFormatted ?? "Chưa có")</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #dee2e6;">@v.DaysSinceUpdate ngày</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<p>Vui lòng mở app và cập nhật số km mới nhất cho từng xe.</p>
+
+@if (!string.IsNullOrEmpty(Model.ActionUrl) && !string.IsNullOrEmpty(Model.ActionText))
+{
+    <p style="text-align: center; margin-top: 24px;">
+        <a href="@Model.ActionUrl" class="button">@Model.ActionText</a>
+    </p>
+}
+
+<p>Trân trọng,<br><strong>Đội ngũ Verendar</strong></p>
