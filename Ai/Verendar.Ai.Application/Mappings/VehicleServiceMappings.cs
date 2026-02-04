@@ -5,9 +5,7 @@ namespace Verendar.Ai.Application.Mappings;
 
 public static class VehicleServiceMappings
 {
-    /// <summary>
-    /// Maps VehicleServiceUserVehicleResponse to VehicleInfoDto
-    /// </summary>
+
     public static VehicleInfoDto ToVehicleInfoDto(this VehicleServiceUserVehicleResponse vehicle)
     {
         return new VehicleInfoDto
@@ -19,9 +17,7 @@ public static class VehicleServiceMappings
         };
     }
 
-    /// <summary>
-    /// Maps VehicleServiceDefaultScheduleResponse to DefaultScheduleDto
-    /// </summary>
+
     public static DefaultScheduleDto ToDefaultScheduleDto(
         this VehicleServiceDefaultScheduleResponse schedule,
         string partCategoryCode)

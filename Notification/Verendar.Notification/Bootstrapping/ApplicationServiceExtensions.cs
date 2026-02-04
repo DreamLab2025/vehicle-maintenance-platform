@@ -8,7 +8,6 @@ using Verendar.Notification.Domain.Repositories.Interfaces;
 using Verendar.Notification.Infrastructure.Configuration;
 using Verendar.Notification.Infrastructure.Data;
 using Verendar.Notification.Infrastructure.ExternalServices.ESms;
-using Verendar.Notification.Apis;
 using Verendar.Notification.Infrastructure.ExternalServices.Resend;
 using Verendar.Notification.Infrastructure.Repositories.Implements;
 using Verendar.Notification.Infrastructure.Services;
@@ -60,8 +59,6 @@ public static class ApplicationServiceExtensions
         app.MapDefaultEndpoints();
 
         app.UseCommonService();
-
-        app.MapEmailApis();
 
         if (app.Environment.IsDevelopment())
         {

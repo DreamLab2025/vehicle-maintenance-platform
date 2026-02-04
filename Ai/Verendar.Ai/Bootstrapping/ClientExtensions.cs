@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Http;
 using Polly;
 using Polly.Extensions.Http;
 using Verendar.Ai.Application.Clients;

@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Verendar.Common\Verendar.Common.csproj" />
     <ProjectReference Include="..\..\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Verendar.Vehicle.Application\Verendar.Vehicle.Application.csproj" />
     <ProjectReference Include="..\Verendar.Vehicle.Infrastructure\Verendar.Vehicle.Infrastructure.csproj" />

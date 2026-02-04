@@ -9,7 +9,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
     public class UserVehicleRepository(VehicleDbContext context) : PostgresRepository<UserVehicle>(context), IUserVehicleRepository
     {
-        private readonly VehicleDbContext _context = context;
+        private readonly VehicleDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
         public IQueryable<UserVehicle> GetQueryWithFullDetails()
         {

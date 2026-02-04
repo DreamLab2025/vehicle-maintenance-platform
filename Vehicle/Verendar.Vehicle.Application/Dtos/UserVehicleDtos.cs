@@ -144,9 +144,7 @@ namespace Verendar.Vehicle.Application.Dtos
 
     public class OdometerHistoryQueryRequest : PaginationRequest
     {
-        /// <summary>Lọc từ ngày (RecordedDate >= FromDate).</summary>
         public DateOnly? FromDate { get; set; }
-        /// <summary>Lọc đến ngày (RecordedDate <= ToDate).</summary>
         public DateOnly? ToDate { get; set; }
     }
 
@@ -156,7 +154,6 @@ namespace Verendar.Vehicle.Application.Dtos
         public Guid UserVehicleId { get; set; }
         public int OdometerValue { get; set; }
         public DateOnly RecordedDate { get; set; }
-        /// <summary>Số km chạy trong ngày đó (km ngày hôm đó). Null nếu là bản ghi đầu tiên.</summary>
         public int? KmOnRecordedDate { get; set; }
         public string Source { get; set; } = null!;
     }

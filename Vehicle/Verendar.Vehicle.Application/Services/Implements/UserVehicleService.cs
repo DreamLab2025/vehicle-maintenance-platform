@@ -598,9 +598,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
             return Math.Round((decimal)totalKm / totalDays, 2);
         }
 
-        /// <summary>
-        /// Flow: Normal (&gt;40%) → Low (25–40%) → Medium (15–25%) → High (5–15%) → Urgent (&lt;5%).
-        /// </summary>
         private static ReminderLevel GetLevelFromPercentage(decimal percentageRemaining)
         {
             if (percentageRemaining > 40) return ReminderLevel.Normal;

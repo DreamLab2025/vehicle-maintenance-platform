@@ -2,7 +2,7 @@ using Verendar.Common.Jwt;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Vehicle.Filters;
+using Verendar.Common.EndpointFilters;
 
 namespace Verendar.Vehicle.Apis
 {
