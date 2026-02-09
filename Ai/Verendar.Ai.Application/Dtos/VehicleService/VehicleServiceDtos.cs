@@ -1,9 +1,5 @@
 namespace Verendar.Ai.Application.Dtos.VehicleService;
 
-/// <summary>
-/// Lightweight DTO for Vehicle Service API responses - only contains fields needed for AI analysis
-/// This reduces payload size and memory usage by ignoring unnecessary fields
-/// </summary>
 public class VehicleServiceUserVehicleResponse
 {
     public int CurrentOdometer { get; set; }

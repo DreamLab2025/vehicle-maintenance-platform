@@ -20,6 +20,7 @@ public class EmailNotificationService(
     private readonly ILogger<EmailNotificationService> _logger = logger;
 
     private const NotificationChannel EmailChannel = NotificationChannel.EMAIL;
+    private const NotificationChannel InAppChannel = NotificationChannel.InApp;
     private const string OtpEmailTitle = "Mã xác thực OTP";
 
     public async Task<bool> SendOtpEmailAsync(OtpRequestedEvent message, CancellationToken cancellationToken = default)
@@ -99,14 +100,8 @@ public class EmailNotificationService(
 
     private const string OdometerReminderTitle = "Nhắc nhở cập nhật số km";
 
-    public async Task<bool> SendOdometerReminderEmailAsync(OdometerReminderEvent message, CancellationToken cancellationToken = default)
+    public async Task<(bool EmailSent, Guid? NotificationId)> SendOdometerReminderAsync(OdometerReminderEvent message, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(message.TargetValue))
-        {
-            _logger.LogWarning("OdometerReminderEvent has no TargetValue (email) for UserId {UserId}", message.UserId);
-            return false;
-        }
-
         var days = message.StaleOdometerDays > 0 ? message.StaleOdometerDays : 3;
         var messageContent = $"Bạn đã không cập nhật số km (odo) trong {days} ngày qua. "
             + "Vui lòng cập nhật số km của xe để Verendar có thể theo dõi bảo dưỡng chính xác hơn.";
@@ -114,153 +109,191 @@ public class EmailNotificationService(
         var notification = message.OdometerReminderToNotificationEntity(
             OdometerReminderTitle,
             messageContent);
-        var delivery = notification.CreateDelivery(message.TargetValue, EmailChannel);
 
         await _unitOfWork.Notifications.AddAsync(notification);
-        await _unitOfWork.NotificationDeliveries.AddAsync(delivery);
+
+        if (!string.IsNullOrWhiteSpace(message.TargetValue))
+        {
+            var emailDelivery = notification.CreateDelivery(message.TargetValue, EmailChannel);
+            await _unitOfWork.NotificationDeliveries.AddAsync(emailDelivery);
+        }
+
+        var inAppDelivery = notification.CreateDelivery(message.UserId.ToString(), InAppChannel);
+        await _unitOfWork.NotificationDeliveries.AddAsync(inAppDelivery);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var templateModel = new OdometerReminderEmailModel
+        var emailSent = false;
+        if (!string.IsNullOrWhiteSpace(message.TargetValue))
         {
-            UserName = message.UserName,
-            UserEmail = message.TargetValue,
-            Title = OdometerReminderTitle,
-            StaleOdometerDays = days,
-            Vehicles = (message.Vehicles ?? []).Select(v => new OdometerReminderVehicleEmailDto
+            var templateModel = new OdometerReminderEmailModel
             {
-                VehicleDisplayName = v.VehicleDisplayName,
-                LicensePlate = v.LicensePlate,
-                CurrentOdometer = v.CurrentOdometer,
-                LastOdometerUpdateFormatted = v.LastOdometerUpdate?.ToString("dd/MM/yyyy"),
-                DaysSinceUpdate = v.DaysSinceUpdate
-            }).ToList()
-        };
+                UserName = message.UserName,
+                UserEmail = message.TargetValue,
+                Title = OdometerReminderTitle,
+                StaleOdometerDays = days,
+                Vehicles = (message.Vehicles ?? []).Select(v => new OdometerReminderVehicleEmailDto
+                {
+                    VehicleDisplayName = v.VehicleDisplayName,
+                    LicensePlate = v.LicensePlate,
+                    CurrentOdometer = v.CurrentOdometer,
+                    LastOdometerUpdateFormatted = v.LastOdometerUpdate?.ToString("dd/MM/yyyy"),
+                    DaysSinceUpdate = v.DaysSinceUpdate
+                }).ToList()
+            };
 
-        var context = new NotificationDeliveryContext
-        {
-            NotificationId = notification.Id,
-            RecipientEmail = message.TargetValue,
-            RecipientPhone = null,
-            Title = OdometerReminderTitle,
-            Message = messageContent,
-            NotificationType = notification.NotificationType,
-            Metadata = new Dictionary<string, object> { { "TemplateKey", "OdometerReminder" } },
-            TemplateModel = templateModel
-        };
-
-        try
-        {
-            var channelService = _channelFactory.GetChannel(EmailChannel);
-            var result = await channelService.SendAsync(context);
-
-            if (result.IsSuccess)
+            var deliveryContext = new NotificationDeliveryContext
             {
-                notification.Status = NotificationStatus.Sent;
-                delivery.Status = NotificationStatus.Sent;
-                delivery.SentAt = DateTime.UtcNow;
-                delivery.DeliveredAt = DateTime.UtcNow;
+                NotificationId = notification.Id,
+                RecipientEmail = message.TargetValue,
+                RecipientPhone = null,
+                Title = OdometerReminderTitle,
+                Message = messageContent,
+                NotificationType = notification.NotificationType,
+                Metadata = new Dictionary<string, object> { { "TemplateKey", "OdometerReminder" } },
+                TemplateModel = templateModel
+            };
+
+            try
+            {
+                var channelService = _channelFactory.GetChannel(EmailChannel);
+                var result = await channelService.SendAsync(deliveryContext);
+                var emailDeliveryEntity = await _unitOfWork.NotificationDeliveries.FindOneAsync(d =>
+                    d.NotificationId == notification.Id && d.Channel == EmailChannel);
+                if (emailDeliveryEntity != null)
+                {
+                    if (result.IsSuccess)
+                    {
+                        notification.Status = NotificationStatus.Sent;
+                        emailDeliveryEntity.Status = NotificationStatus.Sent;
+                        emailDeliveryEntity.SentAt = DateTime.UtcNow;
+                        emailDeliveryEntity.DeliveredAt = DateTime.UtcNow;
+                        emailSent = true;
+                    }
+                    else
+                    {
+                        emailDeliveryEntity.Status = NotificationStatus.Failed;
+                        emailDeliveryEntity.ErrorMessage = result.ErrorMessage;
+                        emailDeliveryEntity.RetryCount++;
+                    }
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                notification.Status = NotificationStatus.Failed;
-                delivery.Status = NotificationStatus.Failed;
-                delivery.ErrorMessage = result.ErrorMessage;
-                delivery.RetryCount++;
+                _logger.LogError(ex, "Error sending OdometerReminder email - NotificationId: {NotificationId}", notification.Id);
+                var emailDeliveryEntity = await _unitOfWork.NotificationDeliveries.FindOneAsync(d =>
+                    d.NotificationId == notification.Id && d.Channel == EmailChannel);
+                if (emailDeliveryEntity != null)
+                {
+                    emailDeliveryEntity.Status = NotificationStatus.Failed;
+                    emailDeliveryEntity.ErrorMessage = ex.Message;
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                }
             }
-
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            return result.IsSuccess;
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Error sending OdometerReminder email - NotificationId: {NotificationId}", notification.Id);
-            notification.Status = NotificationStatus.Failed;
-            delivery.Status = NotificationStatus.Failed;
-            delivery.ErrorMessage = ex.Message;
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            return false;
+            _logger.LogDebug("OdometerReminderEvent has no TargetValue (email) for UserId {UserId}, only InApp delivery created", message.UserId);
         }
+
+        return (emailSent, notification.Id);
     }
 
-    public async Task<bool> SendMaintenanceReminderEmailAsync(MaintenanceReminderEvent message, CancellationToken cancellationToken = default)
+    public async Task<(bool EmailSent, Guid? NotificationId)> SendMaintenanceReminderAsync(MaintenanceReminderEvent message, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(message.TargetValue))
-        {
-            _logger.LogWarning("MaintenanceReminderEvent has no TargetValue (email) for UserId {UserId}", message.UserId);
-            return false;
-        }
-
         var (title, messageContent) = BuildMaintenanceReminderContent(message);
 
         var notification = message.MaintenanceReminderToNotificationEntity(title, messageContent);
-        var delivery = notification.CreateDelivery(message.TargetValue, EmailChannel);
 
         await _unitOfWork.Notifications.AddAsync(notification);
-        await _unitOfWork.NotificationDeliveries.AddAsync(delivery);
+
+        if (!string.IsNullOrWhiteSpace(message.TargetValue))
+        {
+            var emailDelivery = notification.CreateDelivery(message.TargetValue, EmailChannel);
+            await _unitOfWork.NotificationDeliveries.AddAsync(emailDelivery);
+        }
+
+        var inAppDelivery = notification.CreateDelivery(message.UserId.ToString(), InAppChannel);
+        await _unitOfWork.NotificationDeliveries.AddAsync(inAppDelivery);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        const int UrgentLevel = 4;
-        var templateModel = new MaintenanceReminderEmailModel
+        var emailSent = false;
+        if (!string.IsNullOrWhiteSpace(message.TargetValue))
         {
-            UserName = message.UserName,
-            UserEmail = message.TargetValue,
-            Title = title,
-            LevelName = message.LevelName,
-            IsUrgent = message.Level >= UrgentLevel,
-            Items = (message.Items ?? []).Select(i => new MaintenanceReminderItemEmailDto
+            const int UrgentLevel = 4;
+            var templateModel = new MaintenanceReminderEmailModel
             {
-                PartCategoryName = i.PartCategoryName,
-                VehicleDisplayName = i.VehicleDisplayName,
-                CurrentOdometer = i.CurrentOdometer,
-                TargetOdometer = i.TargetOdometer,
-                PercentageRemaining = i.PercentageRemaining
-            }).ToList()
-        };
+                UserName = message.UserName,
+                UserEmail = message.TargetValue,
+                Title = title,
+                LevelName = message.LevelName,
+                IsUrgent = message.Level >= UrgentLevel,
+                Items = (message.Items ?? []).Select(i => new MaintenanceReminderItemEmailDto
+                {
+                    PartCategoryName = i.PartCategoryName,
+                    VehicleDisplayName = i.VehicleDisplayName,
+                    CurrentOdometer = i.CurrentOdometer,
+                    TargetOdometer = i.TargetOdometer,
+                    PercentageRemaining = i.PercentageRemaining
+                }).ToList()
+            };
 
-        var context = new NotificationDeliveryContext
-        {
-            NotificationId = notification.Id,
-            RecipientEmail = message.TargetValue,
-            RecipientPhone = null,
-            Title = title,
-            Message = messageContent,
-            NotificationType = notification.NotificationType,
-            Metadata = new Dictionary<string, object> { { "TemplateKey", "MaintenanceReminder" } },
-            TemplateModel = templateModel
-        };
-
-        try
-        {
-            var channelService = _channelFactory.GetChannel(EmailChannel);
-            var result = await channelService.SendAsync(context);
-
-            if (result.IsSuccess)
+            var deliveryContext = new NotificationDeliveryContext
             {
-                notification.Status = NotificationStatus.Sent;
-                delivery.Status = NotificationStatus.Sent;
-                delivery.SentAt = DateTime.UtcNow;
-                delivery.DeliveredAt = DateTime.UtcNow;
+                NotificationId = notification.Id,
+                RecipientEmail = message.TargetValue,
+                RecipientPhone = null,
+                Title = title,
+                Message = messageContent,
+                NotificationType = notification.NotificationType,
+                Metadata = new Dictionary<string, object> { { "TemplateKey", "MaintenanceReminder" } },
+                TemplateModel = templateModel
+            };
+
+            try
+            {
+                var channelService = _channelFactory.GetChannel(EmailChannel);
+                var result = await channelService.SendAsync(deliveryContext);
+                var emailDeliveryEntity = await _unitOfWork.NotificationDeliveries.FindOneAsync(d =>
+                    d.NotificationId == notification.Id && d.Channel == EmailChannel);
+                if (emailDeliveryEntity != null)
+                {
+                    if (result.IsSuccess)
+                    {
+                        notification.Status = NotificationStatus.Sent;
+                        emailDeliveryEntity.Status = NotificationStatus.Sent;
+                        emailDeliveryEntity.SentAt = DateTime.UtcNow;
+                        emailDeliveryEntity.DeliveredAt = DateTime.UtcNow;
+                        emailSent = true;
+                    }
+                    else
+                    {
+                        emailDeliveryEntity.Status = NotificationStatus.Failed;
+                        emailDeliveryEntity.ErrorMessage = result.ErrorMessage;
+                        emailDeliveryEntity.RetryCount++;
+                    }
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                notification.Status = NotificationStatus.Failed;
-                delivery.Status = NotificationStatus.Failed;
-                delivery.ErrorMessage = result.ErrorMessage;
-                delivery.RetryCount++;
+                _logger.LogError(ex, "Error sending MaintenanceReminder email - NotificationId: {NotificationId}", notification.Id);
+                var emailDeliveryEntity = await _unitOfWork.NotificationDeliveries.FindOneAsync(d =>
+                    d.NotificationId == notification.Id && d.Channel == EmailChannel);
+                if (emailDeliveryEntity != null)
+                {
+                    emailDeliveryEntity.Status = NotificationStatus.Failed;
+                    emailDeliveryEntity.ErrorMessage = ex.Message;
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                }
             }
-
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            return result.IsSuccess;
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "Error sending MaintenanceReminder email - NotificationId: {NotificationId}", notification.Id);
-            notification.Status = NotificationStatus.Failed;
-            delivery.Status = NotificationStatus.Failed;
-            delivery.ErrorMessage = ex.Message;
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            return false;
+            _logger.LogDebug("MaintenanceReminderEvent has no TargetValue (email) for UserId {UserId}, only InApp delivery created", message.UserId);
         }
+
+        return (emailSent, notification.Id);
     }
 
     private static (string Title, string Message) BuildMaintenanceReminderContent(MaintenanceReminderEvent message)

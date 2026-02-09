@@ -1,7 +1,7 @@
 using Verendar.DatabaseMigrationHelpers;
 using Verendar.Identity.Bootstrapping;
-using Verendar.Identity.Data;
-using Verendar.Identity.Seeders;
+using Verendar.Identity.Infrastructure.Data;
+using Verendar.Identity.Infrastructure.Data.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
