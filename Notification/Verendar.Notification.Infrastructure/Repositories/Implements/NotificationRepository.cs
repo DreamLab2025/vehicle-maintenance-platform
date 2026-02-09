@@ -32,4 +32,18 @@ public class NotificationRepository(NotificationDbContext context) : PostgresRep
 
         return (items, totalCount);
     }
+
+    public async Task<int> GetUnreadCountByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await context.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead && n.Deliveries.Any(d => d.Channel == NotificationChannel.InApp))
+            .CountAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Domain.Entities.Notification>> GetUnreadByUserIdWithInAppAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await context.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead && n.Deliveries.Any(d => d.Channel == NotificationChannel.InApp))
+            .ToListAsync(cancellationToken);
+    }
 }

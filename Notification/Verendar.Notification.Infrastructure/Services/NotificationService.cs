@@ -45,4 +45,36 @@ public class NotificationService(IUnitOfWork unitOfWork) : INotificationService
             return ApiResponse<List<NotificationListItemDto>>.FailureResponse("Lỗi khi lấy danh sách thông báo.");
         }
     }
+
+    public async Task<ApiResponse<NotificationStatusDto>> GetStatusAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var unReadCount = await unitOfWork.Notifications.GetUnreadCountByUserIdAsync(userId, cancellationToken);
+        return ApiResponse<NotificationStatusDto>.SuccessResponse(new NotificationStatusDto { UnReadCount = unReadCount });
+    }
+
+    public async Task<ApiResponse<int>> MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var unread = await unitOfWork.Notifications.GetUnreadByUserIdWithInAppAsync(userId, cancellationToken);
+        var readAt = DateTime.UtcNow;
+        foreach (var n in unread)
+        {
+            n.IsRead = true;
+            n.ReadAt = readAt;
+        }
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return ApiResponse<int>.SuccessResponse(unread.Count, $"Đã đánh dấu {unread.Count} thông báo là đã đọc.");
+    }
+
+    public async Task<ApiResponse<bool>> SoftDeleteByIdAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken = default)
+    {
+        var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
+        if (notification == null)
+            return ApiResponse<bool>.FailureResponse("Không tìm thấy thông báo.");
+
+        notification.DeletedAt = DateTime.UtcNow;
+        notification.DeletedBy = userId;
+        await unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return ApiResponse<bool>.SuccessResponse(true, "Đã xóa thông báo.");
+    }
 }

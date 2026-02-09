@@ -23,6 +23,26 @@ public static class NotificationApis
             .Produces<ApiResponse<List<NotificationListItemDto>>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
+        group.MapGet("/status", GetNotificationStatus)
+            .WithName("GetNotificationStatus")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Lấy trạng thái đọc: isRead, unReadCount";
+                return operation;
+            })
+            .Produces<ApiResponse<NotificationStatusDto>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("/read-all", MarkAllNotificationsAsRead)
+            .WithName("MarkAllNotificationsAsRead")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Đánh dấu tất cả thông báo là đã đọc";
+                return operation;
+            })
+            .Produces<ApiResponse<int>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
+
         group.MapGet("/{id:guid}", GetNotificationDetailForUser)
             .WithName("GetNotificationDetailForUser")
             .WithOpenApi(operation =>
@@ -31,6 +51,17 @@ public static class NotificationApis
                 return operation;
             })
             .Produces<ApiResponse<NotificationDetailDto>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapDelete("/{id:guid}", SoftDeleteNotificationById)
+            .WithName("SoftDeleteNotificationById")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Xóa mềm thông báo theo id (chỉ của user hiện tại)";
+                return operation;
+            })
+            .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
 
@@ -62,6 +93,46 @@ public static class NotificationApis
             return Results.Unauthorized();
 
         var response = await notificationService.GetNotificationDetailForUserAsync(userId, id, cancellationToken);
+        return response.IsSuccess ? Results.Ok(response) : Results.NotFound(response);
+    }
+
+    private static async Task<IResult> GetNotificationStatus(
+        ICurrentUserService currentUser,
+        INotificationService notificationService,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = currentUser.UserId;
+        if (userId == Guid.Empty)
+            return Results.Unauthorized();
+
+        var response = await notificationService.GetStatusAsync(userId, cancellationToken);
+        return response.IsSuccess ? Results.Ok(response) : Results.BadRequest(response);
+    }
+
+    private static async Task<IResult> MarkAllNotificationsAsRead(
+        ICurrentUserService currentUser,
+        INotificationService notificationService,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = currentUser.UserId;
+        if (userId == Guid.Empty)
+            return Results.Unauthorized();
+
+        var response = await notificationService.MarkAllAsReadAsync(userId, cancellationToken);
+        return response.IsSuccess ? Results.Ok(response) : Results.BadRequest(response);
+    }
+
+    private static async Task<IResult> SoftDeleteNotificationById(
+        Guid id,
+        ICurrentUserService currentUser,
+        INotificationService notificationService,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = currentUser.UserId;
+        if (userId == Guid.Empty)
+            return Results.Unauthorized();
+
+        var response = await notificationService.SoftDeleteByIdAsync(userId, id, cancellationToken);
         return response.IsSuccess ? Results.Ok(response) : Results.NotFound(response);
     }
 }

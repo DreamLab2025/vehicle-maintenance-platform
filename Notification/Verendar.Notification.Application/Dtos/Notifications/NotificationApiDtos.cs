@@ -36,3 +36,9 @@ public record NotificationDetailDto
     public DateTime CreatedAt { get; init; }
     public string? MetadataJson { get; init; }
 }
+
+public record NotificationStatusDto
+{
+    public int UnReadCount { get; init; }
+    public bool HasUnread => UnReadCount > 0;
+}

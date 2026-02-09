@@ -11,4 +11,8 @@ public interface INotificationRepository : IGenericRepository<Entities.Notificat
         int pageNumber,
         int pageSize,
         CancellationToken cancellationToken = default);
+
+    Task<int> GetUnreadCountByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Entities.Notification>> GetUnreadByUserIdWithInAppAsync(Guid userId, CancellationToken cancellationToken = default);
 }

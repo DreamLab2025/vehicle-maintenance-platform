@@ -14,4 +14,10 @@ public interface INotificationService
         Guid userId,
         Guid notificationId,
         CancellationToken cancellationToken = default);
+
+    Task<ApiResponse<NotificationStatusDto>> GetStatusAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    Task<ApiResponse<int>> MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    Task<ApiResponse<bool>> SoftDeleteByIdAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken = default);
 }
