@@ -66,7 +66,7 @@ public class VehicleMaintenanceAnalysisService(
                 prompt,
                 AiOperation.GenerateText,
                 userId,
-                temperature: 0.3m
+                temperature: 0.5m
             );
 
             if (!aiResponse.IsSuccess || aiResponse.Data == null)
