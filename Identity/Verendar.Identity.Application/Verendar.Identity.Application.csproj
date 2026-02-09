@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Verendar.Common\Verendar.Common.csproj" />
+    <ProjectReference Include="..\Verender.Identity.Contracts\Verender.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\Verendar.Identity.Domain\Verendar.Identity.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
