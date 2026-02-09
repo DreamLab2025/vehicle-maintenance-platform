@@ -12,8 +12,8 @@ var app = builder.Build();
 
 await app.MigrateDbContextAsync<VehicleDbContext>(async (database, ct) =>
 {
-    await database.ExecuteSqlRawAsync(
-        """
+  await database.ExecuteSqlRawAsync(
+      """
         DO $$
         BEGIN
           IF NOT EXISTS (
@@ -24,14 +24,14 @@ await app.MigrateDbContextAsync<VehicleDbContext>(async (database, ct) =>
           END IF;
         END $$;
         """,
-        ct ?? default);
+      ct ?? default);
 });
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<VehicleDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    await MaintenanceReminderTestDataSeeder.SeedAsync(db, logger);
+  var db = scope.ServiceProvider.GetRequiredService<VehicleDbContext>();
+  var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+  await MaintenanceReminderTestDataSeeder.SeedAsync(db, logger);
 }
 
 app.UseApplicationServices();

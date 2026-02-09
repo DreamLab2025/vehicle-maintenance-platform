@@ -6,9 +6,6 @@ using Verendar.Identity.Entities;
 
 namespace Verendar.Identity.Seeders;
 
-/// <summary>
-/// Seed test user for background job flows (MaintenanceReminderJob, OdometerReminderJob).
-/// </summary>
 public static class TestUserSeeder
 {
     private static readonly Guid TestUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
