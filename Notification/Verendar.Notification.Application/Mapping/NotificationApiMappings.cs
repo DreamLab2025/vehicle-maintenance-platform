@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Verendar.Notification.Application.Dtos.Notifications;
 using NotificationEntity = Verendar.Notification.Domain.Entities.Notification;
 
@@ -42,7 +43,7 @@ public static class NotificationApiMappings
             ReadAt = n.ReadAt,
             ExpiresAt = n.ExpiresAt,
             CreatedAt = n.CreatedAt,
-            MetadataJson = n.MetadataJson
+            Metadata = string.IsNullOrEmpty(n.MetadataJson) ? null : JsonSerializer.Deserialize<JsonElement>(n.MetadataJson)
         };
     }
 }

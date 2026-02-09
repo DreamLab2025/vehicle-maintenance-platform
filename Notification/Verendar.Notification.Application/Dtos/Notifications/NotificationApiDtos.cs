@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Verendar.Notification.Domain.Enums;
 
 namespace Verendar.Notification.Application.Dtos.Notifications;
@@ -34,7 +35,7 @@ public record NotificationDetailDto
     public DateTime? ReadAt { get; init; }
     public DateTime? ExpiresAt { get; init; }
     public DateTime CreatedAt { get; init; }
-    public string? MetadataJson { get; init; }
+    public JsonElement? Metadata { get; init; }
 }
 
 public record NotificationStatusDto
