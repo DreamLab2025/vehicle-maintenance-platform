@@ -11,10 +11,8 @@ public static class PromptGenerator
   {
     var today = DateTime.Now.ToString("yyyy-MM-dd");
 
-    // Format dữ liệu Schedule
     var scheduleBlock = $"ITEM: {{ \"Code\": \"{schedule.PartCategoryCode}\", \"Initial_Km\": {schedule.InitialKm}, \"Interval_Km\": {schedule.KmInterval}, \"Interval_Month\": {schedule.MonthsInterval} }}";
 
-    // Format dữ liệu User Answer
     var answerBlock = (answers != null && answers.Any())
         ? string.Join("\n", answers.Where(a => !string.IsNullOrWhiteSpace(a.Value))
                                     .Select(a => $"- User Input ({a.Question}): \"{a.Value}\""))

@@ -53,6 +53,7 @@ public static class InAppNotificationMappings
             ["reminderId"] = i.ReminderId,
             ["currentOdometer"] = i.CurrentOdometer,
             ["targetOdometer"] = i.TargetOdometer,
+            ["initialOdometer"] = i.InitialOdometer,
             ["percentageRemaining"] = i.PercentageRemaining,
             ["vehicleDisplayName"] = i.VehicleDisplayName
         }).ToList();

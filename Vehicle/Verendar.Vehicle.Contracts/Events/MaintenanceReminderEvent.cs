@@ -26,6 +26,7 @@ public class MaintenanceReminderItemDto
     public Guid ReminderId { get; set; }
     public int CurrentOdometer { get; set; }
     public int TargetOdometer { get; set; }
+    public int? InitialOdometer { get; set; }
     public decimal PercentageRemaining { get; set; }
     public string? VehicleDisplayName { get; set; }
 }
