@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\App\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Verendar.Media.Application\Verendar.Media.Application.csproj" />
     <ProjectReference Include="..\Verendar.Media.Infrastructure\Verendar.Media.Infrastructure.csproj" />
   </ItemGroup>

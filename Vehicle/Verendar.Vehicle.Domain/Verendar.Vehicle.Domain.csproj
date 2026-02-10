@@ -5,6 +5,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Verendar.Common\Verendar.Common.csproj" />
+    <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
   </ItemGroup>
 </Project>
