@@ -12,7 +12,7 @@ using Verendar.Notification.Infrastructure.Data;
 namespace Verendar.Notification.Infrastructure.Migrations
 {
     [DbContext(typeof(NotificationDbContext))]
-    [Migration("20260117013634_InitialCreate")]
+    [Migration("20260210105551_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -287,128 +287,6 @@ namespace Verendar.Notification.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("NotificationTemplates");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000001"),
-                            Code = "OTP_PHONE_VERIFICATION",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            DefaultPriority = 2,
-                            IsActive = true,
-                            MessageTemplate = "Ma xac thuc Verender cua ban la: {OTP}. Ma co hieu luc trong {ExpiryMinutes} phut. Khong chia se ma nay voi bat ky ai.",
-                            NotificationType = 1,
-                            TitleTemplate = "Ma xac thuc so dien thoai"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000002"),
-                            Code = "OTP_EMAIL_VERIFICATION",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            DefaultPriority = 2,
-                            IsActive = true,
-                            MessageTemplate = "Ma xac thuc email Verender cua ban la: {OTP}. Ma co hieu luc trong {ExpiryMinutes} phut.",
-                            NotificationType = 1,
-                            TitleTemplate = "Ma xac thuc email"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000003"),
-                            Code = "OTP_PASSWORD_RESET",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            DefaultPriority = 2,
-                            IsActive = true,
-                            MessageTemplate = "Ma dat lai mat khau Verender cua ban la: {OTP}. Ma co hieu luc trong {ExpiryMinutes} phut. Neu ban khong yeu cau dat lai mat khau, vui long bo qua tin nhan nay.",
-                            NotificationType = 1,
-                            TitleTemplate = "Ma dat lai mat khau"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000004"),
-                            Code = "OTP_TWO_FACTOR",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            DefaultPriority = 2,
-                            IsActive = true,
-                            MessageTemplate = "Ma xac thuc hai buoc Verender: {OTP}. Ma co hieu luc trong {ExpiryMinutes} phut. Khong chia se ma nay.",
-                            NotificationType = 1,
-                            TitleTemplate = "Ma xac thuc hai buoc"
-                        },
-                        new
-                        {
-                            Id = new Guid("10000000-0000-0000-0000-000000000005"),
-                            Code = "OTP_REQUESTED",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            DefaultPriority = 2,
-                            IsActive = true,
-                            MessageTemplate = "Ma xac thuc Verender: {OTP}. Ma co hieu luc trong {ExpiryMinutes} phut. Vui long khong chia se ma nay voi bat ky ai.",
-                            NotificationType = 1,
-                            TitleTemplate = "Ma xac thuc OTP"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-000000000001"),
-                            Code = "WELCOME_USER",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            DefaultPriority = 2,
-                            IsActive = true,
-                            MessageTemplate = "Xin chao {UserName}! Cam on ban da dang ky Verender vao ngay {RegistrationDate}. Chung toi rat vui duoc phuc vu ban!",
-                            NotificationType = 2,
-                            TitleTemplate = "Chao mung den voi Verender!"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-000000000002"),
-                            Code = "PHONE_VERIFIED",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            DefaultPriority = 2,
-                            IsActive = true,
-                            MessageTemplate = "So dien thoai {PhoneNumber} cua ban da duoc xac thuc thanh cong. Tai khoan Verender cua ban da san sang su dung!",
-                            NotificationType = 2,
-                            TitleTemplate = "So dien thoai da duoc xac thuc"
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000001"),
-                            Code = "PASSWORD_CHANGED",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            DefaultPriority = 2,
-                            IsActive = true,
-                            MessageTemplate = "Mat khau tai khoan Verender cua ban da duoc thay doi vao {ChangeTime}. Neu ban khong thuc hien thay doi nay, vui long lien he ho tro ngay lap tuc.",
-                            NotificationType = 1,
-                            TitleTemplate = "Mat khau da duoc thay doi"
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000002"),
-                            Code = "ACCOUNT_LOCKED",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            DefaultPriority = 2,
-                            IsActive = true,
-                            MessageTemplate = "Tai khoan Verender cua ban da bi khoa do {Reason}. Vui long lien he ho tro de duoc tro giup.",
-                            NotificationType = 1,
-                            TitleTemplate = "Tai khoan bi tam khoa"
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000003"),
-                            Code = "ACCOUNT_UNLOCKED",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            DefaultPriority = 2,
-                            IsActive = true,
-                            MessageTemplate = "Tai khoan Verender cua ban da duoc mo khoa thanh cong. Ban co the dang nhap binh thuong.",
-                            NotificationType = 1,
-                            TitleTemplate = "Tai khoan da duoc mo khoa"
-                        });
                 });
 
             modelBuilder.Entity("Verendar.Notification.Domain.Entities.NotificationTemplateChannel", b =>
@@ -431,6 +309,10 @@ namespace Verendar.Notification.Infrastructure.Migrations
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ExternalTemplateId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("boolean");

@@ -47,6 +47,8 @@ namespace Verendar.Vehicle.Services
                     .GroupBy(r => r.Level)
                     .OrderByDescending(g => g.Key);
 
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
                 foreach (var levelGroup in byLevel)
                 {
                     var level = levelGroup.Key;
@@ -56,6 +58,14 @@ namespace Verendar.Vehicle.Services
                     if (level != ReminderLevel.Critical)
                     {
                         _logger.LogDebug("Skipping level {Level} for vehicle {VehicleId} - will be handled by background job", level, vehicleId);
+                        continue;
+                    }
+
+                    // Check if already notified today (send only once per day for Critical level)
+                    var alreadyNotifiedToday = levelGroup.All(r => r.IsNotified && r.NotifiedDate == today);
+                    if (alreadyNotifiedToday)
+                    {
+                        _logger.LogDebug("Critical reminders for vehicle {VehicleId} already notified today, skipping", vehicleId);
                         continue;
                     }
 
@@ -105,7 +115,16 @@ namespace Verendar.Vehicle.Services
                             Items = items
                         }, cancellationToken);
 
-                        _logger.LogInformation("Published MaintenanceReminderEvent for user {UserId}, vehicle {VehicleId}, level {Level}, {Count} parts",
+                        // Mark all reminders in this level as notified today
+                        foreach (var reminder in levelGroup)
+                        {
+                            reminder.IsNotified = true;
+                            reminder.NotifiedDate = today;
+                            await _unitOfWork.MaintenanceReminders.UpdateAsync(reminder.Id, reminder);
+                        }
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                        _logger.LogInformation("Published MaintenanceReminderEvent for user {UserId}, vehicle {VehicleId}, level {Level}, {Count} parts, marked as notified today",
                             userId, vehicleId, level, items.Count);
                     }
                     catch (Exception ex)

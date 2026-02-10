@@ -6,9 +6,6 @@ using Verendar.Notification.Infrastructure.Data;
 
 namespace Verendar.Notification.Infrastructure.Seeders
 {
-    /// <summary>
-    /// Seed các email template vào database khi ứng dụng khởi động (thay vì hardcode trong migration).
-    /// </summary>
     public static class EmailTemplateSeeder
     {
         private static readonly Guid SystemUserId = Guid.Empty;

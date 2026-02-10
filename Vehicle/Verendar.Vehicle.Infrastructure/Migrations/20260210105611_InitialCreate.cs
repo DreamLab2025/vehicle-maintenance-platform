@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace Verendar.Vehicle.Infrastructure.Migrations
 {
     /// <inheritdoc />
@@ -430,80 +428,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         principalTable: "VehiclePartTrackings",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.InsertData(
-                table: "PartCategories",
-                columns: new[] { "Id", "AllowsMultipleInstances", "Code", "ConsequencesIfNotHandled", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "DisplayOrder", "IconUrl", "IdentificationSigns", "Name", "RequiresOdometerTracking", "RequiresTimeTracking", "Status", "UpdatedAt", "UpdatedBy" },
-                values: new object[,]
-                {
-                    { new Guid("c0000001-0000-0000-0000-000000000001"), false, "ENGINE-OIL", "Mài mòn nhanh, kẹt piston; hỏng động cơ; chi phí sửa chữa rất cao hoặc phải thay máy.", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Dầu bôi trơn động cơ, cần thay định kỳ theo km hoặc thời gian", 1, "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp", "Dầu đen, nhớt nhớt; động cơ nóng bất thường; đèn báo dầu sáng; tiếng kêu kim loại từ động cơ.", "Dầu nhớt động cơ", true, true, 1, null, null },
-                    { new Guid("c0000002-0000-0000-0000-000000000002"), true, "TIRE", "Trượt, mất lái khi phanh/trời mưa; nổ lốp khi chạy tốc độ cao; tai nạn nghiêm trọng.", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Lốp trước và lốp sau, thay khi mòn hoặc đạt tuổi thọ", 2, "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp", "Gai lốp mòn dưới 1.6mm; nứt rạn; phồng lốp; lốp non hơi thường xuyên; rung lái khi chạy.", "Lốp xe", true, true, 1, null, null },
-                    { new Guid("c0000003-0000-0000-0000-000000000003"), false, "BATTERY", "Chết máy giữa đường; hỏng bình; ảnh hưởng bộ sạc và thiết bị điện; không khởi động được.", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Bình điện ắc quy, thay khi hết tuổi thọ hoặc không giữ điện", 3, "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp", "Khởi động yếu hoặc không nổ; đèn pha mờ; ắc quy phồng, rỉ nước; xe để vài ngày là hết điện.", "Ắc quy", false, true, 1, null, null },
-                    { new Guid("c0000004-0000-0000-0000-000000000004"), true, "BRAKE-PAD", "Mất phanh; đĩa phanh hỏng theo; va chạm, tai nạn do không dừng kịp.", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Má phanh trước và sau, thay khi mòn", 4, "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp", "Tiếng kêu ken két khi phanh; phanh không ăn; tay phanh/ pedal bị trễ; đĩa phanh xước, rỗ.", "Má phanh", true, true, 1, null, null },
-                    { new Guid("c0000005-0000-0000-0000-000000000005"), false, "SPARK-PLUG", "Chết máy; đánh lửa kém gây cháy không hết nhiên liệu, hỏng cat; hao xăng, giảm công suất.", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Bugi đánh lửa động cơ, thay định kỳ", 5, "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp", "Khó nổ, giật khi tăng ga; tốn xăng; động cơ rung; bugi đen, dính dầu hoặc cháy trắng đầu điện cực.", "Bugi", true, true, 1, null, null },
-                    { new Guid("c0000006-0000-0000-0000-000000000006"), false, "AIR-FILTER", "Bụi cát vào buồng đốt, mài mòn xy-lanh; giảm công suất; hỏng bugi, hao xăng lâu dài.", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Lọc không khí động cơ, cần vệ sinh và thay định kỳ", 6, "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp", "Xe yếu, không bốc; tốn xăng; lọc gió bẩn, rách hoặc ẩm mốc; động cơ nổ không đều.", "Lọc gió", true, true, 1, null, null },
-                    { new Guid("c0000007-0000-0000-0000-000000000007"), false, "CHAIN-SPROCKET", "Đứt xích khi chạy, bó bánh; hỏng nhông, moay-ơ; nguy cơ té xe, hỏng hộp số.", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Bộ truyền động xích và nhông, thay khi mòn", 7, "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp", "Xích kêu lạch cạch; xích trùng dù đã chỉnh; răng nhông mòn vẹt; xích rỉ, khô dầu.", "Nhông sên dĩa", true, false, 1, null, null },
-                    { new Guid("c0000008-0000-0000-0000-000000000008"), false, "BRAKE-FLUID", "Sôi dầu khi phanh gấp; mất phanh; hỏng xy-lanh phanh; tai nạn do không dừng kịp.", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Dầu phanh thủy lực, thay định kỳ theo thời gian hoặc km", 8, "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp", "Dầu đổi màu đen hoặc vẩn đục; mức dầu thấp; phanh mềm hoặc trễ; có nước lẫn vào.", "Dầu phanh", true, true, 1, null, null },
-                    { new Guid("c0000009-0000-0000-0000-000000000009"), false, "OIL-FILTER", "Dầu không lọc sạch, mài mòn động cơ; tắc lọc gây thiếu dầu; hỏng máy.", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Lọc dầu động cơ, thay kèm mỗi lần thay dầu nhớt", 9, "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp", "Thay cùng chu kỳ dầu nhớt; lọc tắc khi đèn dầu sáng thường xuyên; dầu đen nhanh bất thường.", "Lọc dầu", true, true, 1, null, null },
-                    { new Guid("c0000010-0000-0000-0000-000000000010"), false, "COOLANT", "Động cơ quá nhiệt; bó máy; hỏng gioăng, xy-lanh; chi phí sửa rất cao.", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Dung dịch làm mát động cơ, kiểm tra và thay định kỳ", 10, "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp", "Mức nước trong bình thấp; nước đổi màu rỉ; động cơ nóng quá; rò rỉ dưới gầm.", "Nước làm mát", true, true, 1, null, null }
-                });
-
-            migrationBuilder.InsertData(
-                table: "VehicleTypes",
-                columns: new[] { "Id", "Code", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "ImageUrl", "Name", "Status", "UpdatedAt", "UpdatedBy" },
-                values: new object[] { new Guid("11111111-1111-1111-1111-111111111111"), "MOTORCYCLE", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "Xe máy hai bánh, bao gồm xe số, xe tay ga, xe côn tay", "https://d3iova6424vljy.cloudfront.net/assets/c51a1e61-9aac-4d59-a01c-5b615be9e794.jpg", "Xe máy", 1, null, null });
-
-            migrationBuilder.InsertData(
-                table: "VehicleBrands",
-                columns: new[] { "Id", "Code", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "LogoUrl", "Name", "Status", "SupportPhone", "UpdatedAt", "UpdatedBy", "VehicleTypeId", "Website" },
-                values: new object[,]
-                {
-                    { new Guid("b0000001-0000-0000-0000-000000000001"), "HONDA", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "https://d3iova6424vljy.cloudfront.net/master/brands/0ea879b6-a573-4691-b00d-9f078f25b605.png", "Honda", 1, "18001076", null, null, new Guid("11111111-1111-1111-1111-111111111111"), "https://www.honda.com.vn" },
-                    { new Guid("b0000002-0000-0000-0000-000000000002"), "YAMAHA", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "https://d3iova6424vljy.cloudfront.net/master/brands/0ea879b6-a573-4691-b00d-9f078f25b605.png", "Yamaha", 1, "18006019", null, null, new Guid("11111111-1111-1111-1111-111111111111"), "https://www.yamaha-motor.com.vn" }
-                });
-
-            migrationBuilder.InsertData(
-                table: "VehicleModels",
-                columns: new[] { "Id", "Code", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "Description", "EngineCapacity", "EngineDisplacement", "FuelType", "ManufactureYear", "Name", "Status", "TransmissionType", "UpdatedAt", "UpdatedBy", "VehicleBrandId" },
-                values: new object[,]
-                {
-                    { new Guid("a0000001-0000-0000-0000-000000000001"), "WAVE-ALPHA", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, null, 1.10m, 110, 1, 2020, "Wave Alpha", 1, 1, null, null, new Guid("b0000001-0000-0000-0000-000000000001") },
-                    { new Guid("a0000002-0000-0000-0000-000000000002"), "AIR-BLADE", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, null, 1.25m, 125, 1, 2021, "Air Blade", 1, 2, null, null, new Guid("b0000001-0000-0000-0000-000000000001") },
-                    { new Guid("a0000003-0000-0000-0000-000000000003"), "EXCITER", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, null, 1.55m, 155, 1, 2021, "Exciter", 1, 1, null, null, new Guid("b0000002-0000-0000-0000-000000000002") },
-                    { new Guid("a0000004-0000-0000-0000-000000000004"), "SIRIUS", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, null, 1.10m, 110, 1, 2020, "Sirius", 1, 1, null, null, new Guid("b0000002-0000-0000-0000-000000000002") }
-                });
-
-            migrationBuilder.InsertData(
-                table: "DefaultMaintenanceSchedules",
-                columns: new[] { "Id", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "InitialKm", "KmInterval", "MonthsInterval", "PartCategoryId", "Status", "UpdatedAt", "UpdatedBy", "VehicleModelId" },
-                values: new object[,]
-                {
-                    { new Guid("d0000001-0000-0000-0000-000000000001"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, 1000, 3000, 4, new Guid("c0000001-0000-0000-0000-000000000001"), 1, null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("d0000002-0000-0000-0000-000000000002"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, 0, 20000, 36, new Guid("c0000002-0000-0000-0000-000000000002"), 1, null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("d0000003-0000-0000-0000-000000000003"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, 0, 0, 24, new Guid("c0000003-0000-0000-0000-000000000003"), 1, null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("d0000004-0000-0000-0000-000000000004"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, 0, 10000, 12, new Guid("c0000004-0000-0000-0000-000000000004"), 1, null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("d0000005-0000-0000-0000-000000000005"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, 0, 8000, 12, new Guid("c0000005-0000-0000-0000-000000000005"), 1, null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("d0000006-0000-0000-0000-000000000006"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, 0, 6000, 6, new Guid("c0000006-0000-0000-0000-000000000006"), 1, null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("d0000007-0000-0000-0000-000000000007"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, 0, 15000, 0, new Guid("c0000007-0000-0000-0000-000000000007"), 1, null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("d0000008-0000-0000-0000-000000000008"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, 0, 20000, 24, new Guid("c0000008-0000-0000-0000-000000000008"), 1, null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("d0000009-0000-0000-0000-000000000009"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, 1000, 3000, 4, new Guid("c0000009-0000-0000-0000-000000000009"), 1, null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("d0000010-0000-0000-0000-000000000010"), new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, 0, 20000, 24, new Guid("c0000010-0000-0000-0000-000000000010"), 1, null, null, new Guid("a0000001-0000-0000-0000-000000000001") }
-                });
-
-            migrationBuilder.InsertData(
-                table: "VehicleVariants",
-                columns: new[] { "Id", "Color", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "HexCode", "ImageUrl", "UpdatedAt", "UpdatedBy", "VehicleModelId" },
-                values: new object[,]
-                {
-                    { new Guid("e0000001-0000-0000-0000-000000000001"), "Đỏ đen", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "#DC143C", "https://d3iova6424vljy.cloudfront.net/master/models/04c7786f-3546-4526-8fe4-6e3ff3196d18.png", null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("e0000002-0000-0000-0000-000000000002"), "Đen bạc", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "#000000", "https://d3iova6424vljy.cloudfront.net/master/models/04c7786f-3546-4526-8fe4-6e3ff3196d18.png", null, null, new Guid("a0000001-0000-0000-0000-000000000001") },
-                    { new Guid("e0000003-0000-0000-0000-000000000003"), "Trắng ngọc trai", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "#FFFFFF", "https://d3iova6424vljy.cloudfront.net/master/models/04c7786f-3546-4526-8fe4-6e3ff3196d18.png", null, null, new Guid("a0000002-0000-0000-0000-000000000002") },
-                    { new Guid("e0000004-0000-0000-0000-000000000004"), "Xanh dương", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "#4169E1", "https://d3iova6424vljy.cloudfront.net/master/models/04c7786f-3546-4526-8fe4-6e3ff3196d18.png", null, null, new Guid("a0000002-0000-0000-0000-000000000002") },
-                    { new Guid("e0000005-0000-0000-0000-000000000005"), "Đen nhám", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "#1C1C1C", "https://d3iova6424vljy.cloudfront.net/master/models/04c7786f-3546-4526-8fe4-6e3ff3196d18.png", null, null, new Guid("a0000003-0000-0000-0000-000000000003") },
-                    { new Guid("e0000006-0000-0000-0000-000000000006"), "Đỏ GP", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "#FF0000", "https://d3iova6424vljy.cloudfront.net/master/models/04c7786f-3546-4526-8fe4-6e3ff3196d18.png", null, null, new Guid("a0000003-0000-0000-0000-000000000003") },
-                    { new Guid("e0000007-0000-0000-0000-000000000007"), "Xanh đen", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "#000080", "https://d3iova6424vljy.cloudfront.net/master/models/04c7786f-3546-4526-8fe4-6e3ff3196d18.png", null, null, new Guid("a0000004-0000-0000-0000-000000000004") },
-                    { new Guid("e0000008-0000-0000-0000-000000000008"), "Đen nhám", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), new Guid("00000000-0000-0000-0000-000000000000"), null, null, "#000000", "https://d3iova6424vljy.cloudfront.net/master/models/04c7786f-3546-4526-8fe4-6e3ff3196d18.png", null, null, new Guid("a0000004-0000-0000-0000-000000000004") }
                 });
 
             migrationBuilder.CreateIndex(
