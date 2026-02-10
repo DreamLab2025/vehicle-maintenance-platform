@@ -233,7 +233,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
 
                 var reminders = await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(userVehicleId);
-                var dtos = reminders.Select(r => r.ToReminderWithPartCategoryDto()).ToList();
+                var dtos = reminders.Select(r => r.ToReminderWithPartCategoryDto(vehicle.CurrentOdometer)).ToList();
 
                 return ApiResponse<List<ReminderWithPartCategoryDto>>.SuccessResponse(
                     dtos,
@@ -300,29 +300,23 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<UserVehicleResponse>.FailureResponse("Số km mới phải lớn hơn hoặc bằng số km hiện tại");
                 }
 
-                // Only create history if odometer actually changed
                 if (request.CurrentOdometer != vehicle.CurrentOdometer)
                 {
-                    // Create odometer history record (km ngày đó = mới - cũ)
                     var odometerHistory = vehicleId.ToOdometerHistory(request.CurrentOdometer, vehicle.CurrentOdometer);
 
                     await _unitOfWork.OdometerHistories.AddAsync(odometerHistory);
 
-                    // Update vehicle odometer
                     vehicle.UpdateOdometer(request.CurrentOdometer);
                     await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
-                    await _unitOfWork.SaveChangesAsync();
 
                     await SyncMaintenanceRemindersAsync(vehicleId, request.CurrentOdometer, userId);
 
-                    // Publish maintenance reminder notification if there are Critical reminders
                     await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
 
                     _logger.LogInformation("Updated odometer for vehicle: {VehicleId} from {OldOdometer} to {NewOdometer} km",
                         vehicleId, vehicle.CurrentOdometer, request.CurrentOdometer);
                 }
 
-                // Load navigation properties
                 var updatedVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(vehicleId);
 
                 return ApiResponse<UserVehicleResponse>.SuccessResponse(
@@ -455,8 +449,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 // Publish maintenance reminder notification if there are Critical reminders
                 await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
 
-                // Return tracking summary
-                var response = tracking.ToSummary();
+                // Return tracking summary with current vehicle odometer
+                var response = tracking.ToSummary(vehicle.CurrentOdometer);
 
                 return ApiResponse<VehiclePartTrackingSummary>.SuccessResponse(
                     response,

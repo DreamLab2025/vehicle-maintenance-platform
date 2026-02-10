@@ -15,6 +15,9 @@ await app.MigrateDbContextAsync<VehicleDbContext>(async (_, _) =>
   using var scope = app.Services.CreateScope();
   var db = scope.ServiceProvider.GetRequiredService<VehicleDbContext>();
   var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+  await PartProductSeeder.SeedAsync(db, logger);
+
   await MaintenanceReminderTestDataSeeder.SeedAsync(db, logger);
 });
 

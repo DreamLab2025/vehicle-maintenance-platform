@@ -11,7 +11,8 @@
       "Bash(do sed -i 's/GenericRepository</PostgresRepository</g; s/, VehicleDbContext>/>/g' \"$f\")",
       "Bash(done)",
       "Bash(Select-String -Pattern \"error|Build\")",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(git restore:*)"
     ]
   }
 }

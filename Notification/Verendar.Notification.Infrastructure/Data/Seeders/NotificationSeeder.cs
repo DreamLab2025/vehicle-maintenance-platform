@@ -16,7 +16,13 @@ public static class NotificationSeeder
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     private static readonly Guid SeedUserVehicleId = Guid.Parse("f0000001-0000-0000-0000-000000000001");
-    private static readonly Guid[] SeedReminderIds = { Guid.Parse("f0000002-0000-0000-0000-000000000002"), Guid.Parse("f0000003-0000-0000-0000-000000000003"), Guid.Parse("f0000004-0000-0000-0000-000000000004") };
+    private static readonly Guid[] SeedReminderIds =
+    {
+        Guid.Parse("f0000002-0000-0000-0000-000000000002"),
+        Guid.Parse("f0000003-0000-0000-0000-000000000003"),
+        Guid.Parse("f0000004-0000-0000-0000-000000000004"),
+        Guid.Parse("f0000005-0000-0000-0000-000000000005")
+    };
     private const string VehicleDisplayName = "59-TEST-01";
 
     private static readonly NotificationSeedItem[] NotificationItems =
