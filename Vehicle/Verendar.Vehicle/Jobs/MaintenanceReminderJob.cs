@@ -61,6 +61,7 @@ public class MaintenanceReminderJob(
                         ReminderId = r.Id,
                         CurrentOdometer = r.CurrentOdometer,
                         TargetOdometer = r.TargetOdometer,
+                        InitialOdometer = r.PartTracking.LastReplacementOdometer,
                         PercentageRemaining = r.PercentageRemaining,
                         VehicleDisplayName = vehicleDisplay
                     };

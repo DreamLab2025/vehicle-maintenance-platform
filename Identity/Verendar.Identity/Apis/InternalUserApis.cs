@@ -1,4 +1,4 @@
-using Verendar.Identity.Services.Interfaces;
+using Verendar.Identity.Application.Services.Interfaces;
 
 namespace Verendar.Identity.Apis;
 

@@ -7,11 +7,6 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Seeders;
 
-/// <summary>
-/// Seed test user vehicle + urgent maintenance reminder for background job flows:
-/// - MaintenanceReminderJob (Urgent reminder → publish MaintenanceReminderEvent)
-/// - OdometerReminderJob (stale odometer → publish OdometerReminderEvent)
-/// </summary>
 public static class MaintenanceReminderTestDataSeeder
 {
     private static readonly Guid TestUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");

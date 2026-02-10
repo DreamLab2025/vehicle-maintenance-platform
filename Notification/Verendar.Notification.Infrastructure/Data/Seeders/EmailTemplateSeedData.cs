@@ -2,9 +2,6 @@ using Verendar.Notification.Domain.Enums;
 
 namespace Verendar.Notification.Infrastructure.Seeders;
 
-/// <summary>
-/// Định nghĩa các email template seed vào database (thay vì hardcode trong migration).
-/// </summary>
 public static class EmailTemplateSeedData
 {
     public static readonly IReadOnlyList<EmailTemplateSeedItem> Items = new[]
@@ -18,7 +15,7 @@ public static class EmailTemplateSeedData
             Code: "WELCOME_USER",
             TitleTemplate: "Chào mừng đến với Verendar!",
             MessageTemplate: "Xin chao {UserName}! Cam on ban da dang ky Verendar. Chung toi rat vui duoc phuc vu ban!",
-            NotificationType: NotificationType.User),
+            NotificationType: NotificationType.Welcome),
         new EmailTemplateSeedItem(
             Code: "OTP_PASSWORD_RESET",
             TitleTemplate: "Đặt lại mật khẩu",
