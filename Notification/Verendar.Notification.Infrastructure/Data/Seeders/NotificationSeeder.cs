@@ -15,20 +15,24 @@ public static class NotificationSeeder
     private const string TestUserEmail = "hoalvpse181951@fpt.edu.vn";
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    private static readonly (string Title, string Message, NotificationType Type, NotificationPriority Priority, string EntityType, int? Level, string? LevelName)[] NotificationItems =
+    private static readonly Guid SeedUserVehicleId = Guid.Parse("f0000001-0000-0000-0000-000000000001");
+    private static readonly Guid[] SeedReminderIds = { Guid.Parse("f0000002-0000-0000-0000-000000000002"), Guid.Parse("f0000003-0000-0000-0000-000000000003"), Guid.Parse("f0000004-0000-0000-0000-000000000004") };
+    private const string VehicleDisplayName = "59-TEST-01";
+
+    private static readonly (string Title, string Message, NotificationType Type, NotificationPriority Priority, string EntityType, int? Level, string? LevelName, string PartCategoryName, int CurrentOdo, int TargetOdo, decimal PctRemaining)[] NotificationItems =
     {
         ("Khẩn cấp: Cần thay linh kiện",
             "Xe cua ban co linh kien da den muc khan cap can thay the. Cac linh kien can chu y:\n• Dau nhot dong co (so km hien tai: 5,000, can thay truoc: 6,000)",
-            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 4, "Urgent"),
+            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 4, "Urgent", "Dầu nhớt động cơ", 5000, 6000, 5m),
         ("Nhắc nhở bảo dưỡng (High)",
             "Xe cua ban co linh kien can chu y bao duong/thay the:\n• Lop xe (so km hien tai: 15,000, can thay truoc: 20,000)",
-            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 3, "High"),
+            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 3, "High", "Lốp xe", 15000, 20000, 25m),
         ("Nhắc nhở bảo dưỡng (Medium)",
             "Xe cua ban co linh kien can chu y bao duong/thay the:\n• Ma phanh (so km hien tai: 7,000, can thay truoc: 10,000)",
-            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 2, "Medium"),
+            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 2, "Medium", "Má phanh", 7000, 10000, 30m),
         ("Nhắc nhở cập nhật số km",
             "Xe 59-TEST-01 chua cap nhat so km trong 5 ngay qua. Vui long vao app cap nhat so km de duoc nhac bao duong chinh xac.",
-            NotificationType.OdometerReminder, NotificationPriority.Medium, "OdometerReminder", null, null),
+            NotificationType.OdometerReminder, NotificationPriority.Medium, "OdometerReminder", null, null, "", 0, 0, 0m),
     };
 
     public static async Task SeedAsync(NotificationDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
@@ -77,11 +81,64 @@ public static class NotificationSeeder
             return;
         }
 
-        foreach (var (title, message, type, priority, entityType, level, levelName) in NotificationItems)
+        for (var i = 0; i < NotificationItems.Length; i++)
         {
-            var metadata = level.HasValue
-                ? JsonSerializer.Serialize(new { Source = "MaintenanceReminder", Level = level, LevelName = levelName }, JsonOptions)
-                : JsonSerializer.Serialize(new { Source = "OdometerReminder" }, JsonOptions);
+            var (title, message, type, priority, entityType, level, levelName, partCategoryName, currentOdo, targetOdo, pctRemaining) = NotificationItems[i];
+            string metadataJson;
+            Guid? entityId;
+
+            if (type == NotificationType.MaintenanceReminder && level.HasValue && levelName != null)
+            {
+                var reminderId = SeedReminderIds[i];
+                var items = new[]
+                {
+                    new
+                    {
+                        partCategoryName,
+                        userVehicleId = SeedUserVehicleId,
+                        reminderId,
+                        currentOdometer = currentOdo,
+                        targetOdometer = targetOdo,
+                        initialOdometer = currentOdo - 3000,
+                        percentageRemaining = pctRemaining,
+                        vehicleDisplayName = VehicleDisplayName
+                    }
+                };
+                metadataJson = JsonSerializer.Serialize(new
+                {
+                    type = "MaintenanceReminder",
+                    entityType = "MaintenanceReminder",
+                    entityId = reminderId,
+                    level,
+                    levelName,
+                    items
+                }, JsonOptions);
+                entityId = reminderId;
+            }
+            else
+            {
+                var vehicles = new[]
+                {
+                    new
+                    {
+                        userVehicleId = SeedUserVehicleId,
+                        vehicleDisplayName = VehicleDisplayName,
+                        licensePlate = VehicleDisplayName,
+                        currentOdometer = 5000,
+                        lastOdometerUpdateFormatted = DateTime.UtcNow.AddDays(-5).ToString("dd/MM/yyyy"),
+                        daysSinceUpdate = 5
+                    }
+                };
+                metadataJson = JsonSerializer.Serialize(new
+                {
+                    type = "OdometerReminder",
+                    entityType = "OdometerReminder",
+                    entityId = SeedUserVehicleId,
+                    staleOdometerDays = 5,
+                    vehicles
+                }, JsonOptions);
+                entityId = SeedUserVehicleId;
+            }
 
             var notification = new NotificationEntity
             {
@@ -93,7 +150,8 @@ public static class NotificationSeeder
                 Priority = priority,
                 Status = NotificationStatus.Sent,
                 EntityType = entityType,
-                MetadataJson = metadata,
+                EntityId = entityId,
+                MetadataJson = metadataJson,
                 IsRead = false,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = SystemUserId
