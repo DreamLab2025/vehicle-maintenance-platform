@@ -16,6 +16,7 @@ using Verendar.Notification.Infrastructure.Repositories.Implements;
 using Verendar.Notification.Infrastructure.Services;
 using Verendar.Notification.Services;
 using Verendar.ServiceDefaults;
+using Verendar.Notification.Application.Services.Implements;
 
 namespace Verendar.Notification.Bootstrapping
 {
