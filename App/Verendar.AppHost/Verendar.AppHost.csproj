@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <Sdk Name="Aspire.AppHost.Sdk" Version="9.5.0" />
 
@@ -20,12 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Ai\Verendar.Ai\Verendar.Ai.csproj" />
-    <ProjectReference Include="..\Identity\Verendar.Identity\Verendar.Identity.csproj" />
-    <ProjectReference Include="..\Media\Verendar.Media\Verendar.Media.csproj" />
-    <ProjectReference Include="..\Vehicle\Verendar.Vehicle\Verendar.Vehicle.csproj" />
-    <ProjectReference Include="..\Notification\Verendar.Notification\Verendar.Notification.csproj" />
-    <ProjectReference Include="..\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\Ai\Verendar.Ai\Verendar.Ai.csproj" />
+    <ProjectReference Include="..\..\Identity\Verendar.Identity\Verendar.Identity.csproj" />
+    <ProjectReference Include="..\..\Media\Verendar.Media\Verendar.Media.csproj" />
+    <ProjectReference Include="..\..\Vehicle\Verendar.Vehicle\Verendar.Vehicle.csproj" />
+    <ProjectReference Include="..\..\Notification\Verendar.Notification\Verendar.Notification.csproj" />
+    <ProjectReference Include="..\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
 </Project>
