@@ -3,41 +3,42 @@ using Polly.Extensions.Http;
 using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Handlers;
 
-namespace Verendar.Ai.Bootstrapping;
-
-public static class ClientExtensions
+namespace Verendar.Ai.Bootstrapping
 {
-    public static IHostApplicationBuilder AddClients(this IHostApplicationBuilder builder)
+    public static class ClientExtensions
     {
-        builder.Services.AddHttpClient<IVehicleServiceClient, VehicleServiceClient>(client =>
+        public static IHostApplicationBuilder AddClients(this IHostApplicationBuilder builder)
         {
-            var baseUrl = builder.Configuration["VehicleService:BaseUrl"]
-                ?? builder.Configuration["Services:Vehicle:BaseUrl"]
-                ?? "https://localhost:8002";
-            client.BaseAddress = new Uri(baseUrl);
-            client.Timeout = TimeSpan.FromSeconds(30);
-        })
-        .AddHttpMessageHandler<ForwardAuthorizationHandler>()
-        .AddPolicyHandler(GetResiliencePolicy());
+            builder.Services.AddHttpClient<IVehicleServiceClient, VehicleServiceClient>(client =>
+            {
+                var baseUrl = builder.Configuration["VehicleService:BaseUrl"]
+                    ?? builder.Configuration["Services:Vehicle:BaseUrl"]
+                    ?? "https://localhost:8002";
+                client.BaseAddress = new Uri(baseUrl);
+                client.Timeout = TimeSpan.FromSeconds(30);
+            })
+            .AddHttpMessageHandler<ForwardAuthorizationHandler>()
+            .AddPolicyHandler(GetResiliencePolicy());
 
-        return builder;
-    }
+            return builder;
+        }
 
-    private static IAsyncPolicy<HttpResponseMessage> GetResiliencePolicy()
-    {
-        var circuitBreakerPolicy = HttpPolicyExtensions
-            .HandleTransientHttpError()
-            .CircuitBreakerAsync(
-                handledEventsAllowedBeforeBreaking: 5,
-                durationOfBreak: TimeSpan.FromSeconds(30));
+        private static IAsyncPolicy<HttpResponseMessage> GetResiliencePolicy()
+        {
+            var circuitBreakerPolicy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .CircuitBreakerAsync(
+                    handledEventsAllowedBeforeBreaking: 5,
+                    durationOfBreak: TimeSpan.FromSeconds(30));
 
-        var retryPolicy = HttpPolicyExtensions
-            .HandleTransientHttpError()
-            .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-            .WaitAndRetryAsync(
-                retryCount: 3,
-                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+            var retryPolicy = HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                .WaitAndRetryAsync(
+                    retryCount: 3,
+                    sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
 
-        return Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
+            return Policy.WrapAsync(retryPolicy, circuitBreakerPolicy);
+        }
     }
 }

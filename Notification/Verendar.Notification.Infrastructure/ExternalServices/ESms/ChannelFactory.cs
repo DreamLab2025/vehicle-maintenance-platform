@@ -1,15 +1,16 @@
 using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Notification.Domain.Enums;
 
-namespace Verendar.Notification.Infrastructure.ExternalServices.ESms;
-
-public class ChannelFactory(IEnumerable<INotificationChannel> channels) : IChannelFactory
+namespace Verendar.Notification.Infrastructure.ExternalServices.ESms
 {
-    private readonly IEnumerable<INotificationChannel> _channels = channels;
-
-    public INotificationChannel GetChannel(NotificationChannel type)
+    public class ChannelFactory(IEnumerable<INotificationChannel> channels) : IChannelFactory
     {
-        var channel = _channels.FirstOrDefault(x => x.ChannelType == type);
-        return channel ?? throw new ArgumentException($"No service registered for channel {type}");
+        private readonly IEnumerable<INotificationChannel> _channels = channels;
+
+        public INotificationChannel GetChannel(NotificationChannel type)
+        {
+            var channel = _channels.FirstOrDefault(x => x.ChannelType == type);
+            return channel ?? throw new ArgumentException($"No service registered for channel {type}");
+        }
     }
 }

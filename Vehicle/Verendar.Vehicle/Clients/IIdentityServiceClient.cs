@@ -1,6 +1,7 @@
-namespace Verendar.Vehicle.Clients;
-
-public interface IIdentityServiceClient
+namespace Verendar.Vehicle.Clients
 {
-    Task<string?> GetUserEmailByIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    public interface IIdentityServiceClient
+    {
+        Task<string?> GetUserEmailByIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    }
 }

@@ -1,17 +1,18 @@
 using Verendar.Notification.Domain.Enums;
 
-namespace Verendar.Notification.Application.Dtos.Notifications;
-
-public class NotificationDeliveryContext
+namespace Verendar.Notification.Application.Dtos.Notifications
 {
-    public Guid NotificationId { get; set; }
-    public string Title { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public string? RecipientEmail { get; set; }
-    public string? RecipientPhone { get; set; }
-    public string? ZaloTemplateId { get; set; }
-    public NotificationType NotificationType { get; set; }
-    public Dictionary<string, string>? TemplateParameters { get; set; }
-    public Dictionary<string, object>? Metadata { get; set; }
-    public object? TemplateModel { get; set; }
+    public class NotificationDeliveryContext
+    {
+        public Guid NotificationId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
+        public string? RecipientEmail { get; set; }
+        public string? RecipientPhone { get; set; }
+        public string? ZaloTemplateId { get; set; }
+        public NotificationType NotificationType { get; set; }
+        public Dictionary<string, string>? TemplateParameters { get; set; }
+        public Dictionary<string, object>? Metadata { get; set; }
+        public object? TemplateModel { get; set; }
+    }
 }

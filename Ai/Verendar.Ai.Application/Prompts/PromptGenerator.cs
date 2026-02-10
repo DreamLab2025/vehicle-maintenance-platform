@@ -1,26 +1,26 @@
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 
-namespace Verendar.Ai.Application.Helpers;
-
-public static class PromptGenerator
+namespace Verendar.Ai.Application.Helpers
 {
-  public static string CreateVehicleMaintenancePrompt(
-        VehicleInfoDto vehicleInfo,
-        DefaultScheduleDto schedule,
-        IEnumerable<QuestionAnswerDto>? answers)
-  {
-    var today = DateTime.Now.ToString("yyyy-MM-dd");
+    public static class PromptGenerator
+    {
+      public static string CreateVehicleMaintenancePrompt(
+            VehicleInfoDto vehicleInfo,
+            DefaultScheduleDto schedule,
+            IEnumerable<QuestionAnswerDto>? answers)
+      {
+        var today = DateTime.Now.ToString("yyyy-MM-dd");
 
-    var scheduleBlock = $"ITEM: {{ \"Code\": \"{schedule.PartCategoryCode}\", \"Initial_Km\": {schedule.InitialKm}, \"Interval_Km\": {schedule.KmInterval}, \"Interval_Month\": {schedule.MonthsInterval} }}";
+        var scheduleBlock = $"ITEM: {{ \"Code\": \"{schedule.PartCategoryCode}\", \"Initial_Km\": {schedule.InitialKm}, \"Interval_Km\": {schedule.KmInterval}, \"Interval_Month\": {schedule.MonthsInterval} }}";
 
-    var answerBlock = (answers != null && answers.Any())
-        ? string.Join("\n", answers.Where(a => !string.IsNullOrWhiteSpace(a.Value))
-                                    .Select(a => $"- User Input ({a.Question}): \"{a.Value}\""))
-        : "No user input provided.";
+        var answerBlock = (answers != null && answers.Any())
+            ? string.Join("\n", answers.Where(a => !string.IsNullOrWhiteSpace(a.Value))
+                                        .Select(a => $"- User Input ({a.Question}): \"{a.Value}\""))
+            : "No user input provided.";
 
-    var vehicleName = $"{vehicleInfo.Brand} {vehicleInfo.Model}".Trim();
+        var vehicleName = $"{vehicleInfo.Brand} {vehicleInfo.Model}".Trim();
 
-    return $@"Nhiệm vụ: Dự đoán mốc bảo dưỡng tiếp theo (predictedNextOdometer, predictedNextDate) từ dữ liệu dưới đây. Trả về JSON đúng format, không null cho predictedNextOdometer/predictedNextDate.
+        return $@"Nhiệm vụ: Dự đoán mốc bảo dưỡng tiếp theo (predictedNextOdometer, predictedNextDate) từ dữ liệu dưới đây. Trả về JSON đúng format, không null cho predictedNextOdometer/predictedNextDate.
 
 Quy tắc: (1) Có Q&A → bắt buộc suy km/ngày từ câu trả lời rồi tính (confidenceScore 0.75–1.0). (2) Chỉ khi Q&A trống hoặc không suy ra được số km/ngày mới dùng lịch hãng (confidenceScore 0.4–0.6).
 
@@ -28,7 +28,7 @@ Quy tắc: (1) Có Q&A → bắt buộc suy km/ngày từ câu trả lời rồi
 Today: {today} | Xe: {vehicleName} | ODO: {vehicleInfo.CurrentOdometer} km | Mua: {vehicleInfo.PurchaseDate:yyyy-MM-dd}
 
 Q&A (ưu tiên – suy Last_ODO, Last_Date, chu kỳ từ đây):
-{answerBlock}
+    {answerBlock}
 
 Lịch hãng (fallback): {scheduleBlock}
 
@@ -40,5 +40,6 @@ Cách làm:
 
 Output (JSON only, no markdown):
 {{""recommendations"":[{{""partCategoryCode"":""{schedule.PartCategoryCode}"",""lastServiceOdometer"":number|null,""lastServiceDate"":""yyyy-MM-dd""|null,""predictedNextOdometer"":number,""predictedNextDate"":""yyyy-MM-dd"",""confidenceScore"":0.4-1.0,""reasoning"":""string"",""needsImmediateAttention"":bool}}],""warnings"":[]}}";
-  }
+      }
+    }
 }

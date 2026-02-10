@@ -1,10 +1,11 @@
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Domain.Enums;
 
-namespace Verendar.Notification.Application.Services.Interfaces;
-
-public interface INotificationChannel
+namespace Verendar.Notification.Application.Services.Interfaces
 {
-    NotificationChannel ChannelType { get; }
-    Task<ChannelDeliveryResult> SendAsync(NotificationDeliveryContext context);
+    public interface INotificationChannel
+    {
+        NotificationChannel ChannelType { get; }
+        Task<ChannelDeliveryResult> SendAsync(NotificationDeliveryContext context);
+    }
 }

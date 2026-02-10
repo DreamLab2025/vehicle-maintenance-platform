@@ -1,36 +1,37 @@
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 using Verendar.Ai.Application.Dtos.VehicleService;
 
-namespace Verendar.Ai.Application.Mappings;
-
-public static class VehicleServiceMappings
+namespace Verendar.Ai.Application.Mappings
 {
-
-    public static VehicleInfoDto ToVehicleInfoDto(this VehicleServiceUserVehicleResponse vehicle)
+    public static class VehicleServiceMappings
     {
-        return new VehicleInfoDto
+
+        public static VehicleInfoDto ToVehicleInfoDto(this VehicleServiceUserVehicleResponse vehicle)
         {
-            Brand = vehicle.UserVehicleVariant.Model.BrandName,
-            Model = vehicle.UserVehicleVariant.Model.Name,
-            CurrentOdometer = vehicle.CurrentOdometer,
-            PurchaseDate = vehicle.PurchaseDate ?? DateTime.UtcNow
-        };
-    }
+            return new VehicleInfoDto
+            {
+                Brand = vehicle.UserVehicleVariant.Model.BrandName,
+                Model = vehicle.UserVehicleVariant.Model.Name,
+                CurrentOdometer = vehicle.CurrentOdometer,
+                PurchaseDate = vehicle.PurchaseDate ?? DateTime.UtcNow
+            };
+        }
 
 
-    public static DefaultScheduleDto ToDefaultScheduleDto(
-        this VehicleServiceDefaultScheduleResponse schedule,
-        string partCategoryCode)
-    {
-        return new DefaultScheduleDto
+        public static DefaultScheduleDto ToDefaultScheduleDto(
+            this VehicleServiceDefaultScheduleResponse schedule,
+            string partCategoryCode)
         {
-            PartCategoryCode = partCategoryCode,
-            PartCategoryName = partCategoryCode, // Will be filled from mapping if needed
-            InitialKm = schedule.InitialKm,
-            KmInterval = schedule.KmInterval,
-            MonthsInterval = schedule.MonthsInterval,
-            RequiresOdometerTracking = schedule.RequiresOdometerTracking,
-            RequiresTimeTracking = schedule.RequiresTimeTracking
-        };
+            return new DefaultScheduleDto
+            {
+                PartCategoryCode = partCategoryCode,
+                PartCategoryName = partCategoryCode, // Will be filled from mapping if needed
+                InitialKm = schedule.InitialKm,
+                KmInterval = schedule.KmInterval,
+                MonthsInterval = schedule.MonthsInterval,
+                RequiresOdometerTracking = schedule.RequiresOdometerTracking,
+                RequiresTimeTracking = schedule.RequiresTimeTracking
+            };
+        }
     }
 }

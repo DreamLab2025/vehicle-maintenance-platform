@@ -1,39 +1,40 @@
 using Verendar.Identity.Application.Services.Interfaces;
 
-namespace Verendar.Identity.Apis;
-
-public static class InternalUserApis
+namespace Verendar.Identity.Apis
 {
-    public static IEndpointRouteBuilder MapInternalUserApi(this IEndpointRouteBuilder builder)
+    public static class InternalUserApis
     {
-        var group = builder.MapGroup("/api/internal/users")
-            .WithTags("Internal User Api");
+        public static IEndpointRouteBuilder MapInternalUserApi(this IEndpointRouteBuilder builder)
+        {
+            var group = builder.MapGroup("/api/internal/users")
+                .WithTags("Internal User Api");
 
-        group.MapGet("/{id:guid}/email", GetUserEmailById)
-            .WithName("GetUserEmailById")
-            .WithOpenApi(operation =>
-            {
-                operation.Summary = "Lấy email người dùng theo ID (internal)";
-                return operation;
-            })
-            .Produces<UserEmailResponse>(StatusCodes.Status200OK)
-            .Produces(StatusCodes.Status404NotFound);
+            group.MapGet("/{id:guid}/email", GetUserEmailById)
+                .WithName("GetUserEmailById")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy email người dùng theo ID (internal)";
+                    return operation;
+                })
+                .Produces<UserEmailResponse>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status404NotFound);
 
-        return builder;
+            return builder;
+        }
+
+        private static async Task<IResult> GetUserEmailById(Guid id, IUserService userService)
+        {
+            var result = await userService.GetUserByIdAsync(id);
+            if (!result.IsSuccess || result.Data == null)
+                return Results.NotFound();
+
+            var email = result.Data.Email;
+            if (string.IsNullOrWhiteSpace(email))
+                return Results.NotFound();
+
+            return Results.Ok(new UserEmailResponse(email));
+        }
     }
 
-    private static async Task<IResult> GetUserEmailById(Guid id, IUserService userService)
-    {
-        var result = await userService.GetUserByIdAsync(id);
-        if (!result.IsSuccess || result.Data == null)
-            return Results.NotFound();
-
-        var email = result.Data.Email;
-        if (string.IsNullOrWhiteSpace(email))
-            return Results.NotFound();
-
-        return Results.Ok(new UserEmailResponse(email));
-    }
+    public record UserEmailResponse(string Email);
 }
-
-public record UserEmailResponse(string Email);

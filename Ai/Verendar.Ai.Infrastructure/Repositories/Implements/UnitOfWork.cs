@@ -3,11 +3,12 @@ using Verendar.Ai.Infrastructure.Data;
 using Verendar.Common.Databases.UnitOfWork;
 
 
-namespace Verendar.Ai.Infrastructure.Repositories.Implements;
-
-public class UnitOfWork(AiDbContext context) : BaseUnitOfWork<AiDbContext>(context), IUnitOfWork
+namespace Verendar.Ai.Infrastructure.Repositories.Implements
 {
-    private IAiUsageRepository? _aiUsages;
+    public class UnitOfWork(AiDbContext context) : BaseUnitOfWork<AiDbContext>(context), IUnitOfWork
+    {
+        private IAiUsageRepository? _aiUsages;
 
-    public IAiUsageRepository AiUsages => _aiUsages ??= new AiUsageRepository(Context);
+        public IAiUsageRepository AiUsages => _aiUsages ??= new AiUsageRepository(Context);
+    }
 }

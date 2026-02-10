@@ -1,8 +1,9 @@
-namespace Verendar.Notification.Domain.Enums;
-
-public enum NotificationPriority
+namespace Verendar.Notification.Domain.Enums
 {
-    Low = 1,
-    Medium = 2,
-    High = 3
+    public enum NotificationPriority
+    {
+        Low = 1,
+        Medium = 2,
+        High = 3
+    }
 }

@@ -2,41 +2,42 @@ using Verendar.Common.Databases.Base;
 using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Domain.Entities;
 
-namespace Verendar.Identity.Application.Mappings;
-
-public static class UserMappings
+namespace Verendar.Identity.Application.Mappings
 {
-    public static UserDto ToDto(this User user)
+    public static class UserMappings
     {
-        return new UserDto
+        public static UserDto ToDto(this User user)
         {
-            Id = user.Id.ToString(),
-            UserName = user.FullName,
-            Email = user.Email,
-            PhoneNumber = user.PhoneNumber ?? string.Empty,
-            EmailVerified = user.EmailVerified,
-            PhoneNumberVerified = user.PhoneNumberVerified,
-            Status = user.Status.ToString(),
-            Roles = user.Roles.Select(r => r.ToString()).ToList(),
-            CreatedAt = user.CreatedAt
-        };
-    }
+            return new UserDto
+            {
+                Id = user.Id.ToString(),
+                UserName = user.FullName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                EmailVerified = user.EmailVerified,
+                PhoneNumberVerified = user.PhoneNumberVerified,
+                Status = user.Status.ToString(),
+                Roles = user.Roles.Select(r => r.ToString()).ToList(),
+                CreatedAt = user.CreatedAt
+            };
+        }
 
-    public static User ToEntity(this RegisterRequest request, string passwordHash)
-    {
-        var userId = Guid.CreateVersion7();
-        return new User
+        public static User ToEntity(this RegisterRequest request, string passwordHash)
         {
-            Id = userId,
-            Email = request.Email,
-            PasswordHash = passwordHash,
-            FullName = request.Email,
-            Status = EntityStatus.Active,
-            Roles = new List<UserRole> { UserRole.User },
-            PhoneNumberVerified = false,
-            EmailVerified = false,
-            RefreshToken = string.Empty,
-            RefreshTokenExpiryTime = null
-        };
+            var userId = Guid.CreateVersion7();
+            return new User
+            {
+                Id = userId,
+                Email = request.Email,
+                PasswordHash = passwordHash,
+                FullName = request.Email,
+                Status = EntityStatus.Active,
+                Roles = new List<UserRole> { UserRole.User },
+                PhoneNumberVerified = false,
+                EmailVerified = false,
+                RefreshToken = string.Empty,
+                RefreshTokenExpiryTime = null
+            };
+        }
     }
 }

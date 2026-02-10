@@ -5,111 +5,112 @@ using RazorLight;
 using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Notification.Infrastructure.Configuration;
 
-namespace Verendar.Notification.Infrastructure.ExternalServices.Resend;
-
-public class RazorEmailTemplateService : IEmailTemplateService
+namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
 {
-    private readonly ILogger<RazorEmailTemplateService> _logger;
-    private readonly ResendOptions _options;
-    private readonly IWebHostEnvironment _environment;
-    private readonly RazorLightEngine _razorEngine;
-
-    public RazorEmailTemplateService(
-        ILogger<RazorEmailTemplateService> logger,
-        IOptions<ResendOptions> options,
-        IWebHostEnvironment environment)
+    public class RazorEmailTemplateService : IEmailTemplateService
     {
-        _logger = logger;
-        _options = options.Value;
-        _environment = environment;
+        private readonly ILogger<RazorEmailTemplateService> _logger;
+        private readonly ResendOptions _options;
+        private readonly IWebHostEnvironment _environment;
+        private readonly RazorLightEngine _razorEngine;
 
-        var templateDirectory = GetTemplateDirectory();
-
-        // Ensure template directory exists
-        if (!Directory.Exists(templateDirectory))
+        public RazorEmailTemplateService(
+            ILogger<RazorEmailTemplateService> logger,
+            IOptions<ResendOptions> options,
+            IWebHostEnvironment environment)
         {
-            Directory.CreateDirectory(templateDirectory);
-            _logger.LogWarning("Template directory created at {TemplateDirectory}", templateDirectory);
-        }
+            _logger = logger;
+            _options = options.Value;
+            _environment = environment;
 
-        // Initialize RazorLight engine
-        _razorEngine = new RazorLightEngineBuilder()
-            .UseFileSystemProject(templateDirectory)
-            .UseMemoryCachingProvider()
-            .Build();
-    }
+            var templateDirectory = GetTemplateDirectory();
 
-    public async Task<string> RenderTemplateAsync<TModel>(
-        string templateKey,
-        TModel model,
-        CancellationToken cancellationToken = default) where TModel : class
-    {
-        try
-        {
-            var templateFile = $"{templateKey}.cshtml";
-            var templatePath = GetTemplatePath(templateKey);
-
-            if (!File.Exists(templatePath))
+            // Ensure template directory exists
+            if (!Directory.Exists(templateDirectory))
             {
-                throw new FileNotFoundException($"Email template not found: {templatePath}");
+                Directory.CreateDirectory(templateDirectory);
+                _logger.LogWarning("Template directory created at {TemplateDirectory}", templateDirectory);
             }
 
-            _logger.LogDebug("Rendering template {TemplateKey} with model type {ModelType}",
-                templateKey, typeof(TModel).Name);
-
-            return await _razorEngine.CompileRenderAsync(templateFile, model);
+            // Initialize RazorLight engine
+            _razorEngine = new RazorLightEngineBuilder()
+                .UseFileSystemProject(templateDirectory)
+                .UseMemoryCachingProvider()
+                .Build();
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to render template {TemplateKey}", templateKey);
-            throw;
-        }
-    }
 
-    public async Task<string> RenderTemplateAsync(
-        string templateKey,
-        object? model = null,
-        CancellationToken cancellationToken = default)
-    {
-        try
+        public async Task<string> RenderTemplateAsync<TModel>(
+            string templateKey,
+            TModel model,
+            CancellationToken cancellationToken = default) where TModel : class
         {
-            var templateFile = $"{templateKey}.cshtml";
-            var templatePath = GetTemplatePath(templateKey);
-
-            if (!File.Exists(templatePath))
+            try
             {
-                throw new FileNotFoundException($"Email template not found: {templatePath}");
+                var templateFile = $"{templateKey}.cshtml";
+                var templatePath = GetTemplatePath(templateKey);
+
+                if (!File.Exists(templatePath))
+                {
+                    throw new FileNotFoundException($"Email template not found: {templatePath}");
+                }
+
+                _logger.LogDebug("Rendering template {TemplateKey} with model type {ModelType}",
+                    templateKey, typeof(TModel).Name);
+
+                return await _razorEngine.CompileRenderAsync(templateFile, model);
             }
-
-            return await _razorEngine.CompileRenderAsync(templateFile, model ?? new { });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to render template {TemplateKey}", templateKey);
+                throw;
+            }
         }
-        catch (Exception ex)
+
+        public async Task<string> RenderTemplateAsync(
+            string templateKey,
+            object? model = null,
+            CancellationToken cancellationToken = default)
         {
-            _logger.LogError(ex, "Failed to render template {TemplateKey}", templateKey);
-            throw;
+            try
+            {
+                var templateFile = $"{templateKey}.cshtml";
+                var templatePath = GetTemplatePath(templateKey);
+
+                if (!File.Exists(templatePath))
+                {
+                    throw new FileNotFoundException($"Email template not found: {templatePath}");
+                }
+
+                return await _razorEngine.CompileRenderAsync(templateFile, model ?? new { });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to render template {TemplateKey}", templateKey);
+                throw;
+            }
         }
-    }
 
-    public Task<bool> TemplateExistsAsync(string templateKey, CancellationToken cancellationToken = default)
-    {
-        var templatePath = GetTemplatePath(templateKey);
-        return Task.FromResult(File.Exists(templatePath));
-    }
+        public Task<bool> TemplateExistsAsync(string templateKey, CancellationToken cancellationToken = default)
+        {
+            var templatePath = GetTemplatePath(templateKey);
+            return Task.FromResult(File.Exists(templatePath));
+        }
 
-    public void ClearCache()
-    {
-        // Không cache render email — không cần xóa cache.
-    }
+        public void ClearCache()
+        {
+            // Không cache render email — không cần xóa cache.
+        }
 
-    private string GetTemplatePath(string templateKey)
-    {
-        var templateDirectory = GetTemplateDirectory();
-        return Path.Combine(templateDirectory, $"{templateKey}.cshtml");
-    }
+        private string GetTemplatePath(string templateKey)
+        {
+            var templateDirectory = GetTemplateDirectory();
+            return Path.Combine(templateDirectory, $"{templateKey}.cshtml");
+        }
 
-    private string GetTemplateDirectory()
-    {
-        var basePath = _environment.ContentRootPath ?? AppDomain.CurrentDomain.BaseDirectory;
-        return Path.Combine(basePath, _options.TemplateBasePath);
+        private string GetTemplateDirectory()
+        {
+            var basePath = _environment.ContentRootPath ?? AppDomain.CurrentDomain.BaseDirectory;
+            return Path.Combine(basePath, _options.TemplateBasePath);
+        }
     }
 }

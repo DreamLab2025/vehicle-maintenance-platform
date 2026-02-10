@@ -1,8 +1,9 @@
 using Verendar.Notification.Application.Dtos.InApp;
 
-namespace Verendar.Notification.Application.Services.Interfaces;
-
-public interface IInAppNotificationService
+namespace Verendar.Notification.Application.Services.Interfaces
 {
-    Task SendAsync(Guid userId, InAppNotificationPayload payload, CancellationToken cancellationToken = default);
+    public interface IInAppNotificationService
+    {
+        Task SendAsync(Guid userId, InAppNotificationPayload payload, CancellationToken cancellationToken = default);
+    }
 }

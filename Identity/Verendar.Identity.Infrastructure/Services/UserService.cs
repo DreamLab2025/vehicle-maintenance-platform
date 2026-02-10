@@ -6,54 +6,55 @@ using Verendar.Identity.Application.Services.Interfaces;
 using Verendar.Identity.Domain.Entities;
 using Verendar.Identity.Domain.Repositories.Interfaces;
 
-namespace Verendar.Identity.Infrastructure.Services;
-
-public class UserService(ILogger<UserService> logger, IUnitOfWork unitOfWork) : IUserService
+namespace Verendar.Identity.Infrastructure.Services
 {
-    private readonly ILogger<UserService> _logger = logger;
-    private readonly IUnitOfWork _unitOfWork = unitOfWork;
-
-    public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(PaginationRequest paginationRequest)
+    public class UserService(ILogger<UserService> logger, IUnitOfWork unitOfWork) : IUserService
     {
-        var users = await _unitOfWork.Users.GetPagedAsync(
-            paginationRequest.PageNumber,
-            paginationRequest.PageSize,
-            null,
-            q => q.OrderByDescending(u => u.CreatedAt)
-        );
+        private readonly ILogger<UserService> _logger = logger;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-        if (users.Items == null)
+        public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(PaginationRequest paginationRequest)
         {
-            return ApiResponse<List<UserDto>>.FailureResponse("Không tìm thấy danh sách người dùng.");
-        }
+            var users = await _unitOfWork.Users.GetPagedAsync(
+                paginationRequest.PageNumber,
+                paginationRequest.PageSize,
+                null,
+                q => q.OrderByDescending(u => u.CreatedAt)
+            );
 
-        var userItems = users.Items ?? new List<User>();
-        var userDtos = userItems.Select(u => u.ToDto()).ToList();
-
-        return ApiResponse<List<UserDto>>.SuccessPagedResponse(
-            userDtos,
-            users.TotalCount,
-            paginationRequest.PageNumber,
-            paginationRequest.PageSize,
-            "Lấy danh sách người dùng thành công."
-        );
-    }
-
-    public async Task<ApiResponse<UserDto>> GetUserByIdAsync(Guid userId)
-    {
-        try
-        {
-            var user = await _unitOfWork.Users.GetByIdAsync(userId);
-            if (user == null)
+            if (users.Items == null)
             {
-                return ApiResponse<UserDto>.FailureResponse("Người dùng không tồn tại.");
+                return ApiResponse<List<UserDto>>.FailureResponse("Không tìm thấy danh sách người dùng.");
             }
-            return ApiResponse<UserDto>.SuccessResponse(user.ToDto(), "Lấy thông tin người dùng thành công.");
+
+            var userItems = users.Items ?? new List<User>();
+            var userDtos = userItems.Select(u => u.ToDto()).ToList();
+
+            return ApiResponse<List<UserDto>>.SuccessPagedResponse(
+                userDtos,
+                users.TotalCount,
+                paginationRequest.PageNumber,
+                paginationRequest.PageSize,
+                "Lấy danh sách người dùng thành công."
+            );
         }
-        catch (Exception ex)
+
+        public async Task<ApiResponse<UserDto>> GetUserByIdAsync(Guid userId)
         {
-            _logger.LogError(ex, "An error occurred while retrieving user by ID: {UserId}", userId);
-            return ApiResponse<UserDto>.FailureResponse("Đã xảy ra lỗi trong quá trình tìm kiếm.");
+            try
+            {
+                var user = await _unitOfWork.Users.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    return ApiResponse<UserDto>.FailureResponse("Người dùng không tồn tại.");
+                }
+                return ApiResponse<UserDto>.SuccessResponse(user.ToDto(), "Lấy thông tin người dùng thành công.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while retrieving user by ID: {UserId}", userId);
+                return ApiResponse<UserDto>.FailureResponse("Đã xảy ra lỗi trong quá trình tìm kiếm.");
+            }
         }
     }
 }

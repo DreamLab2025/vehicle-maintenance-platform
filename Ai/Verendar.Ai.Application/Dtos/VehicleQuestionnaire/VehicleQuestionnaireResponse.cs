@@ -1,41 +1,42 @@
-namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
-
-
-public class VehicleQuestionnaireResponse
+namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire
 {
-    public List<PartTrackingRecommendation> Recommendations { get; set; } = new();
 
-    public List<string> Warnings { get; set; } = new();
+    public class VehicleQuestionnaireResponse
+    {
+        public List<PartTrackingRecommendation> Recommendations { get; set; } = new();
 
-    public AiAnalysisMetadata Metadata { get; set; } = null!;
-}
+        public List<string> Warnings { get; set; } = new();
 
-public class PartTrackingRecommendation
-{
-    public string PartCategoryCode { get; set; } = string.Empty;
+        public AiAnalysisMetadata Metadata { get; set; } = null!;
+    }
 
-    public int? LastReplacementOdometer { get; set; }
+    public class PartTrackingRecommendation
+    {
+        public string PartCategoryCode { get; set; } = string.Empty;
 
-    public DateOnly? LastReplacementDate { get; set; }
+        public int? LastReplacementOdometer { get; set; }
 
-    public int? PredictedNextOdometer { get; set; }
+        public DateOnly? LastReplacementDate { get; set; }
 
-    public DateOnly? PredictedNextDate { get; set; }
+        public int? PredictedNextOdometer { get; set; }
 
-    public double ConfidenceScore { get; set; }
+        public DateOnly? PredictedNextDate { get; set; }
 
-    public string Reasoning { get; set; } = string.Empty;
+        public double ConfidenceScore { get; set; }
 
-    public bool NeedsImmediateAttention { get; set; }
-}
+        public string Reasoning { get; set; } = string.Empty;
 
-public class AiAnalysisMetadata
-{
-    public string Model { get; set; } = string.Empty;
+        public bool NeedsImmediateAttention { get; set; }
+    }
 
-    public int TotalTokens { get; set; }
+    public class AiAnalysisMetadata
+    {
+        public string Model { get; set; } = string.Empty;
 
-    public decimal TotalCost { get; set; }
+        public int TotalTokens { get; set; }
 
-    public int ResponseTimeMs { get; set; }
+        public decimal TotalCost { get; set; }
+
+        public int ResponseTimeMs { get; set; }
+    }
 }

@@ -1,18 +1,19 @@
 using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Domain.Entities;
 
-namespace Verendar.Identity.Application.Mappings;
-
-public static class TokenMappings
+namespace Verendar.Identity.Application.Mappings
 {
-    public static TokenClaims ToTokenClaims(this User user)
+    public static class TokenMappings
     {
-        return new TokenClaims
+        public static TokenClaims ToTokenClaims(this User user)
         {
-            UserId = user.Id.ToString(),
-            Email = user.Email,
-            UserName = user.FullName,
-            Roles = user.Roles.Select(r => r.ToString()).ToList()
-        };
+            return new TokenClaims
+            {
+                UserId = user.Id.ToString(),
+                Email = user.Email,
+                UserName = user.FullName,
+                Roles = user.Roles.Select(r => r.ToString()).ToList()
+            };
+        }
     }
 }

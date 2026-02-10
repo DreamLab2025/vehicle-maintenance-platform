@@ -1,22 +1,23 @@
 using Verender.Identity.Contracts.Events;
-namespace Verendar.Notification.Application.Mapping;
-
-public static class NotificationPreferenceMappings
+namespace Verendar.Notification.Application.Mapping
 {
-    public static Domain.Entities.NotificationPreference UserRegisteredToPreferenceEntity(
-        this UserRegisteredEvent message,
-        bool isEnabled = true)
+    public static class NotificationPreferenceMappings
     {
-        return new Domain.Entities.NotificationPreference
+        public static Domain.Entities.NotificationPreference UserRegisteredToPreferenceEntity(
+            this UserRegisteredEvent message,
+            bool isEnabled = true)
         {
-            UserId = message.UserId,
-            PhoneNumber = message.PhoneNumber,
-            PhoneNumberVerified = message.PhoneNumberVerified,
-            Email = message.Email,
-            EmailVerified = message.EmailVerified,
-            InAppEnabled = isEnabled,
-            SmsEnabled = isEnabled,
-            SmsForHighPriorityOnly = isEnabled
-        };
+            return new Domain.Entities.NotificationPreference
+            {
+                UserId = message.UserId,
+                PhoneNumber = message.PhoneNumber,
+                PhoneNumberVerified = message.PhoneNumberVerified,
+                Email = message.Email,
+                EmailVerified = message.EmailVerified,
+                InAppEnabled = isEnabled,
+                SmsEnabled = isEnabled,
+                SmsForHighPriorityOnly = isEnabled
+            };
+        }
     }
 }

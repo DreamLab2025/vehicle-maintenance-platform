@@ -8,78 +8,79 @@ using Verendar.Common.Jwt;
 using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Services.Interfaces;
 
-namespace Verendar.Identity.Infrastructure.Services;
-
-public class IdentityTokenService : IIdentityTokenService
+namespace Verendar.Identity.Infrastructure.Services
 {
-    private readonly JwtBearerConfigurationOptions _jwtOptions;
-    private readonly SymmetricSecurityKey _signingKey;
-
-    public IdentityTokenService(IOptions<JwtBearerConfigurationOptions> jwtOptions)
+    public class IdentityTokenService : IIdentityTokenService
     {
-        _jwtOptions = jwtOptions.Value ?? throw new ArgumentNullException(nameof(jwtOptions));
+        private readonly JwtBearerConfigurationOptions _jwtOptions;
+        private readonly SymmetricSecurityKey _signingKey;
 
-        if (string.IsNullOrWhiteSpace(_jwtOptions.SecretKey))
+        public IdentityTokenService(IOptions<JwtBearerConfigurationOptions> jwtOptions)
         {
-            throw new InvalidOperationException("JWT SecretKey cannot be null or empty");
+            _jwtOptions = jwtOptions.Value ?? throw new ArgumentNullException(nameof(jwtOptions));
+
+            if (string.IsNullOrWhiteSpace(_jwtOptions.SecretKey))
+            {
+                throw new InvalidOperationException("JWT SecretKey cannot be null or empty");
+            }
+
+            _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
         }
 
-        _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
-    }
-
-    public TokenResponse GenerateTokens(TokenClaims tokenClaims)
-    {
-        var accessToken = GenerateAccessToken(tokenClaims);
-        var refreshToken = GenerateRefreshToken();
-        var expiresAt = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpirationMinutes);
-
-        return new TokenResponse
+        public TokenResponse GenerateTokens(TokenClaims tokenClaims)
         {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            ExpiresAt = expiresAt,
-            TokenType = "Bearer"
-        };
-    }
+            var accessToken = GenerateAccessToken(tokenClaims);
+            var refreshToken = GenerateRefreshToken();
+            var expiresAt = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpirationMinutes);
 
-    private string GenerateAccessToken(TokenClaims tokenClaims)
-    {
-        var claims = new List<Claim>
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, tokenClaims.UserId),
-            new Claim(JwtRegisteredClaimNames.Email, tokenClaims.Email),
-            new Claim(JwtRegisteredClaimNames.UniqueName, tokenClaims.UserName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
-            new Claim("userId", tokenClaims.UserId),
-            new Claim("userName", tokenClaims.UserName)
-        };
-        foreach (var role in tokenClaims.Roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
+            return new TokenResponse
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                ExpiresAt = expiresAt,
+                TokenType = "Bearer"
+            };
         }
-        var credentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256);
 
-        var tokenDescriptor = new SecurityTokenDescriptor
+        private string GenerateAccessToken(TokenClaims tokenClaims)
         {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpirationMinutes),
-            Issuer = _jwtOptions.Issuer,
-            Audience = _jwtOptions.Audience,
-            SigningCredentials = credentials
-        };
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, tokenClaims.UserId),
+                new Claim(JwtRegisteredClaimNames.Email, tokenClaims.Email),
+                new Claim(JwtRegisteredClaimNames.UniqueName, tokenClaims.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                new Claim("userId", tokenClaims.UserId),
+                new Claim("userName", tokenClaims.UserName)
+            };
+            foreach (var role in tokenClaims.Roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+            var credentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256);
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddMinutes(_jwtOptions.ExpirationMinutes),
+                Issuer = _jwtOptions.Issuer,
+                Audience = _jwtOptions.Audience,
+                SigningCredentials = credentials
+            };
 
-        return tokenHandler.WriteToken(token);
-    }
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
 
-    public string GenerateRefreshToken()
-    {
-        var randomNumber = new byte[64];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomNumber);
-        return Convert.ToBase64String(randomNumber);
+            return tokenHandler.WriteToken(token);
+        }
+
+        public string GenerateRefreshToken()
+        {
+            var randomNumber = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
     }
 }

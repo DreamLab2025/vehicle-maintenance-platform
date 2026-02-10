@@ -39,6 +39,9 @@ namespace Verendar.Vehicle.Infrastructure.Data
         private static readonly Guid SparkPlugCategoryId = Guid.Parse("c0000005-0000-0000-0000-000000000005");
         private static readonly Guid AirFilterCategoryId = Guid.Parse("c0000006-0000-0000-0000-000000000006");
         private static readonly Guid ChainCategoryId = Guid.Parse("c0000007-0000-0000-0000-000000000007");
+        private static readonly Guid BrakeFluidCategoryId = Guid.Parse("c0000008-0000-0000-0000-000000000008");
+        private static readonly Guid OilFilterCategoryId = Guid.Parse("c0000009-0000-0000-0000-000000000009");
+        private static readonly Guid CoolantCategoryId = Guid.Parse("c0000010-0000-0000-0000-000000000010");
 
         public static List<VehicleType> GetVehicleTypes()
         {
@@ -377,6 +380,57 @@ namespace Verendar.Vehicle.Infrastructure.Data
                     ConsequencesIfNotHandled = "Đứt xích khi chạy, bó bánh; hỏng nhông, moay-ơ; nguy cơ té xe, hỏng hộp số.",
                     CreatedAt = FixedDate,
                     CreatedBy = SystemUserId
+                },
+                new PartCategory
+                {
+                    Id = BrakeFluidCategoryId,
+                    Name = "Dầu phanh",
+                    Code = "BRAKE-FLUID",
+                    Description = "Dầu phanh thủy lực, thay định kỳ theo thời gian hoặc km",
+                    IconUrl = "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp",
+                    DisplayOrder = 8,
+                    Status = EntityStatus.Active,
+                    RequiresOdometerTracking = true,
+                    RequiresTimeTracking = true,
+                    AllowsMultipleInstances = false,
+                    IdentificationSigns = "Dầu đổi màu đen hoặc vẩn đục; mức dầu thấp; phanh mềm hoặc trễ; có nước lẫn vào.",
+                    ConsequencesIfNotHandled = "Sôi dầu khi phanh gấp; mất phanh; hỏng xy-lanh phanh; tai nạn do không dừng kịp.",
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+                new PartCategory
+                {
+                    Id = OilFilterCategoryId,
+                    Name = "Lọc dầu",
+                    Code = "OIL-FILTER",
+                    Description = "Lọc dầu động cơ, thay kèm mỗi lần thay dầu nhớt",
+                    IconUrl = "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp",
+                    DisplayOrder = 9,
+                    Status = EntityStatus.Active,
+                    RequiresOdometerTracking = true,
+                    RequiresTimeTracking = true,
+                    AllowsMultipleInstances = false,
+                    IdentificationSigns = "Thay cùng chu kỳ dầu nhớt; lọc tắc khi đèn dầu sáng thường xuyên; dầu đen nhanh bất thường.",
+                    ConsequencesIfNotHandled = "Dầu không lọc sạch, mài mòn động cơ; tắc lọc gây thiếu dầu; hỏng máy.",
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+                new PartCategory
+                {
+                    Id = CoolantCategoryId,
+                    Name = "Nước làm mát",
+                    Code = "COOLANT",
+                    Description = "Dung dịch làm mát động cơ, kiểm tra và thay định kỳ",
+                    IconUrl = "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp",
+                    DisplayOrder = 10,
+                    Status = EntityStatus.Active,
+                    RequiresOdometerTracking = true,
+                    RequiresTimeTracking = true,
+                    AllowsMultipleInstances = false,
+                    IdentificationSigns = "Mức nước trong bình thấp; nước đổi màu rỉ; động cơ nóng quá; rò rỉ dưới gầm.",
+                    ConsequencesIfNotHandled = "Động cơ quá nhiệt; bó máy; hỏng gioăng, xy-lanh; chi phí sửa rất cao.",
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
                 }
             };
         }
@@ -474,6 +528,45 @@ namespace Verendar.Vehicle.Infrastructure.Data
                     InitialKm = 0,
                     KmInterval = 15000,
                     MonthsInterval = 0,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+                // Wave Alpha - Dầu phanh
+                new DefaultMaintenanceSchedule
+                {
+                    Id = Guid.Parse("d0000008-0000-0000-0000-000000000008"),
+                    VehicleModelId = WaveAlphaModelId,
+                    PartCategoryId = BrakeFluidCategoryId,
+                    InitialKm = 0,
+                    KmInterval = 20000,
+                    MonthsInterval = 24,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+                // Wave Alpha - Lọc dầu
+                new DefaultMaintenanceSchedule
+                {
+                    Id = Guid.Parse("d0000009-0000-0000-0000-000000000009"),
+                    VehicleModelId = WaveAlphaModelId,
+                    PartCategoryId = OilFilterCategoryId,
+                    InitialKm = 1000,
+                    KmInterval = 3000,
+                    MonthsInterval = 4,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+                // Wave Alpha - Nước làm mát
+                new DefaultMaintenanceSchedule
+                {
+                    Id = Guid.Parse("d0000010-0000-0000-0000-000000000010"),
+                    VehicleModelId = WaveAlphaModelId,
+                    PartCategoryId = CoolantCategoryId,
+                    InitialKm = 0,
+                    KmInterval = 20000,
+                    MonthsInterval = 24,
                     Status = EntityStatus.Active,
                     CreatedAt = FixedDate,
                     CreatedBy = SystemUserId

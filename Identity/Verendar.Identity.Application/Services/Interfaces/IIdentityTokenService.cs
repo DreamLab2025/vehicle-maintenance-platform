@@ -1,9 +1,10 @@
 using Verendar.Identity.Application.Dtos;
 
-namespace Verendar.Identity.Application.Services.Interfaces;
-
-public interface IIdentityTokenService
+namespace Verendar.Identity.Application.Services.Interfaces
 {
-    TokenResponse GenerateTokens(TokenClaims claims);
-    string GenerateRefreshToken();
+    public interface IIdentityTokenService
+    {
+        TokenResponse GenerateTokens(TokenClaims claims);
+        string GenerateRefreshToken();
+    }
 }

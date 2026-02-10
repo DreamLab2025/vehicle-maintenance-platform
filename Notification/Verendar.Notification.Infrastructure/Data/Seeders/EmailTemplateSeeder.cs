@@ -4,94 +4,95 @@ using Verendar.Notification.Domain.Entities;
 using Verendar.Notification.Domain.Enums;
 using Verendar.Notification.Infrastructure.Data;
 
-namespace Verendar.Notification.Infrastructure.Seeders;
-
-/// <summary>
-/// Seed các email template vào database khi ứng dụng khởi động (thay vì hardcode trong migration).
-/// </summary>
-public static class EmailTemplateSeeder
+namespace Verendar.Notification.Infrastructure.Seeders
 {
-    private static readonly Guid SystemUserId = Guid.Empty;
-
-    public static async Task SeedAsync(NotificationDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Seed các email template vào database khi ứng dụng khởi động (thay vì hardcode trong migration).
+    /// </summary>
+    public static class EmailTemplateSeeder
     {
-        foreach (var item in EmailTemplateSeedData.Items)
-        {
-            var existing = await db.NotificationTemplates
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(t => t.Code == item.Code, cancellationToken);
+        private static readonly Guid SystemUserId = Guid.Empty;
 
-            if (existing != null)
+        public static async Task SeedAsync(NotificationDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
+        {
+            foreach (var item in EmailTemplateSeedData.Items)
             {
-                var changed = existing.TitleTemplate != item.TitleTemplate
-                              || existing.MessageTemplate != item.MessageTemplate;
-                if (changed)
+                var existing = await db.NotificationTemplates
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(t => t.Code == item.Code, cancellationToken);
+
+                if (existing != null)
                 {
-                    existing.TitleTemplate = item.TitleTemplate;
-                    existing.MessageTemplate = item.MessageTemplate;
-                    existing.UpdatedAt = DateTime.UtcNow;
-                    existing.UpdatedBy = SystemUserId;
-                    logger?.LogInformation("Updated email template: {Code}", item.Code);
+                    var changed = existing.TitleTemplate != item.TitleTemplate
+                                  || existing.MessageTemplate != item.MessageTemplate;
+                    if (changed)
+                    {
+                        existing.TitleTemplate = item.TitleTemplate;
+                        existing.MessageTemplate = item.MessageTemplate;
+                        existing.UpdatedAt = DateTime.UtcNow;
+                        existing.UpdatedBy = SystemUserId;
+                        logger?.LogInformation("Updated email template: {Code}", item.Code);
+                    }
+
+                    await EnsureEmailChannelExistsAsync(db, existing.Id, logger, cancellationToken);
+                    continue;
                 }
 
-                await EnsureEmailChannelExistsAsync(db, existing.Id, logger, cancellationToken);
-                continue;
+                var template = new NotificationTemplate
+                {
+                    Id = Guid.CreateVersion7(),
+                    Code = item.Code,
+                    TitleTemplate = item.TitleTemplate,
+                    MessageTemplate = item.MessageTemplate,
+                    NotificationType = item.NotificationType,
+                    DefaultPriority = NotificationPriority.Medium,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = SystemUserId
+                };
+                db.NotificationTemplates.Add(template);
+
+                var channel = new NotificationTemplateChannel
+                {
+                    Id = Guid.CreateVersion7(),
+                    NotificationTemplateId = template.Id,
+                    Channel = NotificationChannel.EMAIL,
+                    IsEnabled = true,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = SystemUserId
+                };
+                db.NotificationTemplateChannels.Add(channel);
+
+                logger?.LogInformation("Seeded email template: {Code}", item.Code);
             }
 
-            var template = new NotificationTemplate
-            {
-                Id = Guid.CreateVersion7(),
-                Code = item.Code,
-                TitleTemplate = item.TitleTemplate,
-                MessageTemplate = item.MessageTemplate,
-                NotificationType = item.NotificationType,
-                DefaultPriority = NotificationPriority.Medium,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = SystemUserId
-            };
-            db.NotificationTemplates.Add(template);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        private static async Task EnsureEmailChannelExistsAsync(
+            NotificationDbContext db,
+            Guid templateId,
+            ILogger? logger,
+            CancellationToken cancellationToken)
+        {
+            var hasEmailChannel = await db.NotificationTemplateChannels
+                .IgnoreQueryFilters()
+                .AnyAsync(c => c.NotificationTemplateId == templateId && c.Channel == NotificationChannel.EMAIL, cancellationToken);
+
+            if (hasEmailChannel)
+                return;
 
             var channel = new NotificationTemplateChannel
             {
                 Id = Guid.CreateVersion7(),
-                NotificationTemplateId = template.Id,
+                NotificationTemplateId = templateId,
                 Channel = NotificationChannel.EMAIL,
                 IsEnabled = true,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = SystemUserId
             };
             db.NotificationTemplateChannels.Add(channel);
-
-            logger?.LogInformation("Seeded email template: {Code}", item.Code);
+            logger?.LogInformation("Added EMAIL channel for template Id: {TemplateId}", templateId);
         }
-
-        await db.SaveChangesAsync(cancellationToken);
-    }
-
-    private static async Task EnsureEmailChannelExistsAsync(
-        NotificationDbContext db,
-        Guid templateId,
-        ILogger? logger,
-        CancellationToken cancellationToken)
-    {
-        var hasEmailChannel = await db.NotificationTemplateChannels
-            .IgnoreQueryFilters()
-            .AnyAsync(c => c.NotificationTemplateId == templateId && c.Channel == NotificationChannel.EMAIL, cancellationToken);
-
-        if (hasEmailChannel)
-            return;
-
-        var channel = new NotificationTemplateChannel
-        {
-            Id = Guid.CreateVersion7(),
-            NotificationTemplateId = templateId,
-            Channel = NotificationChannel.EMAIL,
-            IsEnabled = true,
-            CreatedAt = DateTime.UtcNow,
-            CreatedBy = SystemUserId
-        };
-        db.NotificationTemplateChannels.Add(channel);
-        logger?.LogInformation("Added EMAIL channel for template Id: {TemplateId}", templateId);
     }
 }

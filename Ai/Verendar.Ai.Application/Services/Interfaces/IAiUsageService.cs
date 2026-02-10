@@ -1,6 +1,7 @@
-namespace Verendar.Ai.Application.Services.Interfaces;
-
-public interface IAiUsageService
+namespace Verendar.Ai.Application.Services.Interfaces
 {
+    public interface IAiUsageService
+    {
 
+    }
 }
