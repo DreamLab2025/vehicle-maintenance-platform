@@ -57,10 +57,12 @@ namespace Verendar.Notification.Application.Dtos.Email
     public class MaintenanceReminderItemEmailDto
     {
         public string PartCategoryName { get; set; } = string.Empty;
+        public string? Description { get; set; }
         public string? VehicleDisplayName { get; set; }
         public int CurrentOdometer { get; set; }
         public int TargetOdometer { get; set; }
         public decimal PercentageRemaining { get; set; }
+        public string? EstimatedNextReplacementDate { get; set; }
     }
 
     // Nhắc nhở cập nhật số km

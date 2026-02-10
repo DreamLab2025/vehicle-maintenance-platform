@@ -15,6 +15,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await SystemNotificationTemplateSeeder.SeedAsync(db, logger);
     await EmailTemplateSeeder.SeedAsync(db, logger);
     await NotificationSeeder.SeedAsync(db, logger);
 }

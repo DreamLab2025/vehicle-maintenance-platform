@@ -16,24 +16,78 @@ public static class NotificationSeeder
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     private static readonly Guid SeedUserVehicleId = Guid.Parse("f0000001-0000-0000-0000-000000000001");
-    private static readonly Guid[] SeedReminderIds = { Guid.Parse("f0000002-0000-0000-0000-000000000002"), Guid.Parse("f0000003-0000-0000-0000-000000000003"), Guid.Parse("f0000004-0000-0000-0000-000000000004") };
+    private static readonly Guid[] SeedReminderIds =
+    {
+        Guid.Parse("f0000002-0000-0000-0000-000000000002"),
+        Guid.Parse("f0000003-0000-0000-0000-000000000003"),
+        Guid.Parse("f0000004-0000-0000-0000-000000000004"),
+        Guid.Parse("f0000005-0000-0000-0000-000000000005")
+    };
     private const string VehicleDisplayName = "59-TEST-01";
 
-    private static readonly (string Title, string Message, NotificationType Type, NotificationPriority Priority, string EntityType, int? Level, string? LevelName, string PartCategoryName, int CurrentOdo, int TargetOdo, decimal PctRemaining)[] NotificationItems =
+    private static readonly NotificationSeedItem[] NotificationItems =
     {
-        ("Khẩn cấp: Cần thay linh kiện",
-            "Xe cua ban co linh kien da den muc khan cap can thay the. Cac linh kien can chu y:\n• Dau nhot dong co (so km hien tai: 5,000, can thay truoc: 6,000)",
-            NotificationType.User, NotificationPriority.Critical, "MaintenanceReminder", 4, "Critical", "Dầu nhớt động cơ", 5000, 6000, 5m),
-        ("Nhắc nhở bảo dưỡng (High)",
-            "Xe cua ban co linh kien can chu y bao duong/thay the:\n• Lop xe (so km hien tai: 15,000, can thay truoc: 20,000)",
-            NotificationType.User, NotificationPriority.High, "MaintenanceReminder", 3, "High", "Lốp xe", 15000, 20000, 25m),
-        ("Nhắc nhở bảo dưỡng (Medium)",
-            "Xe cua ban co linh kien can chu y bao duong/thay the:\n• Ma phanh (so km hien tai: 7,000, can thay truoc: 10,000)",
-            NotificationType.User, NotificationPriority.Medium, "MaintenanceReminder", 2, "Medium", "Má phanh", 7000, 10000, 30m),
-        ("Nhắc nhở cập nhật số km",
-            "Xe 59-TEST-01 chua cap nhat so km trong 5 ngay qua. Vui long vao app cap nhat so km de duoc nhac bao duong chinh xac.",
-            NotificationType.User, NotificationPriority.Medium, "OdometerReminder", null, null, "", 0, 0, 0m),
+        // Critical notification with multiple parts
+        new NotificationSeedItem(
+            Title: "Khẩn cấp: Cần thay linh kiện",
+            Message: "Xe của bạn có linh kiện đã đến mức khẩn cấp cần thay thế. Bạn sẽ nhận được email nhắc nhở hằng ngày cho đến khi bạn cập nhật đã thay linh kiện.\n\n" +
+                     "Các linh kiện cần chú ý:\n" +
+                     "• Dầu nhớt động cơ (số km hiện tại: 5,000, cần thay trước: 6,000)\n" +
+                     "• Lọc dầu (số km hiện tại: 5,000, cần thay trước: 6,000)",
+            Type: NotificationType.User,
+            Priority: NotificationPriority.Critical,
+            EntityType: "MaintenanceReminder",
+            Level: 4,
+            LevelName: "Critical",
+            Parts: new[]
+            {
+                ("Dầu nhớt động cơ", "Dầu bôi trơn giúp làm mát và bảo vệ động cơ", 5000, 6000, 5m),
+                ("Lọc dầu", "Loại bỏ tạp chất trong dầu động cơ", 5000, 6000, 5m)
+            }),
+
+        // High notification
+        new NotificationSeedItem(
+            Title: "Nhắc nhở bảo dưỡng (High)",
+            Message: "Xe của bạn có linh kiện cần chú ý bảo dưỡng/thay thế:\n\n• Lốp xe (số km hiện tại: 15,000, cần thay trước: 20,000)",
+            Type: NotificationType.User,
+            Priority: NotificationPriority.High,
+            EntityType: "MaintenanceReminder",
+            Level: 3,
+            LevelName: "High",
+            Parts: new[] { ("Lốp xe", "Đảm bảo độ bám đường và an toàn khi di chuyển", 15000, 20000, 25m) }),
+
+        // Medium notification
+        new NotificationSeedItem(
+            Title: "Nhắc nhở bảo dưỡng (Medium)",
+            Message: "Xe của bạn có linh kiện cần chú ý bảo dưỡng/thay thế:\n\n• Má phanh (số km hiện tại: 7,000, cần thay trước: 10,000)",
+            Type: NotificationType.User,
+            Priority: NotificationPriority.Medium,
+            EntityType: "MaintenanceReminder",
+            Level: 2,
+            LevelName: "Medium",
+            Parts: new[] { ("Má phanh", "Đảm bảo khả năng phanh an toàn", 7000, 10000, 30m) }),
+
+        // Odometer reminder
+        new NotificationSeedItem(
+            Title: "Nhắc nhở cập nhật số km",
+            Message: "Bạn đã không cập nhật số km (odo) trong 5 ngày qua. Vui lòng cập nhật số km của xe để Verendar có thể theo dõi bảo dưỡng chính xác hơn.",
+            Type: NotificationType.User,
+            Priority: NotificationPriority.Medium,
+            EntityType: "OdometerReminder",
+            Level: null,
+            LevelName: null,
+            Parts: Array.Empty<(string, string, int, int, decimal)>())
     };
+
+    private record NotificationSeedItem(
+        string Title,
+        string Message,
+        NotificationType Type,
+        NotificationPriority Priority,
+        string EntityType,
+        int? Level,
+        string? LevelName,
+        (string Name, string Description, int CurrentOdo, int TargetOdo, decimal PctRemaining)[] Parts);
 
     public static async Task SeedAsync(NotificationDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
     {
@@ -81,39 +135,44 @@ public static class NotificationSeeder
             return;
         }
 
+        var reminderIdIndex = 0;
         for (var i = 0; i < NotificationItems.Length; i++)
         {
-            var (title, message, type, priority, entityType, level, levelName, partCategoryName, currentOdo, targetOdo, pctRemaining) = NotificationItems[i];
+            var item = NotificationItems[i];
             string metadataJson;
             Guid? entityId;
 
-            if (entityType == "MaintenanceReminder" && level.HasValue && levelName != null)
+            if (item.EntityType == "MaintenanceReminder" && item.Level.HasValue && item.LevelName != null)
             {
-                var reminderId = SeedReminderIds[i];
-                var items = new[]
+                var items = item.Parts.Select(part =>
                 {
-                    new
+                    var reminderId = SeedReminderIds[reminderIdIndex++];
+                    return new
                     {
-                        partCategoryName,
+                        partCategoryName = part.Name,
+                        description = part.Description,
                         userVehicleId = SeedUserVehicleId,
                         reminderId,
-                        currentOdometer = currentOdo,
-                        targetOdometer = targetOdo,
-                        initialOdometer = currentOdo - 3000,
-                        percentageRemaining = pctRemaining,
-                        vehicleDisplayName = VehicleDisplayName
-                    }
-                };
+                        currentOdometer = part.CurrentOdo,
+                        targetOdometer = part.TargetOdo,
+                        initialOdometer = part.CurrentOdo - 3000,
+                        percentageRemaining = part.PctRemaining,
+                        vehicleDisplayName = VehicleDisplayName,
+                        estimatedNextReplacementDate = DateTime.UtcNow.AddDays(30).ToString("yyyy-MM-ddTHH:mm:ssZ")
+                    };
+                }).ToArray();
+
                 metadataJson = JsonSerializer.Serialize(new
                 {
                     type = "MaintenanceReminder",
                     entityType = "MaintenanceReminder",
-                    entityId = reminderId,
-                    level,
-                    levelName,
+                    entityId = SeedUserVehicleId,
+                    level = item.Level,
+                    levelName = item.LevelName,
                     items
                 }, JsonOptions);
-                entityId = reminderId;
+                // Use UserVehicleId as EntityId for MaintenanceReminder (one notification can have multiple reminders)
+                entityId = SeedUserVehicleId;
             }
             else
             {
@@ -144,12 +203,12 @@ public static class NotificationSeeder
             {
                 Id = Guid.CreateVersion7(),
                 UserId = TestUserId,
-                Title = title,
-                Message = message,
-                NotificationType = type,
-                Priority = priority,
+                Title = item.Title,
+                Message = item.Message,
+                NotificationType = item.Type,
+                Priority = item.Priority,
                 Status = NotificationStatus.Sent,
-                EntityType = entityType,
+                EntityType = item.EntityType,
                 EntityId = entityId,
                 MetadataJson = metadataJson,
                 IsRead = false,

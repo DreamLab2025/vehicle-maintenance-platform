@@ -36,9 +36,6 @@ namespace Verendar.Notification.Infrastructure.Data
             });
 
             base.OnModelCreating(modelBuilder);
-
-            modelBuilder.SeedNotificationData();
         }
-
     }
 }

@@ -573,5 +573,241 @@ namespace Verendar.Vehicle.Infrastructure.Data
                 }
             };
         }
+
+        public static List<PartProduct> GetPartProducts()
+        {
+            return new List<PartProduct>
+            {
+                // Engine Oil Products
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000001-0000-0000-0000-000000000001"),
+                    PartCategoryId = EngineOilCategoryId,
+                    Name = "Shell Advance AX7 10W-40",
+                    Brand = "Shell",
+                    
+                    Description = "Dầu nhớt bán tổng hợp cao cấp cho xe số",
+                    
+                    ReferencePrice = 85000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000002-0000-0000-0000-000000000002"),
+                    PartCategoryId = EngineOilCategoryId,
+                    Name = "Castrol Power1 10W-40",
+                    Brand = "Castrol",
+                    
+                    Description = "Dầu nhớt tổng hợp cho xe tay ga",
+                    
+                    ReferencePrice = 95000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000003-0000-0000-0000-000000000003"),
+                    PartCategoryId = EngineOilCategoryId,
+                    Name = "Motul 5100 10W-40",
+                    Brand = "Motul",
+                    
+                    Description = "Dầu nhớt bán tổng hợp cao cấp cho xe côn tay",
+                    
+                    ReferencePrice = 145000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+
+                // Tire Products
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000004-0000-0000-0000-000000000004"),
+                    PartCategoryId = TireCategoryId,
+                    Name = "Michelin Pilot Street 80/90-17",
+                    Brand = "Michelin",
+                    
+                    Description = "Lốp trước cho xe số",
+                    
+                    ReferencePrice = 420000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000005-0000-0000-0000-000000000005"),
+                    PartCategoryId = TireCategoryId,
+                    Name = "Dunlop D307 90/80-17",
+                    Brand = "Dunlop",
+                    
+                    Description = "Lốp sau cho xe tay ga",
+                    
+                    ReferencePrice = 380000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+
+                // Battery Products
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000006-0000-0000-0000-000000000006"),
+                    PartCategoryId = BatteryCategoryId,
+                    Name = "GS GTZ5S 12V 4Ah",
+                    Brand = "GS Battery",
+                    
+                    Description = "Ắc quy khô cho xe máy",
+                    
+                    ReferencePrice = 350000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000007-0000-0000-0000-000000000007"),
+                    PartCategoryId = BatteryCategoryId,
+                    Name = "Yuasa YTX7A-BS 12V 6Ah",
+                    Brand = "Yuasa",
+                    
+                    Description = "Ắc quy khô cao cấp cho xe tay ga",
+                    
+                    ReferencePrice = 480000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+
+                // Brake Pad Products
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000008-0000-0000-0000-000000000008"),
+                    PartCategoryId = BrakePadCategoryId,
+                    Name = "Honda Genuine Brake Pad",
+                    Brand = "Honda",
+                    
+                    Description = "Má phanh chính hãng Honda",
+                    
+                    ReferencePrice = 85000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+
+                // Spark Plug Products
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000009-0000-0000-0000-000000000009"),
+                    PartCategoryId = SparkPlugCategoryId,
+                    Name = "NGK CPR7EA-9",
+                    Brand = "NGK",
+                    
+                    Description = "Bugi iridium cao cấp",
+                    
+                    ReferencePrice = 95000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000010-0000-0000-0000-000000000010"),
+                    PartCategoryId = SparkPlugCategoryId,
+                    Name = "Denso U24EPR9",
+                    Brand = "Denso",
+                    
+                    Description = "Bugi chuẩn cho xe Honda",
+                    
+                    ReferencePrice = 45000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+
+                // Air Filter Products
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000011-0000-0000-0000-000000000011"),
+                    PartCategoryId = AirFilterCategoryId,
+                    Name = "Ferrox Air Filter",
+                    Brand = "Ferrox",
+                    
+                    Description = "Lọc gió thể thao có thể rửa",
+                    
+                    ReferencePrice = 120000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+
+                // Chain Products
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000012-0000-0000-0000-000000000012"),
+                    PartCategoryId = ChainCategoryId,
+                    Name = "RK 428HSB Chain",
+                    Brand = "RK",
+                    
+                    Description = "Sên cao cấp cho xe côn tay",
+                    
+                    ReferencePrice = 380000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+
+                // Oil Filter Products
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000013-0000-0000-0000-000000000013"),
+                    PartCategoryId = OilFilterCategoryId,
+                    Name = "Honda Genuine Oil Filter",
+                    Brand = "Honda",
+                    
+                    Description = "Lọc dầu chính hãng Honda",
+                    
+                    ReferencePrice = 65000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+
+                // Brake Fluid Products
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000014-0000-0000-0000-000000000014"),
+                    PartCategoryId = BrakeFluidCategoryId,
+                    Name = "Castrol DOT 3 Brake Fluid",
+                    Brand = "Castrol",
+                    
+                    Description = "Dầu phanh DOT 3",
+                    
+                    ReferencePrice = 45000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                },
+
+                // Coolant Products
+                new PartProduct
+                {
+                    Id = Guid.Parse("90000015-0000-0000-0000-000000000015"),
+                    PartCategoryId = CoolantCategoryId,
+                    Name = "Honda Genuine Coolant",
+                    Brand = "Honda",
+                    
+                    Description = "Nước làm mát chính hãng Honda",
+                    
+                    ReferencePrice = 85000,
+                    Status = EntityStatus.Active,
+                    CreatedAt = FixedDate,
+                    CreatedBy = SystemUserId
+                }
+            };
+        }
     }
 }

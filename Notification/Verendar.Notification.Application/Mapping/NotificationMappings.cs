@@ -111,7 +111,8 @@ namespace Verendar.Notification.Application.Mapping
                     Items = message.Items
                 }),
                 EntityType = "MaintenanceReminder",
-                EntityId = firstItem?.ReminderId
+                // Use UserVehicleId as EntityId since one notification can contain multiple reminders
+                EntityId = firstItem?.UserVehicleId
             };
         }
 
