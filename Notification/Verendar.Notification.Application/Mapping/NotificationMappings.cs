@@ -67,11 +67,11 @@ namespace Verendar.Notification.Application.Mapping
                 UserId = message.UserId,
                 Title = title,
                 Message = content,
-                NotificationType = NotificationType.OdometerReminder,
+                NotificationType = NotificationType.User,
                 Priority = NotificationPriority.Medium,
                 Status = NotificationStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
-                MetadataJson = JsonSerializer.Serialize(new { Source = "OdometerReminder" }),
+                MetadataJson = JsonSerializer.Serialize(new { Type = "OdometerReminder" }),
                 EntityType = "OdometerReminder",
                 EntityId = firstVehicle?.UserVehicleId
             };
@@ -83,16 +83,33 @@ namespace Verendar.Notification.Application.Mapping
             string content)
         {
             var firstItem = message.Items?.FirstOrDefault();
+
+            // Map reminder level (1-4) to notification priority
+            var priority = message.Level switch
+            {
+                1 => NotificationPriority.Low,
+                2 => NotificationPriority.Medium,
+                3 => NotificationPriority.High,
+                4 => NotificationPriority.Critical,
+                _ => NotificationPriority.Medium
+            };
+
             return new Domain.Entities.Notification
             {
                 UserId = message.UserId,
                 Title = title,
                 Message = content,
-                NotificationType = NotificationType.MaintenanceReminder,
-                Priority = NotificationPriority.High,
+                NotificationType = NotificationType.User,
+                Priority = priority,
                 Status = NotificationStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
-                MetadataJson = JsonSerializer.Serialize(new { Source = "MaintenanceReminder", Level = message.Level, LevelName = message.LevelName }),
+                MetadataJson = JsonSerializer.Serialize(new
+                {
+                    Type = "MaintenanceReminder",
+                    Level = message.Level,
+                    LevelName = message.LevelName,
+                    Items = message.Items
+                }),
                 EntityType = "MaintenanceReminder",
                 EntityId = firstItem?.ReminderId
             };

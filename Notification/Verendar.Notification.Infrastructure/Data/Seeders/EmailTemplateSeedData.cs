@@ -26,17 +26,17 @@ namespace Verendar.Notification.Infrastructure.Seeders
                 Code: "MAINTENANCE_REMINDER_Critical",
                 TitleTemplate: "Khẩn cấp: Cần thay linh kiện",
                 MessageTemplate: "Xe cua ban co linh kien da den muc khan cap can thay the. Ban se nhan duoc email nhac nho hang ngay cho den khi ban cap nhat da thay linh kien.\n\nCac linh kien can chu y:\n{PartList}\n\nVui long vao app cap nhat sau khi thay linh kien de dung nhac nho.",
-                NotificationType: NotificationType.MaintenanceReminder),
+                NotificationType: NotificationType.User),
             new EmailTemplateSeedItem(
                 Code: "MAINTENANCE_REMINDER_HIGH",
                 TitleTemplate: "Nhắc nhở bảo dưỡng (High)",
                 MessageTemplate: "Xe cua ban co linh kien can chu y bao duong/thay the:\n\n{PartList}",
-                NotificationType: NotificationType.MaintenanceReminder),
+                NotificationType: NotificationType.User),
             new EmailTemplateSeedItem(
                 Code: "MAINTENANCE_REMINDER_MEDIUM",
                 TitleTemplate: "Nhắc nhở bảo dưỡng (Medium)",
                 MessageTemplate: "Xe cua ban co linh kien can chu y bao duong/thay the:\n\n{PartList}",
-                NotificationType: NotificationType.MaintenanceReminder),
+                NotificationType: NotificationType.User),
         };
     }
 

@@ -23,16 +23,16 @@ public static class NotificationSeeder
     {
         ("Khẩn cấp: Cần thay linh kiện",
             "Xe cua ban co linh kien da den muc khan cap can thay the. Cac linh kien can chu y:\n• Dau nhot dong co (so km hien tai: 5,000, can thay truoc: 6,000)",
-            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 4, "Critical", "Dầu nhớt động cơ", 5000, 6000, 5m),
+            NotificationType.User, NotificationPriority.Critical, "MaintenanceReminder", 4, "Critical", "Dầu nhớt động cơ", 5000, 6000, 5m),
         ("Nhắc nhở bảo dưỡng (High)",
             "Xe cua ban co linh kien can chu y bao duong/thay the:\n• Lop xe (so km hien tai: 15,000, can thay truoc: 20,000)",
-            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 3, "High", "Lốp xe", 15000, 20000, 25m),
+            NotificationType.User, NotificationPriority.High, "MaintenanceReminder", 3, "High", "Lốp xe", 15000, 20000, 25m),
         ("Nhắc nhở bảo dưỡng (Medium)",
             "Xe cua ban co linh kien can chu y bao duong/thay the:\n• Ma phanh (so km hien tai: 7,000, can thay truoc: 10,000)",
-            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 2, "Medium", "Má phanh", 7000, 10000, 30m),
+            NotificationType.User, NotificationPriority.Medium, "MaintenanceReminder", 2, "Medium", "Má phanh", 7000, 10000, 30m),
         ("Nhắc nhở cập nhật số km",
             "Xe 59-TEST-01 chua cap nhat so km trong 5 ngay qua. Vui long vao app cap nhat so km de duoc nhac bao duong chinh xac.",
-            NotificationType.OdometerReminder, NotificationPriority.Medium, "OdometerReminder", null, null, "", 0, 0, 0m),
+            NotificationType.User, NotificationPriority.Medium, "OdometerReminder", null, null, "", 0, 0, 0m),
     };
 
     public static async Task SeedAsync(NotificationDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
@@ -87,7 +87,7 @@ public static class NotificationSeeder
             string metadataJson;
             Guid? entityId;
 
-            if (type == NotificationType.MaintenanceReminder && level.HasValue && levelName != null)
+            if (entityType == "MaintenanceReminder" && level.HasValue && levelName != null)
             {
                 var reminderId = SeedReminderIds[i];
                 var items = new[]

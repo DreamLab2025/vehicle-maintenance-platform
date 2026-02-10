@@ -16,7 +16,6 @@ namespace Verendar.Notification.Application.Dtos.Notifications
         public string? ActionUrl { get; init; }
         public bool IsRead { get; init; }
         public DateTime? ReadAt { get; init; }
-        public DateTime? ExpiresAt { get; init; }
         public DateTime CreatedAt { get; init; }
     }
 
@@ -33,7 +32,6 @@ namespace Verendar.Notification.Application.Dtos.Notifications
         public string? ActionUrl { get; init; }
         public bool IsRead { get; init; }
         public DateTime? ReadAt { get; init; }
-        public DateTime? ExpiresAt { get; init; }
         public DateTime CreatedAt { get; init; }
         public JsonElement? Metadata { get; init; }
     }
