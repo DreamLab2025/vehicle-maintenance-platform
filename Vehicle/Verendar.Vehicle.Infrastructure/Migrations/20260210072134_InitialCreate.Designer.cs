@@ -12,8 +12,8 @@ using Verendar.Vehicle.Infrastructure.Data;
 namespace Verendar.Vehicle.Infrastructure.Migrations
 {
     [DbContext(typeof(VehicleDbContext))]
-    [Migration("20260204165239_KmOnRecordedDate")]
-    partial class KmOnRecordedDate
+    [Migration("20260210072134_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -159,6 +159,42 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                             KmInterval = 15000,
                             MonthsInterval = 0,
                             PartCategoryId = new Guid("c0000007-0000-0000-0000-000000000007"),
+                            Status = 1,
+                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000008-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            InitialKm = 0,
+                            KmInterval = 20000,
+                            MonthsInterval = 24,
+                            PartCategoryId = new Guid("c0000008-0000-0000-0000-000000000008"),
+                            Status = 1,
+                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000009-0000-0000-0000-000000000009"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            InitialKm = 1000,
+                            KmInterval = 3000,
+                            MonthsInterval = 4,
+                            PartCategoryId = new Guid("c0000009-0000-0000-0000-000000000009"),
+                            Status = 1,
+                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("d0000010-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            InitialKm = 0,
+                            KmInterval = 20000,
+                            MonthsInterval = 24,
+                            PartCategoryId = new Guid("c0000010-0000-0000-0000-000000000010"),
                             Status = 1,
                             VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
                         });
@@ -584,6 +620,57 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                             Name = "Nhông sên dĩa",
                             RequiresOdometerTracking = true,
                             RequiresTimeTracking = false,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("c0000008-0000-0000-0000-000000000008"),
+                            AllowsMultipleInstances = false,
+                            Code = "BRAKE-FLUID",
+                            ConsequencesIfNotHandled = "Sôi dầu khi phanh gấp; mất phanh; hỏng xy-lanh phanh; tai nạn do không dừng kịp.",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Description = "Dầu phanh thủy lực, thay định kỳ theo thời gian hoặc km",
+                            DisplayOrder = 8,
+                            IconUrl = "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp",
+                            IdentificationSigns = "Dầu đổi màu đen hoặc vẩn đục; mức dầu thấp; phanh mềm hoặc trễ; có nước lẫn vào.",
+                            Name = "Dầu phanh",
+                            RequiresOdometerTracking = true,
+                            RequiresTimeTracking = true,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("c0000009-0000-0000-0000-000000000009"),
+                            AllowsMultipleInstances = false,
+                            Code = "OIL-FILTER",
+                            ConsequencesIfNotHandled = "Dầu không lọc sạch, mài mòn động cơ; tắc lọc gây thiếu dầu; hỏng máy.",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Description = "Lọc dầu động cơ, thay kèm mỗi lần thay dầu nhớt",
+                            DisplayOrder = 9,
+                            IconUrl = "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp",
+                            IdentificationSigns = "Thay cùng chu kỳ dầu nhớt; lọc tắc khi đèn dầu sáng thường xuyên; dầu đen nhanh bất thường.",
+                            Name = "Lọc dầu",
+                            RequiresOdometerTracking = true,
+                            RequiresTimeTracking = true,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("c0000010-0000-0000-0000-000000000010"),
+                            AllowsMultipleInstances = false,
+                            Code = "COOLANT",
+                            ConsequencesIfNotHandled = "Động cơ quá nhiệt; bó máy; hỏng gioăng, xy-lanh; chi phí sửa rất cao.",
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Description = "Dung dịch làm mát động cơ, kiểm tra và thay định kỳ",
+                            DisplayOrder = 10,
+                            IconUrl = "https://d3iova6424vljy.cloudfront.net/assets/OIP.webp",
+                            IdentificationSigns = "Mức nước trong bình thấp; nước đổi màu rỉ; động cơ nóng quá; rò rỉ dưới gầm.",
+                            Name = "Nước làm mát",
+                            RequiresOdometerTracking = true,
+                            RequiresTimeTracking = true,
                             Status = 1
                         });
                 });
