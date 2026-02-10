@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Verendar.Common\Verendar.Common.csproj" />
+    <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
     <ProjectReference Include="..\Verender.Identity.Contracts\Verender.Identity.Contracts.csproj" />
     <ProjectReference Include="..\Verendar.Identity.Domain\Verendar.Identity.Domain.csproj" />
   </ItemGroup>
