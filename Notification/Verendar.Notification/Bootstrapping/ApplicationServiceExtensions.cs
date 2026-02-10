@@ -16,6 +16,7 @@ using Verendar.Notification.Infrastructure.Repositories.Implements;
 using Verendar.Notification.Infrastructure.Services;
 using Verendar.Notification.Services;
 using Verendar.ServiceDefaults;
+using Verendar.Notification.Application.Services.Implements;
 
 namespace Verendar.Notification.Bootstrapping
 {
@@ -44,7 +45,7 @@ namespace Verendar.Notification.Bootstrapping
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
 
-            builder.Services.AddSingleton<IEmailTemplateService, RazorEmailTemplateService>();
+            builder.Services.AddSingleton<IEmailTemplateService, SimpleEmailTemplateService>();
 
             // Notification Channels
             builder.Services.AddScoped<INotificationChannel, SmsChannel>();

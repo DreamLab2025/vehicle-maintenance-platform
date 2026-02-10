@@ -21,7 +21,6 @@ namespace Verendar.Notification.Application.Mapping
                 ActionUrl = n.ActionUrl,
                 IsRead = n.IsRead,
                 ReadAt = n.ReadAt,
-                ExpiresAt = n.ExpiresAt,
                 CreatedAt = n.CreatedAt
             };
         }
@@ -41,7 +40,6 @@ namespace Verendar.Notification.Application.Mapping
                 ActionUrl = n.ActionUrl,
                 IsRead = n.IsRead,
                 ReadAt = n.ReadAt,
-                ExpiresAt = n.ExpiresAt,
                 CreatedAt = n.CreatedAt,
                 Metadata = string.IsNullOrEmpty(n.MetadataJson) ? null : JsonSerializer.Deserialize<JsonElement>(n.MetadataJson)
             };

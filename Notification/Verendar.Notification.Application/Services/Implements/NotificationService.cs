@@ -5,7 +5,7 @@ using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Notification.Domain.Enums;
 using Verendar.Notification.Domain.Repositories.Interfaces;
 
-namespace Verendar.Notification.Infrastructure.Services
+namespace Verendar.Notification.Application.Services.Implements
 {
     public class NotificationService(IUnitOfWork unitOfWork) : INotificationService
     {
