@@ -220,14 +220,14 @@ namespace Verendar.Notification.Infrastructure.Services
             var emailSent = false;
             if (!string.IsNullOrWhiteSpace(message.TargetValue))
             {
-                const int UrgentLevel = 4;
+                const int CriticalLevel = 4;
                 var templateModel = new MaintenanceReminderEmailModel
                 {
                     UserName = message.UserName,
                     UserEmail = message.TargetValue,
                     Title = title,
                     LevelName = message.LevelName,
-                    IsUrgent = message.Level >= UrgentLevel,
+                    IsCritical = message.Level >= CriticalLevel,
                     Items = (message.Items ?? []).Select(i => new MaintenanceReminderItemEmailDto
                     {
                         PartCategoryName = i.PartCategoryName,
@@ -298,12 +298,12 @@ namespace Verendar.Notification.Infrastructure.Services
 
         private static (string Title, string Message) BuildMaintenanceReminderContent(MaintenanceReminderEvent message)
         {
-            const int UrgentLevel = 4;
+            const int CriticalLevel = 4;
             var partList = message.Items.Count > 0
                 ? string.Join("\n", message.Items.Select(i => $"• {i.PartCategoryName} (số km hiện tại: {i.CurrentOdometer:N0}, cần thay trước: {i.TargetOdometer:N0})"))
                 : "Các linh kiện cần bảo dưỡng/thay thế.";
 
-            if (message.Level >= UrgentLevel)
+            if (message.Level >= CriticalLevel)
             {
                 var title = "Khẩn cấp: Cần thay linh kiện";
                 var body = "Xe của bạn có linh kiện đã đến mức khẩn cấp cần thay thế. "

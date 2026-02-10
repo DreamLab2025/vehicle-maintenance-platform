@@ -13,7 +13,7 @@ public static class MaintenanceReminderTestDataSeeder
     private static readonly Guid WaveAlphaRedVariantId = Guid.Parse("e0000001-0000-0000-0000-000000000001");
     private static readonly (Guid PartCategoryId, ReminderLevel Level, int CurrentOdometer, int TargetOdometer, decimal PercentageRemaining)[] DeclaredPartReminderConfigs =
     {
-        (Guid.Parse("c0000001-0000-0000-0000-000000000001"), ReminderLevel.Urgent, 5000, 6000, 5m),   // Dầu nhớt
+        (Guid.Parse("c0000001-0000-0000-0000-000000000001"), ReminderLevel.Critical, 5000, 6000, 5m),   // Dầu nhớt
         (Guid.Parse("c0000002-0000-0000-0000-000000000002"), ReminderLevel.High, 15000, 20000, 25m), // Lốp xe
         (Guid.Parse("c0000004-0000-0000-0000-000000000004"), ReminderLevel.Medium, 7000, 10000, 30m), // Má phanh
     };
@@ -105,7 +105,7 @@ public static class MaintenanceReminderTestDataSeeder
         await db.SaveChangesAsync(cancellationToken);
 
         logger?.LogInformation(
-            "Seeded test user vehicle (UserId: {UserId}, UserVehicleId: {UserVehicleId}) with 3 declared parts (IsDeclared=true, Urgent/High/Medium reminders), 2 undeclared parts (IsDeclared=false); stale odometer for OdometerReminderJob",
+            "Seeded test user vehicle (UserId: {UserId}, UserVehicleId: {UserVehicleId}) with 3 declared parts (IsDeclared=true, Critical/High/Medium reminders), 2 undeclared parts (IsDeclared=false); stale odometer for OdometerReminderJob",
             userId, userVehicle.Id);
     }
 

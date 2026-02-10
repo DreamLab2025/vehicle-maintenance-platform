@@ -6,7 +6,7 @@ namespace Verendar.Notification.Application.Mapping
     public static class InAppNotificationMappings
     {
         private const string OdometerReminderTitle = "Nhắc nhở cập nhật số km";
-        private const int UrgentLevel = 4;
+        private const int CriticalLevel = 4;
 
         public static InAppNotificationPayload ToInAppPayload(this OdometerReminderEvent message)
         {
@@ -82,7 +82,7 @@ namespace Verendar.Notification.Application.Mapping
                 ? string.Join("\n", (message.Items ?? []).Select(i => $"• {i.PartCategoryName} (số km hiện tại: {i.CurrentOdometer:N0}, cần thay trước: {i.TargetOdometer:N0})"))
                 : "Các linh kiện cần bảo dưỡng/thay thế.";
 
-            if (message.Level >= UrgentLevel)
+            if (message.Level >= CriticalLevel)
             {
                 var title = "Khẩn cấp: Cần thay linh kiện";
                 var body = "Xe của bạn có linh kiện đã đến mức khẩn cấp cần thay thế. "

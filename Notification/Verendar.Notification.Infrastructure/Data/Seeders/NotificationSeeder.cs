@@ -23,7 +23,7 @@ public static class NotificationSeeder
     {
         ("Khẩn cấp: Cần thay linh kiện",
             "Xe cua ban co linh kien da den muc khan cap can thay the. Cac linh kien can chu y:\n• Dau nhot dong co (so km hien tai: 5,000, can thay truoc: 6,000)",
-            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 4, "Urgent", "Dầu nhớt động cơ", 5000, 6000, 5m),
+            NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 4, "Critical", "Dầu nhớt động cơ", 5000, 6000, 5m),
         ("Nhắc nhở bảo dưỡng (High)",
             "Xe cua ban co linh kien can chu y bao duong/thay the:\n• Lop xe (so km hien tai: 15,000, can thay truoc: 20,000)",
             NotificationType.MaintenanceReminder, NotificationPriority.High, "MaintenanceReminder", 3, "High", "Lốp xe", 15000, 20000, 25m),

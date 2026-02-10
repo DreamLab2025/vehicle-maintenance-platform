@@ -10,7 +10,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Shift existing levels: 0->1, 1->2, 2->3, 3->4 (old Low,Medium,High,Urgent → new Low,Medium,High,Urgent)
+            // Shift existing levels: 0->1, 1->2, 2->3, 3->4 (old Low,Medium,High,Critical → new Low,Medium,High,Critical)
             migrationBuilder.Sql(@"
                 UPDATE ""MaintenanceReminders""
                 SET ""Level"" = ""Level"" + 1

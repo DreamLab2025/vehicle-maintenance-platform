@@ -86,7 +86,7 @@ namespace Verendar.Vehicle.Bootstrapping
                 "0 0 * * *");
 
             RecurringJob.AddOrUpdate<MaintenanceReminderJob>(
-                "maintenance-reminder-urgent",
+                "maintenance-reminder-Critical",
                 x => x.ExecuteAsync(CancellationToken.None),
                 "0 0 * * *");
 

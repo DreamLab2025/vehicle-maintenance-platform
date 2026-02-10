@@ -102,6 +102,7 @@ Response:
 ### Bước 3: User Trả Lời Câu Hỏi Cho Linh Kiện
 
 **Frontend hiển thị form cho engine_oil:**
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ 🛢️ Dầu động cơ (engine_oil)                             │
@@ -166,12 +167,14 @@ POST /api/v1/ai/vehicle-questionnaire/analyze
 ```
 
 **Validation:**
+
 - Chỉ chấp nhận 1 linh kiện trong `defaultSchedules`
 - Nếu >1: "Chỉ hỗ trợ phân tích 1 linh kiện trong mỗi request"
 
 ### Bước 5: AI Phân Tích (Backend - Gemini 2.0-flash)
 
 **Prompt gửi cho Gemini (tiếng Việt để tiết kiệm token):**
+
 ```
 Hôm nay: 2025-01-25
 
@@ -211,6 +214,7 @@ Trả về JSON:
 ```
 
 **AI Response (Gemini):**
+
 ```json
 {
   "isSuccess": true,
@@ -241,6 +245,7 @@ Trả về JSON:
 ```
 
 **Validation:**
+
 - AI phải trả về đúng 1 recommendation
 - Nếu AI trả về nhiều hơn: "AI trả về 2 khuyến nghị thay vì 1. Vui lòng thử lại."
 
@@ -307,6 +312,7 @@ Response:
 ```
 
 **System update:**
+
 ```
 CREATED NEW VehiclePartTracking (engine_oil):
 ├─ CustomKmInterval: 2000 (từ default schedule)
@@ -331,6 +337,7 @@ Lặp lại Bước 2-7 cho brake_pad
 ```
 
 **Kết quả cuối:**
+
 ```
 VehiclePartTracking:
 ├─ engine_oil: ✅ Tracked (có LastReplacement từ AI)
@@ -340,6 +347,7 @@ VehiclePartTracking:
 ```
 
 **Lưu ý quan trọng:**
+
 - Tracking chỉ được tạo khi user chọn phân tích part
 - User có thể quay lại sau để thêm tracking cho part khác
 - Không có tracking = không có reminder cho part đó
@@ -371,6 +379,7 @@ Response:
 ```
 
 **Note:**
+
 - Endpoint này đặt `NeedsOnboarding = false`
 - Frontend có thể dùng để ẩn onboarding wizard sau khi user hoàn thành
 - User có thể hoàn thành onboarding dù đã phân tích 0, 1 hoặc nhiều linh kiện
@@ -396,6 +405,7 @@ All parts: LastReplacement = 0 / PurchaseDate
 ## 3. User Cập Nhật Odometer Sau Đó
 
 **30 ngày sau, user update:**
+
 ```json
 PUT /api/user-vehicles/{id}/odometer
 {
@@ -404,6 +414,7 @@ PUT /api/user-vehicles/{id}/odometer
 ```
 
 **System tự động:**
+
 ```
 1. Update UserVehicle.CurrentOdometer = 9000
 2. Tạo OdometerHistory mới
@@ -427,6 +438,7 @@ PUT /api/user-vehicles/{id}/odometer
 ## 4. User Đi Bảo Dưỡng
 
 **Flow bảo dưỡng:**
+
 ```
 [User] → Click reminder "Má phanh cần thay"
    ↓
@@ -447,6 +459,7 @@ PUT /api/user-vehicles/{id}/odometer
 ```
 
 **Form bảo dưỡng:**
+
 ```json
 POST /api/maintenance-records
 {
@@ -468,6 +481,7 @@ POST /api/maintenance-records
 ```
 
 **System update tracking:**
+
 ```
 VehiclePartTracking (Má phanh):
 ├─ LastReplacementOdometer: 0 → 9100
@@ -500,6 +514,7 @@ MaintenanceReminder (Má phanh):
 ```
 
 **Ví dụ user paste hóa đơn:**
+
 ```
 "HÓA ĐƠN BẢO DƯỠNG
 Đại lý Honda Hà Nội
@@ -515,6 +530,7 @@ Tổng: 170,000đ"
 ```
 
 **AI phân tích:**
+
 ```json
 {
   "serviceDate": "2025-01-25",
@@ -540,6 +556,7 @@ Tổng: 170,000đ"
 ## 6. Notification Flow
 
 **Background Service chạy hàng ngày:**
+
 ```
 Mỗi ngày 08:00 AM:
    ↓
@@ -551,17 +568,18 @@ For each reminder with level >= HIGH và chưa notify:
    └─ Send via Notification Service
       ├─ Push notification
       ├─ In-app notification
-      └─ Email (nếu urgent)
+      └─ Email (nếu Critical)
 ```
 
 **Notification messages:**
+
 ```
 Level HIGH (10-25% remaining):
 "🟡 Honda Wave Alpha (59H1-12345)
 Dầu máy còn 200km nữa cần thay.
 Dự kiến: ~7 ngày nữa"
 
-Level URGENT (<10% remaining):
+Level Critical (<10% remaining):
 "🔴 KHẨN CẤP!
 Honda Wave Alpha (59H1-12345)
 Dầu máy đã vượt 100km so với khuyến nghị!
@@ -621,26 +639,31 @@ Response:
 ## Tóm Tắt Key Flows
 
 ### 1️⃣ Đăng ký xe với AI
+
 ```
 Input text → AI analyze → Confirm → Create with accurate tracking
 ```
 
 ### 2️⃣ Cập nhật km
+
 ```
 Manual input → Auto calculate reminders → Send notifications
 ```
 
 ### 3️⃣ Bảo dưỡng với AI
+
 ```
 Paste hóa đơn → AI parse → Pre-fill form → Confirm → Update tracking
 ```
 
 ### 4️⃣ Nhắc nhở tự động
+
 ```
 Background job → Calculate urgency → Send notifications → Track dismissed
 ```
 
 ### 5️⃣ Dashboard
+
 ```
 Query → Aggregate data → Calculate health score → Show recommendations
 ```

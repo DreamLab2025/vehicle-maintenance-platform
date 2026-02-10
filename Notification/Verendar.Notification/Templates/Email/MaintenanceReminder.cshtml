@@ -13,9 +13,10 @@
 
 <p>Xin chào @(string.IsNullOrEmpty(Model.UserName) ? "bạn" : Model.UserName),</p>
 
-@if (Model.IsUrgent)
+@if (Model.IsCritical)
 {
-    <p style="color: #dc3545; font-weight: 600;">Xe của bạn có linh kiện đã đến mức <strong>khẩn cấp</strong> cần thay thế. Bạn sẽ nhận được email nhắc nhở hằng ngày cho đến khi bạn cập nhật đã thay linh kiện.</p>
+    <p style="color: #dc3545; font-weight: 600;">Xe của bạn có linh kiện đã đến mức <strong>khẩn cấp</strong> cần thay thế.
+        Bạn sẽ nhận được email nhắc nhở hằng ngày cho đến khi bạn cập nhật đã thay linh kiện.</p>
 }
 else
 {
@@ -39,9 +40,12 @@ else
             <tr>
                 <td style="padding: 10px; border: 1px solid #dee2e6;">@item.PartCategoryName</td>
                 <td style="padding: 10px; border: 1px solid #dee2e6;">@(item.VehicleDisplayName ?? "—")</td>
-                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">@item.CurrentOdometer.ToString("N0") km</td>
-                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">@item.TargetOdometer.ToString("N0") km</td>
-                <td style="padding: 10px; text-align: center; border: 1px solid #dee2e6;">@item.PercentageRemaining.ToString("F0")%</td>
+                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">
+                    @item.CurrentOdometer.ToString("N0") km</td>
+                <td style="padding: 10px; text-align: right; border: 1px solid #dee2e6;">@item.TargetOdometer.ToString("N0")
+                    km</td>
+                <td style="padding: 10px; text-align: center; border: 1px solid #dee2e6;">
+                    @item.PercentageRemaining.ToString("F0")%</td>
             </tr>
         }
     </tbody>

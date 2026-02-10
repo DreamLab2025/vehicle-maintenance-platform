@@ -21,9 +21,9 @@ namespace Verendar.Notification.Infrastructure.Seeders
                 TitleTemplate: "Đặt lại mật khẩu",
                 MessageTemplate: "Ma dat lai mat khau Verender cua ban la: {OTP}. Ma co hieu luc trong {ExpiryMinutes} phut. Neu ban khong yeu cau, vui long bo qua email nay.",
                 NotificationType: NotificationType.System),
-            // Thông báo reminder khi đạt mức (trùng 3 mức xe test: Urgent, High, Medium)
+            // Thông báo reminder khi đạt mức (trùng 3 mức xe test: Critical, High, Medium)
             new EmailTemplateSeedItem(
-                Code: "MAINTENANCE_REMINDER_URGENT",
+                Code: "MAINTENANCE_REMINDER_Critical",
                 TitleTemplate: "Khẩn cấp: Cần thay linh kiện",
                 MessageTemplate: "Xe cua ban co linh kien da den muc khan cap can thay the. Ban se nhan duoc email nhac nho hang ngay cho den khi ban cap nhat da thay linh kien.\n\nCac linh kien can chu y:\n{PartList}\n\nVui long vao app cap nhat sau khi thay linh kien de dung nhac nho.",
                 NotificationType: NotificationType.MaintenanceReminder),

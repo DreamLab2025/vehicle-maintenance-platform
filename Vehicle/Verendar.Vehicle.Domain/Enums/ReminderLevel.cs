@@ -10,6 +10,6 @@ namespace Verendar.Vehicle.Domain.Enums
 
         High = 3,
 
-        Urgent = 4
+        Critical = 4
     }
 }

@@ -48,7 +48,7 @@ namespace Verendar.Notification.Application.Dtos.Email
     {
         public string Title { get; set; } = string.Empty;
         public string LevelName { get; set; } = string.Empty;
-        public bool IsUrgent { get; set; }
+        public bool IsCritical { get; set; }
         public List<MaintenanceReminderItemEmailDto> Items { get; set; } = [];
         public string? ActionUrl { get; set; }
         public string? ActionText { get; set; }

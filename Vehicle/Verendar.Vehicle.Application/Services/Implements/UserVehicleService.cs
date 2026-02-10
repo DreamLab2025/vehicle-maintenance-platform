@@ -604,7 +604,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             if (percentageRemaining > 25) return ReminderLevel.Low;
             if (percentageRemaining > 15) return ReminderLevel.Medium;
             if (percentageRemaining > 5) return ReminderLevel.High;
-            return ReminderLevel.Urgent;
+            return ReminderLevel.Critical;
         }
 
         private static (decimal? PercentageRemaining, DateOnly? TargetDate) ComputeReminderData(
