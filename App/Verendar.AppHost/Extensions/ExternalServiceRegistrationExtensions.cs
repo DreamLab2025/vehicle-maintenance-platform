@@ -86,6 +86,8 @@ namespace Verendar.AppHost.Extensions
                                 var notificationCluster = yarp.AddProjectCluster(notificationService);
                                 yarp.AddRoute("/api/v1/notifications/{**catch-all}", notificationCluster);
 
+                                yarp.AddRoute("/hubs/{**catch-all}", notificationCluster);
+
                                 var aiCluster = yarp.AddProjectCluster(aiService);
                                 yarp.AddRoute("/api/v1/ai/vehicle-questionnaire/{**catch-all}", aiCluster);
                             })
