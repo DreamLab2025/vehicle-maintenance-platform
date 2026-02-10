@@ -231,10 +231,12 @@ namespace Verendar.Notification.Infrastructure.Services
                     Items = (message.Items ?? []).Select(i => new MaintenanceReminderItemEmailDto
                     {
                         PartCategoryName = i.PartCategoryName,
+                        Description = i.Description,
                         VehicleDisplayName = i.VehicleDisplayName,
                         CurrentOdometer = i.CurrentOdometer,
                         TargetOdometer = i.TargetOdometer,
-                        PercentageRemaining = i.PercentageRemaining
+                        PercentageRemaining = i.PercentageRemaining,
+                        EstimatedNextReplacementDate = i.EstimatedNextReplacementDate?.ToString("dd/MM/yyyy")
                     }).ToList()
                 };
 

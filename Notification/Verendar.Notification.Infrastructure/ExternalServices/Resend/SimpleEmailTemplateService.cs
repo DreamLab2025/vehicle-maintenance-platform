@@ -156,11 +156,18 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
             var itemsHtml = new StringBuilder();
             foreach (var item in model.Items)
             {
+                var description = !string.IsNullOrEmpty(item.Description)
+                    ? $"<br><small style=\"color: #6c757d;\">{item.Description}</small>"
+                    : string.Empty;
+                var estimatedDate = !string.IsNullOrEmpty(item.EstimatedNextReplacementDate)
+                    ? $"<br><small style=\"color: #6c757d;\">Dự kiến: {item.EstimatedNextReplacementDate}</small>"
+                    : string.Empty;
+
                 itemsHtml.AppendLine("<tr>");
-                itemsHtml.AppendLine($"    <td>{item.PartCategoryName}</td>");
+                itemsHtml.AppendLine($"    <td>{item.PartCategoryName}{description}</td>");
                 itemsHtml.AppendLine($"    <td>{item.VehicleDisplayName ?? "—"}</td>");
                 itemsHtml.AppendLine($"    <td class=\"text-right\">{item.CurrentOdometer.ToString("N0", CultureInfo.GetCultureInfo("vi-VN"))} km</td>");
-                itemsHtml.AppendLine($"    <td class=\"text-right\">{item.TargetOdometer.ToString("N0", CultureInfo.GetCultureInfo("vi-VN"))} km</td>");
+                itemsHtml.AppendLine($"    <td class=\"text-right\">{item.TargetOdometer.ToString("N0", CultureInfo.GetCultureInfo("vi-VN"))} km{estimatedDate}</td>");
                 itemsHtml.AppendLine($"    <td class=\"text-center\">{item.PercentageRemaining.ToString("F0")}%</td>");
                 itemsHtml.AppendLine("</tr>");
             }

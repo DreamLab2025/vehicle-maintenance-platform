@@ -95,13 +95,15 @@ public static class NotificationSeeder
                     new
                     {
                         partCategoryName,
+                        description = $"Mô tả về {partCategoryName.ToLower()}",
                         userVehicleId = SeedUserVehicleId,
                         reminderId,
                         currentOdometer = currentOdo,
                         targetOdometer = targetOdo,
                         initialOdometer = currentOdo - 3000,
                         percentageRemaining = pctRemaining,
-                        vehicleDisplayName = VehicleDisplayName
+                        vehicleDisplayName = VehicleDisplayName,
+                        estimatedNextReplacementDate = DateTime.UtcNow.AddDays(30).ToString("yyyy-MM-ddTHH:mm:ssZ")
                     }
                 };
                 metadataJson = JsonSerializer.Serialize(new

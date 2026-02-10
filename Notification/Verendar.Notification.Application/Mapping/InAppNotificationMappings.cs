@@ -49,13 +49,15 @@ namespace Verendar.Notification.Application.Mapping
             var itemsData = (message.Items ?? []).Select(i => new Dictionary<string, object?>
             {
                 ["partCategoryName"] = i.PartCategoryName,
+                ["description"] = i.Description,
                 ["userVehicleId"] = i.UserVehicleId,
                 ["reminderId"] = i.ReminderId,
                 ["currentOdometer"] = i.CurrentOdometer,
                 ["targetOdometer"] = i.TargetOdometer,
                 ["initialOdometer"] = i.InitialOdometer,
                 ["percentageRemaining"] = i.PercentageRemaining,
-                ["vehicleDisplayName"] = i.VehicleDisplayName
+                ["vehicleDisplayName"] = i.VehicleDisplayName,
+                ["estimatedNextReplacementDate"] = i.EstimatedNextReplacementDate
             }).ToList();
 
             var metadata = new Dictionary<string, object?>

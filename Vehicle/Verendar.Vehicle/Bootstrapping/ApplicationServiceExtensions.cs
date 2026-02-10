@@ -49,6 +49,7 @@ namespace Verendar.Vehicle.Bootstrapping
 
             builder.Services.AddScoped<OdometerReminderJob>();
             builder.Services.AddScoped<MaintenanceReminderJob>();
+            builder.Services.AddScoped<IMaintenanceReminderService, Services.MaintenanceReminderService>();
 
             // Register Unit of Work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();

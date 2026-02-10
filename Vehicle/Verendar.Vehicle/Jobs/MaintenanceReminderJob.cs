@@ -54,16 +54,24 @@ namespace Verendar.Vehicle.Jobs
                         var vehicleDisplay = uv.Variant?.VehicleModel != null
                             ? $"{uv.Variant.VehicleModel.Name}" + (string.IsNullOrEmpty(uv.LicensePlate) ? "" : $" - {uv.LicensePlate}")
                             : uv.LicensePlate;
+
+                        // Convert DateOnly? to DateTime?
+                        DateTime? estimatedNextDate = r.PartTracking.PredictedNextDate.HasValue
+                            ? r.PartTracking.PredictedNextDate.Value.ToDateTime(TimeOnly.MinValue)
+                            : null;
+
                         return new MaintenanceReminderItemDto
                         {
                             PartCategoryName = r.PartTracking!.PartCategory!.Name,
+                            Description = r.PartTracking.PartCategory.Description,
                             UserVehicleId = r.PartTracking.UserVehicleId,
                             ReminderId = r.Id,
                             CurrentOdometer = r.CurrentOdometer,
                             TargetOdometer = r.TargetOdometer,
                             InitialOdometer = r.PartTracking.LastReplacementOdometer,
                             PercentageRemaining = r.PercentageRemaining,
-                            VehicleDisplayName = vehicleDisplay
+                            VehicleDisplayName = vehicleDisplay,
+                            EstimatedNextReplacementDate = estimatedNextDate
                         };
                     }).ToList();
 

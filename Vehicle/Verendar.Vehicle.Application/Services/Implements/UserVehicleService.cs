@@ -10,10 +10,14 @@ using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
-    public class UserVehicleService(ILogger<UserVehicleService> logger, IUnitOfWork unitOfWork) : IUserVehicleService
+    public class UserVehicleService(
+        ILogger<UserVehicleService> logger,
+        IUnitOfWork unitOfWork,
+        IMaintenanceReminderService maintenanceReminderService) : IUserVehicleService
     {
         private readonly ILogger<UserVehicleService> _logger = logger;
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IMaintenanceReminderService _maintenanceReminderService = maintenanceReminderService;
 
         public async Task<ApiResponse<IsAllowedToCreateVehicleResponse>> IsAllowedToCreateVehicleAsync(Guid userId)
         {
@@ -311,6 +315,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                     await SyncMaintenanceRemindersAsync(vehicleId, request.CurrentOdometer, userId);
 
+                    // Publish maintenance reminder notification if there are Critical reminders
+                    await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
+
                     _logger.LogInformation("Updated odometer for vehicle: {VehicleId} from {OldOdometer} to {NewOdometer} km",
                         vehicleId, vehicle.CurrentOdometer, request.CurrentOdometer);
                 }
@@ -444,6 +451,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 // Sync reminders (quay về Normal khi thay phụ tùng với Last*/PredictedNext* mới)
                 await SyncMaintenanceRemindersAsync(vehicleId, vehicle.CurrentOdometer, userId);
+
+                // Publish maintenance reminder notification if there are Critical reminders
+                await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
 
                 // Return tracking summary
                 var response = tracking.ToSummary();
