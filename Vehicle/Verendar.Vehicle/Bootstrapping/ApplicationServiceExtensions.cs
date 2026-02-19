@@ -63,6 +63,7 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IDefaultMaintenanceScheduleService, DefaultMaintenanceScheduleService>();
             builder.Services.AddScoped<IPartCategoryService, PartCategoryService>();
             builder.Services.AddScoped<IPartProductService, PartProductService>();
+            builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
 
             // FluentValidation
             builder.Services.AddValidatorsFromAssemblyContaining<UserVehicleRequestValidator>();
@@ -106,6 +107,7 @@ namespace Verendar.Vehicle.Bootstrapping
             app.MapOdometerHistoryApi();
             app.MapDefaultMaintenanceScheduleApi();
             app.MapPartApi();
+            app.MapMaintenanceRecordApi();
 
             return app;
         }

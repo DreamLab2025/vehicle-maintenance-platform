@@ -133,10 +133,15 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<UserVehicleDetailResponse>.FailureResponse("Không tìm thấy xe");
                 }
 
-                // Get maintenance activities count (would need MaintenanceActivity repository)
-                // For now, set to 0
-                var totalMaintenanceActivities = 0;
+                var recordsQuery = _unitOfWork.MaintenanceRecords.AsQueryable()
+                    .Where(r => r.UserVehicleId == vehicleId);
+                var totalMaintenanceActivities = await recordsQuery.CountAsync();
                 DateTime? lastMaintenanceDate = null;
+                if (totalMaintenanceActivities > 0)
+                {
+                    var lastServiceDate = await recordsQuery.MaxAsync(r => r.ServiceDate);
+                    lastMaintenanceDate = lastServiceDate.ToDateTime(TimeOnly.MinValue);
+                }
 
                 var response = vehicle.ToDetailResponse(totalMaintenanceActivities, lastMaintenanceDate);
 
@@ -495,6 +500,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 _logger.LogError(ex, "Error completing onboarding for vehicle: {VehicleId}", vehicleId);
                 return ApiResponse<UserVehicleResponse>.FailureResponse("Lỗi khi hoàn thành onboarding");
             }
+        }
+
+        public async Task SyncMaintenanceRemindersForVehicleAsync(Guid vehicleId, int currentOdometer, Guid userId)
+        {
+            await SyncMaintenanceRemindersAsync(vehicleId, currentOdometer, userId);
+            await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
         }
 
         private async Task InitializePartTrackingAsync(Guid userVehicleId)
