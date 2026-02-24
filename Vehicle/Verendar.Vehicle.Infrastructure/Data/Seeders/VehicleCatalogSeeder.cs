@@ -14,6 +14,17 @@ public static class VehicleCatalogSeeder
         await SeedVehicleVariantsAsync(db, logger, cancellationToken);
         await SeedPartCategoriesAsync(db, logger, cancellationToken);
         await SeedDefaultMaintenanceSchedulesAsync(db, logger, cancellationToken);
+        await SeedPartProductsAsync(db, logger, cancellationToken);
+    }
+
+    private static async Task SeedPartProductsAsync(VehicleDbContext db, ILogger? logger, CancellationToken ct)
+    {
+        var hasAny = await db.PartProducts.IgnoreQueryFilters().AnyAsync(ct);
+        if (hasAny) return;
+        var list = VehicleDataSeeder.GetPartProducts();
+        db.PartProducts.AddRange(list);
+        await db.SaveChangesAsync(ct);
+        logger?.LogInformation("Seeded {Count} PartProducts", list.Count);
     }
 
     private static async Task SeedVehicleTypesAsync(VehicleDbContext db, ILogger? logger, CancellationToken ct)

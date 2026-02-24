@@ -23,8 +23,8 @@ namespace Verendar.Media.Apis
             MapInitUploadRoute(group, "/init-upload/avatar", "Avatar", "Lấy Presigned URL upload avatar", "avatar");
             MapInitUploadRoute(group, "/init-upload/vehicle-types", "InitUploadVehicleTypes", "Lấy Presigned URL upload ảnh loại xe", "vehicle-types");
             MapInitUploadRoute(group, "/init-upload/vehicle-brands", "InitUploadVehicleBrands", "Lấy Presigned URL upload ảnh hãng xe", "vehicle-brands");
-            MapInitUploadRoute(group, "/init-upload/vehicle-models", "InitUploadVehicleModels", "Lấy Presigned URL upload ảnh mẫu xe", "vehicle-models");
-            MapInitUploadRoute(group, "/init-upload/consumables", "InitUploadConsumables", "Lấy Presigned URL upload ảnh consumable", "consumables");
+            MapInitUploadRoute(group, "/init-upload/vehicle-variants", "InitUploadVehicleVariants", "Lấy Presigned URL upload ảnh phiên bản xe (màu)", "vehicle-variants");
+            MapInitUploadRoute(group, "/init-upload/part-categories", "InitUploadPartCategories", "Lấy Presigned URL upload icon danh mục phụ tùng", "part-categories");
             MapInitUploadRoute(group, "/init-upload/misc", "InitUploadMisc", "Lấy Presigned URL upload file khác", "misc");
 
             group.MapPut("{id:guid}/confirm", ConfirmUploadFile)

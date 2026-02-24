@@ -17,7 +17,6 @@ using (var scope = app.Services.CreateScope())
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     await VehicleCatalogSeeder.SeedAsync(db, logger);
-    await PartProductSeeder.SeedAsync(db, logger);
     await MaintenanceReminderTestDataSeeder.SeedAsync(db, logger);
 }
 

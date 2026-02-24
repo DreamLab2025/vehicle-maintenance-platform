@@ -115,7 +115,7 @@ namespace Verendar.Media.Application.Services.Implements
                 if (fileType == null)
                 {
                     return ApiResponse<InitUploadResponse>.FailureResponse(
-                        $"Folder key không hợp lệ: '{folderKey}'. Cho phép: avatar, vehicle-types, vehicle-brands, vehicle-models, consumables, misc");
+                        $"Folder key không hợp lệ: '{folderKey}'. Cho phép: avatar, vehicle-types, vehicle-brands, vehicle-variants, part-categories, misc");
                 }
 
                 if (!_uploadConfig.IsContentTypeAllowed(request.ContentType))
@@ -167,8 +167,8 @@ namespace Verendar.Media.Application.Services.Implements
                 "avatar" => FileType.Avatar,
                 "vehicle-types" => FileType.VehicleType,
                 "vehicle-brands" => FileType.VehicleBrand,
-                "vehicle-models" => FileType.VehicleModel,
-                "consumables" => FileType.ConsumableItem,
+                "vehicle-variants" => FileType.VehicleVariant,
+                "part-categories" => FileType.PartCategory,
                 "misc" => FileType.Other,
                 _ => null
             };
@@ -181,8 +181,8 @@ namespace Verendar.Media.Application.Services.Implements
                 FileType.Avatar => $"users/{userId}/avatar",
                 FileType.VehicleType => "master/types",
                 FileType.VehicleBrand => "master/brands",
-                FileType.VehicleModel => "master/models",
-                FileType.ConsumableItem => "master/consumables",
+                FileType.VehicleVariant => "master/variants",
+                FileType.PartCategory => "master/part-categories",
                 FileType.Other => "misc/general",
                 _ => "misc/unknown"
             };

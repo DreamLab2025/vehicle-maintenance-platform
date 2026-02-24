@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Verendar.Common.Databases.Base;
@@ -58,8 +58,8 @@ namespace Verendar.Media.Domain.Entities
         Avatar = 1,
         VehicleType = 2,
         VehicleBrand = 3,
-        VehicleModel = 4,
-        ConsumableItem = 5,
+        VehicleVariant = 4,
+        PartCategory = 5,
         Other = 99
     }
 }
