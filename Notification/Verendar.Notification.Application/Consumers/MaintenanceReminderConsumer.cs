@@ -30,20 +30,34 @@ namespace Verendar.Notification.Application.Consumers
 
             try
             {
-                var (emailSent, notificationId) = await _emailNotificationService.SendMaintenanceReminderAsync(message, context.CancellationToken);
+                var (emailSent, notificationIds) = await _emailNotificationService.SendMaintenanceReminderAsync(message, context.CancellationToken);
+                var idsList = notificationIds.ToList();
 
                 if (emailSent)
                     _logger.LogInformation(
-                        "MaintenanceReminder email sent - MessageId: {MessageId}, UserId: {UserId}, Level: {Level}, Parts: {Count}",
-                        messageId, message.UserId, message.LevelName, message.Items?.Count ?? 0);
+                        "MaintenanceReminder email sent - MessageId: {MessageId}, UserId: {UserId}, Level: {Level}, Notifications: {Count}",
+                        messageId, message.UserId, message.LevelName, idsList.Count);
                 else if (!string.IsNullOrWhiteSpace(message.TargetValue))
                     _logger.LogWarning("MaintenanceReminder email send failed - MessageId: {MessageId}, UserId: {UserId}", messageId, message.UserId);
 
-                var inAppPayload = message.ToInAppPayload();
-                await _inAppNotificationService.SendAsync(message.UserId, inAppPayload, context.CancellationToken);
-
-                if (notificationId.HasValue)
-                    await MarkInAppDeliverySentAndSaveMetadataAsync(notificationId.Value, message.UserId, inAppPayload.Metadata, context.CancellationToken);
+                var items = message.Items ?? [];
+                if (idsList.Count == items.Count && items.Count > 0)
+                {
+                    // Mỗi notification tương ứng 1 phụ tùng: gửi in-app riêng cho từng phần (title "Khẩn cấp: cần thay {phụ tùng}")
+                    for (var i = 0; i < idsList.Count; i++)
+                    {
+                        var payload = message.ToInAppPayloadForItem(items[i]);
+                        await _inAppNotificationService.SendAsync(message.UserId, payload, context.CancellationToken);
+                        await MarkInAppDeliverySentAndSaveMetadataAsync(idsList[i], message.UserId, payload.Metadata, context.CancellationToken);
+                    }
+                }
+                else
+                {
+                    var inAppPayload = message.ToInAppPayload();
+                    await _inAppNotificationService.SendAsync(message.UserId, inAppPayload, context.CancellationToken);
+                    if (idsList.Count > 0)
+                        await MarkInAppDeliverySentAndSaveMetadataAsync(idsList[0], message.UserId, inAppPayload.Metadata, context.CancellationToken);
+                }
             }
             catch (Exception ex)
             {

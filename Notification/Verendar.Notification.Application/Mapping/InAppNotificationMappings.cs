@@ -42,6 +42,42 @@ namespace Verendar.Notification.Application.Mapping
             };
         }
 
+        public static InAppNotificationPayload ToInAppPayloadForItem(this MaintenanceReminderEvent message, MaintenanceReminderItemDto item)
+        {
+            var title = $"Khẩn cấp: cần thay {item.PartCategoryName}";
+            var messageContent = "Xe của bạn có linh kiện đã đến mức khẩn cấp cần thay thế. "
+                + $"• {item.PartCategoryName} (số km hiện tại: {item.CurrentOdometer:N0}, cần thay trước: {item.TargetOdometer:N0}). "
+                + "Vui lòng vào app cập nhật sau khi thay linh kiện để dừng nhắc nhở.";
+            var itemData = new Dictionary<string, object?>
+            {
+                ["partCategoryName"] = item.PartCategoryName,
+                ["description"] = item.Description,
+                ["userVehicleId"] = item.UserVehicleId,
+                ["reminderId"] = item.ReminderId,
+                ["currentOdometer"] = item.CurrentOdometer,
+                ["targetOdometer"] = item.TargetOdometer,
+                ["initialOdometer"] = item.InitialOdometer,
+                ["percentageRemaining"] = item.PercentageRemaining,
+                ["vehicleDisplayName"] = item.VehicleDisplayName,
+                ["estimatedNextReplacementDate"] = item.EstimatedNextReplacementDate
+            };
+            var metadata = new Dictionary<string, object?>
+            {
+                ["type"] = "MaintenanceReminder",
+                ["entityType"] = "MaintenanceReminder",
+                ["entityId"] = item.ReminderId,
+                ["level"] = message.Level,
+                ["levelName"] = message.LevelName ?? string.Empty,
+                ["items"] = new List<Dictionary<string, object?>> { itemData }
+            };
+            return new InAppNotificationPayload
+            {
+                Title = title,
+                Message = messageContent,
+                Metadata = metadata
+            };
+        }
+
         public static InAppNotificationPayload ToInAppPayload(this MaintenanceReminderEvent message)
         {
             var (title, messageContent) = BuildMaintenanceReminderContent(message);
