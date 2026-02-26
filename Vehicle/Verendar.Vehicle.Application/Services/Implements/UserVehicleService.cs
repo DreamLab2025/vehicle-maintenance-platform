@@ -106,10 +106,57 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<string>.FailureResponse("Không tìm thấy xe");
                 }
 
-                await _unitOfWork.UserVehicles.DeleteAsync(vehicleId);
+                var deletedAt = DateTime.UtcNow;
+
+                var reminders = await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(vehicleId);
+                foreach (var r in reminders)
+                {
+                    r.DeletedAt = deletedAt;
+                    r.DeletedBy = userId;
+                    await _unitOfWork.MaintenanceReminders.UpdateAsync(r.Id, r);
+                }
+
+                var trackings = await _unitOfWork.VehiclePartTrackings.GetByUserVehicleIdAsync(vehicleId);
+                foreach (var t in trackings)
+                {
+                    t.DeletedAt = deletedAt;
+                    t.DeletedBy = userId;
+                    await _unitOfWork.VehiclePartTrackings.UpdateAsync(t.Id, t);
+                }
+
+                var odometerHistories = await _unitOfWork.OdometerHistories.AsQueryable()
+                    .Where(x => x.UserVehicleId == vehicleId)
+                    .ToListAsync();
+                foreach (var h in odometerHistories)
+                {
+                    h.DeletedAt = deletedAt;
+                    h.DeletedBy = userId;
+                    await _unitOfWork.OdometerHistories.UpdateAsync(h.Id, h);
+                }
+
+                var records = await _unitOfWork.MaintenanceRecords.GetByUserVehicleIdAsync(vehicleId);
+                foreach (var record in records)
+                {
+                    var items = await _unitOfWork.MaintenanceRecordItems.GetByMaintenanceRecordIdAsync(record.Id);
+                    foreach (var item in items)
+                    {
+                        item.DeletedAt = deletedAt;
+                        item.DeletedBy = userId;
+                        await _unitOfWork.MaintenanceRecordItems.UpdateAsync(item.Id, item);
+                    }
+                    record.DeletedAt = deletedAt;
+                    record.DeletedBy = userId;
+                    await _unitOfWork.MaintenanceRecords.UpdateAsync(record.Id, record);
+                }
+
+                vehicle.DeletedAt = deletedAt;
+                vehicle.DeletedBy = userId;
+                vehicle.Status = EntityStatus.Deleted;
+                await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
+
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation("Deleted user vehicle with ID: {VehicleId} for user: {UserId}", vehicleId, userId);
+                _logger.LogInformation("Soft deleted user vehicle with ID: {VehicleId} for user: {UserId} (cascade)", vehicleId, userId);
 
                 return ApiResponse<string>.SuccessResponse(
                     "Deleted",
