@@ -93,14 +93,17 @@ public static class VehicleDataSeeder
     public static List<VehicleVariant> GetVehicleVariants()
     {
         var rows = SeedDataLoader.ReadCsvAsDictionaries("VehicleVariants.csv");
-        return rows.Select(row => BaseAudit(new VehicleVariant
-        {
-            Id = G(row, "Id"),
-            VehicleModelId = G(row, "VehicleModelId"),
-            Color = Get(row, "Color"),
-            HexCode = Get(row, "HexCode"),
-            ImageUrl = Get(row, "ImageUrl")
-        })).ToList();
+        return rows
+            .Where(row => !string.IsNullOrWhiteSpace(Get(row, "ImageUrl")))
+            .Select(row => BaseAudit(new VehicleVariant
+            {
+                Id = G(row, "Id"),
+                VehicleModelId = G(row, "VehicleModelId"),
+                Color = Get(row, "Color"),
+                HexCode = Get(row, "HexCode"),
+                ImageUrl = Get(row, "ImageUrl")
+            }))
+            .ToList();
     }
 
     public static List<PartCategory> GetPartCategories()
