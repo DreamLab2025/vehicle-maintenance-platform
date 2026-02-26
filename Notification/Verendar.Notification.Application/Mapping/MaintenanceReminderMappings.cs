@@ -38,7 +38,13 @@ namespace Verendar.Notification.Application.Mapping
                 return (title, body);
             }
 
-            var normalTitle = $"{NotificationConstants.Titles.MaintenanceNormalPrefix} ({message.LevelName})";
+            var partNames = items.Count > 0
+                ? string.Join(", ", items.Select(i => i.PartCategoryName))
+                : string.Empty;
+            var levelLabel = NotificationConstants.MaintenanceLevelLabels.GetLabel(message.LevelName);
+            var normalTitle = string.IsNullOrEmpty(partNames)
+                ? $"{levelLabel}: {NotificationConstants.Titles.MaintenanceNormalPrefix} ({message.LevelName})"
+                : $"{levelLabel}: {NotificationConstants.Titles.MaintenanceNormalPrefix} {partNames}";
             var normalBody = NormalIntro + "\n\n" + partList;
             return (normalTitle, normalBody);
         }

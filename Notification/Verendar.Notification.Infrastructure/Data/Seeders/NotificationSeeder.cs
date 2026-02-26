@@ -46,11 +46,10 @@ public static class NotificationSeeder
         ("Lọc dầu", "Loại bỏ tạp chất trong dầu động cơ", SeedCurrentOdometer, 15250, 5m)
     };
 
-    // High / Medium: one notification each, like BuildContent (NormalIntro + partList)
-    private static readonly (string Title, string PartName, string Description, int CurrentOdo, int TargetOdo, decimal Pct, int Level, string LevelName)[] NormalReminders =
+    private static readonly (string PartName, string Description, int CurrentOdo, int TargetOdo, decimal Pct, int Level, string LevelName)[] NormalReminders =
     {
-        ("Nhắc nhở bảo dưỡng (High)", "Lốp xe", "Đảm bảo độ bám đường và an toàn khi di chuyển", SeedCurrentOdometer, 20000, 25m, 3, "High"),
-        ("Nhắc nhở bảo dưỡng (Medium)", "Má phanh", "Đảm bảo khả năng phanh an toàn", SeedCurrentOdometer, 18000, 30m, 2, "Medium")
+        ("Lốp xe", "Đảm bảo độ bám đường và an toàn khi di chuyển", SeedCurrentOdometer, 20000, 25m, 3, "High"),
+        ("Má phanh", "Đảm bảo khả năng phanh an toàn", SeedCurrentOdometer, 18000, 30m, 2, "Medium")
     };
 
     public static async Task SeedAsync(NotificationDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
@@ -138,10 +137,11 @@ public static class NotificationSeeder
             totalSeeded++;
         }
 
-        // High / Medium: 1 notification each (BuildContent + ToInAppPayload)
-        foreach (var (title, partName, description, currentOdo, targetOdo, pct, level, levelName) in NormalReminders)
+        foreach (var (partName, description, currentOdo, targetOdo, pct, level, levelName) in NormalReminders)
         {
             var reminderId = SeedReminderIds[reminderIdIndex++];
+            var levelLabel = NotificationConstants.MaintenanceLevelLabels.GetLabel(levelName);
+            var title = $"{levelLabel}: {NotificationConstants.Titles.MaintenanceNormalPrefix} {partName}";
             var partLine = string.Format(PartLineFormat, partName, currentOdo, targetOdo);
             var message = NormalIntro + "\n\n" + partLine;
 

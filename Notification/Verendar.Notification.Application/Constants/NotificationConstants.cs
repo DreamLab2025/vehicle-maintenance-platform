@@ -9,12 +9,34 @@ namespace Verendar.Notification.Application.Constants
             public const string MaintenanceReminder = "MaintenanceReminder";
         }
 
+        public static class MaintenanceLevelLabels
+        {
+            public const string Critical = "Khẩn cấp";
+            public const string High = "Cao";
+            public const string Medium = "Trung bình";
+            public const string Low = "Thấp";
+            public const string Normal = "Bình thường";
+
+            public static string GetLabel(string? levelName)
+            {
+                return levelName switch
+                {
+                    "Critical" => Critical,
+                    "High" => High,
+                    "Medium" => Medium,
+                    "Low" => Low,
+                    "Normal" => Normal,
+                    _ => levelName ?? string.Empty
+                };
+            }
+        }
+
         public static class Titles
         {
             public const string Otp = "Mã xác thực OTP";
             public const string OdometerReminder = "Nhắc nhở cập nhật số km";
-            public const string MaintenanceCriticalPart = "Khẩn cấp: cần thay";
-            public const string MaintenanceCritical = "Khẩn cấp: Cần thay linh kiện";
+            public static readonly string MaintenanceCriticalPart = $"{MaintenanceLevelLabels.Critical}: cần thay";
+            public static readonly string MaintenanceCritical = $"{MaintenanceLevelLabels.Critical}: Cần thay linh kiện";
             public const string MaintenanceNormalPrefix = "Nhắc nhở bảo dưỡng";
         }
 
