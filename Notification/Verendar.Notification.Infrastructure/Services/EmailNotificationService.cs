@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Verendar.Notification.Application.Dtos.Email;
+using Verendar.Notification.Application.Constants;
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Mapping;
 using Verendar.Notification.Application.Services.Interfaces;
@@ -21,15 +21,15 @@ namespace Verendar.Notification.Infrastructure.Services
 
         private const NotificationChannel EmailChannel = NotificationChannel.EMAIL;
         private const NotificationChannel InAppChannel = NotificationChannel.InApp;
-        private const string OtpEmailTitle = "Mã xác thực OTP";
 
         public async Task<bool> SendOtpEmailAsync(OtpRequestedEvent message, CancellationToken cancellationToken = default)
         {
-            var expiryMinutes = Math.Ceiling(CalculateExpiryMinutes(message.ExpiryTime));
-            var messageContent = $"Mã xác thực OTP Verendar của bạn là: {message.Otp}. Hiệu lực {expiryMinutes} phút. Không chia sẻ mã này.";
+            var expiryMinutes = CalculateExpiryMinutes(message.ExpiryTime);
+            var title = NotificationConstants.Titles.Otp;
+            var messageContent = $"Mã xác thực OTP Verendar của bạn là: {message.Otp}. Hiệu lực {Math.Ceiling(expiryMinutes)} phút. Không chia sẻ mã này.";
 
             var notification = message.OtpRequestedToNotificationEntity(
-                OtpEmailTitle,
+                title,
                 messageContent,
                 NotificationType.System,
                 isFallback: false);
@@ -39,24 +39,7 @@ namespace Verendar.Notification.Infrastructure.Services
             await _unitOfWork.NotificationDeliveries.AddAsync(delivery);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var context = new NotificationDeliveryContext
-            {
-                NotificationId = notification.Id,
-                RecipientEmail = message.TargetValue,
-                RecipientPhone = null,
-                Title = OtpEmailTitle,
-                Message = messageContent,
-                NotificationType = notification.NotificationType,
-                TemplateParameters = new Dictionary<string, string>
-                {
-                    { "OTP", message.Otp },
-                    { "OtpCode", message.Otp },
-                    { "ExpiryMinutes", CalculateExpiryMinutes(message.ExpiryTime).ToString() },
-                    { "ExpiryTime", message.ExpiryTime.ToString("HH:mm dd/MM/yyyy") },
-                    { "Type", message.Type.ToString() }
-                },
-                Metadata = new Dictionary<string, object> { { "TemplateKey", "Otp" } }
-            };
+            var context = message.ToDeliveryContext(notification.Id, title, messageContent, notification.NotificationType, expiryMinutes);
 
             try
             {
@@ -98,17 +81,14 @@ namespace Verendar.Notification.Infrastructure.Services
             return timeSpan.TotalMinutes > 0 ? timeSpan.TotalMinutes : 0;
         }
 
-        private const string OdometerReminderTitle = "Nhắc nhở cập nhật số km";
-
         public async Task<(bool EmailSent, Guid? NotificationId)> SendOdometerReminderAsync(OdometerReminderEvent message, CancellationToken cancellationToken = default)
         {
             var days = message.StaleOdometerDays > 0 ? message.StaleOdometerDays : 3;
             var messageContent = $"Bạn đã không cập nhật số km (odo) trong {days} ngày qua. "
                 + "Vui lòng cập nhật số km của xe để Verendar có thể theo dõi bảo dưỡng chính xác hơn.";
 
-            var notification = message.OdometerReminderToNotificationEntity(
-                OdometerReminderTitle,
-                messageContent);
+            var title = OdometerReminderMappings.OdometerReminderTitle;
+            var notification = message.OdometerReminderToNotificationEntity(title, messageContent);
 
             await _unitOfWork.Notifications.AddAsync(notification);
 
@@ -125,33 +105,10 @@ namespace Verendar.Notification.Infrastructure.Services
             var emailSent = false;
             if (!string.IsNullOrWhiteSpace(message.TargetValue))
             {
-                var templateModel = new OdometerReminderEmailModel
-                {
-                    UserName = message.UserName,
-                    UserEmail = message.TargetValue,
-                    Title = OdometerReminderTitle,
-                    StaleOdometerDays = days,
-                    Vehicles = (message.Vehicles ?? []).Select(v => new OdometerReminderVehicleEmailDto
-                    {
-                        VehicleDisplayName = v.VehicleDisplayName,
-                        LicensePlate = v.LicensePlate,
-                        CurrentOdometer = v.CurrentOdometer,
-                        LastOdometerUpdateFormatted = v.LastOdometerUpdate?.ToString("dd/MM/yyyy"),
-                        DaysSinceUpdate = v.DaysSinceUpdate
-                    }).ToList()
-                };
-
-                var deliveryContext = new NotificationDeliveryContext
-                {
-                    NotificationId = notification.Id,
-                    RecipientEmail = message.TargetValue,
-                    RecipientPhone = null,
-                    Title = OdometerReminderTitle,
-                    Message = messageContent,
-                    NotificationType = notification.NotificationType,
-                    Metadata = new Dictionary<string, object> { { "TemplateKey", "OdometerReminder" } },
-                    TemplateModel = templateModel
-                };
+                var templateModel = message.ToEmailModel(days);
+                var deliveryContext = EmailDeliveryContextMappings.ToDeliveryContext(
+                    notification.Id, message.TargetValue!, title, messageContent,
+                    notification.NotificationType, templateModel, NotificationConstants.TemplateKeys.OdometerReminder);
 
                 try
                 {
@@ -201,27 +158,17 @@ namespace Verendar.Notification.Infrastructure.Services
 
         public async Task<(bool EmailSent, IReadOnlyList<Guid> NotificationIds)> SendMaintenanceReminderAsync(MaintenanceReminderEvent message, CancellationToken cancellationToken = default)
         {
-            const int CriticalLevel = 4;
             var items = message.Items ?? [];
-            var isCriticalWithMultipleParts = message.Level >= CriticalLevel && items.Count > 0;
+            var isCriticalWithParts = message.Level >= MaintenanceReminderMappings.CriticalLevel && items.Count > 0;
 
-            if (isCriticalWithMultipleParts)
+            if (isCriticalWithParts)
             {
-                // Mỗi phụ tùng khẩn cấp = 1 thông báo riêng: "Khẩn cấp: cần thay {phụ tùng}"
                 var notificationIds = new List<Guid>();
                 var allEmailSent = true;
                 foreach (var item in items)
                 {
-                    var singleItemMessage = new MaintenanceReminderEvent
-                    {
-                        UserId = message.UserId,
-                        TargetValue = message.TargetValue,
-                        UserName = message.UserName,
-                        Level = message.Level,
-                        LevelName = message.LevelName,
-                        Items = [item]
-                    };
-                    var (title, messageContent) = BuildSingleItemCriticalContent(item);
+                    var singleItemMessage = message.ToSingleItemMessage(item);
+                    var (title, messageContent) = item.BuildSingleItemCriticalContent();
                     var notification = singleItemMessage.MaintenanceReminderToNotificationEntity(title, messageContent);
                     await _unitOfWork.Notifications.AddAsync(notification);
 
@@ -236,38 +183,10 @@ namespace Verendar.Notification.Infrastructure.Services
 
                     if (!string.IsNullOrWhiteSpace(message.TargetValue))
                     {
-                        var templateModel = new MaintenanceReminderEmailModel
-                        {
-                            UserName = message.UserName,
-                            UserEmail = message.TargetValue,
-                            Title = title,
-                            LevelName = message.LevelName,
-                            IsCritical = true,
-                            Items =
-                            [
-                                new MaintenanceReminderItemEmailDto
-                                {
-                                    PartCategoryName = item.PartCategoryName,
-                                    Description = item.Description,
-                                    VehicleDisplayName = item.VehicleDisplayName,
-                                    CurrentOdometer = item.CurrentOdometer,
-                                    TargetOdometer = item.TargetOdometer,
-                                    PercentageRemaining = item.PercentageRemaining,
-                                    EstimatedNextReplacementDate = item.EstimatedNextReplacementDate?.ToString("dd/MM/yyyy")
-                                }
-                            ]
-                        };
-                        var deliveryContext = new NotificationDeliveryContext
-                        {
-                            NotificationId = notification.Id,
-                            RecipientEmail = message.TargetValue,
-                            RecipientPhone = null,
-                            Title = title,
-                            Message = messageContent,
-                            NotificationType = notification.NotificationType,
-                            Metadata = new Dictionary<string, object> { { "TemplateKey", "MaintenanceReminder" } },
-                            TemplateModel = templateModel
-                        };
+                        var templateModel = message.ToEmailModel(title, messageContent, item);
+                        var deliveryContext = EmailDeliveryContextMappings.ToDeliveryContext(
+                            notification.Id, message.TargetValue, title, messageContent,
+                            notification.NotificationType, templateModel, NotificationConstants.TemplateKeys.MaintenanceReminder);
                         try
                         {
                             var channelService = _channelFactory.GetChannel(EmailChannel);
@@ -312,8 +231,7 @@ namespace Verendar.Notification.Infrastructure.Services
                 return (allEmailSent, notificationIds);
             }
 
-            // Không phải Critical hoặc không có items: giữ 1 thông báo như cũ
-            var (singleTitle, singleMessageContent) = BuildMaintenanceReminderContent(message);
+            var (singleTitle, singleMessageContent) = message.BuildContent();
             var singleNotification = message.MaintenanceReminderToNotificationEntity(singleTitle, singleMessageContent);
             await _unitOfWork.Notifications.AddAsync(singleNotification);
 
@@ -329,35 +247,10 @@ namespace Verendar.Notification.Infrastructure.Services
             var singleEmailSent = false;
             if (!string.IsNullOrWhiteSpace(message.TargetValue))
             {
-                var templateModel = new MaintenanceReminderEmailModel
-                {
-                    UserName = message.UserName ?? string.Empty,
-                    UserEmail = message.TargetValue,
-                    Title = singleTitle,
-                    LevelName = message.LevelName,
-                    IsCritical = message.Level >= CriticalLevel,
-                    Items = items.Select(i => new MaintenanceReminderItemEmailDto
-                    {
-                        PartCategoryName = i.PartCategoryName,
-                        Description = i.Description,
-                        VehicleDisplayName = i.VehicleDisplayName,
-                        CurrentOdometer = i.CurrentOdometer,
-                        TargetOdometer = i.TargetOdometer,
-                        PercentageRemaining = i.PercentageRemaining,
-                        EstimatedNextReplacementDate = i.EstimatedNextReplacementDate?.ToString("dd/MM/yyyy")
-                    }).ToList()
-                };
-                var deliveryContext = new NotificationDeliveryContext
-                {
-                    NotificationId = singleNotification.Id,
-                    RecipientEmail = message.TargetValue,
-                    RecipientPhone = null,
-                    Title = singleTitle,
-                    Message = singleMessageContent,
-                    NotificationType = singleNotification.NotificationType,
-                    Metadata = new Dictionary<string, object> { { "TemplateKey", "MaintenanceReminder" } },
-                    TemplateModel = templateModel
-                };
+                var templateModel = message.ToEmailModel(singleTitle, singleMessageContent, items);
+                var deliveryContext = EmailDeliveryContextMappings.ToDeliveryContext(
+                    singleNotification.Id, message.TargetValue, singleTitle, singleMessageContent,
+                    singleNotification.NotificationType, templateModel, NotificationConstants.TemplateKeys.MaintenanceReminder);
                 try
                 {
                     var channelService = _channelFactory.GetChannel(EmailChannel);
@@ -404,38 +297,5 @@ namespace Verendar.Notification.Infrastructure.Services
             return (singleEmailSent, [singleNotification.Id]);
         }
 
-        /// <summary>Title và nội dung cho 1 phụ tùng khẩn cấp: "Khẩn cấp: cần thay {PartCategoryName}".</summary>
-        private static (string Title, string Message) BuildSingleItemCriticalContent(MaintenanceReminderItemDto item)
-        {
-            var title = $"Khẩn cấp: cần thay {item.PartCategoryName}";
-            var body = "Xe của bạn có linh kiện đã đến mức khẩn cấp cần thay thế. "
-                + "Bạn sẽ nhận được email nhắc nhở hằng ngày cho đến khi bạn cập nhật đã thay linh kiện (về mức bình thường).\n\n"
-                + $"• {item.PartCategoryName} (số km hiện tại: {item.CurrentOdometer:N0}, cần thay trước: {item.TargetOdometer:N0})"
-                + "\n\nVui lòng vào app cập nhật sau khi thay linh kiện để dừng nhắc nhở.";
-            return (title, body);
-        }
-
-        private static (string Title, string Message) BuildMaintenanceReminderContent(MaintenanceReminderEvent message)
-        {
-            const int CriticalLevel = 4;
-            var items = message.Items ?? [];
-            var partList = items.Count > 0
-                ? string.Join("\n", items.Select(i => $"• {i.PartCategoryName} (số km hiện tại: {i.CurrentOdometer:N0}, cần thay trước: {i.TargetOdometer:N0})"))
-                : "Các linh kiện cần bảo dưỡng/thay thế.";
-
-            if (message.Level >= CriticalLevel)
-            {
-                var title = "Khẩn cấp: Cần thay linh kiện";
-                var body = "Xe của bạn có linh kiện đã đến mức khẩn cấp cần thay thế. "
-                    + "Bạn sẽ nhận được email nhắc nhở hằng ngày cho đến khi bạn cập nhật đã thay linh kiện (về mức bình thường).\n\n"
-                    + "Các linh kiện cần chú ý:\n" + partList
-                    + "\n\nVui lòng vào app cập nhật sau khi thay linh kiện để dừng nhắc nhở.";
-                return (title, body);
-            }
-
-            var normalTitle = $"Nhắc nhở bảo dưỡng ({message.LevelName})";
-            var normalBody = "Xe của bạn có linh kiện cần chú ý bảo dưỡng/thay thế:\n\n" + partList;
-            return (normalTitle, normalBody);
-        }
     }
 }

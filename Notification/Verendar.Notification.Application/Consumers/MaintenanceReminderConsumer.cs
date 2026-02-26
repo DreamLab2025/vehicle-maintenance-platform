@@ -80,7 +80,7 @@ namespace Verendar.Notification.Application.Consumers
                 d.NotificationId == notificationId && d.Channel == NotificationChannel.InApp);
             if (delivery != null)
             {
-                delivery.Status = Domain.Enums.NotificationStatus.Sent;
+                delivery.Status = NotificationStatus.Sent;
                 delivery.SentAt = DateTime.UtcNow;
                 delivery.DeliveredAt = DateTime.UtcNow;
                 await _unitOfWork.NotificationDeliveries.UpdateAsync(delivery.Id, delivery);

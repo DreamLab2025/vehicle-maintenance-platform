@@ -3,6 +3,8 @@ using Verendar.Notification.Domain.Entities;
 using Verendar.Notification.Domain.Enums;
 using Verender.Identity.Contracts.Events;
 using Verendar.Vehicle.Contracts.Events;
+using Verendar.Notification.Application.Dtos.Notifications;
+
 
 namespace Verendar.Notification.Application.Mapping
 {
@@ -12,7 +14,7 @@ namespace Verendar.Notification.Application.Mapping
                 this OtpRequestedEvent message,
                 string title,
                 string content,
-                Domain.Enums.NotificationType type,
+                NotificationType type,
                 bool isFallback = false)
         {
             return new Domain.Entities.Notification
@@ -37,7 +39,7 @@ namespace Verendar.Notification.Application.Mapping
             this UserRegisteredEvent message,
             string title,
             string content,
-            Domain.Enums.NotificationType type,
+            NotificationType type,
             bool isFallback = false)
         {
             return new Domain.Entities.Notification
@@ -84,7 +86,6 @@ namespace Verendar.Notification.Application.Mapping
         {
             var firstItem = message.Items?.FirstOrDefault();
 
-            // Map reminder level (1-4) to notification priority
             var priority = message.Level switch
             {
                 1 => NotificationPriority.Low,
@@ -111,7 +112,6 @@ namespace Verendar.Notification.Application.Mapping
                     Items = message.Items
                 }),
                 EntityType = "MaintenanceReminder",
-                // Use UserVehicleId as EntityId since one notification can contain multiple reminders
                 EntityId = firstItem?.UserVehicleId
             };
         }
@@ -129,6 +129,45 @@ namespace Verendar.Notification.Application.Mapping
                 Status = NotificationStatus.Pending,
                 CreatedAt = DateTime.UtcNow,
                 MaxRetries = 3
+            };
+        }
+
+        public static NotificationListItemDto ToListItemDto(this Domain.Entities.Notification n)
+        {
+            return new NotificationListItemDto
+            {
+                Id = n.Id,
+                Title = n.Title,
+                Message = n.Message,
+                NotificationType = n.NotificationType,
+                Priority = n.Priority,
+                Status = n.Status,
+                EntityType = n.EntityType,
+                EntityId = n.EntityId,
+                ActionUrl = n.ActionUrl,
+                IsRead = n.IsRead,
+                ReadAt = n.ReadAt,
+                CreatedAt = n.CreatedAt
+            };
+        }
+
+        public static NotificationDetailDto ToDetailDto(this Domain.Entities.Notification n)
+        {
+            return new NotificationDetailDto
+            {
+                Id = n.Id,
+                Title = n.Title,
+                Message = n.Message,
+                NotificationType = n.NotificationType,
+                Priority = n.Priority,
+                Status = n.Status,
+                EntityType = n.EntityType,
+                EntityId = n.EntityId,
+                ActionUrl = n.ActionUrl,
+                IsRead = n.IsRead,
+                ReadAt = n.ReadAt,
+                CreatedAt = n.CreatedAt,
+                Metadata = string.IsNullOrEmpty(n.MetadataJson) ? null : JsonSerializer.Deserialize<JsonElement>(n.MetadataJson)
             };
         }
     }

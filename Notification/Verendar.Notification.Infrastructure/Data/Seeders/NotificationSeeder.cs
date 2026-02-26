@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Verendar.Notification.Application.Constants;
 using Verendar.Notification.Domain.Entities;
 using Verendar.Notification.Domain.Enums;
 using Verendar.Notification.Infrastructure.Data;
@@ -25,69 +26,32 @@ public static class NotificationSeeder
     };
     private const string VehicleDisplayName = "59-TEST-01";
 
-    private static readonly NotificationSeedItem[] NotificationItems =
+    // Align with Vehicle.MaintenanceReminderTestDataSeeder: single CurrentOdometer = 15000
+    private const int SeedCurrentOdometer = 15000;
+    private const int StaleOdometerDays = 5;
+
+    // Match MaintenanceReminderMappings / InAppNotificationMappings
+    private const string CriticalIntro = "Xe của bạn có linh kiện đã đến mức khẩn cấp cần thay thế. "
+        + "Bạn sẽ nhận được email nhắc nhở hằng ngày cho đến khi bạn cập nhật đã thay linh kiện (về mức bình thường).";
+    private const string CtaUpdateApp = "\n\nVui lòng vào app cập nhật sau khi thay linh kiện để dừng nhắc nhở.";
+    private const string NormalIntro = "Xe của bạn có linh kiện cần chú ý bảo dưỡng/thay thế:";
+    private const string PartLineFormat = "• {0} (số km hiện tại: {1:N0}, cần thay trước: {2:N0})";
+    private const string OdometerMessageFormat = "Bạn đã không cập nhật số km (odo) trong {0} ngày qua. "
+        + "Vui lòng cập nhật số km của xe để Verendar có thể theo dõi bảo dưỡng chính xác hơn.";
+
+    // Critical = 2 notifications (one per part), like EmailNotificationService.SendMaintenanceReminderAsync
+    private static readonly (string Name, string Description, int CurrentOdo, int TargetOdo, decimal Pct)[] CriticalParts =
     {
-        // Critical notification with multiple parts
-        new NotificationSeedItem(
-            Title: "Khẩn cấp: Cần thay linh kiện",
-            Message: "Xe của bạn có linh kiện đã đến mức khẩn cấp cần thay thế. Bạn sẽ nhận được email nhắc nhở hằng ngày cho đến khi bạn cập nhật đã thay linh kiện.\n\n" +
-                     "Các linh kiện cần chú ý:\n" +
-                     "• Dầu nhớt động cơ (số km hiện tại: 5,000, cần thay trước: 6,000)\n" +
-                     "• Lọc dầu (số km hiện tại: 5,000, cần thay trước: 6,000)",
-            Type: NotificationType.User,
-            Priority: NotificationPriority.Critical,
-            EntityType: "MaintenanceReminder",
-            Level: 4,
-            LevelName: "Critical",
-            Parts: new[]
-            {
-                ("Dầu nhớt động cơ", "Dầu bôi trơn giúp làm mát và bảo vệ động cơ", 5000, 6000, 5m),
-                ("Lọc dầu", "Loại bỏ tạp chất trong dầu động cơ", 5000, 6000, 5m)
-            }),
-
-        // High notification
-        new NotificationSeedItem(
-            Title: "Nhắc nhở bảo dưỡng (High)",
-            Message: "Xe của bạn có linh kiện cần chú ý bảo dưỡng/thay thế:\n\n• Lốp xe (số km hiện tại: 15,000, cần thay trước: 20,000)",
-            Type: NotificationType.User,
-            Priority: NotificationPriority.High,
-            EntityType: "MaintenanceReminder",
-            Level: 3,
-            LevelName: "High",
-            Parts: new[] { ("Lốp xe", "Đảm bảo độ bám đường và an toàn khi di chuyển", 15000, 20000, 25m) }),
-
-        // Medium notification
-        new NotificationSeedItem(
-            Title: "Nhắc nhở bảo dưỡng (Medium)",
-            Message: "Xe của bạn có linh kiện cần chú ý bảo dưỡng/thay thế:\n\n• Má phanh (số km hiện tại: 7,000, cần thay trước: 10,000)",
-            Type: NotificationType.User,
-            Priority: NotificationPriority.Medium,
-            EntityType: "MaintenanceReminder",
-            Level: 2,
-            LevelName: "Medium",
-            Parts: new[] { ("Má phanh", "Đảm bảo khả năng phanh an toàn", 7000, 10000, 30m) }),
-
-        // Odometer reminder
-        new NotificationSeedItem(
-            Title: "Nhắc nhở cập nhật số km",
-            Message: "Bạn đã không cập nhật số km (odo) trong 5 ngày qua. Vui lòng cập nhật số km của xe để Verendar có thể theo dõi bảo dưỡng chính xác hơn.",
-            Type: NotificationType.User,
-            Priority: NotificationPriority.Medium,
-            EntityType: "OdometerReminder",
-            Level: null,
-            LevelName: null,
-            Parts: Array.Empty<(string, string, int, int, decimal)>())
+        ("Dầu nhớt động cơ", "Dầu bôi trơn giúp làm mát và bảo vệ động cơ", SeedCurrentOdometer, 15250, 5m),
+        ("Lọc dầu", "Loại bỏ tạp chất trong dầu động cơ", SeedCurrentOdometer, 15250, 5m)
     };
 
-    private record NotificationSeedItem(
-        string Title,
-        string Message,
-        NotificationType Type,
-        NotificationPriority Priority,
-        string EntityType,
-        int? Level,
-        string? LevelName,
-        (string Name, string Description, int CurrentOdo, int TargetOdo, decimal PctRemaining)[] Parts);
+    // High / Medium: one notification each, like BuildContent (NormalIntro + partList)
+    private static readonly (string Title, string PartName, string Description, int CurrentOdo, int TargetOdo, decimal Pct, int Level, string LevelName)[] NormalReminders =
+    {
+        ("Nhắc nhở bảo dưỡng (High)", "Lốp xe", "Đảm bảo độ bám đường và an toàn khi di chuyển", SeedCurrentOdometer, 20000, 25m, 3, "High"),
+        ("Nhắc nhở bảo dưỡng (Medium)", "Má phanh", "Đảm bảo khả năng phanh an toàn", SeedCurrentOdometer, 18000, 30m, 2, "Medium")
+    };
 
     public static async Task SeedAsync(NotificationDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
     {
@@ -136,117 +100,169 @@ public static class NotificationSeeder
         }
 
         var reminderIdIndex = 0;
-        for (var i = 0; i < NotificationItems.Length; i++)
+        var totalSeeded = 0;
+
+        // Critical: 1 notification per part (same as EmailNotificationService + ToInAppPayloadForItem)
+        foreach (var (name, description, currentOdo, targetOdo, pct) in CriticalParts)
         {
-            var item = NotificationItems[i];
-            string metadataJson;
-            Guid? entityId;
+            var reminderId = SeedReminderIds[reminderIdIndex++];
+            var title = $"{NotificationConstants.Titles.MaintenanceCriticalPart} {name}";
+            var partLine = string.Format(PartLineFormat, name, currentOdo, targetOdo);
+            var message = CriticalIntro + "\n\n" + partLine + CtaUpdateApp;
 
-            if (item.EntityType == "MaintenanceReminder" && item.Level.HasValue && item.LevelName != null)
+            var itemData = new
             {
-                var items = item.Parts.Select(part =>
-                {
-                    var reminderId = SeedReminderIds[reminderIdIndex++];
-                    return new
-                    {
-                        partCategoryName = part.Name,
-                        description = part.Description,
-                        userVehicleId = SeedUserVehicleId,
-                        reminderId,
-                        currentOdometer = part.CurrentOdo,
-                        targetOdometer = part.TargetOdo,
-                        initialOdometer = part.CurrentOdo - 3000,
-                        percentageRemaining = part.PctRemaining,
-                        vehicleDisplayName = VehicleDisplayName,
-                        estimatedNextReplacementDate = DateTime.UtcNow.AddDays(30).ToString("yyyy-MM-ddTHH:mm:ssZ")
-                    };
-                }).ToArray();
-
-                metadataJson = JsonSerializer.Serialize(new
-                {
-                    type = "MaintenanceReminder",
-                    entityType = "MaintenanceReminder",
-                    entityId = SeedUserVehicleId,
-                    level = item.Level,
-                    levelName = item.LevelName,
-                    items
-                }, JsonOptions);
-                // Use UserVehicleId as EntityId for MaintenanceReminder (one notification can have multiple reminders)
-                entityId = SeedUserVehicleId;
-            }
-            else
-            {
-                var vehicles = new[]
-                {
-                    new
-                    {
-                        userVehicleId = SeedUserVehicleId,
-                        vehicleDisplayName = VehicleDisplayName,
-                        licensePlate = VehicleDisplayName,
-                        currentOdometer = 5000,
-                        lastOdometerUpdateFormatted = DateTime.UtcNow.AddDays(-5).ToString("dd/MM/yyyy"),
-                        daysSinceUpdate = 5
-                    }
-                };
-                metadataJson = JsonSerializer.Serialize(new
-                {
-                    type = "OdometerReminder",
-                    entityType = "OdometerReminder",
-                    entityId = SeedUserVehicleId,
-                    staleOdometerDays = 5,
-                    vehicles
-                }, JsonOptions);
-                entityId = SeedUserVehicleId;
-            }
-
-            var notification = new NotificationEntity
-            {
-                Id = Guid.CreateVersion7(),
-                UserId = TestUserId,
-                Title = item.Title,
-                Message = item.Message,
-                NotificationType = item.Type,
-                Priority = item.Priority,
-                Status = NotificationStatus.Sent,
-                EntityType = item.EntityType,
-                EntityId = entityId,
-                MetadataJson = metadataJson,
-                IsRead = false,
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = SystemUserId
+                partCategoryName = name,
+                description,
+                userVehicleId = SeedUserVehicleId,
+                reminderId,
+                currentOdometer = currentOdo,
+                targetOdometer = targetOdo,
+                initialOdometer = currentOdo - 3000,
+                percentageRemaining = pct,
+                vehicleDisplayName = VehicleDisplayName,
+                estimatedNextReplacementDate = DateTime.UtcNow.AddDays(30).ToString("yyyy-MM-ddTHH:mm:ssZ")
             };
-            db.Notifications.Add(notification);
-
-            var inAppDelivery = new NotificationDelivery
+            var metadataJson = JsonSerializer.Serialize(new
             {
-                Id = Guid.CreateVersion7(),
-                NotificationId = notification.Id,
-                Channel = NotificationChannel.InApp,
-                RecipientAddress = TestUserId.ToString(),
-                Status = NotificationStatus.Sent,
-                SentAt = DateTime.UtcNow,
-                DeliveredAt = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = SystemUserId
-            };
-            db.NotificationDeliveries.Add(inAppDelivery);
+                type = "MaintenanceReminder",
+                entityType = "MaintenanceReminder",
+                entityId = reminderId,
+                level = 4,
+                levelName = "Critical",
+                items = new[] { itemData }
+            }, JsonOptions);
 
-            var emailDelivery = new NotificationDelivery
-            {
-                Id = Guid.CreateVersion7(),
-                NotificationId = notification.Id,
-                Channel = NotificationChannel.EMAIL,
-                RecipientAddress = TestUserEmail,
-                Status = NotificationStatus.Sent,
-                SentAt = DateTime.UtcNow,
-                DeliveredAt = DateTime.UtcNow,
-                CreatedAt = DateTime.UtcNow,
-                CreatedBy = SystemUserId
-            };
-            db.NotificationDeliveries.Add(emailDelivery);
+            await AddNotificationWithDeliveriesAsync(db, TestUserId, title, message, NotificationPriority.Critical,
+                "MaintenanceReminder", SeedUserVehicleId, metadataJson, cancellationToken);
+            totalSeeded++;
         }
 
+        // High / Medium: 1 notification each (BuildContent + ToInAppPayload)
+        foreach (var (title, partName, description, currentOdo, targetOdo, pct, level, levelName) in NormalReminders)
+        {
+            var reminderId = SeedReminderIds[reminderIdIndex++];
+            var partLine = string.Format(PartLineFormat, partName, currentOdo, targetOdo);
+            var message = NormalIntro + "\n\n" + partLine;
+
+            var itemData = new
+            {
+                partCategoryName = partName,
+                description,
+                userVehicleId = SeedUserVehicleId,
+                reminderId,
+                currentOdometer = currentOdo,
+                targetOdometer = targetOdo,
+                initialOdometer = currentOdo - 3000,
+                percentageRemaining = pct,
+                vehicleDisplayName = VehicleDisplayName,
+                estimatedNextReplacementDate = DateTime.UtcNow.AddDays(30).ToString("yyyy-MM-ddTHH:mm:ssZ")
+            };
+            var metadataJson = JsonSerializer.Serialize(new
+            {
+                type = "MaintenanceReminder",
+                entityType = "MaintenanceReminder",
+                entityId = reminderId,
+                level,
+                levelName,
+                items = new[] { itemData }
+            }, JsonOptions);
+
+            var priority = level == 3 ? NotificationPriority.High : NotificationPriority.Medium;
+            await AddNotificationWithDeliveriesAsync(db, TestUserId, title, message, priority,
+                "MaintenanceReminder", SeedUserVehicleId, metadataJson, cancellationToken);
+            totalSeeded++;
+        }
+
+        // Odometer reminder (ToInAppPayload)
+        var odometerTitle = NotificationConstants.Titles.OdometerReminder;
+        var odometerMessage = string.Format(OdometerMessageFormat, StaleOdometerDays);
+        var lastUpdate = DateTime.UtcNow.AddDays(-StaleOdometerDays);
+        var vehiclesData = new[]
+        {
+            new
+            {
+                userVehicleId = SeedUserVehicleId,
+                vehicleDisplayName = VehicleDisplayName,
+                licensePlate = VehicleDisplayName,
+                currentOdometer = SeedCurrentOdometer,
+                lastOdometerUpdateFormatted = lastUpdate.ToString(NotificationConstants.DateFormats.DateOnly),
+                daysSinceUpdate = StaleOdometerDays
+            }
+        };
+        var odometerMetadataJson = JsonSerializer.Serialize(new
+        {
+            type = "OdometerReminder",
+            entityType = "OdometerReminder",
+            entityId = SeedUserVehicleId,
+            staleOdometerDays = StaleOdometerDays,
+            vehicles = vehiclesData
+        }, JsonOptions);
+
+        await AddNotificationWithDeliveriesAsync(db, TestUserId, odometerTitle, odometerMessage, NotificationPriority.Medium,
+            "OdometerReminder", SeedUserVehicleId, odometerMetadataJson, cancellationToken);
+        totalSeeded++;
+
         await db.SaveChangesAsync(cancellationToken);
-        logger?.LogInformation("Seeded {Count} notifications for test user (UserId: {UserId}) corresponding to user vehicle", NotificationItems.Length, TestUserId);
+        logger?.LogInformation("Seeded {Count} notifications for test user (UserId: {UserId}) corresponding to user vehicle", totalSeeded, TestUserId);
+    }
+
+    private static async Task AddNotificationWithDeliveriesAsync(
+        NotificationDbContext db,
+        Guid userId,
+        string title,
+        string message,
+        NotificationPriority priority,
+        string entityType,
+        Guid entityId,
+        string metadataJson,
+        CancellationToken cancellationToken)
+    {
+        var notification = new NotificationEntity
+        {
+            Id = Guid.CreateVersion7(),
+            UserId = userId,
+            Title = title,
+            Message = message,
+            NotificationType = NotificationType.User,
+            Priority = priority,
+            Status = NotificationStatus.Sent,
+            EntityType = entityType,
+            EntityId = entityId,
+            MetadataJson = metadataJson,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = SystemUserId
+        };
+        db.Notifications.Add(notification);
+
+        var inAppDelivery = new NotificationDelivery
+        {
+            Id = Guid.CreateVersion7(),
+            NotificationId = notification.Id,
+            Channel = NotificationChannel.InApp,
+            RecipientAddress = userId.ToString(),
+            Status = NotificationStatus.Sent,
+            SentAt = DateTime.UtcNow,
+            DeliveredAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = SystemUserId
+        };
+        db.NotificationDeliveries.Add(inAppDelivery);
+
+        var emailDelivery = new NotificationDelivery
+        {
+            Id = Guid.CreateVersion7(),
+            NotificationId = notification.Id,
+            Channel = NotificationChannel.EMAIL,
+            RecipientAddress = TestUserEmail,
+            Status = NotificationStatus.Sent,
+            SentAt = DateTime.UtcNow,
+            DeliveredAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = SystemUserId
+        };
+        db.NotificationDeliveries.Add(emailDelivery);
+        await Task.CompletedTask;
     }
 }
