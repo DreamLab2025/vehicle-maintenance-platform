@@ -65,8 +65,8 @@ services:
     environment:
       DASHBOARD__OTLP__AUTHMODE: ApiKey
       DASHBOARD__OTLP__PRIMARYAPIKEY: ${ASPIRE_DASHBOARD_OTLP_API_KEY}
-      DASHBOARD__OTLP__ENDPOINT: http://+:18889
-      ASPNETCORE_URLS: http://+:18888
+      DASHBOARD__OTLP__ENDPOINT: http://0.0.0.0:18889
+      ASPNETCORE_URLS: http://0.0.0.0:18888
       DASHBOARD__UNSECUREDALLOWEDANONYMOUSACCESS: true
     ports:
       - "${ASPIRE_DASHBOARD_UI_PORT:-18888}:18888"
@@ -97,6 +97,20 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
+  pgweb:
+    image: sosedoff/pgweb:latest
+    container_name: verendar-pgweb
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-verendar}?sslmode=disable
+    ports:
+      - "${PGWEB_PORT:-5050}:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - verendar-network
     restart: unless-stopped
