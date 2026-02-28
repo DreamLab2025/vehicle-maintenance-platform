@@ -1,0 +1,119 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    env_file: .env.prod
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init-multiple-dbs.sql:/docker-entrypoint-initdb.d/init-multiple-dbs.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    env_file: .env.prod
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+    # Prod: chỉ mở UI trên localhost (tuỳ bạn)
+    ports:
+      - "5672:5672"
+      - "127.0.0.1:15672:15672"
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  verendar.identity:
+    build: { context: ., dockerfile: Identity/Verendar.Identity/Dockerfile }
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "7001:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  verendar.vehicle:
+    build: { context: ., dockerfile: Vehicle/Verendar.Vehicle/Dockerfile }
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "7002:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  verendar.media:
+    build: { context: ., dockerfile: Media/Verendar.Media/Dockerfile }
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "7003:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  verendar.notification:
+    build: { context: ., dockerfile: Notification/Verendar.Notification/Dockerfile }
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "7004:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  verendar.ai:
+    build: { context: ., dockerfile: Ai/Verendar.Ai/Dockerfile }
+    restart: unless-stopped
+    env_file: .env.prod
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "7005:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  rabbitdata:
+  redisdata:
