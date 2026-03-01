@@ -31,9 +31,9 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization()
                 .Produces<ApiResponse<PartCategoryResponse>>(StatusCodes.Status200OK);
 
-            group.MapGet("/categories/vehicle/{vehicleId:guid}", GetCategoriesByVehicleTrackedParts)
-                .WithName("GetPartCategoriesByVehicleTrackedParts")
-                .WithOpenApi(op => { op.Summary = "Get part categories of tracked parts for a user vehicle"; return op; })
+            group.MapGet("/categories/user-vehicle/{vehicleId:guid}", GetCategoriesByVehicleDeclaredParts)
+                .WithName("GetPartCategoriesByUserVehicleDeclaredParts")
+                .WithOpenApi(op => { op.Summary = "Lấy danh mục phụ tùng đã khai báo theo xe của user"; return op; })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<PartCategoryResponse>>>(StatusCodes.Status200OK);
 
@@ -112,9 +112,9 @@ namespace Verendar.Vehicle.Apis
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 
-        private static async Task<IResult> GetCategoriesByVehicleTrackedParts(Guid vehicleId, IPartCategoryService service)
+        private static async Task<IResult> GetCategoriesByVehicleDeclaredParts(Guid vehicleId, IPartCategoryService service)
         {
-            var result = await service.GetCategoriesByVehicleTrackedPartsAsync(vehicleId);
+            var result = await service.GetCategoriesByVehicleDeclaredPartsAsync(vehicleId);
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 

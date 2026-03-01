@@ -151,11 +151,11 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<PartCategoryResponse>>> GetCategoriesByVehicleTrackedPartsAsync(Guid userVehicleId)
+        public async Task<ApiResponse<List<PartCategoryResponse>>> GetCategoriesByVehicleDeclaredPartsAsync(Guid userVehicleId)
         {
             try
             {
-                var trackings = await _unitOfWork.VehiclePartTrackings.GetByUserVehicleIdAsync(userVehicleId);
+                var trackings = await _unitOfWork.VehiclePartTrackings.GetDeclaredByUserVehicleIdAsync(userVehicleId);
                 var categories = trackings
                     .Where(t => t.PartCategory != null && t.PartCategory.DeletedAt == null)
                     .Select(t => t.PartCategory!)
@@ -168,12 +168,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 return ApiResponse<List<PartCategoryResponse>>.SuccessResponse(
                     categories,
-                    "Lấy danh mục phụ tùng đang theo dõi thành công");
+                    "Lấy danh mục phụ tùng đã khai báo thành công");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting part categories by vehicle tracked parts for UserVehicleId: {UserVehicleId}", userVehicleId);
-                return ApiResponse<List<PartCategoryResponse>>.FailureResponse("Lỗi khi lấy danh mục phụ tùng theo xe");
+                _logger.LogError(ex, "Error getting part categories by vehicle declared parts for UserVehicleId: {UserVehicleId}", userVehicleId);
+                return ApiResponse<List<PartCategoryResponse>>.FailureResponse("Lỗi khi lấy danh mục phụ tùng đã khai báo theo xe");
             }
         }
     }
