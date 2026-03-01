@@ -1,4 +1,6 @@
 # Verendar - Docker Compose Production (thư mục Docker/)
+# Workflow: build local -> push Docker Hub -> trên server: pull và chạy (không build).
+# Cần set DOCKER_IMAGE_PREFIX (vd: dockerhub-username hoặc username/repo) và tùy chọn IMAGE_TAG trong .env.prod
 # Chạy từ repo root: docker-compose -f Docker/docker-compose.prod.yml --env-file Docker/.env.prod up -d
 # Hoặc từ Docker/:   docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
@@ -133,9 +135,7 @@ services:
         condition: service_started
 
   identity-service:
-    build:
-      context: ..
-      dockerfile: Identity/Verendar.Identity/Dockerfile
+    image: ${DOCKER_IMAGE_PREFIX}/verendar-identity-service:${IMAGE_TAG:-latest}
     container_name: verendar-identity-service
     expose:
       - "8080"
@@ -155,9 +155,7 @@ services:
     restart: unless-stopped
 
   vehicle-service:
-    build:
-      context: ..
-      dockerfile: Vehicle/Verendar.Vehicle/Dockerfile
+    image: ${DOCKER_IMAGE_PREFIX}/verendar-vehicle-service:${IMAGE_TAG:-latest}
     container_name: verendar-vehicle-service
     expose:
       - "8080"
@@ -177,9 +175,7 @@ services:
     restart: unless-stopped
 
   media-service:
-    build:
-      context: ..
-      dockerfile: Media/Verendar.Media/Dockerfile
+    image: ${DOCKER_IMAGE_PREFIX}/verendar-media-service:${IMAGE_TAG:-latest}
     container_name: verendar-media-service
     expose:
       - "8080"
@@ -199,9 +195,7 @@ services:
     restart: unless-stopped
 
   notification-service:
-    build:
-      context: ..
-      dockerfile: Notification/Verendar.Notification/Dockerfile
+    image: ${DOCKER_IMAGE_PREFIX}/verendar-notification-service:${IMAGE_TAG:-latest}
     container_name: verendar-notification-service
     expose:
       - "8080"
@@ -221,9 +215,7 @@ services:
     restart: unless-stopped
 
   ai-service:
-    build:
-      context: ..
-      dockerfile: Ai/Verendar.Ai/Dockerfile
+    image: ${DOCKER_IMAGE_PREFIX}/verendar-ai-service:${IMAGE_TAG:-latest}
     container_name: verendar-ai-service
     expose:
       - "8080"
