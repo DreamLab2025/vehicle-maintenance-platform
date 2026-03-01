@@ -11,35 +11,27 @@
    ↓
 [System] → Tạo UserVehicle với NeedsOnboarding = true
    ↓
-[System] → Tạo default VehiclePartTracking cho tất cả linh kiện
+[System] → KHÔNG tạo tracking - đợi user chọn part
    ↓
-[Frontend] → Hiển thị danh sách linh kiện cần onboarding
+[Frontend] → Hiển thị danh sách parts có thể track
    ↓
-[User] → Chọn linh kiện để phân tích (hoặc skip)
-   │
-   ├─ Option 1: Chọn phân tích cho linh kiện (e.g., engine_oil)
-   │   ↓
-   │  [System] → Lấy DefaultSchedule cho linh kiện đó
-   │   ↓
-   │  [Frontend] → Hiển thị câu hỏi cụ thể cho linh kiện
-   │   ↓
-   │  [User] → Trả lời câu hỏi
-   │   ↓
-   │  [AI] → Phân tích và đề xuất (1 linh kiện/request)
-   │   ↓
-   │  [User] → Review và xác nhận
-   │   ↓
-   │  [System] → Update VehiclePartTracking cho linh kiện đó
-   │   ↓
-   │  [User] → Tiếp tục với linh kiện khác hoặc skip
-   │
-   └─ Option 2: Skip phân tích
-       ↓
-      [System] → Giữ default tracking (không có LastReplacement)
+[User] → Chọn part để phân tích (e.g., engine_oil)
    ↓
-[User] → Hoàn tất onboarding (có thể đã phân tích 0, 1, hoặc nhiều linh kiện)
+[System] → Lấy DefaultSchedule cho part đó
    ↓
-[System] → Set NeedsOnboarding = false (optional)
+[Frontend] → Hiển thị câu hỏi cụ thể cho part
+   ↓
+[User] → Trả lời câu hỏi
+   ↓
+[AI] → Phân tích và đề xuất (1 part/request)
+   ↓
+[User] → Review và xác nhận
+   ↓
+[System] → TẠO MỚI VehiclePartTracking cho part đó (nếu chưa có)
+   ↓
+[User] → Có thể quay lại chọn part khác để track sau
+   ↓
+[System] → Set NeedsOnboarding = false khi user hoàn tất (optional)
 ```
 
 ### Bước 1: Tạo UserVehicle Với Default Tracking
@@ -64,6 +56,7 @@ Response:
     "vinNumber": "MLHJF1234567890",
     "purchaseDate": "2024-01-15T00:00:00Z",
     "currentOdometer": 8500,
+    "needsOnboarding": true,
     "userVehicleVariant": {
       "variantName": "Đỏ",
       "modelName": "Honda Wave Alpha",
@@ -75,11 +68,7 @@ Response:
 
 // System tự động tạo:
 // 1. OdometerHistory: initial 8500km
-// 2. VehiclePartTracking cho tất cả parts với default intervals:
-//    - engine_oil: CustomKmInterval=2000, CustomMonthsInterval=6, LastReplacement=null
-//    - oil_filter: CustomKmInterval=4000, CustomMonthsInterval=6, LastReplacement=null
-//    - air_filter: CustomKmInterval=6000, CustomMonthsInterval=12, LastReplacement=null
-//    - brake_pad: CustomKmInterval=10000, CustomMonthsInterval=12, LastReplacement=null
+// 2. KHÔNG tạo VehiclePartTracking - sẽ tạo khi user chọn phân tích part
 ```
 
 ### Bước 2: Frontend Lấy Default Schedule Cho Linh Kiện
@@ -113,6 +102,7 @@ Response:
 ### Bước 3: User Trả Lời Câu Hỏi Cho Linh Kiện
 
 **Frontend hiển thị form cho engine_oil:**
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │ 🛢️ Dầu động cơ (engine_oil)                             │
@@ -177,12 +167,14 @@ POST /api/v1/ai/vehicle-questionnaire/analyze
 ```
 
 **Validation:**
+
 - Chỉ chấp nhận 1 linh kiện trong `defaultSchedules`
 - Nếu >1: "Chỉ hỗ trợ phân tích 1 linh kiện trong mỗi request"
 
 ### Bước 5: AI Phân Tích (Backend - Gemini 2.0-flash)
 
 **Prompt gửi cho Gemini (tiếng Việt để tiết kiệm token):**
+
 ```
 Hôm nay: 2025-01-25
 
@@ -222,6 +214,7 @@ Trả về JSON:
 ```
 
 **AI Response (Gemini):**
+
 ```json
 {
   "isSuccess": true,
@@ -252,6 +245,7 @@ Trả về JSON:
 ```
 
 **Validation:**
+
 - AI phải trả về đúng 1 recommendation
 - Nếu AI trả về nhiều hơn: "AI trả về 2 khuyến nghị thay vì 1. Vui lòng thử lại."
 
@@ -318,35 +312,77 @@ Response:
 ```
 
 **System update:**
-```
-VehiclePartTracking (engine_oil):
-├─ LastReplacementOdometer: null → 7200
-├─ LastReplacementDate: null → 2024-12-25
-├─ PredictedNextOdometer: null → 9200
-├─ PredictedNextDate: null → 2025-06-25
-└─ AiAnalysisResult: null → JSON với reasoning và confidence
-```
-
-### Bước 8: Lặp Lại Cho Linh Kiện Khác (Optional)
 
 ```
-[User] → Chọn linh kiện tiếp theo (e.g., brake_pad)
+CREATED NEW VehiclePartTracking (engine_oil):
+├─ CustomKmInterval: 2000 (từ default schedule)
+├─ CustomMonthsInterval: 6 (từ default schedule)
+├─ LastReplacementOdometer: 7200 (từ AI)
+├─ LastReplacementDate: 2024-12-25 (từ AI)
+├─ PredictedNextOdometer: 9200 (từ AI)
+├─ PredictedNextDate: 2025-06-25 (từ AI)
+└─ AiAnalysisResult: JSON với reasoning và confidence
+```
+
+### Bước 8: Lặp Lại Cho Part Khác (Optional)
+
+```
+[User] → Chọn part tiếp theo (e.g., brake_pad)
    ↓
 Lặp lại Bước 2-7 cho brake_pad
    ↓
-[User] → Skip các linh kiện còn lại
+[User] → Không chọn part nào khác
    ↓
-[System] → Các linh kiện skip giữ default (LastReplacement = null)
+[System] → Chỉ có parts đã chọn mới có tracking
 ```
 
 **Kết quả cuối:**
+
 ```
 VehiclePartTracking:
-├─ engine_oil: ✅ Analyzed by AI (có LastReplacement từ AI)
-├─ brake_pad: ✅ Analyzed by AI (có LastReplacement từ AI)
-├─ oil_filter: ❌ Skipped (LastReplacement = null, dùng default)
-└─ air_filter: ❌ Skipped (LastReplacement = null, dùng default)
+├─ engine_oil: ✅ Tracked (có LastReplacement từ AI)
+├─ brake_pad: ✅ Tracked (có LastReplacement từ AI)
+├─ oil_filter: ❌ KHÔNG CÓ TRACKING (user chưa chọn)
+└─ air_filter: ❌ KHÔNG CÓ TRACKING (user chưa chọn)
 ```
+
+**Lưu ý quan trọng:**
+
+- Tracking chỉ được tạo khi user chọn phân tích part
+- User có thể quay lại sau để thêm tracking cho part khác
+- Không có tracking = không có reminder cho part đó
+
+### Bước 9: Hoàn Thành Onboarding (Optional)
+
+**Khi user hoàn thành hoặc muốn skip onboarding:**
+
+```json
+PATCH /api/v1/user-vehicles/{userVehicleId}/complete-onboarding
+
+Response:
+{
+  "isSuccess": true,
+  "data": {
+    "id": "user-vehicle-guid",
+    "userId": "user-guid",
+    "licensePlate": "59H1-12345",
+    "currentOdometer": 8500,
+    "needsOnboarding": false,  // Changed to false
+    "userVehicleVariant": {
+      "variantName": "Đỏ",
+      "modelName": "Honda Wave Alpha",
+      "brandName": "Honda"
+    }
+  },
+  "message": "Hoàn thành onboarding thành công"
+}
+```
+
+**Note:**
+
+- Endpoint này đặt `NeedsOnboarding = false`
+- Frontend có thể dùng để ẩn onboarding wizard sau khi user hoàn thành
+- User có thể hoàn thành onboarding dù đã phân tích 0, 1 hoặc nhiều linh kiện
 
 ---
 
@@ -369,6 +405,7 @@ All parts: LastReplacement = 0 / PurchaseDate
 ## 3. User Cập Nhật Odometer Sau Đó
 
 **30 ngày sau, user update:**
+
 ```json
 PUT /api/user-vehicles/{id}/odometer
 {
@@ -377,6 +414,7 @@ PUT /api/user-vehicles/{id}/odometer
 ```
 
 **System tự động:**
+
 ```
 1. Update UserVehicle.CurrentOdometer = 9000
 2. Tạo OdometerHistory mới
@@ -400,6 +438,7 @@ PUT /api/user-vehicles/{id}/odometer
 ## 4. User Đi Bảo Dưỡng
 
 **Flow bảo dưỡng:**
+
 ```
 [User] → Click reminder "Má phanh cần thay"
    ↓
@@ -420,6 +459,7 @@ PUT /api/user-vehicles/{id}/odometer
 ```
 
 **Form bảo dưỡng:**
+
 ```json
 POST /api/maintenance-records
 {
@@ -441,6 +481,7 @@ POST /api/maintenance-records
 ```
 
 **System update tracking:**
+
 ```
 VehiclePartTracking (Má phanh):
 ├─ LastReplacementOdometer: 0 → 9100
@@ -473,6 +514,7 @@ MaintenanceReminder (Má phanh):
 ```
 
 **Ví dụ user paste hóa đơn:**
+
 ```
 "HÓA ĐƠN BẢO DƯỠNG
 Đại lý Honda Hà Nội
@@ -488,6 +530,7 @@ Tổng: 170,000đ"
 ```
 
 **AI phân tích:**
+
 ```json
 {
   "serviceDate": "2025-01-25",
@@ -513,6 +556,7 @@ Tổng: 170,000đ"
 ## 6. Notification Flow
 
 **Background Service chạy hàng ngày:**
+
 ```
 Mỗi ngày 08:00 AM:
    ↓
@@ -524,17 +568,18 @@ For each reminder with level >= HIGH và chưa notify:
    └─ Send via Notification Service
       ├─ Push notification
       ├─ In-app notification
-      └─ Email (nếu urgent)
+      └─ Email (nếu Critical)
 ```
 
 **Notification messages:**
+
 ```
 Level HIGH (10-25% remaining):
 "🟡 Honda Wave Alpha (59H1-12345)
 Dầu máy còn 200km nữa cần thay.
 Dự kiến: ~7 ngày nữa"
 
-Level URGENT (<10% remaining):
+Level Critical (<10% remaining):
 "🔴 KHẨN CẤP!
 Honda Wave Alpha (59H1-12345)
 Dầu máy đã vượt 100km so với khuyến nghị!
@@ -594,26 +639,31 @@ Response:
 ## Tóm Tắt Key Flows
 
 ### 1️⃣ Đăng ký xe với AI
+
 ```
 Input text → AI analyze → Confirm → Create with accurate tracking
 ```
 
 ### 2️⃣ Cập nhật km
+
 ```
 Manual input → Auto calculate reminders → Send notifications
 ```
 
 ### 3️⃣ Bảo dưỡng với AI
+
 ```
 Paste hóa đơn → AI parse → Pre-fill form → Confirm → Update tracking
 ```
 
 ### 4️⃣ Nhắc nhở tự động
+
 ```
 Background job → Calculate urgency → Send notifications → Track dismissed
 ```
 
 ### 5️⃣ Dashboard
+
 ```
 Query → Aggregate data → Calculate health score → Show recommendations
 ```

@@ -4,22 +4,22 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>426e5858-8bcd-45ce-a4dd-b6a7e447c60f</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+    <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.11">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Verendar.Common\Verendar.Common.csproj" />
-    <ProjectReference Include="..\..\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\Verender.Identity.Contracts\Verender.Identity.Contracts.csproj" />
-
+    <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
+    <ProjectReference Include="..\..\App\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Verendar.Identity.Application\Verendar.Identity.Application.csproj" />
+    <ProjectReference Include="..\Verendar.Identity.Infrastructure\Verendar.Identity.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

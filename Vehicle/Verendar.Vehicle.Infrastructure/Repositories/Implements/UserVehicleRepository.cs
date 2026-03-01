@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Verendar.Common.Databases.Base;
 using Verendar.Common.Databases.Implements;
 using Verendar.Vehicle.Domain.Entities;
@@ -7,13 +7,9 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class UserVehicleRepository : PostgresRepository<UserVehicle>, IUserVehicleRepository
+    public class UserVehicleRepository(VehicleDbContext context) : PostgresRepository<UserVehicle>(context), IUserVehicleRepository
     {
-        private readonly VehicleDbContext _context;
-        public UserVehicleRepository(VehicleDbContext context) : base(context)
-        {
-            _context = context;
-        }
+        private new readonly VehicleDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
         public IQueryable<UserVehicle> GetQueryWithFullDetails()
         {
@@ -31,6 +27,16 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .Where(v => v.DeletedAt == null);
         }
 
+        public IQueryable<UserVehicle> GetQueryWithoutPartTrackings()
+        {
+            return _dbSet
+                .Include(v => v.Variant)
+                    .ThenInclude(vv => vv.VehicleModel)
+                        .ThenInclude(vm => vm.Brand)
+                            .ThenInclude(b => b.VehicleType)
+                .Where(v => v.DeletedAt == null);
+        }
+
         public async Task<UserVehicle?> GetByIdWithFullDetailsAsync(Guid id)
         {
             return await GetQueryWithFullDetails()
@@ -40,6 +46,12 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         public async Task<UserVehicle?> GetByIdAndUserIdWithFullDetailsAsync(Guid id, Guid userId)
         {
             return await GetQueryWithFullDetails()
+                .FirstOrDefaultAsync(v => v.Id == id && v.UserId == userId);
+        }
+
+        public async Task<UserVehicle?> GetByIdAndUserIdWithoutPartTrackingsAsync(Guid id, Guid userId)
+        {
+            return await GetQueryWithoutPartTrackings()
                 .FirstOrDefaultAsync(v => v.Id == id && v.UserId == userId);
         }
 
@@ -93,6 +105,35 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .ToListAsync();
 
             return logDates.Count >= daysRequired;
+        }
+
+        public async Task<IReadOnlyList<Guid>> GetDistinctUserIdsWithStaleOdometerAsync(int olderThanDays, CancellationToken cancellationToken = default)
+        {
+            var cutoffDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-olderThanDays);
+
+            var userIds = await _dbSet
+                .Where(v => v.DeletedAt == null
+                            && v.Status == EntityStatus.Active
+                            && (v.LastOdometerUpdate == null || v.LastOdometerUpdate < cutoffDate))
+                .Select(v => v.UserId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            return userIds;
+        }
+
+        public async Task<IReadOnlyList<UserVehicle>> GetStaleOdometerVehiclesByUserAsync(Guid userId, int olderThanDays, CancellationToken cancellationToken = default)
+        {
+            var cutoffDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-olderThanDays);
+
+            return await _dbSet
+                .Include(v => v.Variant)
+                    .ThenInclude(vv => vv.VehicleModel)
+                .Where(v => v.DeletedAt == null
+                            && v.Status == EntityStatus.Active
+                            && v.UserId == userId
+                            && (v.LastOdometerUpdate == null || v.LastOdometerUpdate < cutoffDate))
+                .ToListAsync(cancellationToken);
         }
     }
 }

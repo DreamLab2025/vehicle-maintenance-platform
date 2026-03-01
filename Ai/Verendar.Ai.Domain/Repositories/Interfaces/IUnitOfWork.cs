@@ -1,8 +1,9 @@
 using Verendar.Common.Databases.UnitOfWork;
 
-namespace Verendar.Ai.Domain.Repositories.Interfaces;
-
-public interface IUnitOfWork : IBaseUnitOfWork
+namespace Verendar.Ai.Domain.Repositories.Interfaces
 {
-    IAiUsageRepository AiUsages { get; }
+    public interface IUnitOfWork : IBaseUnitOfWork
+    {
+        IAiUsageRepository AiUsages { get; }
+    }
 }

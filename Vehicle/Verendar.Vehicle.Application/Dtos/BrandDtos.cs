@@ -1,13 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
-
 namespace Verendar.Vehicle.Application.Dtos
 {
     public class BrandRequest
     {
-        [Required(ErrorMessage = "Vui lòng chọn loại xe")]
         public Guid VehicleTypeId { get; set; }
 
-        [Required(ErrorMessage = "Tên thương hiệu không được để trống")]
         public string Name { get; set; } = null!;
 
         public string? LogoUrl { get; set; }

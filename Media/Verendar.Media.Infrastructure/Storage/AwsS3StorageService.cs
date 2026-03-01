@@ -1,4 +1,4 @@
-﻿using Amazon.S3;
+using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
 using System.Net;
@@ -7,16 +7,10 @@ using Verendar.Media.Infrastructure.Configuration;
 
 namespace Verendar.Media.Infrastructure.Storage
 {
-    public class AwsS3StorageService : IStorageService
+    public class AwsS3StorageService(IAmazonS3 s3Client, IOptions<S3Settings> s3Settings) : IStorageService
     {
-        private readonly IAmazonS3 _s3Client;
-        private readonly S3Settings _s3settings;
-
-        public AwsS3StorageService(IAmazonS3 s3Client, IOptions<S3Settings> s3Settings)
-        {
-            _s3Client = s3Client;
-            _s3settings = s3Settings.Value;
-        }
+        private readonly IAmazonS3 _s3Client = s3Client;
+        private readonly S3Settings _s3settings = s3Settings.Value;
 
         public async Task DeleteFileAsync(string fileKey)
         {
@@ -32,6 +26,29 @@ namespace Verendar.Media.Infrastructure.Storage
             catch (AmazonS3Exception ex)
             {
                 throw;
+            }
+        }
+
+        public async Task<bool> ExistsAsync(string fileKey)
+        {
+            if (string.IsNullOrWhiteSpace(fileKey))
+            {
+                return false;
+            }
+
+            try
+            {
+                var request = new GetObjectMetadataRequest
+                {
+                    BucketName = _s3settings.BucketName,
+                    Key = fileKey
+                };
+                await _s3Client.GetObjectMetadataAsync(request);
+                return true;
+            }
+            catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return false;
             }
         }
 
@@ -59,31 +76,7 @@ namespace Verendar.Media.Infrastructure.Storage
             }
         }
 
-        //public static string? ExtractFirebasePath(string fullUrl)
-        //{
-        //    if (string.IsNullOrWhiteSpace(fullUrl)) return null;
 
-        //    try
-        //    {
-        //        var parts = fullUrl.Split(new[] { "/o/" }, StringSplitOptions.None);
-
-        //        if (parts.Length < 2) return null;
-
-        //        var segment = parts[1];
-
-        //        var queryIndex = segment.IndexOf('?');
-        //        if (queryIndex != -1)
-        //        {
-        //            segment = segment.Substring(0, queryIndex);
-        //        }
-
-        //        return WebUtility.UrlDecode(segment);
-        //    }
-        //    catch
-        //    {
-        //        return null;
-        //    }
-        //}
 
         public async Task<string> GeneratePresignedUrlAsync(string fileKey, string contentType)
         {
@@ -104,7 +97,6 @@ namespace Verendar.Media.Infrastructure.Storage
 
         public string GetFilePath(string fileKey)
         {
-            // Use CloudFront URL if configured, otherwise use S3 URL
             if (!string.IsNullOrWhiteSpace(_s3settings.CloudFrontUrl))
             {
                 return $"{_s3settings.CloudFrontUrl.TrimEnd('/')}/{fileKey}";

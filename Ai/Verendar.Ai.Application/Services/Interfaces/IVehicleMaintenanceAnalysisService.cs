@@ -1,11 +1,13 @@
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 using Verendar.Common.Shared;
 
-namespace Verendar.Ai.Application.Services.Interfaces;
-
-public interface IVehicleMaintenanceAnalysisService
+namespace Verendar.Ai.Application.Services.Interfaces
 {
-    Task<ApiResponse<VehicleQuestionnaireResponse>> AnalyzeQuestionnaireAsync(
-        VehicleQuestionnaireRequest request,
-        CancellationToken cancellationToken = default);
+    public interface IVehicleMaintenanceAnalysisService
+    {
+        Task<ApiResponse<VehicleQuestionnaireResponse>> AnalyzeQuestionnaireAsync(
+            Guid userId,
+            VehicleQuestionnaireRequest request,
+            CancellationToken cancellationToken = default);
+    }
 }

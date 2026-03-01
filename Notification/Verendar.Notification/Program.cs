@@ -1,6 +1,7 @@
 using Verendar.DatabaseMigrationHelpers;
 using Verendar.Notification.Bootstrapping;
 using Verendar.Notification.Infrastructure.Data;
+using Verendar.Notification.Infrastructure.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,15 @@ builder.AddApplicationServices();
 var app = builder.Build();
 
 await app.MigrateDbContextAsync<NotificationDbContext>();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await SystemNotificationTemplateSeeder.SeedAsync(db, logger);
+    await EmailTemplateSeeder.SeedAsync(db, logger);
+    await NotificationSeeder.SeedAsync(db, logger);
+}
 
 app.UseApplicationServices();
 

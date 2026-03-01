@@ -16,6 +16,9 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(500)]
         public string? Description { get; set; }
 
+        [MaxLength(500)]
+        public string? ImageUrl { get; set; }
+
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
         public List<VehicleBrand> Brands { get; set; } = [];

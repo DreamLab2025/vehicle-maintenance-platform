@@ -5,13 +5,13 @@ namespace Verendar.Media.Application.Mappings
 {
     public static class MediaFileMappings
     {
-        public static MediaFile ToEntity(this InitUploadRequest request, Guid userId, string fileKey)
+        public static MediaFile ToEntity(this InitUploadRequest request, Guid userId, string fileKey, FileType fileType)
         {
             return new MediaFile
             {
                 UserId = userId,
                 Provider = request.Provider,
-                FileType = request.FileType,
+                FileType = fileType,
                 FilePath = fileKey,
                 OriginalFileName = request.FileName,
                 ContentType = request.ContentType,

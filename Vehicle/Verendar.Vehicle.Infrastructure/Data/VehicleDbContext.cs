@@ -4,11 +4,8 @@ using Verendar.Vehicle.Domain.Entities;
 
 namespace Verendar.Vehicle.Infrastructure.Data
 {
-    public class VehicleDbContext : BaseDbContext
+    public class VehicleDbContext(DbContextOptions<VehicleDbContext> options) : BaseDbContext(options)
     {
-        public VehicleDbContext(DbContextOptions<VehicleDbContext> options) : base(options)
-        {
-        }
 
         // Vehicle Catalog
         public DbSet<VehicleType> VehicleTypes { get; set; } = null!;
@@ -69,19 +66,6 @@ namespace Verendar.Vehicle.Infrastructure.Data
             modelBuilder.Entity<MaintenanceReminder>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<MaintenanceRecord>().HasQueryFilter(e => e.DeletedAt == null);
             modelBuilder.Entity<MaintenanceRecordItem>().HasQueryFilter(e => e.DeletedAt == null);
-
-            // Seed data
-            SeedData(modelBuilder);
-        }
-
-        private void SeedData(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<VehicleType>().HasData(VehicleDataSeeder.GetVehicleTypes());
-            modelBuilder.Entity<VehicleBrand>().HasData(VehicleDataSeeder.GetVehicleBrands());
-            modelBuilder.Entity<VehicleModel>().HasData(VehicleDataSeeder.GetVehicleModels());
-            modelBuilder.Entity<VehicleVariant>().HasData(VehicleDataSeeder.GetVehicleVariants());
-            modelBuilder.Entity<PartCategory>().HasData(VehicleDataSeeder.GetPartCategories());
-            modelBuilder.Entity<DefaultMaintenanceSchedule>().HasData(VehicleDataSeeder.GetDefaultMaintenanceSchedules());
         }
     }
 }

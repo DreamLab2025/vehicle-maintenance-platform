@@ -9,16 +9,10 @@ using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
-    public class VehicleModelService : IVehicleModelService
+    public class VehicleModelService(ILogger<VehicleModelService> logger, IUnitOfWork unitOfWork) : IVehicleModelService
     {
-        private readonly ILogger<VehicleModelService> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public VehicleModelService(ILogger<VehicleModelService> logger, IUnitOfWork unitOfWork)
-        {
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-        }
+        private readonly ILogger<VehicleModelService> _logger = logger;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         public async Task<ApiResponse<ModelResponseWithVariants>> CreateModelAsync(ModelRequest request)
         {

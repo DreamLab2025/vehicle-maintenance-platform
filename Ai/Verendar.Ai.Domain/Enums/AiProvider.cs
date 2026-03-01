@@ -1,6 +1,7 @@
-namespace Verendar.Ai.Domain.Enums;
-
-public enum AiProvider
+namespace Verendar.Ai.Domain.Enums
 {
-    Gemini = 1,
+    public enum AiProvider
+    {
+        Gemini = 1,
+    }
 }

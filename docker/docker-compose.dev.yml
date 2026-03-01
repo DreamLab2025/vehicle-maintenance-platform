@@ -1,0 +1,321 @@
+# Verendar - Docker Compose Development
+# Chạy từ repo root: docker-compose -f Docker/docker-compose.dev.yml --env-file Docker/.env.dev up -d
+# Hoặc từ Docker/:   docker-compose -f docker-compose.dev.yml --env-file .env.dev up -d
+
+x-common-environment: &common-environment
+  ASPNETCORE_ENVIRONMENT: Development
+  ASPNETCORE_URLS: http://+:8080
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://aspire-dashboard:18889
+  OTEL_EXPORTER_OTLP_HEADERS: x-otlp-api-key=${ASPIRE_DASHBOARD_OTLP_API_KEY}
+  JwtBearer__SecretKey: ${JWT_BEARER_SECRET_KEY}
+  JwtBearer__Issuer: ${JWT_BEARER_ISSUER:-https://localhost}
+  JwtBearer__Audience: ${JWT_BEARER_AUDIENCE:-https://localhost}
+  JwtBearer__ExpirationMinutes: 60
+  JwtBearer__RefreshTokenExpirationDays: 7
+  JwtBearer__ValidateIssuer: true
+  JwtBearer__ValidateAudience: true
+  JwtBearer__ValidateLifetime: true
+  JwtBearer__ValidateIssuerSigningKey: true
+  JwtBearer__ClockSkewSeconds: 0
+  FrontendUrl: ${FRONTEND_URL:-https://localhost}
+
+x-identity-service-environment: &identity-service-environment
+  ConnectionStrings__identity-db: Host=postgres;Port=5432;Database=${IDENTITY_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+
+x-vehicle-service-environment: &vehicle-service-environment
+  ConnectionStrings__vehicle-db: Host=postgres;Port=5432;Database=${VEHICLE_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+
+x-media-service-environment: &media-service-environment
+  ConnectionStrings__media-db: Host=postgres;Port=5432;Database=${MEDIA_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  S3Settings__BucketName: ${MEDIA_S3_BUCKET_NAME}
+  S3Settings__Region: ${MEDIA_S3_REGION:-ap-southeast-1}
+  S3Settings__AccessKey: ${MEDIA_S3_ACCESS_KEY}
+  S3Settings__SecretKey: ${MEDIA_S3_SECRET_KEY}
+  S3Settings__CloudFrontUrl: ${MEDIA_S3_CLOUDFRONT_URL:-}
+
+x-notification-service-environment: &notification-service-environment
+  ConnectionStrings__notification-db: Host=postgres;Port=5432;Database=${NOTIFICATION_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+
+x-ai-service-environment: &ai-service-environment
+  ConnectionStrings__ai-db: Host=postgres;Port=5432;Database=${AI_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  AiProvider: ${AI_PROVIDER:-Gemini}
+  Gemini__ApiKey: ${GEMINI_API_KEY}
+  Gemini__ApiEndpoint: ${GEMINI_API_ENDPOINT:-https://generativelanguage.googleapis.com/v1beta}
+  Gemini__DefaultModel: ${GEMINI_DEFAULT_MODEL:-gemini-2.5-flash-lite}
+  Gemini__MaxRetries: ${GEMINI_MAX_RETRIES:-3}
+  Gemini__TimeoutSeconds: ${GEMINI_TIMEOUT_SECONDS:-180}
+  Gemini__RequestsPerMinute: ${GEMINI_REQUESTS_PER_MINUTE:-60}
+  Gemini__RequestsPerDay: ${GEMINI_REQUESTS_PER_DAY:-1500}
+  Gemini__MaxConcurrentRequests: ${GEMINI_MAX_CONCURRENT_REQUESTS:-5}
+  Gemini__DefaultParameters__MaxTokens: ${GEMINI_DEFAULT_PARAMETERS_MAX_TOKENS:-8192}
+  Gemini__DefaultParameters__Temperature: ${GEMINI_DEFAULT_PARAMETERS_TEMPERATURE:-0.7}
+  Gemini__DefaultParameters__TopP: ${GEMINI_DEFAULT_PARAMETERS_TOP_P:-0.95}
+  Gemini__DefaultParameters__TopK: ${GEMINI_DEFAULT_PARAMETERS_TOP_K:-40}
+  VehicleService__BaseUrl: ${VEHICLE_SERVICE_BASE_URL:-http://vehicle-service:8080}
+
+services:
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:8
+    container_name: verendar-aspire-dashboard
+    environment:
+      DASHBOARD__OTLP__AUTHMODE: ApiKey
+      DASHBOARD__OTLP__PRIMARYAPIKEY: ${ASPIRE_DASHBOARD_OTLP_API_KEY}
+      DASHBOARD__OTLP__ENDPOINT: http://0.0.0.0:18889
+      ASPNETCORE_URLS: http://0.0.0.0:18888
+      DASHBOARD__UNSECUREDALLOWEDANONYMOUSACCESS: true
+    ports:
+      - "${ASPIRE_DASHBOARD_UI_PORT:-18888}:18888"
+      - "${ASPIRE_DASHBOARD_OTLP_PORT:-18889}:18889"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:18888 || exit 1" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: verendar-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-verendar}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init-multiple-dbs.sql:/docker-entrypoint-initdb.d/init-multiple-dbs.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-verendar}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
+  pgweb:
+    image: sosedoff/pgweb:latest
+    container_name: verendar-pgweb
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-verendar}?sslmode=disable
+    ports:
+      - "${PGWEB_PORT:-5050}:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4.0-alpine
+    container_name: verendar-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:4.0.2-management-alpine
+    container_name: verendar-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_NODENAME: rabbit@rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD-SHELL", "rabbitmq-diagnostics -q ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
+  gateway:
+    image: nginx:latest
+    container_name: verendar-gateway
+    ports:
+      - "${GATEWAY_PORT:-8080}:80"
+    volumes:
+      - ./data/gateway/etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - verendar-network
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      identity-service:
+        condition: service_started
+      vehicle-service:
+        condition: service_started
+      media-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      ai-service:
+        condition: service_started
+
+  identity-service:
+    build:
+      context: ..
+      dockerfile: Identity/Verendar.Identity/Dockerfile
+    container_name: verendar-identity-service
+    ports:
+      - "${IDENTITY_SERVICE_PORT:-7001}:8080"
+    environment:
+      <<: [ *common-environment, *identity-service-environment ]
+    depends_on:
+      aspire-dashboard:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - verendar-network
+    restart: unless-stopped
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  vehicle-service:
+    build:
+      context: ..
+      dockerfile: Vehicle/Verendar.Vehicle/Dockerfile
+    container_name: verendar-vehicle-service
+    ports:
+      - "${VEHICLE_SERVICE_PORT:-7002}:8080"
+    environment:
+      <<: [ *common-environment, *vehicle-service-environment ]
+    depends_on:
+      aspire-dashboard:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - verendar-network
+    restart: unless-stopped
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  media-service:
+    build:
+      context: ..
+      dockerfile: Media/Verendar.Media/Dockerfile
+    container_name: verendar-media-service
+    ports:
+      - "${MEDIA_SERVICE_PORT:-7003}:8080"
+    environment:
+      <<: [ *common-environment, *media-service-environment ]
+    depends_on:
+      aspire-dashboard:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - verendar-network
+    restart: unless-stopped
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  notification-service:
+    build:
+      context: ..
+      dockerfile: Notification/Verendar.Notification/Dockerfile
+    container_name: verendar-notification-service
+    ports:
+      - "${NOTIFICATION_SERVICE_PORT:-7004}:8080"
+    environment:
+      <<: [ *common-environment, *notification-service-environment ]
+    depends_on:
+      aspire-dashboard:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - verendar-network
+    restart: unless-stopped
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  ai-service:
+    build:
+      context: ..
+      dockerfile: Ai/Verendar.Ai/Dockerfile
+    container_name: verendar-ai-service
+    ports:
+      - "${AI_SERVICE_PORT:-7005}:8080"
+    environment:
+      <<: [ *common-environment, *ai-service-environment ]
+    depends_on:
+      aspire-dashboard:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - verendar-network
+    restart: unless-stopped
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  verendar-network:
+    driver: bridge

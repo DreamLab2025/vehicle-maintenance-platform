@@ -5,10 +5,7 @@ using Verendar.Media.Infrastructure.Data;
 
 namespace Verendar.Media.Infrastructure.Repositories.Implements
 {
-    public class MediaFileRepository : PostgresRepository<MediaFile>, IMediaFileRepository
+    public class MediaFileRepository(MediaDbContext context) : PostgresRepository<MediaFile>(context), IMediaFileRepository
     {
-        public MediaFileRepository(MediaDbContext context) : base(context)
-        {
-        }
     }
 }

@@ -6,12 +6,8 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class VehicleBrandRepository : PostgresRepository<VehicleBrand>, IVehicleBrandRepository
+    public class VehicleBrandRepository(VehicleDbContext context) : PostgresRepository<VehicleBrand>(context), IVehicleBrandRepository
     {
-        public VehicleBrandRepository(VehicleDbContext context) : base(context)
-        {
-        }
-
         public async Task<VehicleBrand?> GetByIdWithTypesAsync(Guid id)
         {
             return await _context.Set<VehicleBrand>()

@@ -1,5 +1,7 @@
+using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Domain.Entities;
+using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Application.Mappings
 {
@@ -33,6 +35,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 CurrentOdometer = entity.CurrentOdometer,
                 LastOdometerUpdateAt = entity.LastOdometerUpdate?.ToDateTime(TimeOnly.MinValue),
                 AverageKmPerDay = entity.AverageKmPerDay,
+                NeedsOnboarding = entity.NeedsOnboarding,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -55,17 +58,31 @@ namespace Verendar.Vehicle.Application.Mappings
                 CurrentOdometer = entity.CurrentOdometer,
                 LastOdometerUpdateAt = entity.LastOdometerUpdate?.ToDateTime(TimeOnly.MinValue),
                 AverageKmPerDay = entity.AverageKmPerDay,
+                NeedsOnboarding = entity.NeedsOnboarding,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt,
                 TotalMaintenanceActivities = totalMaintenanceActivities,
                 LastMaintenanceDate = lastMaintenanceDate,
                 DaysSincePurchase = daysSincePurchase,
-                TotalKmDriven = entity.CurrentOdometer,
-                PartTrackings = entity.PartTrackings?.Select(pt => pt.ToSummary()).ToList() ?? new()
+                TotalKmDriven = entity.CurrentOdometer
             };
         }
 
-        public static VehiclePartTrackingSummary ToSummary(this VehiclePartTracking entity)
+        public static UserVehiclePartSummary ToUserVehiclePartSummary(this VehiclePartTracking entity)
+        {
+            return new UserVehiclePartSummary
+            {
+                Id = entity.Id,
+                PartCategoryId = entity.PartCategoryId,
+                PartCategoryName = entity.PartCategory?.Name ?? string.Empty,
+                PartCategoryCode = entity.PartCategory?.Code ?? string.Empty,
+                IconUrl = entity.PartCategory?.IconUrl,
+                IsDeclared = entity.IsDeclared,
+                Description = entity.PartCategory?.Description
+            };
+        }
+
+        public static VehiclePartTrackingSummary ToSummary(this VehiclePartTracking entity, int? vehicleCurrentOdometer = null)
         {
             return new VehiclePartTrackingSummary
             {
@@ -82,27 +99,28 @@ namespace Verendar.Vehicle.Application.Mappings
                 CustomMonthsInterval = entity.CustomMonthsInterval,
                 PredictedNextOdometer = entity.PredictedNextOdometer,
                 PredictedNextDate = entity.PredictedNextDate,
-                IsIgnored = entity.IsIgnored,
-                UserConditionDescription = entity.UserConditionDescription,
-                AiAnalysisResult = entity.AiAnalysisResult,
-                Reminders = entity.Reminders?.Select(r => r.ToSummary()).ToList() ?? new()
+                IsDeclared = entity.IsDeclared,
+                Reminders = entity.Reminders?.Where(r => r.IsCurrent).Select(r => r.ToSummary(vehicleCurrentOdometer)).ToList() ?? new()
             };
         }
 
-        public static MaintenanceReminderSummary ToSummary(this MaintenanceReminder entity)
+        public static MaintenanceReminderSummary ToSummary(this MaintenanceReminder entity, int? vehicleCurrentOdometer = null)
         {
+            var currentOdo = vehicleCurrentOdometer ?? entity.CurrentOdometer;
             return new MaintenanceReminderSummary
             {
                 Id = entity.Id,
                 Level = entity.Level.ToString(),
-                CurrentOdometer = entity.CurrentOdometer,
+                CurrentOdometer = currentOdo,
                 TargetOdometer = entity.TargetOdometer,
+                RemainingKm = entity.TargetOdometer - currentOdo,
                 TargetDate = entity.TargetDate,
                 PercentageRemaining = entity.PercentageRemaining,
                 IsNotified = entity.IsNotified,
                 NotifiedDate = entity.NotifiedDate,
                 IsDismissed = entity.IsDismissed,
-                DismissedDate = entity.DismissedDate
+                DismissedDate = entity.DismissedDate,
+                IsCurrent = entity.IsCurrent
             };
         }
 
@@ -139,6 +157,123 @@ namespace Verendar.Vehicle.Application.Mappings
                 CurrentStreak = streak,
                 IsStreakActive = streak > 0,
                 DaysToNextUnlock = streak > 0 ? 7 - (streak % 7) : 7
+            };
+        }
+
+        public static IsAllowedToCreateVehicleResponse ToIsAllowedToCreateVehicleResponse(this bool isAllowed, string message)
+        {
+            return new IsAllowedToCreateVehicleResponse
+            {
+                IsAllowed = isAllowed,
+                Message = message
+            };
+        }
+
+        public static VehiclePartTracking ToInitializePartTracking(this Guid userVehicleId, Guid partCategoryId)
+        {
+            return new VehiclePartTracking
+            {
+                UserVehicleId = userVehicleId,
+                PartCategoryId = partCategoryId,
+                Status = EntityStatus.Active,
+                IsDeclared = false,
+            };
+        }
+
+        public static VehiclePartTracking ToPartTracking(this Guid userVehicleId, Guid partCategoryId, ApplyTrackingConfigRequest request)
+        {
+            return new VehiclePartTracking
+            {
+                UserVehicleId = userVehicleId,
+                PartCategoryId = partCategoryId,
+                Status = EntityStatus.Active,
+                IsDeclared = true,
+                LastReplacementOdometer = request.LastReplacementOdometer,
+                LastReplacementDate = request.LastReplacementDate,
+                PredictedNextOdometer = request.PredictedNextOdometer,
+                PredictedNextDate = request.PredictedNextDate,
+            };
+        }
+
+
+        public static void ApplyTrackingConfig(this VehiclePartTracking entity, ApplyTrackingConfigRequest request)
+        {
+            entity.LastReplacementOdometer = request.LastReplacementOdometer;
+            entity.LastReplacementDate = request.LastReplacementDate;
+            entity.PredictedNextOdometer = request.PredictedNextOdometer;
+            entity.PredictedNextDate = request.PredictedNextDate;
+            entity.IsDeclared = true;
+        }
+
+        public static OdometerHistory ToOdometerHistory(this Guid userVehicleId, int odometerValue)
+        {
+            return new OdometerHistory
+            {
+                UserVehicleId = userVehicleId,
+                OdometerValue = odometerValue,
+                RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                Source = OdometerSource.ManualInput,
+                KmOnRecordedDate = null
+            };
+        }
+
+        public static OdometerHistory ToOdometerHistory(this Guid userVehicleId, int odometerValue, int previousOdometerValue)
+        {
+            return new OdometerHistory
+            {
+                UserVehicleId = userVehicleId,
+                OdometerValue = odometerValue,
+                RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                Source = OdometerSource.ManualInput,
+                KmOnRecordedDate = odometerValue - previousOdometerValue
+            };
+        }
+
+        public static ReminderWithPartCategoryDto ToReminderWithPartCategoryDto(this MaintenanceReminder entity, int? vehicleCurrentOdometer = null)
+        {
+            var currentOdo = vehicleCurrentOdometer ?? entity.CurrentOdometer;
+            return new ReminderWithPartCategoryDto
+            {
+                Id = entity.Id,
+                VehiclePartTrackingId = entity.VehiclePartTrackingId,
+                Level = entity.Level.ToString(),
+                CurrentOdometer = currentOdo,
+                TargetOdometer = entity.TargetOdometer,
+                RemainingKm = entity.TargetOdometer - currentOdo,
+                TargetDate = entity.TargetDate,
+                PercentageRemaining = entity.PercentageRemaining,
+                IsNotified = entity.IsNotified,
+                NotifiedDate = entity.NotifiedDate,
+                IsDismissed = entity.IsDismissed,
+                DismissedDate = entity.DismissedDate,
+                PartCategory = entity.PartTracking?.PartCategory?.ToPartCategoryInfoDto() ?? new PartCategoryInfoDto()
+            };
+        }
+
+        public static PartCategoryInfoDto ToPartCategoryInfoDto(this PartCategory entity)
+        {
+            return new PartCategoryInfoDto
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Code = entity.Code,
+                Description = entity.Description,
+                IconUrl = entity.IconUrl,
+                IdentificationSigns = entity.IdentificationSigns,
+                ConsequencesIfNotHandled = entity.ConsequencesIfNotHandled
+            };
+        }
+
+        public static OdometerHistoryItemDto ToOdometerHistoryItemDto(this OdometerHistory entity)
+        {
+            return new OdometerHistoryItemDto
+            {
+                Id = entity.Id,
+                UserVehicleId = entity.UserVehicleId,
+                OdometerValue = entity.OdometerValue,
+                RecordedDate = entity.RecordedDate,
+                KmOnRecordedDate = entity.KmOnRecordedDate,
+                Source = entity.Source.ToString()
             };
         }
     }

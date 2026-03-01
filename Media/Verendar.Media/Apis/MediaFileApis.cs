@@ -1,4 +1,4 @@
-﻿using Verendar.Common.Jwt;
+using Verendar.Common.Jwt;
 using Verendar.Common.Shared;
 using Verendar.Media.Application.Dtos;
 using Verendar.Media.Application.Services.Interfaces;
@@ -20,19 +20,14 @@ namespace Verendar.Media.Apis
 
         public static RouteGroupBuilder MapMediaFileRoutes(this RouteGroupBuilder group)
         {
-            group.MapPost("/init-upload", InitiateUpload)
-                .WithName("Initiate Upload")
-                .WithOpenApi(operation =>
-                {
-                    operation.Summary = "Lấy Presigned URL để upload file";
-                    return operation;
-                })
-                .RequireAuthorization()
-                .Produces<ApiResponse<InitUploadResponse>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<InitUploadResponse>>(StatusCodes.Status400BadRequest)
-                .Produces(StatusCodes.Status401Unauthorized);
+            MapInitUploadRoute(group, "/init-upload/avatar", "Avatar", "Lấy Presigned URL upload avatar", "avatar");
+            MapInitUploadRoute(group, "/init-upload/vehicle-types", "InitUploadVehicleTypes", "Lấy Presigned URL upload ảnh loại xe", "vehicle-types");
+            MapInitUploadRoute(group, "/init-upload/vehicle-brands", "InitUploadVehicleBrands", "Lấy Presigned URL upload ảnh hãng xe", "vehicle-brands");
+            MapInitUploadRoute(group, "/init-upload/vehicle-variants", "InitUploadVehicleVariants", "Lấy Presigned URL upload ảnh phiên bản xe (màu)", "vehicle-variants");
+            MapInitUploadRoute(group, "/init-upload/part-categories", "InitUploadPartCategories", "Lấy Presigned URL upload icon danh mục phụ tùng", "part-categories");
+            MapInitUploadRoute(group, "/init-upload/misc", "InitUploadMisc", "Lấy Presigned URL upload file khác", "misc");
 
-            group.MapPut("{id}/confirm", ConfirmUploadFile)
+            group.MapPut("{id:guid}/confirm", ConfirmUploadFile)
                 .WithName("Confirm Upload File")
                 .WithOpenApi(operation =>
                 {
@@ -58,12 +53,25 @@ namespace Verendar.Media.Apis
                 : Results.BadRequest(result);
         }
 
+        private static void MapInitUploadRoute(RouteGroupBuilder group, string pattern, string name, string summary, string folderKey)
+        {
+            group.MapPost(pattern, (InitUploadRequest request, IMediaUploadService service, ICurrentUserService currentUser)
+                => InitiateUpload(request, service, currentUser, folderKey))
+                .WithName(name)
+                .WithOpenApi(operation => { operation.Summary = summary; return operation; })
+                .RequireAuthorization()
+                .Produces<ApiResponse<InitUploadResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<InitUploadResponse>>(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized);
+        }
+
         private static async Task<IResult> InitiateUpload(
             InitUploadRequest request,
             IMediaUploadService mediaUploadService,
-            ICurrentUserService currentUser)
+            ICurrentUserService currentUser,
+            string folderKey)
         {
-            var result = await mediaUploadService.InitiateUploadAsync(request, currentUser.UserId);
+            var result = await mediaUploadService.InitiateUploadAsync(request, currentUser.UserId, folderKey);
 
             return result.IsSuccess
                 ? Results.Ok(result)

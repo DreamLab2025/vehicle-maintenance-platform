@@ -29,6 +29,11 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public bool AllowsMultipleInstances { get; set; } = false;
 
+        [MaxLength(1000)]
+        public string? IdentificationSigns { get; set; }
+
+        [MaxLength(1000)]
+        public string? ConsequencesIfNotHandled { get; set; }
 
         public List<PartProduct> Products { get; set; } = [];
         public List<DefaultMaintenanceSchedule> DefaultSchedules { get; set; } = [];

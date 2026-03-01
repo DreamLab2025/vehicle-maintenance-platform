@@ -1,0 +1,4 @@
+Id,VehicleTypeId,Name,Code,LogoUrl,Website,SupportPhone,Status
+b0000001-0000-0000-0000-000000000001,11111111-1111-1111-1111-111111111111,Honda,HONDA,https://d3iova6424vljy.cloudfront.net/master/brands/HONDA.png,https://www.honda.com.vn,18001076,1
+b0000002-0000-0000-0000-000000000002,11111111-1111-1111-1111-111111111111,Yamaha,YAMAHA,https://d3iova6424vljy.cloudfront.net/master/brands/YAMAHA.png,https://www.yamaha-motor.com.vn,18006019,1
+b0000003-0000-0000-0000-000000000003,11111111-1111-1111-1111-111111111111,Piaggio,PIAGGIO,https://d3iova6424vljy.cloudfront.net/master/brands/PIAGGIO.png,https://www.piaggio.com.vn,,1

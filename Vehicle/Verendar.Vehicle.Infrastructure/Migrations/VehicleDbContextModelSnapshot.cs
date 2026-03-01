@@ -73,92 +73,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("DefaultMaintenanceSchedules");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("d0000001-0000-0000-0000-000000000001"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            InitialKm = 1000,
-                            KmInterval = 3000,
-                            MonthsInterval = 4,
-                            PartCategoryId = new Guid("c0000001-0000-0000-0000-000000000001"),
-                            Status = 1,
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000002-0000-0000-0000-000000000002"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            InitialKm = 0,
-                            KmInterval = 20000,
-                            MonthsInterval = 36,
-                            PartCategoryId = new Guid("c0000002-0000-0000-0000-000000000002"),
-                            Status = 1,
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000003-0000-0000-0000-000000000003"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            InitialKm = 0,
-                            KmInterval = 0,
-                            MonthsInterval = 24,
-                            PartCategoryId = new Guid("c0000003-0000-0000-0000-000000000003"),
-                            Status = 1,
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000004-0000-0000-0000-000000000004"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            InitialKm = 0,
-                            KmInterval = 10000,
-                            MonthsInterval = 12,
-                            PartCategoryId = new Guid("c0000004-0000-0000-0000-000000000004"),
-                            Status = 1,
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000005-0000-0000-0000-000000000005"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            InitialKm = 0,
-                            KmInterval = 8000,
-                            MonthsInterval = 12,
-                            PartCategoryId = new Guid("c0000005-0000-0000-0000-000000000005"),
-                            Status = 1,
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000006-0000-0000-0000-000000000006"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            InitialKm = 0,
-                            KmInterval = 6000,
-                            MonthsInterval = 6,
-                            PartCategoryId = new Guid("c0000006-0000-0000-0000-000000000006"),
-                            Status = 1,
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("d0000007-0000-0000-0000-000000000007"),
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            InitialKm = 0,
-                            KmInterval = 15000,
-                            MonthsInterval = 0,
-                            PartCategoryId = new Guid("c0000007-0000-0000-0000-000000000007"),
-                            Status = 1,
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        });
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceRecord", b =>
@@ -302,6 +216,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<DateOnly?>("DismissedDate")
                         .HasColumnType("date");
 
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDismissed")
                         .HasColumnType("boolean");
 
@@ -358,6 +275,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("KmOnRecordedDate")
+                        .HasColumnType("integer");
+
                     b.Property<int>("OdometerValue")
                         .HasColumnType("integer");
 
@@ -398,6 +318,10 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("ConsequencesIfNotHandled")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -420,6 +344,10 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<string>("IconUrl")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<string>("IdentificationSigns")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -451,106 +379,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("PartCategories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("c0000001-0000-0000-0000-000000000001"),
-                            AllowsMultipleInstances = false,
-                            Code = "ENGINE-OIL",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Dầu bôi trơn động cơ, cần thay định kỳ theo km hoặc thời gian",
-                            DisplayOrder = 1,
-                            Name = "Dầu nhớt động cơ",
-                            RequiresOdometerTracking = true,
-                            RequiresTimeTracking = true,
-                            Status = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000002-0000-0000-0000-000000000002"),
-                            AllowsMultipleInstances = true,
-                            Code = "TIRE",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Lốp trước và lốp sau, thay khi mòn hoặc đạt tuổi thọ",
-                            DisplayOrder = 2,
-                            Name = "Lốp xe",
-                            RequiresOdometerTracking = true,
-                            RequiresTimeTracking = true,
-                            Status = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000003-0000-0000-0000-000000000003"),
-                            AllowsMultipleInstances = false,
-                            Code = "BATTERY",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Bình điện ắc quy, thay khi hết tuổi thọ hoặc không giữ điện",
-                            DisplayOrder = 3,
-                            Name = "Ắc quy",
-                            RequiresOdometerTracking = false,
-                            RequiresTimeTracking = true,
-                            Status = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000004-0000-0000-0000-000000000004"),
-                            AllowsMultipleInstances = true,
-                            Code = "BRAKE-PAD",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Má phanh trước và sau, thay khi mòn",
-                            DisplayOrder = 4,
-                            Name = "Má phanh",
-                            RequiresOdometerTracking = true,
-                            RequiresTimeTracking = true,
-                            Status = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000005-0000-0000-0000-000000000005"),
-                            AllowsMultipleInstances = false,
-                            Code = "SPARK-PLUG",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Bugi đánh lửa động cơ, thay định kỳ",
-                            DisplayOrder = 5,
-                            Name = "Bugi",
-                            RequiresOdometerTracking = true,
-                            RequiresTimeTracking = true,
-                            Status = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000006-0000-0000-0000-000000000006"),
-                            AllowsMultipleInstances = false,
-                            Code = "AIR-FILTER",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Lọc không khí động cơ, cần vệ sinh và thay định kỳ",
-                            DisplayOrder = 6,
-                            Name = "Lọc gió",
-                            RequiresOdometerTracking = true,
-                            RequiresTimeTracking = true,
-                            Status = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("c0000007-0000-0000-0000-000000000007"),
-                            AllowsMultipleInstances = false,
-                            Code = "CHAIN-SPROCKET",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Bộ truyền động xích và nhông, thay khi mòn",
-                            DisplayOrder = 7,
-                            Name = "Nhông sên dĩa",
-                            RequiresOdometerTracking = true,
-                            RequiresTimeTracking = false,
-                            Status = 1
-                        });
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.PartProduct", b =>
@@ -744,32 +572,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.HasIndex("VehicleTypeId");
 
                     b.ToTable("VehicleBrands");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("b0000001-0000-0000-0000-000000000001"),
-                            Code = "HONDA",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Name = "Honda",
-                            Status = 1,
-                            SupportPhone = "18001076",
-                            VehicleTypeId = new Guid("11111111-1111-1111-1111-111111111111"),
-                            Website = "https://www.honda.com.vn"
-                        },
-                        new
-                        {
-                            Id = new Guid("b0000002-0000-0000-0000-000000000002"),
-                            Code = "YAMAHA",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Name = "Yamaha",
-                            Status = 1,
-                            SupportPhone = "18006019",
-                            VehicleTypeId = new Guid("11111111-1111-1111-1111-111111111111"),
-                            Website = "https://www.yamaha-motor.com.vn"
-                        });
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.VehicleModel", b =>
@@ -841,68 +643,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("VehicleModels");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("a0000001-0000-0000-0000-000000000001"),
-                            Code = "WAVE-ALPHA",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            EngineCapacity = 1.10m,
-                            EngineDisplacement = 110,
-                            FuelType = 1,
-                            ManufactureYear = 2020,
-                            Name = "Wave Alpha",
-                            Status = 1,
-                            TransmissionType = 1,
-                            VehicleBrandId = new Guid("b0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000002-0000-0000-0000-000000000002"),
-                            Code = "AIR-BLADE",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            EngineCapacity = 1.25m,
-                            EngineDisplacement = 125,
-                            FuelType = 1,
-                            ManufactureYear = 2021,
-                            Name = "Air Blade",
-                            Status = 1,
-                            TransmissionType = 2,
-                            VehicleBrandId = new Guid("b0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000003-0000-0000-0000-000000000003"),
-                            Code = "EXCITER",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            EngineCapacity = 1.55m,
-                            EngineDisplacement = 155,
-                            FuelType = 1,
-                            ManufactureYear = 2021,
-                            Name = "Exciter",
-                            Status = 1,
-                            TransmissionType = 1,
-                            VehicleBrandId = new Guid("b0000002-0000-0000-0000-000000000002")
-                        },
-                        new
-                        {
-                            Id = new Guid("a0000004-0000-0000-0000-000000000004"),
-                            Code = "SIRIUS",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            EngineCapacity = 1.10m,
-                            EngineDisplacement = 110,
-                            FuelType = 1,
-                            ManufactureYear = 2020,
-                            Name = "Sirius",
-                            Status = 1,
-                            TransmissionType = 1,
-                            VehicleBrandId = new Guid("b0000002-0000-0000-0000-000000000002")
-                        });
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.VehiclePartTracking", b =>
@@ -910,10 +650,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("AiAnalysisResult")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -940,7 +676,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<bool>("IsIgnored")
+                    b.Property<bool>("IsDeclared")
                         .HasColumnType("boolean");
 
                     b.Property<DateOnly?>("LastReplacementDate")
@@ -966,10 +702,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("UserConditionDescription")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
 
                     b.Property<Guid>("UserVehicleId")
                         .HasColumnType("uuid");
@@ -1014,6 +746,10 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1035,18 +771,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("VehicleTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            Code = "MOTORCYCLE",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Description = "Xe máy hai bánh, bao gồm xe số, xe tay ga, xe côn tay",
-                            Name = "Xe máy",
-                            Status = 1
-                        });
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.VehicleVariant", b =>
@@ -1096,88 +820,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.HasIndex("VehicleModelId");
 
                     b.ToTable("VehicleVariants");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("e0000001-0000-0000-0000-000000000001"),
-                            Color = "Đỏ đen",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#DC143C",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000002-0000-0000-0000-000000000002"),
-                            Color = "Đen bạc",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#000000",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000001-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000003-0000-0000-0000-000000000003"),
-                            Color = "Trắng ngọc trai",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#FFFFFF",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000002-0000-0000-0000-000000000002")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000004-0000-0000-0000-000000000004"),
-                            Color = "Xanh dương",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#4169E1",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000002-0000-0000-0000-000000000002")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000005-0000-0000-0000-000000000005"),
-                            Color = "Đen nhám",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#1C1C1C",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000003-0000-0000-0000-000000000003")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000006-0000-0000-0000-000000000006"),
-                            Color = "Đỏ GP",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#FF0000",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000003-0000-0000-0000-000000000003")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000007-0000-0000-0000-000000000007"),
-                            Color = "Xanh đen",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#000080",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000004-0000-0000-0000-000000000004")
-                        },
-                        new
-                        {
-                            Id = new Guid("e0000008-0000-0000-0000-000000000008"),
-                            Color = "Đen nhám",
-                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            CreatedBy = new Guid("00000000-0000-0000-0000-000000000000"),
-                            HexCode = "#000000",
-                            ImageUrl = "",
-                            VehicleModelId = new Guid("a0000004-0000-0000-0000-000000000004")
-                        });
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.DefaultMaintenanceSchedule", b =>

@@ -5,14 +5,18 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>0f0beb87-1e13-4498-be44-f11f7bfe861c</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+    <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.11" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\App\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Verendar.Media.Application\Verendar.Media.Application.csproj" />
     <ProjectReference Include="..\Verendar.Media.Infrastructure\Verendar.Media.Infrastructure.csproj" />
   </ItemGroup>

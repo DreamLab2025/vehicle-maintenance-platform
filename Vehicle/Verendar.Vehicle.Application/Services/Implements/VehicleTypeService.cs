@@ -7,16 +7,10 @@ using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
-    public class VehicleTypeService : IVehicleTypeService
+    public class VehicleTypeService(ILogger<VehicleTypeService> logger, IUnitOfWork unitOfWork) : IVehicleTypeService
     {
-        private readonly ILogger<VehicleTypeService> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public VehicleTypeService(ILogger<VehicleTypeService> logger, IUnitOfWork unitOfWork)
-        {
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-        }
+        private readonly ILogger<VehicleTypeService> _logger = logger;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         public async Task<ApiResponse<TypeResponse>> CreateTypeAsync(TypeRequest request)
         {

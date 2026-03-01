@@ -1,7 +1,8 @@
-﻿using Verendar.Common.Jwt;
+using Verendar.Common.Jwt;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Services.Interfaces;
+using Verendar.Common.EndpointFilters;
 
 namespace Verendar.Vehicle.Apis
 {
@@ -31,7 +32,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<List<UserVehicleResponse>>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapGet("/{id:guid}", GetUserVehicleById)
+            group.MapGet("/{userVehicleId:guid}", GetUserVehicleById)
                 .WithName("GetUserVehicleById")
                 .WithOpenApi(operation =>
                 {
@@ -43,7 +44,32 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<UserVehicleDetailResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/{userVehicleId:guid}/parts", GetUserVehicleParts)
+                .WithName("GetUserVehicleParts")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách phụ tùng của xe người dùng";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<UserVehiclePartSummary>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<UserVehiclePartSummary>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/is-allowed-create", IsAllowedToCreateVehicle)
+                .WithName("IsAllowedToCreateVehicle")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Kiểm tra xem người dùng có được tạo xe mới không";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<IsAllowedToCreateVehicleResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<IsAllowedToCreateVehicleResponse>>(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             group.MapPost("/", CreateUserVehicle)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<UserVehicleRequest>())
                 .WithName("CreateUserVehicle")
                 .WithOpenApi(operation =>
                 {
@@ -55,7 +81,8 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPut("/{id:guid}", UpdateUserVehicle)
+            group.MapPut("/{userVehicleId:guid}", UpdateUserVehicle)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<UserVehicleRequest>())
                 .WithName("UpdateUserVehicle")
                 .WithOpenApi(operation =>
                 {
@@ -67,7 +94,8 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPatch("/{id:guid}/odometer", UpdateOdometer)
+            group.MapPatch("/{userVehicleId:guid}/odometer", UpdateOdometer)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<UpdateOdometerRequest>())
                 .WithName("UpdateOdometer")
                 .WithOpenApi(operation =>
                 {
@@ -79,7 +107,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapDelete("/{id:guid}", DeleteUserVehicle)
+            group.MapDelete("/{userVehicleId:guid}", DeleteUserVehicle)
                 .WithName("DeleteUserVehicle")
                 .WithOpenApi(operation =>
                 {
@@ -102,14 +130,12 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<VehicleStreakResponse>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/{id:guid}/apply-tracking", ApplyTrackingConfig)
+            group.MapPost("/{userVehicleId:guid}/apply-tracking", ApplyTrackingConfig)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<ApplyTrackingConfigRequest>())
                 .WithName("ApplyTrackingConfig")
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Áp dụng cấu hình tracking từ AI cho một linh kiện";
-                    operation.Description = "Sau khi AI phân tích questionnaire, frontend gọi endpoint này " +
-                                          "để áp dụng khuyến nghị của AI vào VehiclePartTracking. " +
-                                          "Endpoint này cập nhật LastReplacement và PredictedNext từ AI.";
                     return operation;
                 })
                 .RequireAuthorization()
@@ -117,7 +143,45 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<VehiclePartTrackingSummary>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/{userVehicleId:guid}/reminders", GetReminders)
+                .WithName("GetReminders")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách nhắc bảo trì (level cao → thấp) kèm thông tin PartCategory";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<ReminderWithPartCategoryDto>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<ReminderWithPartCategoryDto>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/{userVehicleId:guid}/odometer-history", GetOdometerHistory)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<OdometerHistoryQueryRequest>())
+                .WithName("GetOdometerHistory")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy lịch sử số km phân trang (có lọc theo FromDate/ToDate)";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<OdometerHistoryItemDto>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<OdometerHistoryItemDto>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             return group;
+        }
+
+        private static async Task<IResult> IsAllowedToCreateVehicle(
+            ICurrentUserService currentUserService,
+            IUserVehicleService userVehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+            var result = await userVehicleService.IsAllowedToCreateVehicleAsync(userId);
+            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
         private static async Task<IResult> GetVehicleStreak(
@@ -145,7 +209,7 @@ namespace Verendar.Vehicle.Apis
         }
 
         private static async Task<IResult> GetUserVehicleById(
-            Guid id,
+            Guid userVehicleId,
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
         {
@@ -155,7 +219,22 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
             }
 
-            var result = await vehicleService.GetUserVehicleByIdAsync(userId, id);
+            var result = await vehicleService.GetUserVehicleByIdAsync(userId, userVehicleId);
+            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+        }
+
+        private static async Task<IResult> GetUserVehicleParts(
+            Guid userVehicleId,
+            ICurrentUserService currentUserService,
+            IUserVehicleService vehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await vehicleService.GetPartsByUserVehicleAsync(userId, userVehicleId);
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 
@@ -175,7 +254,7 @@ namespace Verendar.Vehicle.Apis
         }
 
         private static async Task<IResult> UpdateUserVehicle(
-            Guid id,
+            Guid userVehicleId,
             UserVehicleRequest request,
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
@@ -186,12 +265,12 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
             }
 
-            var result = await vehicleService.UpdateUserVehicleAsync(userId, id, request);
+            var result = await vehicleService.UpdateUserVehicleAsync(userId, userVehicleId, request);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
         private static async Task<IResult> UpdateOdometer(
-            Guid id,
+            Guid userVehicleId,
             UpdateOdometerRequest request,
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
@@ -202,12 +281,12 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
             }
 
-            var result = await vehicleService.UpdateOdometerAsync(userId, id, request);
+            var result = await vehicleService.UpdateOdometerAsync(userId, userVehicleId, request);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
         private static async Task<IResult> DeleteUserVehicle(
-            Guid id,
+            Guid userVehicleId,
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
         {
@@ -217,12 +296,43 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
             }
 
-            var result = await vehicleService.DeleteUserVehicleAsync(userId, id);
+            var result = await vehicleService.DeleteUserVehicleAsync(userId, userVehicleId);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
+        private static async Task<IResult> GetReminders(
+            Guid userVehicleId,
+            ICurrentUserService currentUserService,
+            IUserVehicleService vehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await vehicleService.GetRemindersAsync(userId, userVehicleId);
+            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+        }
+
+        private static async Task<IResult> GetOdometerHistory(
+            Guid userVehicleId,
+            [AsParameters] OdometerHistoryQueryRequest query,
+            ICurrentUserService currentUserService,
+            IUserVehicleService vehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await vehicleService.GetOdometerHistoryPagedAsync(userId, userVehicleId, query);
+            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+        }
+
         private static async Task<IResult> ApplyTrackingConfig(
-            Guid id,
+            Guid userVehicleId,
             ApplyTrackingConfigRequest request,
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
@@ -233,7 +343,7 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
             }
 
-            var result = await vehicleService.ApplyTrackingConfigAsync(userId, id, request);
+            var result = await vehicleService.ApplyTrackingConfigAsync(userId, userVehicleId, request);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
     }

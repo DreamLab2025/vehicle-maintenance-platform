@@ -1,0 +1,2 @@
+# Dependencies for upload_variant_images.py
+boto3>=1.28.0

@@ -1,28 +1,29 @@
-namespace Verendar.Notification.Application.Dtos.Notifications;
-
-public class ChannelDeliveryResult
+namespace Verendar.Notification.Application.Dtos.Notifications
 {
-    public bool IsSuccess { get; set; }
-    public string? ExternalId { get; set; }
-    public string? ErrorMessage { get; set; }
-    public bool ShouldRetry { get; set; }
-
-    public static ChannelDeliveryResult Success(string? externalId = null)
+    public class ChannelDeliveryResult
     {
-        return new ChannelDeliveryResult
-        {
-            IsSuccess = true,
-            ExternalId = externalId
-        };
-    }
+        public bool IsSuccess { get; set; }
+        public string? ExternalId { get; set; }
+        public string? ErrorMessage { get; set; }
+        public bool ShouldRetry { get; set; }
 
-    public static ChannelDeliveryResult Failed(string errorMessage, bool shouldRetry = false)
-    {
-        return new ChannelDeliveryResult
+        public static ChannelDeliveryResult Success(string? externalId = null)
         {
-            IsSuccess = false,
-            ErrorMessage = errorMessage,
-            ShouldRetry = shouldRetry
-        };
+            return new ChannelDeliveryResult
+            {
+                IsSuccess = true,
+                ExternalId = externalId
+            };
+        }
+
+        public static ChannelDeliveryResult Failed(string errorMessage, bool shouldRetry = false)
+        {
+            return new ChannelDeliveryResult
+            {
+                IsSuccess = false,
+                ErrorMessage = errorMessage,
+                ShouldRetry = shouldRetry
+            };
+        }
     }
 }

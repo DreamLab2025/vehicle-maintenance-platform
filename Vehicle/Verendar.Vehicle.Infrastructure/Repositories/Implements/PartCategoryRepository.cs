@@ -6,12 +6,8 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class PartCategoryRepository : PostgresRepository<PartCategory>, IPartCategoryRepository
+    public class PartCategoryRepository(VehicleDbContext context) : PostgresRepository<PartCategory>(context), IPartCategoryRepository
     {
-        public PartCategoryRepository(VehicleDbContext context) : base(context)
-        {
-        }
-
         public async Task<PartCategory?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
         {
             return await _dbSet

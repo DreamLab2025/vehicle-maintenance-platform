@@ -8,16 +8,10 @@ using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
-    public class VehicleBrandService : IVehicleBrandService
+    public class VehicleBrandService(ILogger<VehicleBrandService> logger, IUnitOfWork unitOfWork) : IVehicleBrandService
     {
-        private readonly ILogger<VehicleBrandService> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public VehicleBrandService(ILogger<VehicleBrandService> logger, IUnitOfWork unitOfWork)
-        {
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-        }
+        private readonly ILogger<VehicleBrandService> _logger = logger;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         public async Task<ApiResponse<BrandResponse>> CreateBrandAsync(BrandRequest request)
         {

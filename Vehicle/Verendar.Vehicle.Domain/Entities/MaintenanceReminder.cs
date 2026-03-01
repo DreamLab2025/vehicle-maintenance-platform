@@ -29,6 +29,8 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public DateOnly? DismissedDate { get; set; }
 
+        public bool IsCurrent { get; set; } = false;
+
         public VehiclePartTracking PartTracking { get; set; } = null!;
     }
 }

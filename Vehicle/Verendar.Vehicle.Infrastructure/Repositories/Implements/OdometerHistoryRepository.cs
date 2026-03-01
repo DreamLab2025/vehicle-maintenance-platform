@@ -6,12 +6,8 @@ using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
-    public class OdometerHistoryRepository : PostgresRepository<OdometerHistory>, IOdometerHistoryRepository
+    public class OdometerHistoryRepository(VehicleDbContext context) : PostgresRepository<OdometerHistory>(context), IOdometerHistoryRepository
     {
-        public OdometerHistoryRepository(VehicleDbContext context) : base(context)
-        {
-        }
-
         public async Task<int> GetCurrentStreakAsync(Guid userVehicleId)
         {
             var logDates = await _dbSet
@@ -53,6 +49,37 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
             }
 
             return streak;
+        }
+
+        public async Task<(IEnumerable<OdometerHistory> Items, int TotalCount)> GetPagedByUserVehicleAsync(
+            Guid userVehicleId,
+            int pageNumber,
+            int pageSize,
+            DateOnly? fromDate,
+            DateOnly? toDate,
+            bool isDescending = true,
+            CancellationToken cancellationToken = default)
+        {
+            var query = _dbSet
+                .Where(x => x.UserVehicleId == userVehicleId && x.DeletedAt == null);
+
+            if (fromDate.HasValue)
+                query = query.Where(x => x.RecordedDate >= fromDate.Value);
+            if (toDate.HasValue)
+                query = query.Where(x => x.RecordedDate <= toDate.Value);
+
+            var totalCount = await query.CountAsync(cancellationToken);
+
+            var ordered = isDescending
+                ? query.OrderByDescending(x => x.RecordedDate).ThenByDescending(x => x.CreatedAt)
+                : query.OrderBy(x => x.RecordedDate).ThenBy(x => x.CreatedAt);
+
+            var items = await ordered
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
         }
     }
 }

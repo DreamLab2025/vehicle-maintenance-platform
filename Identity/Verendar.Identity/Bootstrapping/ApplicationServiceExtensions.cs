@@ -1,11 +1,11 @@
-﻿using Verendar.Common.Bootstrapping;
+using Verendar.Common.Bootstrapping;
 using Verendar.Common.Shared;
 using Verendar.Identity.Apis;
-using Verendar.Identity.Data;
-using Verendar.Identity.Repositories.Implements;
-using Verendar.Identity.Repositories.Interfaces;
-using Verendar.Identity.Services.Implements;
-using Verendar.Identity.Services.Interfaces;
+using Verendar.Identity.Infrastructure.Data;
+using Verendar.Identity.Infrastructure.Repositories.Implements;
+using Verendar.Identity.Infrastructure.Services;
+using Verendar.Identity.Domain.Repositories.Interfaces;
+using Verendar.Identity.Application.Services.Interfaces;
 using Verendar.ServiceDefaults;
 
 namespace Verendar.Identity.Bootstrapping
@@ -22,10 +22,8 @@ namespace Verendar.Identity.Bootstrapping
 
             builder.AddServiceRedis(nameof(Identity), connectionName: Const.Redis);
 
-            // Register Unit of Work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-            // Register Services
             builder.Services.AddScoped<IIdentityTokenService, IdentityTokenService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
@@ -48,6 +46,7 @@ namespace Verendar.Identity.Bootstrapping
 
             app.MapAuthApi();
             app.MapUserApi();
+            app.MapInternalUserApi();
 
             return app;
         }

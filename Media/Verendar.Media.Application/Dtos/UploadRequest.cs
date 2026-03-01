@@ -1,4 +1,4 @@
-﻿using Verendar.Media.Domain.Entities;
+using Verendar.Media.Domain.Entities;
 
 namespace Verendar.Media.Application.Dtos
 {
@@ -8,7 +8,6 @@ namespace Verendar.Media.Application.Dtos
         public string ContentType { get; set; } = null!;
         public long Size { get; set; }
         public StorageProvider Provider { get; set; } = StorageProvider.AwsS3;
-        public FileType FileType { get; set; } = FileType.Other;
     }
 
     public class InitUploadResponse

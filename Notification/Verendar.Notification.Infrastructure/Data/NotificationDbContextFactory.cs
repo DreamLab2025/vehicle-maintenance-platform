@@ -1,17 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace Verendar.Notification.Infrastructure.Data;
-
-public class NotificationDbContextFactory : IDesignTimeDbContextFactory<NotificationDbContext>
+namespace Verendar.Notification.Infrastructure.Data
 {
-    public NotificationDbContext CreateDbContext(string[] args)
+    public class NotificationDbContextFactory : IDesignTimeDbContextFactory<NotificationDbContext>
     {
-        var optionsBuilder = new DbContextOptionsBuilder<NotificationDbContext>();
-        optionsBuilder.UseNpgsql(
-            "Host=localhost;Database=NotificationDb;Username=postgres;Password=postgres",
-            npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(NotificationDbContext).Assembly.FullName));
+        public NotificationDbContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<NotificationDbContext>();
+            optionsBuilder.UseNpgsql(
+                "Host=localhost;Database=NotificationDb;Username=postgres;Password=postgres",
+                npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(NotificationDbContext).Assembly.FullName));
 
-        return new NotificationDbContext(optionsBuilder.Options);
+            return new NotificationDbContext(optionsBuilder.Options);
+        }
     }
 }

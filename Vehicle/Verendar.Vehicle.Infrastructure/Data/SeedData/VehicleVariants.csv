@@ -1,0 +1,207 @@
+Id,VehicleModelId,Color,HexCode,ImageUrl
+e0000001-0000-0000-0000-000000000001,a0000001-0000-0000-0000-000000000001,Đen,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20Alpha/Black.png
+e0000002-0000-0000-0000-000000000002,a0000001-0000-0000-0000-000000000001,Xanh Dương,#1E4D9E,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20Alpha/Blue.png
+e0000003-0000-0000-0000-000000000003,a0000001-0000-0000-0000-000000000001,Đỏ,#CC2222,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20Alpha/Red.png
+e0000004-0000-0000-0000-000000000004,a0000001-0000-0000-0000-000000000001,Trắng,#F5F5F5,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20Alpha/White.png
+e0000005-0000-0000-0000-000000000005,a0000002-0000-0000-0000-000000000002,Xanh Nhạt,#7EB8D4,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20Alpha%20Classic/Blue.png
+e0000006-0000-0000-0000-000000000006,a0000002-0000-0000-0000-000000000002,Xám Trắng,#D4DDD6,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20Alpha%20Classic/Grey%20White.png
+e0000007-0000-0000-0000-000000000007,a0000002-0000-0000-0000-000000000002,Xám,#9EA8A0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20Alpha%20Classic/Grey.png
+e0000008-0000-0000-0000-000000000008,a0000003-0000-0000-0000-000000000003,Đen,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20RSX/Black.png
+e0000009-0000-0000-0000-000000000009,a0000003-0000-0000-0000-000000000003,Xanh Đen,#1A3A6B,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20RSX/Blue%20and%20Black.png
+e0000010-0000-0000-0000-000000000010,a0000003-0000-0000-0000-000000000003,Xám Đen,#7A8A8C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20RSX/Grey%20and%20Black.png
+e0000011-0000-0000-0000-000000000011,a0000003-0000-0000-0000-000000000003,Đỏ Đen Xanh,#CC2222,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20RSX/Red%20Black%20and%20Blue.png
+e0000012-0000-0000-0000-000000000012,a0000003-0000-0000-0000-000000000003,Đỏ Đen,#8B1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Wave%20RSX/Red%20Black.png
+e0000013-0000-0000-0000-000000000013,a0000004-0000-0000-0000-000000000004,Đen Xanh Sport,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Blade/Black%20Blue%20Sport.png
+e0000014-0000-0000-0000-000000000014,a0000004-0000-0000-0000-000000000004,Đen Xanh,#1C2B3A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Blade/Black%20Blue.png
+e0000015-0000-0000-0000-000000000015,a0000004-0000-0000-0000-000000000004,Đen Luxury,#222222,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Blade/Black%20Luxury.png
+e0000016-0000-0000-0000-000000000016,a0000004-0000-0000-0000-000000000004,Đen Đỏ Sport,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Blade/Black%20Red%20Sport.png
+e0000017-0000-0000-0000-000000000017,a0000004-0000-0000-0000-000000000004,Đen Đỏ,#2A1010,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Blade/Black%20Red.png
+e0000018-0000-0000-0000-000000000018,a0000004-0000-0000-0000-000000000004,Đen Sport,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Blade/Black%20Sport.png
+e0000019-0000-0000-0000-000000000019,a0000005-0000-0000-0000-000000000005,Xanh Đen Bạc,#3D5A78,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Future/Blue%20Black%20Silver.png
+e0000020-0000-0000-0000-000000000020,a0000005-0000-0000-0000-000000000005,Xanh Đen,#1F3A5F,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Future/Blue%20Black.png
+e0000021-0000-0000-0000-000000000021,a0000005-0000-0000-0000-000000000005,Xám Đen Xanh,#5A6570,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Future/Grey%20Black%20Blue.png
+e0000022-0000-0000-0000-000000000022,a0000005-0000-0000-0000-000000000005,Đỏ Đen Trắng,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Future/Red%20Black%20White.png
+e0000023-0000-0000-0000-000000000023,a0000005-0000-0000-0000-000000000005,Bạc Đen Xám,#C0C0C0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Future/Silver%20Black%20Grey.png
+e0000024-0000-0000-0000-000000000024,a0000005-0000-0000-0000-000000000005,Trắng Đen Đỏ,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Future/White%20Black%20Red.png
+e0000025-0000-0000-0000-000000000025,a0000006-0000-0000-0000-000000000006,Đen,#2D2D2D,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Cub%20125/Black.png
+e0000026-0000-0000-0000-000000000026,a0000006-0000-0000-0000-000000000006,Xanh Xám,#6B8FA8,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Cub%20125/Blue%20Grey.png
+e0000027-0000-0000-0000-000000000027,a0000006-0000-0000-0000-000000000006,Xanh Nhạt,#4A7FA5,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/Cub%20125/Light%20Blue.png
+e0000028-0000-0000-0000-000000000028,a0000007-0000-0000-0000-000000000007,Xám Đen,#C8C8C8,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual/CT125/Grey%20Black.png
+e0000029-0000-0000-0000-000000000029,a0000008-0000-0000-0000-000000000008,Đen Bạc,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual%20clutch/Winner%20R/Black%20Silver.png
+e0000030-0000-0000-0000-000000000030,a0000008-0000-0000-0000-000000000008,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual%20clutch/Winner%20R/Black.png
+e0000031-0000-0000-0000-000000000031,a0000008-0000-0000-0000-000000000008,Xanh Lá Đen,#4A6741,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual%20clutch/Winner%20R/Green%20Black.png
+e0000032-0000-0000-0000-000000000032,a0000008-0000-0000-0000-000000000008,Xám Đen,#B0BEC5,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual%20clutch/Winner%20R/Grey%20Black.png
+e0000033-0000-0000-0000-000000000033,a0000008-0000-0000-0000-000000000008,Đỏ Đen Special,#C0392B,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual%20clutch/Winner%20R/Red%20Black%20Special.png
+e0000034-0000-0000-0000-000000000034,a0000008-0000-0000-0000-000000000008,Đỏ Đen Sport,#CC0000,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual%20clutch/Winner%20R/Red%20Black%20Sport.png
+e0000035-0000-0000-0000-000000000035,a0000008-0000-0000-0000-000000000008,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual%20clutch/Winner%20R/Red%20Black.png
+e0000036-0000-0000-0000-000000000036,a0000009-0000-0000-0000-000000000009,Đen Xám,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual%20clutch/CBR150/Black%20Grey.png
+e0000037-0000-0000-0000-000000000037,a0000009-0000-0000-0000-000000000009,Đen Đỏ,#CC0000,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual%20clutch/CBR150/Black%20Red.png
+e0000038-0000-0000-0000-000000000038,a0000009-0000-0000-0000-000000000009,Đỏ,#E60000,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Manual%20clutch/CBR150/Red.png
+e0000039-0000-0000-0000-000000000039,a0000010-0000-0000-0000-000000000010,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vision/Black.png
+e0000040-0000-0000-0000-000000000040,a0000010-0000-0000-0000-000000000010,Nâu Xám,#8B7355,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vision/Brown%20Grey.png
+e0000041-0000-0000-0000-000000000041,a0000010-0000-0000-0000-000000000010,Xám Đen,#9E9E9E,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vision/Grey%20Black.png
+e0000042-0000-0000-0000-000000000042,a0000010-0000-0000-0000-000000000010,Đỏ Xám,#9B2335,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vision/Red%20Grey.png
+e0000043-0000-0000-0000-000000000043,a0000010-0000-0000-0000-000000000010,Bạc Đen,#C0C0C0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vision/Silver%20Black.png
+e0000044-0000-0000-0000-000000000044,a0000010-0000-0000-0000-000000000010,Trắng Đen,#F5F5F5,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vision/White%20Black.png
+e0000045-0000-0000-0000-000000000045,a0000011-0000-0000-0000-000000000011,Đen Nâu,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Lead/Black%20Brown.png
+e0000046-0000-0000-0000-000000000046,a0000011-0000-0000-0000-000000000011,Đen Đỏ,#8B1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Lead/Black%20Red.png
+e0000047-0000-0000-0000-000000000047,a0000011-0000-0000-0000-000000000011,Xanh Đen,#3A5A6B,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Lead/Blue%20Black.png
+e0000048-0000-0000-0000-000000000048,a0000011-0000-0000-0000-000000000011,Bạc Đen,#A8A8A8,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Lead/Silver%20Black.png
+e0000049-0000-0000-0000-000000000049,a0000011-0000-0000-0000-000000000011,Trắng Đen,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Lead/White%20Black.png
+e0000050-0000-0000-0000-000000000050,a0000012-0000-0000-0000-000000000012,Đen,#1A1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vario125/Black.png
+e0000051-0000-0000-0000-000000000051,a0000012-0000-0000-0000-000000000012,Xanh Đen,#2B4A7A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vario125/Blue%20Black.png
+e0000052-0000-0000-0000-000000000052,a0000012-0000-0000-0000-000000000012,Đỏ Đen,#C41E3A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vario125/Red%20Black.png
+e0000053-0000-0000-0000-000000000053,a0000013-0000-0000-0000-000000000013,Đen Bạc,#1A1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vario160/Black%20Silver.png
+e0000054-0000-0000-0000-000000000054,a0000013-0000-0000-0000-000000000013,Xanh Đen Bạc,#1A3A6B,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vario160/Blue%20Black%20Silver.png
+e0000055-0000-0000-0000-000000000055,a0000013-0000-0000-0000-000000000013,Xám Đen Bạc,#6B7280,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vario160/Grey%20Black%20Silver.png
+e0000056-0000-0000-0000-000000000056,a0000013-0000-0000-0000-000000000013,Đỏ Đen Bạc,#C0392B,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/Vario160/Red%20Black%20Silver.png
+e0000057-0000-0000-0000-000000000057,a0000014-0000-0000-0000-000000000014,Đen Xám,#222222,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/AB125i/Black%20Grey.png
+e0000058-0000-0000-0000-000000000058,a0000014-0000-0000-0000-000000000014,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/AB125i/Black.png
+e0000059-0000-0000-0000-000000000059,a0000014-0000-0000-0000-000000000014,Xanh Đen Xám,#1A3A5C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/AB125i/Blue%20Black%20Grey.png
+e0000060-0000-0000-0000-000000000060,a0000014-0000-0000-0000-000000000014,Xám Đỏ Đen,#B0B0B0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/AB125i/Grey%20Red%20Black.png
+e0000061-0000-0000-0000-000000000061,a0000014-0000-0000-0000-000000000014,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/AB125i/Red%20Black.png
+e0000062-0000-0000-0000-000000000062,a0000014-0000-0000-0000-000000000014,Trắng Đỏ Đen,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/AB125i/White%20Red%20Black.png
+e0000063-0000-0000-0000-000000000063,a0000015-0000-0000-0000-000000000015,Xám Đen,#6B7280,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/AB160i/Grey%20Black.png
+e0000064-0000-0000-0000-000000000064,a0000015-0000-0000-0000-000000000015,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/AB160i/Red%20Black.png
+e0000065-0000-0000-0000-000000000065,a0000015-0000-0000-0000-000000000015,Trắng Đỏ Đen,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/AB160i/White%20Red%20Black.png
+e0000066-0000-0000-0000-000000000066,a0000016-0000-0000-0000-000000000016,Đen,#1A1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SHMode/Black.png
+e0000067-0000-0000-0000-000000000067,a0000016-0000-0000-0000-000000000016,Xanh Đen,#1B3A6B,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SHMode/Blue%20Black.png
+e0000068-0000-0000-0000-000000000068,a0000016-0000-0000-0000-000000000016,Xanh Dương,#1E56A0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SHMode/BLue.png
+e0000069-0000-0000-0000-000000000069,a0000016-0000-0000-0000-000000000016,Xám Đen,#8C8C8C,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SHMode/Grey%20Black.png
+e0000070-0000-0000-0000-000000000070,a0000016-0000-0000-0000-000000000016,Đỏ Đen,#A91E1E,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SHMode/Red%20Black.png
+e0000071-0000-0000-0000-000000000071,a0000016-0000-0000-0000-000000000016,Đỏ,#CC2222,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SHMode/Red.png
+e0000072-0000-0000-0000-000000000072,a0000016-0000-0000-0000-000000000016,Bạc Đen,#C8C8C8,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SHMode/Silver%20Black.png
+e0000073-0000-0000-0000-000000000073,a0000016-0000-0000-0000-000000000016,Trắng,#F5F5F5,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SHMode/White.png
+e0000074-0000-0000-0000-000000000074,a0000017-0000-0000-0000-000000000017,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH125/Black.png
+e0000075-0000-0000-0000-000000000075,a0000017-0000-0000-0000-000000000017,Xanh Lá Đen Đỏ,#4A7A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH125/Green%20Black%20Red.png
+e0000076-0000-0000-0000-000000000076,a0000017-0000-0000-0000-000000000017,Xám Đen Đỏ,#8FA89A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH125/Grey%20Black%20Red.png
+e0000077-0000-0000-0000-000000000077,a0000017-0000-0000-0000-000000000017,Xám Đen,#546A6E,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH125/Grey%20Black.png
+e0000078-0000-0000-0000-000000000078,a0000017-0000-0000-0000-000000000017,Đỏ,#9B2335,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH125/Red.png
+e0000079-0000-0000-0000-000000000079,a0000017-0000-0000-0000-000000000017,Trắng Đen,#E8E8E8,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH125/White%20Black.png
+e0000080-0000-0000-0000-000000000080,a0000017-0000-0000-0000-000000000017,Trắng,#F5F5F5,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH125/White.png
+e0000081-0000-0000-0000-000000000081,a0000018-0000-0000-0000-000000000018,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH160/Black.png
+e0000082-0000-0000-0000-000000000082,a0000018-0000-0000-0000-000000000018,Xanh Lá Đen Đỏ,#4A7A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH160/Green%20Black%20Red.png
+e0000083-0000-0000-0000-000000000083,a0000018-0000-0000-0000-000000000018,Xám Đen Đỏ,#8FA89A,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH160/Grey%20Black%20Red.png
+e0000084-0000-0000-0000-000000000084,a0000018-0000-0000-0000-000000000018,Xám Đen,#546A6E,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH160/Grey%20Black.png
+e0000085-0000-0000-0000-000000000085,a0000018-0000-0000-0000-000000000018,Đỏ Đen,#9B2335,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH160/Red%20Black.png
+e0000086-0000-0000-0000-000000000086,a0000018-0000-0000-0000-000000000018,Trắng Đen,#E8E8E8,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH160/White%20Black.png
+e0000087-0000-0000-0000-000000000087,a0000018-0000-0000-0000-000000000018,Trắng,#F5F5F5,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH160/White.png
+e0000088-0000-0000-0000-000000000088,a0000019-0000-0000-0000-000000000019,Xanh Lá Đen,#5A7A55,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH350/Green%20Black.png
+e0000089-0000-0000-0000-000000000089,a0000019-0000-0000-0000-000000000019,Xám Đen Special,#6B6B6B,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH350/Grey%20Black%20Special.png
+e0000090-0000-0000-0000-000000000090,a0000019-0000-0000-0000-000000000019,Xám Đen,#7A9AA0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH350/Grey%20Black.png
+e0000091-0000-0000-0000-000000000091,a0000019-0000-0000-0000-000000000019,Trắng Đen,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/SH350/White%20Black.png
+e0000092-0000-0000-0000-000000000092,a0000020-0000-0000-0000-000000000020,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/ADV350/Black.png
+e0000093-0000-0000-0000-000000000093,a0000020-0000-0000-0000-000000000020,Xanh Đen,#1A3A6B,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/ADV350/Blue%20Black.png
+e0000094-0000-0000-0000-000000000094,a0000020-0000-0000-0000-000000000020,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Honda/Scooter/ADV350/Red%20Black.png
+e0000095-0000-0000-0000-000000000095,a0000021-0000-0000-0000-000000000021,Đen,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius/Black.webp
+e0000096-0000-0000-0000-000000000096,a0000021-0000-0000-0000-000000000021,Xanh Xám Đen,#4A6B8A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius/Blue%20Grey%20Black.webp
+e0000097-0000-0000-0000-000000000097,a0000021-0000-0000-0000-000000000021,Vàng Xám Đen,#C8A84A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius/Gold%20Grey%20Black.webp
+e0000098-0000-0000-0000-000000000098,a0000021-0000-0000-0000-000000000021,Xám Đen,#4A4A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius/Grey%20Black.webp
+e0000099-0000-0000-0000-000000000099,a0000021-0000-0000-0000-000000000021,Xám Xanh,#7A8FA0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius/Grey%20Blue.webp
+e0000100-0000-0000-0000-000000000100,a0000021-0000-0000-0000-000000000021,Xám Đỏ,#8A4A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius/Grey%20Red.webp
+e0000101-0000-0000-0000-000000000101,a0000021-0000-0000-0000-000000000021,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius/Red%20Black.webp
+e0000102-0000-0000-0000-000000000102,a0000022-0000-0000-0000-000000000022,Đen Xám,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius%20Fi/Black%20Grey.webp
+e0000103-0000-0000-0000-000000000103,a0000022-0000-0000-0000-000000000022,Xanh Xám Đen,#4A6B8A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius%20Fi/Blue%20Grey%20Black.webp
+e0000104-0000-0000-0000-000000000104,a0000022-0000-0000-0000-000000000022,Xanh Bạc Đen,#3A5A7A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius%20Fi/Blue%20Silver%20Black.webp
+e0000105-0000-0000-0000-000000000105,a0000022-0000-0000-0000-000000000022,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius%20Fi/Red%20Black.webp
+e0000106-0000-0000-0000-000000000106,a0000022-0000-0000-0000-000000000022,Trắng Đen,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius%20Fi/White%20Black.webp
+e0000107-0000-0000-0000-000000000107,a0000022-0000-0000-0000-000000000022,Trắng Xanh Đen,#E0E8F0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Sirius%20Fi/White%20Blue%20Black.webp
+e0000108-0000-0000-0000-000000000108,a0000023-0000-0000-0000-000000000023,Đen Xám,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Jupiter/Black%20Grey.webp
+e0000109-0000-0000-0000-000000000109,a0000023-0000-0000-0000-000000000023,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Jupiter/Black.webp
+e0000110-0000-0000-0000-000000000110,a0000023-0000-0000-0000-000000000023,Xanh Đen,#1A3A6B,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Jupiter/Blue%20Black.webp
+e0000111-0000-0000-0000-000000000111,a0000023-0000-0000-0000-000000000023,Xanh Xám,#6B8FA8,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Jupiter/Blue%20Grey.webp
+e0000112-0000-0000-0000-000000000112,a0000023-0000-0000-0000-000000000023,Xám Đen,#4A4A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Jupiter/Grey%20Black.webp
+e0000113-0000-0000-0000-000000000113,a0000023-0000-0000-0000-000000000023,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Jupiter/Red%20Black.webp
+e0000114-0000-0000-0000-000000000114,a0000023-0000-0000-0000-000000000023,Trắng Xám,#E8E8E8,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Jupiter/White%20Grey.webp
+e0000115-0000-0000-0000-000000000115,a0000024-0000-0000-0000-000000000024,Đen Bạc,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Black%20Silver.webp
+e0000116-0000-0000-0000-000000000116,a0000024-0000-0000-0000-000000000024,Xanh Đen Bạc,#3A5A7A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Blue%20Black%20Silver.webp
+e0000117-0000-0000-0000-000000000117,a0000024-0000-0000-0000-000000000024,Xanh Đen,#1A3A6B,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Blue%20Black.webp
+e0000118-0000-0000-0000-000000000118,a0000024-0000-0000-0000-000000000024,Xanh Dương,#5CACEE,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Blue.webp
+e0000119-0000-0000-0000-000000000119,a0000024-0000-0000-0000-000000000024,Nâu Cát,#C4A882,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Brown%20Sand.webp
+e0000120-0000-0000-0000-000000000120,a0000024-0000-0000-0000-000000000024,Xanh Lá Đen,#4A7A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Green%20Black.webp
+e0000121-0000-0000-0000-000000000121,a0000024-0000-0000-0000-000000000024,Xanh Rêu Camo,#6B7A55,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Green%20Camo.webp
+e0000122-0000-0000-0000-000000000122,a0000024-0000-0000-0000-000000000024,Xám Đen,#4A4A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Grey%20Black.webp
+e0000123-0000-0000-0000-000000000123,a0000024-0000-0000-0000-000000000024,Xám Xanh Bạc,#8AACBE,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Grey%20Blue%20Silver.webp
+e0000124-0000-0000-0000-000000000124,a0000024-0000-0000-0000-000000000024,Cam Bạc,#E87040,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Ogrange%20Silver.webp
+e0000125-0000-0000-0000-000000000125,a0000024-0000-0000-0000-000000000024,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Red%20Black.webp
+e0000126-0000-0000-0000-000000000126,a0000024-0000-0000-0000-000000000024,Vàng Đen Bạc,#DAA520,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Yellow%20Black%20Silver.webp
+e0000127-0000-0000-0000-000000000127,a0000024-0000-0000-0000-000000000024,Vàng,#F0C040,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/PG1/Yellow.webp
+e0000128-0000-0000-0000-000000000128,a0000025-0000-0000-0000-000000000025,Xanh Đen,#1A3A8B,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter150/Blue%20Black.webp
+e0000129-0000-0000-0000-000000000129,a0000025-0000-0000-0000-000000000025,Xám Đen,#4A4A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter150/Grey%20Black.webp
+e0000130-0000-0000-0000-000000000130,a0000025-0000-0000-0000-000000000025,Xám Xanh Đen,#5A6A5A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter150/Grey%20Green%20Black.webp
+e0000131-0000-0000-0000-000000000131,a0000025-0000-0000-0000-000000000025,Trắng Đen,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter150/White%20Black.webp
+e0000132-0000-0000-0000-000000000132,a0000026-0000-0000-0000-000000000026,Đen Xanh,#1A2A3A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Black%20Blue.webp
+e0000133-0000-0000-0000-000000000133,a0000026-0000-0000-0000-000000000026,Đen Nâu,#2A1A10,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Black%20Brown.webp
+e0000134-0000-0000-0000-000000000134,a0000026-0000-0000-0000-000000000026,Đen Vàng,#1A1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Black%20Gold.webp
+e0000135-0000-0000-0000-000000000135,a0000026-0000-0000-0000-000000000026,Đen Xám,#2A2A2A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Black%20Grey.webp
+e0000136-0000-0000-0000-000000000136,a0000026-0000-0000-0000-000000000026,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Black.webp
+e0000137-0000-0000-0000-000000000137,a0000026-0000-0000-0000-000000000026,Xanh Đen,#1A3A8B,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Blue%20Black.webp
+e0000138-0000-0000-0000-000000000138,a0000026-0000-0000-0000-000000000026,Xanh GP,#0052A5,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Blue%20GP.webp
+e0000139-0000-0000-0000-000000000139,a0000026-0000-0000-0000-000000000026,Xanh Xám Vàng Đen,#3A5A7A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Blue%20Grey%20Yellow%20Black.webp
+e0000140-0000-0000-0000-000000000140,a0000026-0000-0000-0000-000000000026,Xanh Luxury,#1A4A7A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Blue%20Luxury.webp
+e0000141-0000-0000-0000-000000000141,a0000026-0000-0000-0000-000000000026,Xám Xanh,#7A8FA0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Grey%20Blue.webp
+e0000142-0000-0000-0000-000000000142,a0000026-0000-0000-0000-000000000026,Cam Đen,#E87040,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Ogrange%20Black.webp
+e0000143-0000-0000-0000-000000000143,a0000026-0000-0000-0000-000000000026,Đỏ Đen Xám,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Red%20Black%20Grey.webp
+e0000144-0000-0000-0000-000000000144,a0000026-0000-0000-0000-000000000026,Đỏ Xám,#9B2335,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Red%20Grey.webp
+e0000145-0000-0000-0000-000000000145,a0000026-0000-0000-0000-000000000026,Đỏ Luxury,#8B1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Red%20Luxury.webp
+e0000146-0000-0000-0000-000000000146,a0000026-0000-0000-0000-000000000026,Bạc Xanh,#C0C8D0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Silver%20Blue.webp
+e0000147-0000-0000-0000-000000000147,a0000026-0000-0000-0000-000000000026,Trắng Đen Luxury,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/White%20Black%20Luxury.webp
+e0000148-0000-0000-0000-000000000148,a0000026-0000-0000-0000-000000000026,Trắng Đen,#E8E8E8,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/White%20Black.webp
+e0000149-0000-0000-0000-000000000149,a0000026-0000-0000-0000-000000000026,Vàng Đen Xám,#DAA520,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Manual/Exciter155/Yellow%20Black%20Grey.webp
+e0000150-0000-0000-0000-000000000150,a0000027-0000-0000-0000-000000000027,Đen Xám,#1C1C1C,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/NVX/Black%20Grey.webp
+e0000151-0000-0000-0000-000000000151,a0000027-0000-0000-0000-000000000027,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/NVX/Black.webp
+e0000152-0000-0000-0000-000000000152,a0000027-0000-0000-0000-000000000027,Xanh Đen,#1A3A6B,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/NVX/Blue%20Black.webp
+e0000153-0000-0000-0000-000000000153,a0000027-0000-0000-0000-000000000027,Xanh Dương,#0066CC,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/NVX/Blue.webp
+e0000154-0000-0000-0000-000000000154,a0000027-0000-0000-0000-000000000027,Xám Xanh,#7A8FA0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/NVX/Grey%20Blue.webp
+e0000155-0000-0000-0000-000000000155,a0000027-0000-0000-0000-000000000027,Đỏ Xám,#9B2335,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/NVX/Red%20Grey.webp
+e0000156-0000-0000-0000-000000000156,a0000027-0000-0000-0000-000000000027,Bạc Vàng,#C0C0A0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/NVX/Silver%20Gold.webp
+e0000157-0000-0000-0000-000000000157,a0000027-0000-0000-0000-000000000027,Trắng Đỏ,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/NVX/White%20Red.webp
+e0000158-0000-0000-0000-000000000158,a0000028-0000-0000-0000-000000000028,Đen 2024,#1A1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Black%202024.webp
+e0000159-0000-0000-0000-000000000159,a0000028-0000-0000-0000-000000000028,Đen 2025,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Black%202025.webp
+e0000160-0000-0000-0000-000000000160,a0000028-0000-0000-0000-000000000028,Đen Hồng 2024,#2A1A2A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Black%20Pink%202024.webp
+e0000161-0000-0000-0000-000000000161,a0000028-0000-0000-0000-000000000028,Xanh Đen 2024,#1A3A6B,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Blue%20Black%202024.webp
+e0000162-0000-0000-0000-000000000162,a0000028-0000-0000-0000-000000000028,Xanh Bạc Đen,#3A7AAA,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Blue%20Silver%20Black.webp
+e0000163-0000-0000-0000-000000000163,a0000028-0000-0000-0000-000000000028,Vàng Đen,#DAA520,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Gold%20Black.webp
+e0000164-0000-0000-0000-000000000164,a0000028-0000-0000-0000-000000000028,Xanh Lá Đen 2024,#4A7A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Green%20Black%202024.webp
+e0000165-0000-0000-0000-000000000165,a0000028-0000-0000-0000-000000000028,Xanh Lá Bạc Đen,#6BA08A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Green%20Silver%20Black.webp
+e0000166-0000-0000-0000-000000000166,a0000028-0000-0000-0000-000000000028,Xám Đen 2024,#6B6B6B,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Grey%20Black%202024.webp
+e0000167-0000-0000-0000-000000000167,a0000028-0000-0000-0000-000000000028,Xám Bạc Đen 2025,#9A9A9A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Grey%20Silver%20Black%202025.webp
+e0000168-0000-0000-0000-000000000168,a0000028-0000-0000-0000-000000000028,Xám Bạc Đen,#8A8A8A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Grey%20Silver%20Black.webp
+e0000169-0000-0000-0000-000000000169,a0000028-0000-0000-0000-000000000028,Hồng Đen 2024,#D4738A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Pink%20Black%202024.webp
+e0000170-0000-0000-0000-000000000170,a0000028-0000-0000-0000-000000000028,Đỏ Đen 2024,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Red%20Black%202024.webp
+e0000171-0000-0000-0000-000000000171,a0000028-0000-0000-0000-000000000028,Đỏ Đen 2025,#CC2222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/Red%20Black%202025.webp
+e0000172-0000-0000-0000-000000000172,a0000028-0000-0000-0000-000000000028,Trắng Xám,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Grande/White%20Grey.webp
+e0000173-0000-0000-0000-000000000173,a0000029-0000-0000-0000-000000000029,Đen Vàng Metal,#1A1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Janus/Black%20Gold%20Metal.webp
+e0000174-0000-0000-0000-000000000174,a0000029-0000-0000-0000-000000000029,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Janus/Black.webp
+e0000175-0000-0000-0000-000000000175,a0000029-0000-0000-0000-000000000029,Xanh Đen Xám,#4A6B8A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Janus/Blue%20Black%20Grey.webp
+e0000176-0000-0000-0000-000000000176,a0000029-0000-0000-0000-000000000029,Xám Metal,#8A8A8A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Janus/Grey%20Metal.webp
+e0000177-0000-0000-0000-000000000177,a0000029-0000-0000-0000-000000000029,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Janus/Red%20Black.webp
+e0000178-0000-0000-0000-000000000178,a0000029-0000-0000-0000-000000000029,Bạc,#C0C0C0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Janus/Silver.webp
+e0000179-0000-0000-0000-000000000179,a0000029-0000-0000-0000-000000000029,Trắng Xám,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Janus/White%20Grey.webp
+e0000180-0000-0000-0000-000000000180,a0000030-0000-0000-0000-000000000030,Đen Vàng,#1A1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/FreeGo/Black%20Gold.webp
+e0000181-0000-0000-0000-000000000181,a0000030-0000-0000-0000-000000000030,Đen Đỏ,#2A1010,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/FreeGo/Black%20Red.webp
+e0000182-0000-0000-0000-000000000182,a0000030-0000-0000-0000-000000000030,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/FreeGo/Black.webp
+e0000183-0000-0000-0000-000000000183,a0000030-0000-0000-0000-000000000030,Xanh Đen,#1A3A6B,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/FreeGo/Blue%20Black.webp
+e0000184-0000-0000-0000-000000000184,a0000030-0000-0000-0000-000000000030,Xám Đen,#4A4A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/FreeGo/Grey%20Black.webp
+e0000185-0000-0000-0000-000000000185,a0000030-0000-0000-0000-000000000030,Xám Vàng,#8A8A6A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/FreeGo/Grey%20Gold.webp
+e0000186-0000-0000-0000-000000000186,a0000030-0000-0000-0000-000000000030,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/FreeGo/Red%20Black.webp
+e0000187-0000-0000-0000-000000000187,a0000030-0000-0000-0000-000000000030,Bạc Đen,#C0C0C0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/FreeGo/Silver%20Black.webp
+e0000188-0000-0000-0000-000000000188,a0000030-0000-0000-0000-000000000030,Trắng Đen,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/FreeGo/White%20Black.webp
+e0000189-0000-0000-0000-000000000189,a0000031-0000-0000-0000-000000000031,Đen,#1A1A1A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/Black.webp
+e0000190-0000-0000-0000-000000000190,a0000031-0000-0000-0000-000000000031,Xanh Đen Special,#1A4A7A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/Blue%20Black%20Special.webp
+e0000191-0000-0000-0000-000000000191,a0000031-0000-0000-0000-000000000031,Xanh Đen,#3A6A8A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/Blue%20Black.webp
+e0000192-0000-0000-0000-000000000192,a0000031-0000-0000-0000-000000000031,Xanh Dương,#4A8ABE,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/Blue.webp
+e0000193-0000-0000-0000-000000000193,a0000031-0000-0000-0000-000000000031,Xanh Lá Đen,#4A7A4A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/Green%20Black.webp
+e0000194-0000-0000-0000-000000000194,a0000031-0000-0000-0000-000000000031,Xám Đen Special,#6B6B6B,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/Grey%20Black%20Special.webp
+e0000195-0000-0000-0000-000000000195,a0000031-0000-0000-0000-000000000031,Xám Đen,#8A8A8A,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/Grey%20Black.webp
+e0000196-0000-0000-0000-000000000196,a0000031-0000-0000-0000-000000000031,Đỏ Đen,#B22222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/Red%20Black.webp
+e0000197-0000-0000-0000-000000000197,a0000031-0000-0000-0000-000000000031,Đỏ,#CC2222,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/Red.webp
+e0000198-0000-0000-0000-000000000198,a0000031-0000-0000-0000-000000000031,Trắng Đen Special,#F5F5F5,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/White%20Black%20Special.webp
+e0000199-0000-0000-0000-000000000199,a0000031-0000-0000-0000-000000000031,Trắng Đen,#E8E8E8,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/White%20Black.webp
+e0000200-0000-0000-0000-000000000200,a0000031-0000-0000-0000-000000000031,Trắng,#FFFFFF,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Latte/White.webp
+e0000201-0000-0000-0000-000000000201,a0000032-0000-0000-0000-000000000032,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Lexi/Black.webp
+e0000202-0000-0000-0000-000000000202,a0000032-0000-0000-0000-000000000032,Xanh Xám,#6B8FA8,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Lexi/Blue%20Grey.webp
+e0000203-0000-0000-0000-000000000203,a0000032-0000-0000-0000-000000000032,Trắng Đen,#F0F0F0,https://d3iova6424vljy.cloudfront.net/master/variants/Yamaha/Automatic/Lexi/White%20Black.webp
+e0000204-0000-0000-0000-000000000204,a0000033-0000-0000-0000-000000000033,Beige,#D4B896,https://d3iova6424vljy.cloudfront.net/master/variants/Vespa/GTS/Beige.avif
+e0000205-0000-0000-0000-000000000205,a0000034-0000-0000-0000-000000000034,Xanh Lá,#228B22,https://d3iova6424vljy.cloudfront.net/master/variants/Vespa/Sprint/Green.jpg
+e0000206-0000-0000-0000-000000000206,a0000034-0000-0000-0000-000000000034,Đen,#111111,https://d3iova6424vljy.cloudfront.net/master/variants/Vespa/Sprint/Black.jpg

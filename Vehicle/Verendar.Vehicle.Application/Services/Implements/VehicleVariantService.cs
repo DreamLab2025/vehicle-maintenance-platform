@@ -7,16 +7,10 @@ using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
-    public class VehicleVariantService : IVehicleVariantService
+    public class VehicleVariantService(ILogger<VehicleVariantService> logger, IUnitOfWork unitOfWork) : IVehicleVariantService
     {
-        private readonly ILogger<VehicleVariantService> _logger;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public VehicleVariantService(ILogger<VehicleVariantService> logger, IUnitOfWork unitOfWork)
-        {
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-        }
+        private readonly ILogger<VehicleVariantService> _logger = logger;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         public async Task<ApiResponse<List<VehicleVariantResponse>>> GetImagesByModelIdAsync(Guid vehicleModelId)
         {

@@ -3,34 +3,35 @@ using Microsoft.EntityFrameworkCore;
 using Verendar.Common.Databases.Base;
 using Verendar.Notification.Domain.Enums;
 
-namespace Verendar.Notification.Domain.Entities;
-
-[Index(nameof(NotificationId), nameof(Channel))]
-public class NotificationDelivery : BaseEntity
+namespace Verendar.Notification.Domain.Entities
 {
-    [Required]
-    public Guid NotificationId { get; set; }
-    public Notification Notification { get; set; } = null!;
+    [Index(nameof(NotificationId), nameof(Channel))]
+    public class NotificationDelivery : BaseEntity
+    {
+        [Required]
+        public Guid NotificationId { get; set; }
+        public Notification Notification { get; set; } = null!;
 
-    [Required]
-    public NotificationChannel Channel { get; set; }
+        [Required]
+        public NotificationChannel Channel { get; set; }
 
-    public NotificationStatus Status { get; set; } = NotificationStatus.Pending;
+        public NotificationStatus Status { get; set; } = NotificationStatus.Pending;
 
-    [MaxLength(200)]
-    public string? RecipientAddress { get; set; }
+        [MaxLength(200)]
+        public string? RecipientAddress { get; set; }
 
-    public DateTime? SentAt { get; set; }
-    public DateTime? DeliveredAt { get; set; }
+        public DateTime? SentAt { get; set; }
+        public DateTime? DeliveredAt { get; set; }
 
-    public int RetryCount { get; set; } = 0;
-    public int MaxRetries { get; set; } = 3;
+        public int RetryCount { get; set; } = 0;
+        public int MaxRetries { get; set; } = 3;
 
-    [MaxLength(1000)]
-    public string? ErrorMessage { get; set; }
+        [MaxLength(1000)]
+        public string? ErrorMessage { get; set; }
 
-    public DateTime? NextRetryAt { get; set; }
+        public DateTime? NextRetryAt { get; set; }
 
-    [MaxLength(200)]
-    public string? ExternalId { get; set; }
+        [MaxLength(200)]
+        public string? ExternalId { get; set; }
+    }
 }
