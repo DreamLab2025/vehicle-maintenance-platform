@@ -14,6 +14,9 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public Guid? PartProductId { get; set; }
 
+        [MaxLength(200)]
+        public string? CustomPartName { get; set; }
+
         [MaxLength(50)]
         public string? InstanceIdentifier { get; set; }
 

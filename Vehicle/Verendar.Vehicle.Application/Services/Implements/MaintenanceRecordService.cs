@@ -106,6 +106,20 @@ namespace Verendar.Vehicle.Application.Services.Implements
                             predictedNextDate = existingTracking.PredictedNextDate;
                         }
                     }
+                    else if (itemInput.UpdatesTracking && (!itemInput.PartProductId.HasValue))
+                    {
+                        customKm = itemInput.CustomKmInterval;
+                        customMonths = itemInput.CustomMonthsInterval;
+                        if (customKm.GetValueOrDefault(0) > 0) predictedNextOdo = lastOdo + (customKm ?? 0);
+                        if (customMonths.GetValueOrDefault(0) > 0) predictedNextDate = lastDate.AddMonths(customMonths ?? 0);
+                        if (existingTracking != null && !predictedNextOdo.HasValue && !predictedNextDate.HasValue)
+                        {
+                            customKm = existingTracking.CustomKmInterval ?? customKm;
+                            customMonths = existingTracking.CustomMonthsInterval ?? customMonths;
+                            predictedNextOdo = existingTracking.PredictedNextOdometer;
+                            predictedNextDate = existingTracking.PredictedNextDate;
+                        }
+                    }
                     else if (existingTracking != null)
                     {
                         customKm = existingTracking.CustomKmInterval;
@@ -180,6 +194,33 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 _logger.LogError(ex, "Error creating maintenance record for vehicle {VehicleId}", vehicleId);
                 return ApiResponse<CreateMaintenanceRecordResponse>.FailureResponse("Lỗi khi tạo phiếu bảo dưỡng");
             }
+        }
+
+        public async Task<ApiResponse<IReadOnlyList<MaintenanceRecordSummaryDto>>> GetMaintenanceHistoryAsync(Guid userId, Guid userVehicleId)
+        {
+            var vehicle = await _unitOfWork.UserVehicles.AsQueryable()
+                .FirstOrDefaultAsync(v => v.Id == userVehicleId && v.UserId == userId);
+            if (vehicle == null)
+                return ApiResponse<IReadOnlyList<MaintenanceRecordSummaryDto>>.FailureResponse("Không tìm thấy xe");
+
+            var records = await _unitOfWork.MaintenanceRecords.GetByUserVehicleIdWithItemsAsync(userVehicleId);
+            var list = records.Select(r => r.ToMaintenanceRecordSummaryDto()).ToList();
+            return ApiResponse<IReadOnlyList<MaintenanceRecordSummaryDto>>.SuccessResponse(list, "Lấy lịch sử bảo dưỡng thành công");
+        }
+
+        public async Task<ApiResponse<MaintenanceRecordDetailDto>> GetMaintenanceRecordDetailAsync(Guid userId, Guid maintenanceRecordId)
+        {
+            var record = await _unitOfWork.MaintenanceRecords.GetWithItemsAsync(maintenanceRecordId);
+            if (record == null)
+                return ApiResponse<MaintenanceRecordDetailDto>.FailureResponse("Không tìm thấy phiếu bảo dưỡng");
+
+            var vehicle = await _unitOfWork.UserVehicles.AsQueryable()
+                .FirstOrDefaultAsync(v => v.Id == record.UserVehicleId && v.UserId == userId);
+            if (vehicle == null)
+                return ApiResponse<MaintenanceRecordDetailDto>.FailureResponse("Bạn không có quyền xem phiếu bảo dưỡng này");
+
+            var detail = record.ToMaintenanceRecordDetailDto();
+            return ApiResponse<MaintenanceRecordDetailDto>.SuccessResponse(detail, "Lấy chi tiết phiếu bảo dưỡng thành công");
         }
     }
 }

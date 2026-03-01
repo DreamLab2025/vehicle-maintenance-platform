@@ -34,6 +34,27 @@ namespace Verendar.Vehicle.Application.Validators
                     .MaximumLength(500)
                     .When(x => x.ItemNotes != null)
                     .WithMessage("Ghi chú dòng phụ tùng tối đa 500 ký tự");
+                item.RuleFor(x => x.CustomPartName)
+                    .NotEmpty()
+                    .WithMessage("Khi không chọn sản phẩm cần nhập tên phụ tùng (CustomPartName).")
+                    .MaximumLength(200)
+                    .WithMessage("Tên phụ tùng tối đa 200 ký tự")
+                    .When(x => !x.PartProductId.HasValue);
+                item.RuleFor(x => x.CustomPartName)
+                    .MaximumLength(200)
+                    .When(x => x.CustomPartName != null)
+                    .WithMessage("Tên phụ tùng tối đa 200 ký tự");
+                item.RuleFor(x => x.CustomKmInterval)
+                    .GreaterThan(0)
+                    .When(x => x.CustomKmInterval.HasValue)
+                    .WithMessage("Chu kỳ km phải lớn hơn 0");
+                item.RuleFor(x => x.CustomMonthsInterval)
+                    .GreaterThan(0)
+                    .When(x => x.CustomMonthsInterval.HasValue)
+                    .WithMessage("Chu kỳ tháng phải lớn hơn 0");
+                item.RuleFor(x => x)
+                    .Must(x => x.PartProductId.HasValue || !x.UpdatesTracking || (x.CustomKmInterval ?? 0) > 0 || (x.CustomMonthsInterval ?? 0) > 0)
+                    .WithMessage("Khi không chọn sản phẩm và có cập nhật tracking, cần nhập ít nhất Chu kỳ km hoặc Chu kỳ tháng (vd: 1500 km / 3 tháng theo hướng dẫn thợ).");
             });
 
             RuleFor(x => x.TotalCost)
