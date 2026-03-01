@@ -31,6 +31,12 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization()
                 .Produces<ApiResponse<PartCategoryResponse>>(StatusCodes.Status200OK);
 
+            group.MapGet("/categories/vehicle/{vehicleId:guid}", GetCategoriesByVehicleTrackedParts)
+                .WithName("GetPartCategoriesByVehicleTrackedParts")
+                .WithOpenApi(op => { op.Summary = "Get part categories of tracked parts for a user vehicle"; return op; })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<PartCategoryResponse>>>(StatusCodes.Status200OK);
+
             group.MapPost("/categories", CreateCategory)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<PartCategoryRequest>())
                 .WithName("CreatePartCategory")
@@ -103,6 +109,12 @@ namespace Verendar.Vehicle.Apis
         private static async Task<IResult> GetCategoryById(Guid id, IPartCategoryService service)
         {
             var result = await service.GetCategoryByIdAsync(id);
+            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+        }
+
+        private static async Task<IResult> GetCategoriesByVehicleTrackedParts(Guid vehicleId, IPartCategoryService service)
+        {
+            var result = await service.GetCategoriesByVehicleTrackedPartsAsync(vehicleId);
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 

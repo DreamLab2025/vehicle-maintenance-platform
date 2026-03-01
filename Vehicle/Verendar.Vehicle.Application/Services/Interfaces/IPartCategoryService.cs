@@ -10,5 +10,6 @@ namespace Verendar.Vehicle.Application.Services.Interfaces
         Task<ApiResponse<string>> DeleteCategoryAsync(Guid id);
         Task<ApiResponse<List<PartCategoryResponse>>> GetAllCategoriesAsync(PaginationRequest paginationRequest);
         Task<ApiResponse<PartCategoryResponse>> GetCategoryByIdAsync(Guid id);
+        Task<ApiResponse<List<PartCategoryResponse>>> GetCategoriesByVehicleTrackedPartsAsync(Guid userVehicleId);
     }
 }

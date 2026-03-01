@@ -19,7 +19,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             {
                 if (await _unitOfWork.PartCategories.GetByCodeAsync(request.Code) != null)
                 {
-                    return ApiResponse<PartCategoryResponse>.FailureResponse("Category code already exists");
+                    return ApiResponse<PartCategoryResponse>.FailureResponse("Mã danh mục phụ tùng đã tồn tại");
                 }
 
                 var category = request.ToEntity();
@@ -30,12 +30,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 return ApiResponse<PartCategoryResponse>.SuccessResponse(
                     category.ToResponse(),
-                    "Category created successfully");
+                    "Tạo danh mục phụ tùng thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating part category {CategoryName}", request.Name);
-                return ApiResponse<PartCategoryResponse>.FailureResponse("Error creating category");
+                return ApiResponse<PartCategoryResponse>.FailureResponse("Lỗi khi tạo danh mục phụ tùng");
             }
         }
 
@@ -46,13 +46,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(id);
                 if (category == null || category.DeletedAt != null)
                 {
-                    return ApiResponse<PartCategoryResponse>.FailureResponse("Category not found");
+                    return ApiResponse<PartCategoryResponse>.FailureResponse("Không tìm thấy danh mục phụ tùng");
                 }
 
                 var existingByCode = await _unitOfWork.PartCategories.GetByCodeAsync(request.Code);
                 if (existingByCode != null && existingByCode.Id != id)
                 {
-                    return ApiResponse<PartCategoryResponse>.FailureResponse("Category code already exists");
+                    return ApiResponse<PartCategoryResponse>.FailureResponse("Mã danh mục phụ tùng đã tồn tại");
                 }
 
                 category.UpdateEntity(request);
@@ -63,12 +63,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 return ApiResponse<PartCategoryResponse>.SuccessResponse(
                     category.ToResponse(),
-                    "Category updated successfully");
+                    "Cập nhật danh mục phụ tùng thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating part category with ID: {CategoryId}", id);
-                return ApiResponse<PartCategoryResponse>.FailureResponse("Error updating category");
+                return ApiResponse<PartCategoryResponse>.FailureResponse("Lỗi khi cập nhật danh mục phụ tùng");
             }
         }
 
@@ -79,7 +79,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(id);
                 if (category == null || category.DeletedAt != null)
                 {
-                    return ApiResponse<string>.FailureResponse("Category not found");
+                    return ApiResponse<string>.FailureResponse("Không tìm thấy danh mục phụ tùng");
                 }
 
                 await _unitOfWork.PartCategories.DeleteAsync(id);
@@ -87,12 +87,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 _logger.LogInformation("Deleted part category {CategoryName} (ID: {CategoryId})", category.Name, id);
 
-                return ApiResponse<string>.SuccessResponse("Deleted", "Category deleted successfully");
+                return ApiResponse<string>.SuccessResponse("Đã xóa", "Xóa danh mục phụ tùng thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting part category with ID: {CategoryId}", id);
-                return ApiResponse<string>.FailureResponse("Error deleting category");
+                return ApiResponse<string>.FailureResponse("Lỗi khi xóa danh mục phụ tùng");
             }
         }
 
@@ -121,12 +121,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     totalCount,
                     paginationRequest.PageNumber,
                     paginationRequest.PageSize,
-                    "Categories retrieved successfully");
+                    "Lấy danh sách danh mục phụ tùng thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all part categories");
-                return ApiResponse<List<PartCategoryResponse>>.FailureResponse("Error retrieving categories");
+                return ApiResponse<List<PartCategoryResponse>>.FailureResponse("Lỗi khi lấy danh sách danh mục phụ tùng");
             }
         }
 
@@ -137,17 +137,43 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(id);
                 if (category == null || category.DeletedAt != null)
                 {
-                    return ApiResponse<PartCategoryResponse>.FailureResponse("Category not found");
+                    return ApiResponse<PartCategoryResponse>.FailureResponse("Không tìm thấy danh mục phụ tùng");
                 }
 
                 return ApiResponse<PartCategoryResponse>.SuccessResponse(
                     category.ToResponse(),
-                    "Category retrieved successfully");
+                    "Lấy thông tin danh mục phụ tùng thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting part category with ID: {CategoryId}", id);
-                return ApiResponse<PartCategoryResponse>.FailureResponse("Error retrieving category");
+                return ApiResponse<PartCategoryResponse>.FailureResponse("Lỗi khi lấy thông tin danh mục phụ tùng");
+            }
+        }
+
+        public async Task<ApiResponse<List<PartCategoryResponse>>> GetCategoriesByVehicleTrackedPartsAsync(Guid userVehicleId)
+        {
+            try
+            {
+                var trackings = await _unitOfWork.VehiclePartTrackings.GetByUserVehicleIdAsync(userVehicleId);
+                var categories = trackings
+                    .Where(t => t.PartCategory != null && t.PartCategory.DeletedAt == null)
+                    .Select(t => t.PartCategory!)
+                    .GroupBy(c => c.Id)
+                    .Select(g => g.First())
+                    .OrderBy(c => c.DisplayOrder)
+                    .ThenBy(c => c.CreatedAt)
+                    .Select(c => c.ToResponse())
+                    .ToList();
+
+                return ApiResponse<List<PartCategoryResponse>>.SuccessResponse(
+                    categories,
+                    "Lấy danh mục phụ tùng đang theo dõi thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting part categories by vehicle tracked parts for UserVehicleId: {UserVehicleId}", userVehicleId);
+                return ApiResponse<List<PartCategoryResponse>>.FailureResponse("Lỗi khi lấy danh mục phụ tùng theo xe");
             }
         }
     }
