@@ -595,12 +595,32 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var currentReminder = await _unitOfWork.MaintenanceReminders.AsQueryable()
                     .FirstOrDefaultAsync(r => r.VehiclePartTrackingId == tracking.Id && r.IsCurrent);
 
-                if (currentReminder != null)
+                var stateChanged = currentReminder != null && (
+                    currentReminder.Level != level ||
+                    currentReminder.TargetOdometer != targetOdometer ||
+                    currentReminder.TargetDate != targetDate);
+
+                if (currentReminder != null && stateChanged)
+                {
+                    // Lưu lịch sử: đánh dấu reminder hiện tại không còn current, tạo bản ghi mới
+                    currentReminder.IsCurrent = false;
+                    await _unitOfWork.MaintenanceReminders.UpdateAsync(currentReminder.Id, currentReminder);
+
+                    var reminder = new MaintenanceReminder
+                    {
+                        VehiclePartTrackingId = tracking.Id,
+                        CurrentOdometer = currentOdometer,
+                        TargetOdometer = targetOdometer,
+                        TargetDate = targetDate,
+                        Level = level,
+                        PercentageRemaining = percentageRemaining.Value,
+                        IsCurrent = true,
+                    };
+                    await _unitOfWork.MaintenanceReminders.AddAsync(reminder);
+                }
+                else if (currentReminder != null)
                 {
                     currentReminder.CurrentOdometer = currentOdometer;
-                    currentReminder.TargetOdometer = targetOdometer;
-                    currentReminder.TargetDate = targetDate;
-                    currentReminder.Level = level;
                     currentReminder.PercentageRemaining = percentageRemaining.Value;
                     await _unitOfWork.MaintenanceReminders.UpdateAsync(currentReminder.Id, currentReminder);
                 }
