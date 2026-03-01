@@ -592,6 +592,10 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var targetOdometer = tracking.PredictedNextOdometer ?? currentOdometer;
                 var level = GetLevelFromPercentage(percentageRemaining.Value);
 
+                // Reminder urgent (Critical) nếu số km hoặc ngày đã vượt mục tiêu
+                if (currentOdometer >= targetOdometer || (targetDate.HasValue && today >= targetDate.Value))
+                    level = ReminderLevel.Critical;
+
                 var currentReminder = await _unitOfWork.MaintenanceReminders.AsQueryable()
                     .FirstOrDefaultAsync(r => r.VehiclePartTrackingId == tracking.Id && r.IsCurrent);
 

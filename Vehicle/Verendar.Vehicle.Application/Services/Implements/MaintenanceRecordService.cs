@@ -6,6 +6,7 @@ using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Domain.Entities;
+using Verendar.Vehicle.Domain.Enums;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
@@ -42,6 +43,25 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 DateOnly lastDate = record.ServiceDate;
                 var itemResults = new List<CreateMaintenanceRecordItemResult>();
                 var trackingIdsToResetReminders = new List<Guid>();
+
+                if (record.OdometerAtService >= vehicle.CurrentOdometer)
+                {
+                    var previousOdo = vehicle.CurrentOdometer;
+                    vehicle.UpdateOdometer(record.OdometerAtService);
+                    vehicle.LastOdometerUpdate = record.ServiceDate;
+                    await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
+
+                    var odometerHistory = new OdometerHistory
+                    {
+                        UserVehicleId = vehicleId,
+                        OdometerValue = record.OdometerAtService,
+                        RecordedDate = record.ServiceDate,
+                        Source = OdometerSource.ServiceRecord,
+                        KmOnRecordedDate = record.OdometerAtService - previousOdo
+                    };
+                    await _unitOfWork.OdometerHistories.AddAsync(odometerHistory);
+                    await _unitOfWork.SaveChangesAsync();
+                }
 
                 foreach (var itemInput in request.Items)
                 {

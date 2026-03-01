@@ -412,6 +412,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     NotifiedDate = table.Column<DateOnly>(type: "date", nullable: true),
                     IsDismissed = table.Column<bool>(type: "boolean", nullable: false),
                     DismissedDate = table.Column<DateOnly>(type: "date", nullable: true),
+                    IsCurrent = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<Guid>(type: "uuid", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
