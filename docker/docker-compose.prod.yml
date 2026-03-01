@@ -31,6 +31,11 @@ x-media-service-environment: &media-service-environment
   ConnectionStrings__media-db: Host=postgres;Port=5432;Database=${MEDIA_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
   ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  S3Settings__BucketName: ${MEDIA_S3_BUCKET_NAME}
+  S3Settings__Region: ${MEDIA_S3_REGION:-ap-southeast-1}
+  S3Settings__AccessKey: ${MEDIA_S3_ACCESS_KEY}
+  S3Settings__SecretKey: ${MEDIA_S3_SECRET_KEY}
+  S3Settings__CloudFrontUrl: ${MEDIA_S3_CLOUDFRONT_URL:-}
 
 x-notification-service-environment: &notification-service-environment
   ConnectionStrings__notification-db: Host=postgres;Port=5432;Database=${NOTIFICATION_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
