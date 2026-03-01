@@ -93,12 +93,14 @@ namespace Verendar.Vehicle.Application.Dtos
         public string Level { get; set; } = null!;
         public int CurrentOdometer { get; set; }
         public int TargetOdometer { get; set; }
+        public int RemainingKm { get; set; }
         public DateOnly? TargetDate { get; set; }
         public decimal PercentageRemaining { get; set; }
         public bool IsNotified { get; set; }
         public DateOnly? NotifiedDate { get; set; }
         public bool IsDismissed { get; set; }
         public DateOnly? DismissedDate { get; set; }
+        public bool IsCurrent { get; set; }
     }
 
     public class VehicleStreakResponse
@@ -122,6 +124,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public string Level { get; set; } = null!;
         public int CurrentOdometer { get; set; }
         public int TargetOdometer { get; set; }
+        public int RemainingKm { get; set; }
         public DateOnly? TargetDate { get; set; }
         public decimal PercentageRemaining { get; set; }
         public bool IsNotified { get; set; }

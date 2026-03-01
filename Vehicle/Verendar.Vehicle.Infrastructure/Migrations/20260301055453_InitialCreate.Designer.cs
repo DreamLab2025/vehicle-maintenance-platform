@@ -12,7 +12,7 @@ using Verendar.Vehicle.Infrastructure.Data;
 namespace Verendar.Vehicle.Infrastructure.Migrations
 {
     [DbContext(typeof(VehicleDbContext))]
-    [Migration("20260210105611_InitialCreate")]
+    [Migration("20260301055453_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -218,6 +218,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.Property<DateOnly?>("DismissedDate")
                         .HasColumnType("date");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDismissed")
                         .HasColumnType("boolean");

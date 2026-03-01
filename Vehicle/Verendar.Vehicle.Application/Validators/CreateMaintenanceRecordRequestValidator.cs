@@ -34,18 +34,6 @@ namespace Verendar.Vehicle.Application.Validators
                     .MaximumLength(500)
                     .When(x => x.ItemNotes != null)
                     .WithMessage("Ghi chú dòng phụ tùng tối đa 500 ký tự");
-                item.RuleFor(x => x.CustomKmInterval)
-                    .GreaterThan(0)
-                    .When(x => x.CustomKmInterval.HasValue)
-                    .WithMessage("Chu kỳ km phải lớn hơn 0");
-                item.RuleFor(x => x.CustomMonthsInterval)
-                    .GreaterThan(0)
-                    .When(x => x.CustomMonthsInterval.HasValue)
-                    .WithMessage("Chu kỳ tháng phải lớn hơn 0");
-                item.RuleFor(x => x.PredictedNextOdometer)
-                    .GreaterThanOrEqualTo(0)
-                    .When(x => x.PredictedNextOdometer.HasValue)
-                    .WithMessage("Số km dự đoán lần tiếp theo phải lớn hơn hoặc bằng 0");
             });
 
             RuleFor(x => x.TotalCost)

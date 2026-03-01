@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Verendar.Notification.Application.Dtos.InApp;
 using Verendar.Notification.Application.Services.Interfaces;
-using Verendar.Notification.Hubs;
+using Verendar.Notification.Application.Hubs;
 
-namespace Verendar.Notification.Services
+namespace Verendar.Notification.Application.Services.Implements
 {
     public class InAppNotificationService(
         IHubContext<NotificationHub> hubContext,

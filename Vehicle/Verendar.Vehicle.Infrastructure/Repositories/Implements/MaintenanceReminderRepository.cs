@@ -15,7 +15,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .Include(x => x.PartTracking)
                     .ThenInclude(x => x.PartCategory)
                 .Where(x => x.PartTracking.UserVehicleId == userVehicleId)
-                .OrderByDescending(x => x.Level)
                 .ToListAsync(cancellationToken);
         }
 
@@ -26,9 +25,9 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                     .ThenInclude(x => x.PartCategory)
                 .Where(x =>
                     x.PartTracking.UserVehicleId == userVehicleId &&
+                    x.IsCurrent &&
                     !x.IsNotified &&
                     !x.IsDismissed)
-                .OrderByDescending(x => x.Level)
                 .ToListAsync(cancellationToken);
         }
 
@@ -37,7 +36,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
             return await _dbSet
                 .Include(x => x.PartTracking)
                     .ThenInclude(x => x.PartCategory)
-                .Where(x => x.Level == level && !x.IsNotified)
+                .Where(x => x.Level == level && x.IsCurrent && !x.IsNotified)
                 .ToListAsync(cancellationToken);
         }
 
@@ -49,14 +48,29 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
             var query = _dbSet
                 .Include(x => x.PartTracking)
                     .ThenInclude(pt => pt!.UserVehicle)
+                        .ThenInclude(uv => uv!.Variant)
+                            .ThenInclude(v => v!.VehicleModel)
                 .Include(x => x.PartTracking)
                     .ThenInclude(pt => pt!.PartCategory)
-                .Where(x => x.Level == level);
+                .Where(x => x.Level == level && x.IsCurrent);
 
             if (!includeAlreadyNotified)
                 query = query.Where(x => !x.IsNotified);
 
             return await query.ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<MaintenanceReminder>> GetByUserVehicleIdWithDetailsAsync(Guid userVehicleId, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Include(x => x.PartTracking)
+                    .ThenInclude(pt => pt!.PartCategory)
+                .Include(x => x.PartTracking)
+                    .ThenInclude(pt => pt!.UserVehicle)
+                        .ThenInclude(uv => uv!.Variant)
+                            .ThenInclude(v => v!.VehicleModel)
+                .Where(x => x.PartTracking!.UserVehicleId == userVehicleId && x.IsCurrent)
+                .ToListAsync(cancellationToken);
         }
     }
 }

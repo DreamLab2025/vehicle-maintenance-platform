@@ -9,7 +9,7 @@ using Verendar.Vehicle.Application.Validators;
 using Verendar.Vehicle.Apis;
 using Verendar.Vehicle.Application.Services.Implements;
 using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Vehicle.Clients;
+using Verendar.Vehicle.Application.Clients;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 using Verendar.Vehicle.Infrastructure.Data;
 using Verendar.Vehicle.Infrastructure.Repositories.Implements;
@@ -49,7 +49,6 @@ namespace Verendar.Vehicle.Bootstrapping
 
             builder.Services.AddScoped<OdometerReminderJob>();
             builder.Services.AddScoped<MaintenanceReminderJob>();
-            builder.Services.AddScoped<IMaintenanceReminderService, Services.MaintenanceReminderService>();
 
             // Register Unit of Work
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -60,6 +59,7 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IVehicleModelService, VehicleModelService>();
             builder.Services.AddScoped<IVehicleVariantService, VehicleVariantService>();
             builder.Services.AddScoped<IUserVehicleService, UserVehicleService>();
+            builder.Services.AddScoped<IMaintenanceReminderService, MaintenanceReminderService>();
             builder.Services.AddScoped<IDefaultMaintenanceScheduleService, DefaultMaintenanceScheduleService>();
             builder.Services.AddScoped<IPartCategoryService, PartCategoryService>();
             builder.Services.AddScoped<IPartProductService, PartProductService>();

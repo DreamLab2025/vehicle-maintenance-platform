@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Verendar.Common.Databases.Base;
+using Verendar.Identity.Application.Helpers;
 using Verendar.Identity.Domain.Entities;
-using Verendar.Identity.Infrastructure.Data;
 
 namespace Verendar.Identity.Infrastructure.Data.Seeders
 {
@@ -15,13 +15,14 @@ namespace Verendar.Identity.Infrastructure.Data.Seeders
 
         public static async Task SeedAsync(UserDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
         {
+            var normalizedEmail = EmailHelper.Normalize(TestUserEmail);
             var existing = await db.Users
                 .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(u => u.Email == TestUserEmail, cancellationToken);
+                .FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
 
             if (existing != null)
             {
-                logger?.LogDebug("Test user already exists: {Email}", TestUserEmail);
+                logger?.LogDebug("Test user already exists: {Email}", normalizedEmail);
                 return;
             }
 
@@ -29,7 +30,7 @@ namespace Verendar.Identity.Infrastructure.Data.Seeders
             var user = new User
             {
                 Id = TestUserId,
-                Email = TestUserEmail,
+                Email = normalizedEmail,
                 FullName = "Test User (Background Jobs)",
                 PasswordHash = string.Empty,
                 EmailVerified = true,
@@ -43,7 +44,7 @@ namespace Verendar.Identity.Infrastructure.Data.Seeders
 
             db.Users.Add(user);
             await db.SaveChangesAsync(cancellationToken);
-            logger?.LogInformation("Seeded test user: {Email} (Id: {UserId}) for background job flows", TestUserEmail, TestUserId);
+            logger?.LogInformation("Seeded test user: {Email} (Id: {UserId}) for background job flows", normalizedEmail, TestUserId);
         }
     }
 }

@@ -1,7 +1,7 @@
-﻿sep=,
+sep=,
 Id,PartCategoryId,Name,Brand,Description,ImageUrl,ReferencePrice,RecommendedKmInterval,RecommendedMonthsInterval,Status
 90000001-0000-0000-0000-000000000001,c0000001-0000-0000-0000-000000000001,Shell Advance AX7 10W-40,Shell,Dầu nhớt bán tổng hợp cao cấp cho xe số,,85000,,,1
-90000002-0000-0000-0000-000000000002,c0000001-0000-0000-0000-000000000001,Castrol Power1 10W-40,Castrol,Dầu nhớt tổng hợp cho xe tay ga,,95000,,,1
+90000002-0000-0000-0000-000000000002,c0000001-0000-0000-0000-000000000001,Castrol Power1 10W-40,Castrol,"Dầu nhớt bán tổng hợp 10W-40 cho xe tay ga và xe số. Công nghệ Active Protection bảo vệ động cơ, giảm ma sát, chạy êm. Phù hợp Honda Vision, Wave, Future, SH và các xe tay ga phổ biến. Độ nhớt đa cấp hoạt động tốt trong điều kiện khí hậu Việt Nam.",,95000,2000,3,1
 90000003-0000-0000-0000-000000000003,c0000001-0000-0000-0000-000000000001,Motul 5100 10W-40,Motul,Dầu nhớt bán tổng hợp cao cấp cho xe côn tay,,145000,,,1
 90000004-0000-0000-0000-000000000004,c0000002-0000-0000-0000-000000000002,Michelin Pilot Street 80/90-17,Michelin,Lốp trước cho xe số,,420000,,,1
 90000005-0000-0000-0000-000000000005,c0000002-0000-0000-0000-000000000002,Dunlop D307 90/80-17,Dunlop,Lốp sau cho xe tay ga,,380000,,,1

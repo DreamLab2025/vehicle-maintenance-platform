@@ -8,10 +8,6 @@ namespace Verendar.Vehicle.Application.Dtos
         public decimal? Price { get; set; }
         public string? ItemNotes { get; set; }
         public bool UpdatesTracking { get; set; } = true;
-        public int? CustomKmInterval { get; set; }
-        public int? CustomMonthsInterval { get; set; }
-        public int? PredictedNextOdometer { get; set; }
-        public DateOnly? PredictedNextDate { get; set; }
     }
 
     public class CreateMaintenanceRecordRequest

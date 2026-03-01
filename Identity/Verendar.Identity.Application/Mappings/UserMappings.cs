@@ -1,5 +1,6 @@
 using Verendar.Common.Databases.Base;
 using Verendar.Identity.Application.Dtos;
+using Verendar.Identity.Application.Helpers;
 using Verendar.Identity.Domain.Entities;
 
 namespace Verendar.Identity.Application.Mappings
@@ -24,13 +25,14 @@ namespace Verendar.Identity.Application.Mappings
 
         public static User ToEntity(this RegisterRequest request, string passwordHash)
         {
+            var normalizedEmail = EmailHelper.Normalize(request.Email);
             var userId = Guid.CreateVersion7();
             return new User
             {
                 Id = userId,
-                Email = request.Email,
+                Email = normalizedEmail,
                 PasswordHash = passwordHash,
-                FullName = request.Email,
+                FullName = normalizedEmail,
                 Status = EntityStatus.Active,
                 Roles = new List<UserRole> { UserRole.User },
                 PhoneNumberVerified = false,

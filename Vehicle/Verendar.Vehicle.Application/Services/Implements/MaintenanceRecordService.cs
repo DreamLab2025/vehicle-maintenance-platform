@@ -6,6 +6,7 @@ using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Domain.Entities;
+using Verendar.Vehicle.Domain.Enums;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
@@ -41,6 +42,26 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 int lastOdo = record.OdometerAtService;
                 DateOnly lastDate = record.ServiceDate;
                 var itemResults = new List<CreateMaintenanceRecordItemResult>();
+                var trackingIdsToResetReminders = new List<Guid>();
+
+                if (record.OdometerAtService >= vehicle.CurrentOdometer)
+                {
+                    var previousOdo = vehicle.CurrentOdometer;
+                    vehicle.UpdateOdometer(record.OdometerAtService);
+                    vehicle.LastOdometerUpdate = record.ServiceDate;
+                    await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
+
+                    var odometerHistory = new OdometerHistory
+                    {
+                        UserVehicleId = vehicleId,
+                        OdometerValue = record.OdometerAtService,
+                        RecordedDate = record.ServiceDate,
+                        Source = OdometerSource.ServiceRecord,
+                        KmOnRecordedDate = record.OdometerAtService - previousOdo
+                    };
+                    await _unitOfWork.OdometerHistories.AddAsync(odometerHistory);
+                    await _unitOfWork.SaveChangesAsync();
+                }
 
                 foreach (var itemInput in request.Items)
                 {
@@ -74,15 +95,23 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                         customKm = product.RecommendedKmInterval;
                         customMonths = product.RecommendedMonthsInterval;
-                        if (customKm.GetValueOrDefault(0) > 0) predictedNextOdo = lastOdo + customKm.Value;
-                        if (customMonths.GetValueOrDefault(0) > 0) predictedNextDate = lastDate.AddMonths(customMonths.Value);
+                        if (customKm.GetValueOrDefault(0) > 0) predictedNextOdo = lastOdo + (customKm ?? 0);
+                        if (customMonths.GetValueOrDefault(0) > 0) predictedNextDate = lastDate.AddMonths(customMonths ?? 0);
+
+                        if (existingTracking != null && !predictedNextOdo.HasValue && !predictedNextDate.HasValue)
+                        {
+                            customKm = existingTracking.CustomKmInterval ?? customKm;
+                            customMonths = existingTracking.CustomMonthsInterval ?? customMonths;
+                            predictedNextOdo = existingTracking.PredictedNextOdometer;
+                            predictedNextDate = existingTracking.PredictedNextDate;
+                        }
                     }
-                    else
+                    else if (existingTracking != null)
                     {
-                        customKm = itemInput.CustomKmInterval;
-                        customMonths = itemInput.CustomMonthsInterval;
-                        predictedNextOdo = itemInput.PredictedNextOdometer ?? (customKm.GetValueOrDefault(0) > 0 ? lastOdo + (customKm ?? 0) : null);
-                        predictedNextDate = itemInput.PredictedNextDate ?? (customMonths.GetValueOrDefault(0) > 0 ? lastDate.AddMonths(customMonths ?? 0) : null);
+                        customKm = existingTracking.CustomKmInterval;
+                        customMonths = existingTracking.CustomMonthsInterval;
+                        predictedNextOdo = existingTracking.PredictedNextOdometer;
+                        predictedNextDate = existingTracking.PredictedNextDate;
                     }
 
                     var item = itemInput.ToMaintenanceRecordItem(record.Id, partCategory.Id, currentPartProductId);
@@ -118,6 +147,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                             customMonths);
                         await _unitOfWork.VehiclePartTrackings.UpdateAsync(existingTracking.Id, existingTracking);
                         tracking = existingTracking;
+                        trackingIdsToResetReminders.Add(tracking.Id);
                     }
 
                     await _unitOfWork.SaveChangesAsync();
@@ -125,6 +155,20 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     var trackingSummary = tracking.ToSummary(vehicle.CurrentOdometer);
                     itemResults.Add(MaintenanceRecordMappings.ToCreateMaintenanceRecordItemResult(item.Id, itemInput.PartCategoryCode, trackingSummary));
                 }
+
+                foreach (var trackingId in trackingIdsToResetReminders)
+                {
+                    var reminders = await _unitOfWork.MaintenanceReminders.AsQueryable()
+                        .Where(r => r.VehiclePartTrackingId == trackingId)
+                        .ToListAsync();
+                    foreach (var r in reminders)
+                    {
+                        r.IsCurrent = false;
+                        await _unitOfWork.MaintenanceReminders.UpdateAsync(r.Id, r);
+                    }
+                }
+                if (trackingIdsToResetReminders.Count > 0)
+                    await _unitOfWork.SaveChangesAsync();
 
                 await _userVehicleService.SyncMaintenanceRemindersForVehicleAsync(vehicleId, vehicle.CurrentOdometer, userId);
 

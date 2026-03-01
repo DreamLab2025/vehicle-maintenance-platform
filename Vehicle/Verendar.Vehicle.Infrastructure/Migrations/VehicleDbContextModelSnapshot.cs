@@ -216,6 +216,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<DateOnly?>("DismissedDate")
                         .HasColumnType("date");
 
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsDismissed")
                         .HasColumnType("boolean");
 

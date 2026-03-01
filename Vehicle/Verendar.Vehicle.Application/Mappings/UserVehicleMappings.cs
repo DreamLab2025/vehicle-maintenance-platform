@@ -100,24 +100,27 @@ namespace Verendar.Vehicle.Application.Mappings
                 PredictedNextOdometer = entity.PredictedNextOdometer,
                 PredictedNextDate = entity.PredictedNextDate,
                 IsDeclared = entity.IsDeclared,
-                Reminders = entity.Reminders?.Select(r => r.ToSummary(vehicleCurrentOdometer)).ToList() ?? new()
+                Reminders = entity.Reminders?.Where(r => r.IsCurrent).Select(r => r.ToSummary(vehicleCurrentOdometer)).ToList() ?? new()
             };
         }
 
         public static MaintenanceReminderSummary ToSummary(this MaintenanceReminder entity, int? vehicleCurrentOdometer = null)
         {
+            var currentOdo = vehicleCurrentOdometer ?? entity.CurrentOdometer;
             return new MaintenanceReminderSummary
             {
                 Id = entity.Id,
                 Level = entity.Level.ToString(),
-                CurrentOdometer = vehicleCurrentOdometer ?? entity.CurrentOdometer,
+                CurrentOdometer = currentOdo,
                 TargetOdometer = entity.TargetOdometer,
+                RemainingKm = entity.TargetOdometer - currentOdo,
                 TargetDate = entity.TargetDate,
                 PercentageRemaining = entity.PercentageRemaining,
                 IsNotified = entity.IsNotified,
                 NotifiedDate = entity.NotifiedDate,
                 IsDismissed = entity.IsDismissed,
-                DismissedDate = entity.DismissedDate
+                DismissedDate = entity.DismissedDate,
+                IsCurrent = entity.IsCurrent
             };
         }
 
@@ -228,13 +231,15 @@ namespace Verendar.Vehicle.Application.Mappings
 
         public static ReminderWithPartCategoryDto ToReminderWithPartCategoryDto(this MaintenanceReminder entity, int? vehicleCurrentOdometer = null)
         {
+            var currentOdo = vehicleCurrentOdometer ?? entity.CurrentOdometer;
             return new ReminderWithPartCategoryDto
             {
                 Id = entity.Id,
                 VehiclePartTrackingId = entity.VehiclePartTrackingId,
                 Level = entity.Level.ToString(),
-                CurrentOdometer = vehicleCurrentOdometer ?? entity.CurrentOdometer,
+                CurrentOdometer = currentOdo,
                 TargetOdometer = entity.TargetOdometer,
+                RemainingKm = entity.TargetOdometer - currentOdo,
                 TargetDate = entity.TargetDate,
                 PercentageRemaining = entity.PercentageRemaining,
                 IsNotified = entity.IsNotified,
