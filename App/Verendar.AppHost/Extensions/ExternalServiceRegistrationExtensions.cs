@@ -1,4 +1,4 @@
-﻿using Aspire.Hosting.Yarp;
+using Aspire.Hosting.Yarp;
 using Yarp.ReverseProxy.Configuration;
 
 namespace Verendar.AppHost.Extensions
@@ -66,36 +66,41 @@ namespace Verendar.AppHost.Extensions
 
 
             var apiGateway = builder.AddYarp("api-gateway")
-                            .WithContainerName("ApiGateway")
-                            .WithHostPort(8080)
-                            .WithConfiguration(yarp =>
-                            {
-                                var identityCluster = yarp.AddProjectCluster(identityService);
-                                yarp.AddRoute("/api/v1/auth/{**catch-all}", identityCluster);
-                                yarp.AddRoute("/api/v1/identities/{**catch-all}", identityCluster);
+                .WithContainerName("ApiGateway")
+                .WithHostPort(8080)
+                .WithConfiguration(yarp =>
+                {
+                    var identityCluster = yarp.AddProjectCluster(identityService);
+                    yarp.AddRoute("/api/v1/auth/{**catch-all}", identityCluster);
+                    yarp.AddRoute("/api/v1/users/{**catch-all}", identityCluster);
+                    yarp.AddRoute("/api/internal/{**catch-all}", identityCluster);
 
-                                var vehicleCluster = yarp.AddProjectCluster(vehicleService);
-                                yarp.AddRoute("/api/v1/brands/{**catch-all}", vehicleCluster);
-                                yarp.AddRoute("/api/v1/models/{**catch-all}", vehicleCluster);
-                                yarp.AddRoute("/api/v1/types/{**catch-all}", vehicleCluster);
-                                yarp.AddRoute("/api/v1/user-vehicles/{**catch-all}", vehicleCluster);
+                    var aiCluster = yarp.AddProjectCluster(aiService);
+                    yarp.AddRoute("/api/v1/ai/{**catch-all}", aiCluster);
 
-                                var mediaCluster = yarp.AddProjectCluster(mediaService);
-                                yarp.AddRoute("/api/v1/media-files/{**catch-all}", mediaCluster);
+                    var vehicleCluster = yarp.AddProjectCluster(vehicleService);
+                    yarp.AddRoute("/api/v1/user-vehicles/{**catch-all}", vehicleCluster);
+                    yarp.AddRoute("/api/v1/maintenance-records/{**catch-all}", vehicleCluster);
+                    yarp.AddRoute("/api/v1/variants/{**catch-all}", vehicleCluster);
+                    yarp.AddRoute("/api/v1/models/{**catch-all}", vehicleCluster);
+                    yarp.AddRoute("/api/v1/vehicle-models/{**catch-all}", vehicleCluster);
+                    yarp.AddRoute("/api/v1/odometer-history/{**catch-all}", vehicleCluster);
+                    yarp.AddRoute("/api/v1/parts/{**catch-all}", vehicleCluster);
+                    yarp.AddRoute("/api/v1/types/{**catch-all}", vehicleCluster);
+                    yarp.AddRoute("/api/v1/brands/{**catch-all}", vehicleCluster);
 
-                                var notificationCluster = yarp.AddProjectCluster(notificationService);
-                                yarp.AddRoute("/api/v1/notifications/{**catch-all}", notificationCluster);
+                    var mediaCluster = yarp.AddProjectCluster(mediaService);
+                    yarp.AddRoute("/api/v1/media-files/{**catch-all}", mediaCluster);
 
-                                yarp.AddRoute("/hubs/{**catch-all}", notificationCluster);
-
-                                var aiCluster = yarp.AddProjectCluster(aiService);
-                                yarp.AddRoute("/api/v1/ai/vehicle-questionnaire/{**catch-all}", aiCluster);
-                            })
-                            .WaitFor(identityService)
-                            .WaitFor(vehicleService)
-                            .WaitFor(mediaService)
-                            .WaitFor(notificationService)
-                            .WaitFor(aiService);
+                    var notificationCluster = yarp.AddProjectCluster(notificationService);
+                    yarp.AddRoute("/api/v1/notifications/{**catch-all}", notificationCluster);
+                    yarp.AddRoute("/hubs/{**catch-all}", notificationCluster);
+                })
+                .WaitFor(identityService)
+                .WaitFor(vehicleService)
+                .WaitFor(mediaService)
+                .WaitFor(notificationService)
+                .WaitFor(aiService);
 
             return builder;
         }

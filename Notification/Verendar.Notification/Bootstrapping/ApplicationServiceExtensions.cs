@@ -7,16 +7,15 @@ using Verendar.Notification.Application.Dtos.ESms;
 using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Notification.Domain.Repositories.Interfaces;
 using Verendar.Notification.Apis;
-using Verendar.Notification.Hubs;
+using Verendar.Notification.Application.Hubs;
 using Verendar.Notification.Infrastructure.Configuration;
 using Verendar.Notification.Infrastructure.Data;
 using Verendar.Notification.Infrastructure.ExternalServices.ESms;
 using Verendar.Notification.Infrastructure.ExternalServices.Resend;
 using Verendar.Notification.Infrastructure.Repositories.Implements;
 using Verendar.Notification.Infrastructure.Services;
-using Verendar.Notification.Services;
-using Verendar.ServiceDefaults;
 using Verendar.Notification.Application.Services.Implements;
+using Verendar.ServiceDefaults;
 
 namespace Verendar.Notification.Bootstrapping
 {
@@ -33,21 +32,18 @@ namespace Verendar.Notification.Bootstrapping
             builder.Services.Configure<ESmsOptions>(builder.Configuration.GetSection("ESms"));
             builder.Services.Configure<ResendOptions>(builder.Configuration.GetSection(ResendOptions.SectionName));
 
-            // Add Memory Cache for template caching
             builder.Services.AddMemoryCache();
 
             builder.Services.AddHttpClient<IESmsService, ESmsService>()
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
 
-            // Resend Email Service - Using HttpClient directly with Resend REST API
             builder.Services.AddHttpClient<IResendEmailService, ResendEmailService>()
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
 
             builder.Services.AddSingleton<IEmailTemplateService, SimpleEmailTemplateService>();
 
-            // Notification Channels
             builder.Services.AddScoped<INotificationChannel, SmsChannel>();
             builder.Services.AddScoped<INotificationChannel, ZaloChannel>();
             builder.Services.AddScoped<INotificationChannel, EmailChannel>();
@@ -59,10 +55,8 @@ namespace Verendar.Notification.Bootstrapping
 
             builder.Services.AddScoped<IInAppNotificationService, InAppNotificationService>();
 
-            // SignalR: userId lấy từ JWT (mặc định dùng claim NameIdentifier / "sub" giống CurrentUserService trong Common)
             builder.Services.AddSignalR();
 
-            // JWT cho SignalR: WebSocket không gửi header Authorization, đọc token từ query "access_token"
             builder.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 var onMessageReceived = options.Events?.OnMessageReceived;

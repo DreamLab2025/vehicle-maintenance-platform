@@ -100,7 +100,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 PredictedNextOdometer = entity.PredictedNextOdometer,
                 PredictedNextDate = entity.PredictedNextDate,
                 IsDeclared = entity.IsDeclared,
-                Reminders = entity.Reminders?.Select(r => r.ToSummary(vehicleCurrentOdometer)).ToList() ?? new()
+                Reminders = entity.Reminders?.Where(r => r.IsCurrent).Select(r => r.ToSummary(vehicleCurrentOdometer)).ToList() ?? new()
             };
         }
 
@@ -117,7 +117,8 @@ namespace Verendar.Vehicle.Application.Mappings
                 IsNotified = entity.IsNotified,
                 NotifiedDate = entity.NotifiedDate,
                 IsDismissed = entity.IsDismissed,
-                DismissedDate = entity.DismissedDate
+                DismissedDate = entity.DismissedDate,
+                IsCurrent = entity.IsCurrent
             };
         }
 

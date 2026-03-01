@@ -13,5 +13,6 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
             ReminderLevel level,
             bool includeAlreadyNotified,
             CancellationToken cancellationToken = default);
+        Task<IEnumerable<MaintenanceReminder>> GetByUserVehicleIdWithDetailsAsync(Guid userVehicleId, CancellationToken cancellationToken = default);
     }
 }

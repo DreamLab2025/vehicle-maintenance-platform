@@ -27,7 +27,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var (isAllowed, message) = await _unitOfWork.UserVehicles.CheckCanCreateVehicleAsync(userId);
                 return ApiResponse<IsAllowedToCreateVehicleResponse>.SuccessResponse(
                     isAllowed.ToIsAllowedToCreateVehicleResponse(message),
-                    "Kiểm tra xem người dùng có được tạo xe mới không thành công");
+                    "Kiểm tra quyền tạo xe thành công");
             }
             catch (Exception ex)
             {
@@ -49,14 +49,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 {
                     return ApiResponse<UserVehicleResponse>.FailureResponse("Phiên bản xe không tồn tại");
                 }
-
-                // var (isAllowed, message) = await _unitOfWork.UserVehicles
-                //     .CheckCanCreateVehicleAsync(userId);
-
-                // if (!isAllowed)
-                // {
-                //     return ApiResponse<UserVehicleResponse>.FailureResponse(message);
-                // }
 
                 var existingVehicle = await _unitOfWork.UserVehicles
                     .FindOneAsync(v => v.UserId == userId && v.LicensePlate == request.LicensePlate);
@@ -285,7 +277,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<List<ReminderWithPartCategoryDto>>.FailureResponse("Không tìm thấy xe");
                 }
 
-                var reminders = await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(userVehicleId);
+                var reminders = (await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(userVehicleId))
+                    .Where(r => r.IsCurrent)
+                    .ToList();
                 var dtos = reminders.Select(r => r.ToReminderWithPartCategoryDto(vehicle.CurrentOdometer)).ToList();
 
                 return ApiResponse<List<ReminderWithPartCategoryDto>>.SuccessResponse(
@@ -598,28 +592,29 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var targetOdometer = tracking.PredictedNextOdometer ?? currentOdometer;
                 var level = GetLevelFromPercentage(percentageRemaining.Value);
 
-                var existingReminders = await _unitOfWork.MaintenanceReminders.AsQueryable()
-                    .Where(r => r.VehiclePartTrackingId == tracking.Id)
-                    .OrderByDescending(r => r.Level)
-                    .ToListAsync();
+                var currentReminder = await _unitOfWork.MaintenanceReminders.AsQueryable()
+                    .FirstOrDefaultAsync(r => r.VehiclePartTrackingId == tracking.Id && r.IsCurrent);
 
-                var toKeep = existingReminders.FirstOrDefault();
-                if (toKeep != null)
+                if (currentReminder != null)
                 {
-                    toKeep.CurrentOdometer = currentOdometer;
-                    toKeep.TargetOdometer = targetOdometer;
-                    toKeep.TargetDate = targetDate;
-                    toKeep.Level = level;
-                    toKeep.PercentageRemaining = percentageRemaining.Value;
-                    await _unitOfWork.MaintenanceReminders.UpdateAsync(toKeep.Id, toKeep);
-
-                    foreach (var duplicate in existingReminders.Skip(1))
-                    {
-                        await _unitOfWork.MaintenanceReminders.DeleteAsync(duplicate.Id);
-                    }
+                    currentReminder.CurrentOdometer = currentOdometer;
+                    currentReminder.TargetOdometer = targetOdometer;
+                    currentReminder.TargetDate = targetDate;
+                    currentReminder.Level = level;
+                    currentReminder.PercentageRemaining = percentageRemaining.Value;
+                    await _unitOfWork.MaintenanceReminders.UpdateAsync(currentReminder.Id, currentReminder);
                 }
                 else
                 {
+                    var otherReminders = await _unitOfWork.MaintenanceReminders.AsQueryable()
+                        .Where(r => r.VehiclePartTrackingId == tracking.Id)
+                        .ToListAsync();
+                    foreach (var r in otherReminders)
+                    {
+                        r.IsCurrent = false;
+                        await _unitOfWork.MaintenanceReminders.UpdateAsync(r.Id, r);
+                    }
+
                     var reminder = new MaintenanceReminder
                     {
                         VehiclePartTrackingId = tracking.Id,
@@ -628,6 +623,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                         TargetDate = targetDate,
                         Level = level,
                         PercentageRemaining = percentageRemaining.Value,
+                        IsCurrent = true,
                     };
                     await _unitOfWork.MaintenanceReminders.AddAsync(reminder);
                 }

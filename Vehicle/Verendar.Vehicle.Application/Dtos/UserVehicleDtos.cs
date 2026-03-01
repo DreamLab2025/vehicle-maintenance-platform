@@ -99,6 +99,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateOnly? NotifiedDate { get; set; }
         public bool IsDismissed { get; set; }
         public DateOnly? DismissedDate { get; set; }
+        public bool IsCurrent { get; set; }
     }
 
     public class VehicleStreakResponse

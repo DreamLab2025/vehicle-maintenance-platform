@@ -1,4 +1,4 @@
-namespace Verendar.Vehicle.Clients
+namespace Verendar.Vehicle.Application.Clients
 {
     public interface IIdentityServiceClient
     {

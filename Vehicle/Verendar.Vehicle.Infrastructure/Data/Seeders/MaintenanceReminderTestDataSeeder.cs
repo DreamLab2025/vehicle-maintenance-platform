@@ -157,6 +157,7 @@ public static class MaintenanceReminderTestDataSeeder
                 Level = level,
                 PercentageRemaining = pct,
                 IsNotified = false,
+                IsCurrent = true,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = TestUserId
             };
@@ -253,6 +254,7 @@ public static class MaintenanceReminderTestDataSeeder
                 Level = level,
                 PercentageRemaining = pct,
                 IsNotified = false,
+                IsCurrent = true,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = TestUserId
             };

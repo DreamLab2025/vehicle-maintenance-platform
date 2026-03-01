@@ -1,13 +1,13 @@
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Vehicle.Clients;
+using Verendar.Vehicle.Application.Clients;
 using Verendar.Vehicle.Contracts.Events;
 using Verendar.Vehicle.Domain.Enums;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
-namespace Verendar.Vehicle.Services
+namespace Verendar.Vehicle.Application.Services.Implements
 {
     public class MaintenanceReminderService(
         IUnitOfWork unitOfWork,
@@ -24,16 +24,7 @@ namespace Verendar.Vehicle.Services
         {
             try
             {
-                // Get all reminders for this vehicle
-                var reminders = await _unitOfWork.MaintenanceReminders.AsQueryable()
-                    .Include(r => r.PartTracking)
-                        .ThenInclude(pt => pt.PartCategory)
-                    .Include(r => r.PartTracking)
-                        .ThenInclude(pt => pt.UserVehicle)
-                            .ThenInclude(uv => uv.Variant)
-                                .ThenInclude(v => v.VehicleModel)
-                    .Where(r => r.PartTracking!.UserVehicleId == vehicleId)
-                    .ToListAsync(cancellationToken);
+                var reminders = (await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdWithDetailsAsync(vehicleId, cancellationToken)).ToList();
 
                 if (reminders.Count == 0)
                 {
@@ -41,7 +32,6 @@ namespace Verendar.Vehicle.Services
                     return;
                 }
 
-                // Group by level and check if we need to send notification
                 var byLevel = reminders
                     .Where(r => r.PartTracking?.UserVehicle != null && r.PartTracking.PartCategory != null)
                     .GroupBy(r => r.Level)
@@ -53,15 +43,12 @@ namespace Verendar.Vehicle.Services
                 {
                     var level = levelGroup.Key;
 
-                    // Only send notification for Critical level immediately
-                    // Other levels will be sent by background job
                     if (level != ReminderLevel.Critical)
                     {
                         _logger.LogDebug("Skipping level {Level} for vehicle {VehicleId} - will be handled by background job", level, vehicleId);
                         continue;
                     }
 
-                    // Check if already notified today (send only once per day for Critical level)
                     var alreadyNotifiedToday = levelGroup.All(r => r.IsNotified && r.NotifiedDate == today);
                     if (alreadyNotifiedToday)
                     {
@@ -78,32 +65,7 @@ namespace Verendar.Vehicle.Services
                             continue;
                         }
 
-                        var items = levelGroup.Select(r =>
-                        {
-                            var uv = r.PartTracking!.UserVehicle!;
-                            var vehicleDisplay = uv.Variant?.VehicleModel != null
-                                ? $"{uv.Variant.VehicleModel.Name}" + (string.IsNullOrEmpty(uv.LicensePlate) ? "" : $" - {uv.LicensePlate}")
-                                : uv.LicensePlate;
-
-                            // Convert DateOnly? to DateTime?
-                            DateTime? estimatedNextDate = r.PartTracking.PredictedNextDate.HasValue
-                                ? r.PartTracking.PredictedNextDate.Value.ToDateTime(TimeOnly.MinValue)
-                                : null;
-
-                            return new MaintenanceReminderItemDto
-                            {
-                                PartCategoryName = r.PartTracking!.PartCategory!.Name,
-                                Description = r.PartTracking.PartCategory.Description,
-                                UserVehicleId = r.PartTracking.UserVehicleId,
-                                ReminderId = r.Id,
-                                CurrentOdometer = r.CurrentOdometer,
-                                TargetOdometer = r.TargetOdometer,
-                                InitialOdometer = r.PartTracking.LastReplacementOdometer,
-                                PercentageRemaining = r.PercentageRemaining,
-                                VehicleDisplayName = vehicleDisplay,
-                                EstimatedNextReplacementDate = estimatedNextDate
-                            };
-                        }).ToList();
+                        var items = levelGroup.Select(r => r.ToEventItem()).ToList();
 
                         await _publishEndpoint.Publish(new MaintenanceReminderEvent
                         {
@@ -115,7 +77,6 @@ namespace Verendar.Vehicle.Services
                             Items = items
                         }, cancellationToken);
 
-                        // Mark all reminders in this level as notified today
                         foreach (var reminder in levelGroup)
                         {
                             reminder.IsNotified = true;

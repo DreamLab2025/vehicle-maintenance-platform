@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Verendar.Vehicle.Clients
+namespace Verendar.Vehicle.Application.Clients
 {
     public class IdentityServiceClient(HttpClient httpClient) : IIdentityServiceClient
     {

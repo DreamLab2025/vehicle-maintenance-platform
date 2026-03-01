@@ -1,9 +1,10 @@
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Verendar.Vehicle.Application.Clients;
+using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Contracts.Events;
-using Verendar.Vehicle.Clients;
-using Verendar.Vehicle.Domain.Repositories.Interfaces;
 using Verendar.Vehicle.Domain.Enums;
+using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Jobs
 {
@@ -48,32 +49,7 @@ namespace Verendar.Vehicle.Jobs
                         continue;
                     }
 
-                    var items = group.Select(r =>
-                    {
-                        var uv = r.PartTracking!.UserVehicle!;
-                        var vehicleDisplay = uv.Variant?.VehicleModel != null
-                            ? $"{uv.Variant.VehicleModel.Name}" + (string.IsNullOrEmpty(uv.LicensePlate) ? "" : $" - {uv.LicensePlate}")
-                            : uv.LicensePlate;
-
-                        // Convert DateOnly? to DateTime?
-                        DateTime? estimatedNextDate = r.PartTracking.PredictedNextDate.HasValue
-                            ? r.PartTracking.PredictedNextDate.Value.ToDateTime(TimeOnly.MinValue)
-                            : null;
-
-                        return new MaintenanceReminderItemDto
-                        {
-                            PartCategoryName = r.PartTracking!.PartCategory!.Name,
-                            Description = r.PartTracking.PartCategory.Description,
-                            UserVehicleId = r.PartTracking.UserVehicleId,
-                            ReminderId = r.Id,
-                            CurrentOdometer = r.CurrentOdometer,
-                            TargetOdometer = r.TargetOdometer,
-                            InitialOdometer = r.PartTracking.LastReplacementOdometer,
-                            PercentageRemaining = r.PercentageRemaining,
-                            VehicleDisplayName = vehicleDisplay,
-                            EstimatedNextReplacementDate = estimatedNextDate
-                        };
-                    }).ToList();
+                    var items = group.Select(r => r.ToEventItem()).ToList();
 
                     await publishEndpoint.Publish(new MaintenanceReminderEvent
                     {
@@ -85,8 +61,7 @@ namespace Verendar.Vehicle.Jobs
                         Items = items
                     }, cancellationToken);
 
-                    logger.LogDebug("MaintenanceReminderJob: Published MaintenanceReminderEvent for user {UserId}, {Count} parts",
-                        userId, items.Count);
+                    logger.LogDebug("MaintenanceReminderJob: Published MaintenanceReminderEvent for user {UserId}, {Count} parts", userId, items.Count);
                 }
                 catch (Exception ex)
                 {
