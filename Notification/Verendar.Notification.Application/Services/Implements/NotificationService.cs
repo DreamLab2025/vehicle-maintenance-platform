@@ -65,6 +65,22 @@ namespace Verendar.Notification.Application.Services.Implements
             return ApiResponse<int>.SuccessResponse(unread.Count, $"Đã đánh dấu {unread.Count} thông báo là đã đọc.");
         }
 
+        public async Task<ApiResponse<bool>> MarkAsReadAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken = default)
+        {
+            var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
+            if (notification == null)
+                return ApiResponse<bool>.FailureResponse("Không tìm thấy thông báo.");
+
+            if (notification.IsRead)
+                return ApiResponse<bool>.SuccessResponse(true, "Thông báo đã được đánh dấu đọc trước đó.");
+
+            notification.IsRead = true;
+            notification.ReadAt = DateTime.UtcNow;
+            await unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return ApiResponse<bool>.SuccessResponse(true, "Đã đánh dấu thông báo là đã đọc.");
+        }
+
         public async Task<ApiResponse<bool>> SoftDeleteByIdAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken = default)
         {
             var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);

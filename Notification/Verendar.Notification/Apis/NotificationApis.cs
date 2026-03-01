@@ -43,6 +43,17 @@ namespace Verendar.Notification.Apis
                 .Produces<ApiResponse<int>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapPost("/{id:guid}/read", MarkOneNotificationAsRead)
+                .WithName("MarkOneNotificationAsRead")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Đánh dấu một thông báo là đã đọc";
+                    return operation;
+                })
+                .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             group.MapGet("/{id:guid}", GetNotificationDetailForUser)
                 .WithName("GetNotificationDetailForUser")
                 .WithOpenApi(operation =>
@@ -120,6 +131,20 @@ namespace Verendar.Notification.Apis
 
             var response = await notificationService.MarkAllAsReadAsync(userId, cancellationToken);
             return response.IsSuccess ? Results.Ok(response) : Results.BadRequest(response);
+        }
+
+        private static async Task<IResult> MarkOneNotificationAsRead(
+            Guid id,
+            ICurrentUserService currentUser,
+            INotificationService notificationService,
+            CancellationToken cancellationToken = default)
+        {
+            var userId = currentUser.UserId;
+            if (userId == Guid.Empty)
+                return Results.Unauthorized();
+
+            var response = await notificationService.MarkAsReadAsync(userId, id, cancellationToken);
+            return response.IsSuccess ? Results.Ok(response) : Results.NotFound(response);
         }
 
         private static async Task<IResult> SoftDeleteNotificationById(
