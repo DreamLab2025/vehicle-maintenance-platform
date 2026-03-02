@@ -364,6 +364,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     MaintenanceRecordId = table.Column<Guid>(type: "uuid", nullable: false),
                     PartCategoryId = table.Column<Guid>(type: "uuid", nullable: false),
                     PartProductId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CustomPartName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     InstanceIdentifier = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                     Price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     Notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),

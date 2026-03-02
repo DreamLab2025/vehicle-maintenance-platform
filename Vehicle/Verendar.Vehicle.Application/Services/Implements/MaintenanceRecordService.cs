@@ -43,6 +43,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 DateOnly lastDate = record.ServiceDate;
                 var itemResults = new List<CreateMaintenanceRecordItemResult>();
                 var trackingIdsToResetReminders = new List<Guid>();
+                var trackingIdsForResponse = new List<Guid>();
 
                 if (record.OdometerAtService >= vehicle.CurrentOdometer)
                 {
@@ -147,6 +148,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                             currentPartProductId);
                         await _unitOfWork.VehiclePartTrackings.AddAsync(tracking);
                         tracking.PartCategory = partCategory;
+                        trackingIdsForResponse.Add(tracking.Id);
                     }
                     else
                     {
@@ -162,6 +164,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                         await _unitOfWork.VehiclePartTrackings.UpdateAsync(existingTracking.Id, existingTracking);
                         tracking = existingTracking;
                         trackingIdsToResetReminders.Add(tracking.Id);
+                        trackingIdsForResponse.Add(tracking.Id);
                     }
 
                     await _unitOfWork.SaveChangesAsync();
@@ -185,6 +188,23 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     await _unitOfWork.SaveChangesAsync();
 
                 await _userVehicleService.SyncMaintenanceRemindersForVehicleAsync(vehicleId, vehicle.CurrentOdometer, userId);
+
+                if (trackingIdsForResponse.Count > 0)
+                {
+                    var trackingsWithReminders = await _unitOfWork.VehiclePartTrackings.AsQueryable()
+                        .Where(t => trackingIdsForResponse.Contains(t.Id))
+                        .Include(t => t.PartCategory)
+                        .Include(t => t.CurrentPartProduct)
+                        .Include(t => t.Reminders)
+                        .ToListAsync();
+                    var trackingMap = trackingsWithReminders.ToDictionary(t => t.Id);
+                    for (var i = 0; i < itemResults.Count && i < trackingIdsForResponse.Count; i++)
+                    {
+                        var tid = trackingIdsForResponse[i];
+                        if (trackingMap.TryGetValue(tid, out var fresh) && fresh != null)
+                            itemResults[i].Tracking = fresh.ToSummary(vehicle.CurrentOdometer);
+                    }
+                }
 
                 var response = MaintenanceRecordMappings.ToCreateMaintenanceRecordResponse(record.Id, itemResults);
                 return ApiResponse<CreateMaintenanceRecordResponse>.SuccessResponse(response, "Tạo phiếu bảo dưỡng thành công");

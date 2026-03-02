@@ -1,3 +1,4 @@
+using Verendar.Common.Jwt;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Services.Interfaces;
@@ -36,6 +37,13 @@ namespace Verendar.Vehicle.Apis
                 .WithOpenApi(op => { op.Summary = "Lấy danh mục phụ tùng đã khai báo theo xe của user"; return op; })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<PartCategoryResponse>>>(StatusCodes.Status200OK);
+
+            group.MapGet("/categories/{partCategoryCode}/reminders/user-vehicle/{userVehicleId:guid}", GetRemindersByCategoryCode)
+                .WithName("GetRemindersByCategoryCode")
+                .WithOpenApi(op => { op.Summary = "Lấy toàn bộ reminder (current + lịch sử) theo part category code"; return op; })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<ReminderWithPartCategoryDto>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<ReminderWithPartCategoryDto>>>(StatusCodes.Status404NotFound);
 
             group.MapPost("/categories", CreateCategory)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<PartCategoryRequest>())
@@ -115,6 +123,22 @@ namespace Verendar.Vehicle.Apis
         private static async Task<IResult> GetCategoriesByVehicleDeclaredParts(Guid vehicleId, IPartCategoryService service)
         {
             var result = await service.GetCategoriesByVehicleDeclaredPartsAsync(vehicleId);
+            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+        }
+
+        private static async Task<IResult> GetRemindersByCategoryCode(
+            string partCategoryCode,
+            Guid userVehicleId,
+            ICurrentUserService currentUserService,
+            IPartCategoryService service)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await service.GetRemindersByCategoryCodeAsync(userId, userVehicleId, partCategoryCode);
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 

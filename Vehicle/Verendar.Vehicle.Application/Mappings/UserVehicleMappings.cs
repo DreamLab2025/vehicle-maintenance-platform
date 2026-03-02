@@ -246,6 +246,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 NotifiedDate = entity.NotifiedDate,
                 IsDismissed = entity.IsDismissed,
                 DismissedDate = entity.DismissedDate,
+                IsCurrent = entity.IsCurrent,
                 PartCategory = entity.PartTracking?.PartCategory?.ToPartCategoryInfoDto() ?? new PartCategoryInfoDto()
             };
         }
