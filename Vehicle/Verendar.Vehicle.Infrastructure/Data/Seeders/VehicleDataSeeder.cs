@@ -144,19 +144,22 @@ public static class VehicleDataSeeder
     public static List<PartProduct> GetPartProducts()
     {
         var rows = SeedDataLoader.ReadCsvAsDictionaries("PartProducts.csv");
-        return rows.Select(row => BaseAudit(new PartProduct
-        {
-            Id = G(row, "Id"),
-            PartCategoryId = G(row, "PartCategoryId"),
-            Name = Get(row, "Name"),
-            Brand = Get(row, "Brand").NullIfEmpty(),
-            Description = Get(row, "Description").NullIfEmpty(),
-            ImageUrl = Get(row, "ImageUrl").NullIfEmpty(),
-            ReferencePrice = Dec(row, "ReferencePrice") > 0 ? Dec(row, "ReferencePrice") : null,
-            RecommendedKmInterval = Int(row, "RecommendedKmInterval") > 0 ? Int(row, "RecommendedKmInterval") : null,
-            RecommendedMonthsInterval = Int(row, "RecommendedMonthsInterval") > 0 ? Int(row, "RecommendedMonthsInterval") : null,
-            Status = Status(row)
-        })).ToList();
+        return rows
+            .Where(row => !string.IsNullOrWhiteSpace(Get(row, "ImageUrl")))
+            .Select(row => BaseAudit(new PartProduct
+            {
+                Id = G(row, "Id"),
+                PartCategoryId = G(row, "PartCategoryId"),
+                Name = Get(row, "Name"),
+                Brand = Get(row, "Brand").NullIfEmpty(),
+                Description = Get(row, "Description").NullIfEmpty(),
+                ImageUrl = Get(row, "ImageUrl").NullIfEmpty(),
+                ReferencePrice = Dec(row, "ReferencePrice") > 0 ? Dec(row, "ReferencePrice") : null,
+                RecommendedKmInterval = Int(row, "RecommendedKmInterval") > 0 ? Int(row, "RecommendedKmInterval") : null,
+                RecommendedMonthsInterval = Int(row, "RecommendedMonthsInterval") > 0 ? Int(row, "RecommendedMonthsInterval") : null,
+                Status = Status(row)
+            }))
+            .ToList();
     }
 
     private static string? NullIfEmpty(this string s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();

@@ -105,7 +105,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<PartProductResponse>>> GetProductsByCategoryAsync(Guid categoryId)
+        public async Task<ApiResponse<List<PartProductResponse>>> GetProductsByCategoryAsync(Guid categoryId, PaginationRequest paginationRequest)
         {
             try
             {
@@ -115,17 +115,26 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<List<PartProductResponse>>.FailureResponse("Không tìm thấy danh mục phụ tùng");
                 }
 
-                var products = await _unitOfWork.PartProducts.AsQueryable()
+                var query = _unitOfWork.PartProducts.AsQueryable()
                     .Include(p => p.Category)
                     .Where(p => p.PartCategoryId == categoryId && p.DeletedAt == null)
-                    .OrderBy(p => p.Name)
+                    .OrderBy(p => p.Name);
+
+                var totalCount = await query.CountAsync();
+
+                var products = await query
+                    .Skip((paginationRequest.PageNumber - 1) * paginationRequest.PageSize)
+                    .Take(paginationRequest.PageSize)
                     .ToListAsync();
 
                 var responses = products.Select(p => p.ToResponse()).ToList();
 
-                return ApiResponse<List<PartProductResponse>>.SuccessResponse(
+                return ApiResponse<List<PartProductResponse>>.SuccessPagedResponse(
                     responses,
-                    $"Lấy {responses.Count} phụ tùng thành công");
+                    totalCount,
+                    paginationRequest.PageNumber,
+                    paginationRequest.PageSize,
+                    "Lấy danh sách phụ tùng thành công");
             }
             catch (Exception ex)
             {

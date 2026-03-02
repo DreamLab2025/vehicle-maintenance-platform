@@ -71,7 +71,7 @@ namespace Verendar.Vehicle.Apis
             // Part Product Routes
             group.MapGet("/products/category/{categoryId:guid}", GetProductsByCategory)
                 .WithName("GetProductsByCategory")
-                .WithOpenApi(op => { op.Summary = "Get products by category"; return op; })
+                .WithOpenApi(op => { op.Summary = "Get products by category (paginated)"; return op; })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<PartProductResponse>>>(StatusCodes.Status200OK);
 
@@ -160,10 +160,9 @@ namespace Verendar.Vehicle.Apis
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
-        // Part Product Handlers
-        private static async Task<IResult> GetProductsByCategory(Guid categoryId, IPartProductService service)
+        private static async Task<IResult> GetProductsByCategory(Guid categoryId, [AsParameters] PaginationRequest paginationRequest, IPartProductService service)
         {
-            var result = await service.GetProductsByCategoryAsync(categoryId);
+            var result = await service.GetProductsByCategoryAsync(categoryId, paginationRequest);
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 
