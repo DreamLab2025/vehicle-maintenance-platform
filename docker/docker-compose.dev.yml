@@ -61,6 +61,16 @@ x-ai-service-environment: &ai-service-environment
   Gemini__DefaultParameters__Temperature: ${GEMINI_DEFAULT_PARAMETERS_TEMPERATURE:-0.7}
   Gemini__DefaultParameters__TopP: ${GEMINI_DEFAULT_PARAMETERS_TOP_P:-0.95}
   Gemini__DefaultParameters__TopK: ${GEMINI_DEFAULT_PARAMETERS_TOP_K:-40}
+  Bedrock__Region: ${BEDROCK_REGION:-us-east-1}
+  Bedrock__AccessKeyId: ${BEDROCK_ACCESS_KEY_ID:-}
+  Bedrock__SecretAccessKey: ${BEDROCK_SECRET_ACCESS_KEY:-}
+  Bedrock__DefaultModel: ${BEDROCK_DEFAULT_MODEL:-anthropic.claude-3-5-sonnet-20241022-v2:0}
+  Bedrock__MaxRetries: ${BEDROCK_MAX_RETRIES:-3}
+  Bedrock__TimeoutSeconds: ${BEDROCK_TIMEOUT_SECONDS:-60}
+  Bedrock__DefaultParameters__MaxTokens: ${BEDROCK_DEFAULT_PARAMETERS_MAX_TOKENS:-8192}
+  Bedrock__DefaultParameters__Temperature: ${BEDROCK_DEFAULT_PARAMETERS_TEMPERATURE:-0.7}
+  Bedrock__DefaultParameters__TopP: ${BEDROCK_DEFAULT_PARAMETERS_TOP_P:-0.95}
+  Bedrock__DefaultParameters__TopK: ${BEDROCK_DEFAULT_PARAMETERS_TOP_K:-40}
   VehicleService__BaseUrl: ${VEHICLE_SERVICE_BASE_URL:-http://vehicle-service:8080}
 
 services:

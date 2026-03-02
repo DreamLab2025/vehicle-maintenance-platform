@@ -1,3 +1,4 @@
+using Verendar.Common.EndpointFilters;
 using Verendar.Common.Jwt;
 using Verendar.Common.Shared;
 using Verendar.Identity.Application.Dtos;
@@ -20,6 +21,7 @@ namespace Verendar.Identity.Apis
         public static RouteGroupBuilder MapAuthRoutes(this RouteGroupBuilder group)
         {
             group.MapPost("/login", LoginUser)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<LoginRequest>())
                 .WithName("Login")
                 .WithOpenApi(operation =>
                 {
@@ -31,6 +33,7 @@ namespace Verendar.Identity.Apis
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status400BadRequest);
 
             group.MapPost("/register", RegisterUser)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<RegisterRequest>())
                 .WithName("Register")
                 .WithOpenApi(operation =>
                 {
@@ -42,6 +45,7 @@ namespace Verendar.Identity.Apis
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest);
 
             group.MapPost("/refresh-token", RefreshToken)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<RefreshTokenRequest>())
                 .WithName("RefreshToken")
                 .WithOpenApi(operation =>
                 {
@@ -54,6 +58,7 @@ namespace Verendar.Identity.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/change-password", ChangePassword)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<ChangePasswordRequest>())
                 .WithName("ChangePassword")
                 .WithOpenApi(operation =>
                 {
@@ -66,6 +71,7 @@ namespace Verendar.Identity.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/verify-otp", VerifyOtp)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<VerifyOtpRequest>())
                 .WithName("VerifyOtp")
                 .WithOpenApi(operation =>
                 {
@@ -77,6 +83,7 @@ namespace Verendar.Identity.Apis
                 .Produces<ApiResponse<bool>>(StatusCodes.Status400BadRequest);
 
             group.MapPost("/resend-otp", ResendOtp)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<ResendOtpRequest>())
                 .WithName("ResendOtp")
                 .WithOpenApi(op =>
                 {
@@ -88,6 +95,7 @@ namespace Verendar.Identity.Apis
                 .Produces<ApiResponse<bool>>(StatusCodes.Status400BadRequest);
 
             group.MapPost("/forgot-password", ForgotPassword)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<ForgotPasswordRequest>())
                 .WithName("ForgotPassword")
                 .WithOpenApi(op =>
                 {
@@ -98,6 +106,7 @@ namespace Verendar.Identity.Apis
                 .Produces<ApiResponse<bool>>(StatusCodes.Status200OK);
 
             group.MapPost("/reset-password", ResetPassword)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<ResetPasswordRequest>())
                 .WithName("ResetPassword")
                 .WithOpenApi(operation =>
                 {

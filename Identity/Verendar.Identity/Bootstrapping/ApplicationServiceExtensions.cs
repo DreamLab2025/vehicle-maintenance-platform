@@ -1,6 +1,8 @@
+using FluentValidation;
 using Verendar.Common.Bootstrapping;
 using Verendar.Common.Shared;
 using Verendar.Identity.Apis;
+using Verendar.Identity.Application.Validators;
 using Verendar.Identity.Infrastructure.Data;
 using Verendar.Identity.Infrastructure.Repositories.Implements;
 using Verendar.Identity.Infrastructure.Services;
@@ -27,6 +29,8 @@ namespace Verendar.Identity.Bootstrapping
             builder.Services.AddScoped<IIdentityTokenService, IdentityTokenService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
+
+            builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
             return builder;
         }

@@ -1,0 +1,312 @@
+using System.Diagnostics;
+using System.Text;
+using System.Text.Json;
+using Amazon;
+using Amazon.BedrockRuntime;
+using Amazon.BedrockRuntime.Model;
+using Amazon.Runtime;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Verendar.Ai.Application.Dtos.Ai;
+using Verendar.Ai.Application.Services.Interfaces;
+using Verendar.Ai.Domain.Entities;
+using Verendar.Ai.Domain.Enums;
+using Verendar.Ai.Domain.Repositories.Interfaces;
+using Verendar.Ai.Infrastructure.Configuration;
+using Verendar.Common.Shared;
+
+namespace Verendar.Ai.Infrastructure.ExternalServices
+{
+    public class BedrockService(
+        IOptions<BedrockSettings> config,
+        IUnitOfWork unitOfWork,
+        ILogger<BedrockService> logger
+    ) : IGenerativeAiService
+    {
+        private readonly BedrockSettings _config = config.Value;
+
+        public async Task<ApiResponse<GenerativeAiResponse>> GenerateContentAsync(
+            string prompt,
+            AiOperation operation,
+            Guid userId,
+            Guid? promptId = null,
+            string? model = null,
+            int? maxTokens = null,
+            decimal? temperature = null,
+            decimal? topP = null)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var selectedModel = model ?? _config.DefaultModel;
+
+            try
+            {
+                var hasExplicitCredentials = !string.IsNullOrWhiteSpace(_config.AccessKeyId) && !string.IsNullOrWhiteSpace(_config.SecretAccessKey);
+                if (!hasExplicitCredentials && string.IsNullOrWhiteSpace(_config.Region))
+                {
+                    logger.LogError("Bedrock: Region is required when not using default credential chain");
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service is not properly configured");
+                }
+
+                var requestBody = new Dictionary<string, object>
+                {
+                    ["anthropic_version"] = "bedrock-2023-05-31",
+                    ["max_tokens"] = maxTokens ?? _config.DefaultParameters.MaxTokens,
+                    ["messages"] = new[]
+                    {
+                        new Dictionary<string, object>
+                        {
+                            ["role"] = "user",
+                            ["content"] = new[] { new Dictionary<string, object> { ["type"] = "text", ["text"] = prompt } }
+                        }
+                    }
+                };
+
+                if (temperature.HasValue || _config.DefaultParameters.Temperature != 0)
+                    requestBody["temperature"] = (double)(temperature ?? _config.DefaultParameters.Temperature);
+                if (topP.HasValue || _config.DefaultParameters.TopP != 0)
+                    requestBody["top_p"] = (double)(topP ?? _config.DefaultParameters.TopP);
+                if (_config.DefaultParameters.TopK > 0)
+                    requestBody["top_k"] = _config.DefaultParameters.TopK;
+
+                var jsonBody = JsonSerializer.Serialize(requestBody);
+                var bodyBytes = Encoding.UTF8.GetBytes(jsonBody);
+
+                AmazonBedrockRuntimeClient client;
+                if (hasExplicitCredentials)
+                {
+                    var credentials = new BasicAWSCredentials(_config.AccessKeyId, _config.SecretAccessKey);
+                    client = new AmazonBedrockRuntimeClient(credentials, RegionEndpoint.GetBySystemName(_config.Region));
+                }
+                else
+                {
+                    client = new AmazonBedrockRuntimeClient(RegionEndpoint.GetBySystemName(_config.Region));
+                }
+
+                using (client)
+                {
+                    var request = new InvokeModelRequest
+                    {
+                        ModelId = selectedModel,
+                        Body = new MemoryStream(bodyBytes),
+                        ContentType = "application/json",
+                        Accept = "application/json"
+                    };
+
+                    logger.LogInformation(
+                        "Calling Bedrock API - Model: {Model}, Operation: {Operation}, UserId: {UserId}, PromptLength: {PromptLength}, MaxTokens: {MaxTokens}, Temperature: {Temperature}",
+                        selectedModel, operation, userId, prompt?.Length ?? 0, requestBody["max_tokens"], requestBody.GetValueOrDefault("temperature"));
+
+                    InvokeModelResponse? invokeResponse = null;
+                    var lastError = string.Empty;
+
+                    for (var attempt = 0; attempt <= _config.MaxRetries; attempt++)
+                    {
+                        if (attempt > 0)
+                        {
+                            var delayMs = Math.Min((int)Math.Pow(2, attempt) * 1000, 60_000);
+                            logger.LogWarning(
+                                "Bedrock API retry {Attempt}/{MaxRetries} after {DelayMs}ms - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
+                                attempt, _config.MaxRetries, delayMs, selectedModel, operation, userId);
+                            await Task.Delay(delayMs);
+                        }
+
+                        try
+                        {
+                            invokeResponse = await client.InvokeModelAsync(request);
+                            break;
+                        }
+                        catch (AmazonBedrockRuntimeException ex)
+                        {
+                            lastError = ex.Message;
+                            if (ex.ErrorCode?.Contains("Timeout", StringComparison.OrdinalIgnoreCase) == true ||
+                                ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
+                            {
+                                stopwatch.Stop();
+                                logger.LogError(ex,
+                                    "Bedrock API timeout - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Attempt: {Attempt}",
+                                    selectedModel, operation, userId, attempt + 1);
+                                await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, lastError);
+                                return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service request timeout");
+                            }
+                            if (attempt >= _config.MaxRetries) break;
+                            if (ex.StatusCode != System.Net.HttpStatusCode.TooManyRequests &&
+                                ex.StatusCode != System.Net.HttpStatusCode.ServiceUnavailable)
+                                break;
+                            continue;
+                        }
+                    }
+
+                    stopwatch.Stop();
+
+                    if (invokeResponse == null || invokeResponse.Body == null || invokeResponse.Body.Length == 0)
+                    {
+                        logger.LogError(
+                            "Bedrock API error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ResponseTime: {ResponseTime}ms, Error: {Error}",
+                            selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, lastError);
+                        await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, lastError);
+                        return ApiResponse<GenerativeAiResponse>.FailureResponse(GetUserFriendlyMessage(lastError));
+                    }
+
+                    string responseContent;
+                    using (var reader = new StreamReader(invokeResponse.Body))
+                        responseContent = await reader.ReadToEndAsync();
+
+                    if (string.IsNullOrWhiteSpace(responseContent))
+                    {
+                        logger.LogWarning(
+                            "Bedrock API returned empty response - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
+                            selectedModel, operation, userId);
+                        await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, "Empty response from API");
+                        return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned empty response");
+                    }
+
+                    var bedrockResponse = ParseBedrockResponse(responseContent, selectedModel, stopwatch.ElapsedMilliseconds);
+                    await TrackSuccessfulUsageAsync(userId, selectedModel, operation, promptId, bedrockResponse, prompt ?? string.Empty);
+
+                    logger.LogInformation(
+                        "Bedrock API success - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Tokens: {TotalTokens}, Cost: ${Cost:F4}, Time: {Time}ms",
+                        selectedModel, operation, userId, bedrockResponse.TotalTokens, bedrockResponse.TotalCost, stopwatch.ElapsedMilliseconds);
+
+                    return ApiResponse<GenerativeAiResponse>.SuccessResponse(bedrockResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                logger.LogError(ex,
+                    "Bedrock API unexpected error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ElapsedTime: {ElapsedTime}ms, ExceptionType: {ExceptionType}",
+                    model ?? _config.DefaultModel, operation, userId, stopwatch.ElapsedMilliseconds, ex.GetType().Name);
+
+                await TrackFailedUsageAsync(userId, model ?? _config.DefaultModel, operation, promptId, stopwatch.ElapsedMilliseconds, ex.Message);
+
+                return ApiResponse<GenerativeAiResponse>.FailureResponse("An unexpected error occurred while calling AI service");
+            }
+        }
+
+        private GenerativeAiResponse ParseBedrockResponse(string responseContent, string model, long responseTimeMs)
+        {
+            var root = JsonDocument.Parse(responseContent).RootElement;
+
+            var content = string.Empty;
+            if (root.TryGetProperty("content", out var contentArr) && contentArr.GetArrayLength() > 0)
+            {
+                var first = contentArr[0];
+                if (first.TryGetProperty("text", out var textProp))
+                    content = textProp.GetString() ?? string.Empty;
+            }
+
+            var inputTokens = 0;
+            var outputTokens = 0;
+            if (root.TryGetProperty("usage", out var usage))
+            {
+                if (usage.TryGetProperty("input_tokens", out var inProp))
+                    inputTokens = inProp.GetInt32();
+                if (usage.TryGetProperty("output_tokens", out var outProp))
+                    outputTokens = outProp.GetInt32();
+            }
+
+            var totalTokens = inputTokens + outputTokens;
+            var inputCost = (inputTokens / 1_000_000m) * _config.Pricing.InputCostPer1MTokens;
+            var outputCost = (outputTokens / 1_000_000m) * _config.Pricing.OutputCostPer1MTokens;
+
+            return new GenerativeAiResponse
+            {
+                Content = content,
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
+                TotalTokens = totalTokens,
+                InputCost = inputCost,
+                OutputCost = outputCost,
+                TotalCost = inputCost + outputCost,
+                ResponseTimeMs = (int)responseTimeMs,
+                Model = model
+            };
+        }
+
+        private static string GetUserFriendlyMessage(string? error)
+        {
+            if (string.IsNullOrEmpty(error)) return "Đã xảy ra lỗi khi gọi API AI. Vui lòng thử lại.";
+            if (error.Contains("Throttling", StringComparison.OrdinalIgnoreCase))
+                return "Tạm thời quá tải. Vui lòng thử lại sau vài phút.";
+            if (error.Contains("timeout", StringComparison.OrdinalIgnoreCase))
+                return "AI service request timeout";
+            if (error.Contains("AccessDenied", StringComparison.OrdinalIgnoreCase) || error.Contains("UnrecognizedClientException", StringComparison.OrdinalIgnoreCase))
+                return "Lỗi xác thực AWS. Kiểm tra cấu hình Bedrock.";
+            return "Đã xảy ra lỗi khi gọi API AI. Vui lòng thử lại.";
+        }
+
+        private async Task TrackSuccessfulUsageAsync(
+            Guid userId,
+            string model,
+            AiOperation operation,
+            Guid? promptId,
+            GenerativeAiResponse response,
+            string requestSummary)
+        {
+            try
+            {
+                var inputCost = (response.InputTokens / 1_000_000m) * _config.Pricing.InputCostPer1MTokens;
+                var outputCost = (response.OutputTokens / 1_000_000m) * _config.Pricing.OutputCostPer1MTokens;
+                var usage = new AiUsage
+                {
+                    UserId = userId,
+                    Provider = AiProvider.Bedrock,
+                    Model = model,
+                    Operation = operation,
+                    InputTokens = response.InputTokens,
+                    OutputTokens = response.OutputTokens,
+                    TotalTokens = response.TotalTokens,
+                    InputCost = inputCost,
+                    OutputCost = outputCost,
+                    TotalCost = inputCost + outputCost,
+                    ResponseTimeMs = response.ResponseTimeMs,
+                    ErrorMessage = null,
+                    RequestSummary = requestSummary?.Length > 500 ? requestSummary[..500] : requestSummary
+                };
+
+                await unitOfWork.AiUsages.AddAsync(usage);
+                await unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error tracking successful AI usage (Bedrock)");
+            }
+        }
+
+        private async Task TrackFailedUsageAsync(
+            Guid userId,
+            string model,
+            AiOperation operation,
+            Guid? promptId,
+            long responseTimeMs,
+            string errorMessage)
+        {
+            try
+            {
+                var usage = new AiUsage
+                {
+                    UserId = userId,
+                    Provider = AiProvider.Bedrock,
+                    Model = model,
+                    Operation = operation,
+                    InputTokens = 0,
+                    OutputTokens = 0,
+                    TotalTokens = 0,
+                    InputCost = 0,
+                    OutputCost = 0,
+                    TotalCost = 0,
+                    ResponseTimeMs = (int)responseTimeMs,
+                    ErrorMessage = errorMessage?.Length > 1000 ? errorMessage[..1000] : errorMessage,
+                    RequestSummary = null
+                };
+
+                await unitOfWork.AiUsages.AddAsync(usage);
+                await unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error tracking failed AI usage (Bedrock)");
+            }
+        }
+    }
+}

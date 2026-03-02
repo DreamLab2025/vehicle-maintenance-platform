@@ -54,6 +54,12 @@ x-ai-service-environment: &ai-service-environment
   Gemini__DefaultModel: ${GEMINI_DEFAULT_MODEL:-gemini-2.5-flash-lite}
   Gemini__MaxRetries: ${GEMINI_MAX_RETRIES:-3}
   Gemini__TimeoutSeconds: ${GEMINI_TIMEOUT_SECONDS:-180}
+  Bedrock__Region: ${BEDROCK_REGION:-us-east-1}
+  Bedrock__AccessKeyId: ${BEDROCK_ACCESS_KEY_ID:-}
+  Bedrock__SecretAccessKey: ${BEDROCK_SECRET_ACCESS_KEY:-}
+  Bedrock__DefaultModel: ${BEDROCK_DEFAULT_MODEL:-anthropic.claude-3-5-sonnet-20241022-v2:0}
+  Bedrock__MaxRetries: ${BEDROCK_MAX_RETRIES:-3}
+  Bedrock__TimeoutSeconds: ${BEDROCK_TIMEOUT_SECONDS:-60}
   VehicleService__BaseUrl: ${VEHICLE_SERVICE_BASE_URL:-http://vehicle-service:8080}
 
 services:

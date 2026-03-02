@@ -1,4 +1,5 @@
-﻿using Verendar.Common.Shared;
+using Verendar.Common.EndpointFilters;
+using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Services.Interfaces;
 
@@ -19,6 +20,7 @@ namespace Verendar.Vehicle.Apis
         public static RouteGroupBuilder MapModelRoutes(this RouteGroupBuilder group)
         {
             group.MapGet("/", GetAllModels)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<ModelFilterRequest>())
                 .WithName("GetAllModels")
                 .WithOpenApi(operation =>
                 {
@@ -31,6 +33,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateVehicleModel)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<ModelRequest>())
                 .WithName("CreateModel")
                 .WithOpenApi(operation =>
                 {
@@ -43,6 +46,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{id:guid}", UpdateVehicleModel)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<ModelRequest>())
                 .WithName("UpdateModel")
                 .WithOpenApi(operation =>
                 {

@@ -7,6 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.10.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.10.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
     <ProjectReference Include="..\Verender.Identity.Contracts\Verender.Identity.Contracts.csproj" />
     <ProjectReference Include="..\Verendar.Identity.Domain\Verendar.Identity.Domain.csproj" />
