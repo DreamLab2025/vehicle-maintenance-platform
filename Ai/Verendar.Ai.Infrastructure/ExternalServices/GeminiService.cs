@@ -313,5 +313,55 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 logger.LogError(ex, "Error tracking failed AI usage");
             }
         }
+
+        public async Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(_config.ApiKey))
+            {
+                return (false, "Gemini API key is not configured");
+            }
+
+            var requestBody = new
+            {
+                contents = new[] { new { parts = new[] { new { text = "ping" } } } },
+                generationConfig = new
+                {
+                    maxOutputTokens = 8,
+                    temperature = 0,
+                    responseMimeType = "application/json"
+                }
+            };
+
+            try
+            {
+                var httpClient = httpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(Math.Min(_config.TimeoutSeconds, 10));
+
+                var url = $"{_config.ApiEndpoint.TrimEnd('/')}/models/{_config.DefaultModel}:generateContent";
+                using var request = new HttpRequestMessage(HttpMethod.Post, url);
+                request.Headers.TryAddWithoutValidation("X-goog-api-key", _config.ApiKey);
+                request.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+
+                var response = await httpClient.SendAsync(request, cancellationToken);
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (response.IsSuccessStatusCode && !string.IsNullOrWhiteSpace(content))
+                    return (true, null);
+
+                return (false, GetUserFriendlyMessage(response.StatusCode) ?? content);
+            }
+            catch (TaskCanceledException)
+            {
+                return (false, "Request timeout");
+            }
+            catch (HttpRequestException ex)
+            {
+                return (false, $"Network error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message);
+            }
+        }
     }
 }

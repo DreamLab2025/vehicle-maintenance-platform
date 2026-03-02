@@ -308,5 +308,68 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 logger.LogError(ex, "Error tracking failed AI usage (Bedrock)");
             }
         }
+
+        public async Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default)
+        {
+            var hasExplicitCredentials = !string.IsNullOrWhiteSpace(_config.AccessKeyId) && !string.IsNullOrWhiteSpace(_config.SecretAccessKey);
+            if (!hasExplicitCredentials && string.IsNullOrWhiteSpace(_config.Region))
+            {
+                return (false, "Bedrock region is required when not using default credential chain");
+            }
+
+            var requestBody = new Dictionary<string, object>
+            {
+                ["anthropic_version"] = "bedrock-2023-05-31",
+                ["max_tokens"] = 8,
+                ["messages"] = new[]
+                {
+                    new Dictionary<string, object>
+                    {
+                        ["role"] = "user",
+                        ["content"] = new[] { new Dictionary<string, object> { ["type"] = "text", ["text"] = "ping" } }
+                    }
+                }
+            };
+
+            try
+            {
+                AmazonBedrockRuntimeClient client;
+                if (hasExplicitCredentials)
+                {
+                    var credentials = new BasicAWSCredentials(_config.AccessKeyId, _config.SecretAccessKey);
+                    client = new AmazonBedrockRuntimeClient(credentials, RegionEndpoint.GetBySystemName(_config.Region));
+                }
+                else
+                {
+                    client = new AmazonBedrockRuntimeClient(RegionEndpoint.GetBySystemName(_config.Region));
+                }
+
+                using (client)
+                {
+                    var bodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(requestBody));
+                    var request = new InvokeModelRequest
+                    {
+                        ModelId = _config.DefaultModel,
+                        Body = new MemoryStream(bodyBytes),
+                        ContentType = "application/json",
+                        Accept = "application/json"
+                    };
+
+                    var response = await client.InvokeModelAsync(request, cancellationToken);
+                    if (response?.Body != null && response.Body.Length > 0)
+                        return (true, null);
+
+                    return (false, "Empty response from Bedrock");
+                }
+            }
+            catch (AmazonBedrockRuntimeException ex)
+            {
+                return (false, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message);
+            }
+        }
     }
 }

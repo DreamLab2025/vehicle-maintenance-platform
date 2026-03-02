@@ -67,6 +67,7 @@ namespace Verendar.Ai.Bootstrapping
             app.UseHttpsRedirection();
 
             app.MapVehicleQuestionnaireApi();
+            app.MapAiApi();
 
             return app;
         }
