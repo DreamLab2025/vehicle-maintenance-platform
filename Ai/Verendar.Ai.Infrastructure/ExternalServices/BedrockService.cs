@@ -40,11 +40,17 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
 
             try
             {
-                var hasExplicitCredentials = !string.IsNullOrWhiteSpace(_config.AccessKeyId) && !string.IsNullOrWhiteSpace(_config.SecretAccessKey);
-                if (!hasExplicitCredentials && string.IsNullOrWhiteSpace(_config.Region))
+                if (string.IsNullOrWhiteSpace(_config.AccessKeyId) || string.IsNullOrWhiteSpace(_config.SecretAccessKey))
                 {
-                    logger.LogError("Bedrock: Region is required when not using default credential chain");
-                    return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service is not properly configured");
+                    logger.LogError("Bedrock: AccessKeyId and SecretAccessKey are required. Set Bedrock:AccessKeyId and Bedrock:SecretAccessKey in User Secrets or appsettings.");
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(
+                        "AI service is not properly configured. Set Bedrock:AccessKeyId and Bedrock:SecretAccessKey in User Secrets or configuration.");
+                }
+
+                if (string.IsNullOrWhiteSpace(_config.Region))
+                {
+                    logger.LogError("Bedrock: Region is required");
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service is not properly configured (missing Region).");
                 }
 
                 var requestBody = new Dictionary<string, object>
@@ -71,20 +77,10 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 var jsonBody = JsonSerializer.Serialize(requestBody);
                 var bodyBytes = Encoding.UTF8.GetBytes(jsonBody);
 
-                AmazonBedrockRuntimeClient client;
-                if (hasExplicitCredentials)
-                {
-                    var credentials = new BasicAWSCredentials(_config.AccessKeyId, _config.SecretAccessKey);
-                    client = new AmazonBedrockRuntimeClient(credentials, RegionEndpoint.GetBySystemName(_config.Region));
-                }
-                else
-                {
-                    client = new AmazonBedrockRuntimeClient(RegionEndpoint.GetBySystemName(_config.Region));
-                }
+                var credentials = new BasicAWSCredentials(_config.AccessKeyId, _config.SecretAccessKey);
+                using var client = new AmazonBedrockRuntimeClient(credentials, RegionEndpoint.GetBySystemName(_config.Region));
 
-                using (client)
-                {
-                    var request = new InvokeModelRequest
+                var request = new InvokeModelRequest
                     {
                         ModelId = selectedModel,
                         Body = new MemoryStream(bodyBytes),
@@ -168,7 +164,6 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                         selectedModel, operation, userId, bedrockResponse.TotalTokens, bedrockResponse.TotalCost, stopwatch.ElapsedMilliseconds);
 
                     return ApiResponse<GenerativeAiResponse>.SuccessResponse(bedrockResponse);
-                }
             }
             catch (Exception ex)
             {
@@ -311,11 +306,10 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
 
         public async Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default)
         {
-            var hasExplicitCredentials = !string.IsNullOrWhiteSpace(_config.AccessKeyId) && !string.IsNullOrWhiteSpace(_config.SecretAccessKey);
-            if (!hasExplicitCredentials && string.IsNullOrWhiteSpace(_config.Region))
-            {
-                return (false, "Bedrock region is required when not using default credential chain");
-            }
+            if (string.IsNullOrWhiteSpace(_config.AccessKeyId) || string.IsNullOrWhiteSpace(_config.SecretAccessKey))
+                return (false, "Bedrock: AccessKeyId and SecretAccessKey are required. Set in User Secrets or appsettings.");
+            if (string.IsNullOrWhiteSpace(_config.Region))
+                return (false, "Bedrock: Region is required.");
 
             var requestBody = new Dictionary<string, object>
             {
@@ -333,34 +327,23 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
 
             try
             {
-                AmazonBedrockRuntimeClient client;
-                if (hasExplicitCredentials)
-                {
-                    var credentials = new BasicAWSCredentials(_config.AccessKeyId, _config.SecretAccessKey);
-                    client = new AmazonBedrockRuntimeClient(credentials, RegionEndpoint.GetBySystemName(_config.Region));
-                }
-                else
-                {
-                    client = new AmazonBedrockRuntimeClient(RegionEndpoint.GetBySystemName(_config.Region));
-                }
+                var credentials = new BasicAWSCredentials(_config.AccessKeyId, _config.SecretAccessKey);
+                using var client = new AmazonBedrockRuntimeClient(credentials, RegionEndpoint.GetBySystemName(_config.Region));
 
-                using (client)
+                var bodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(requestBody));
+                var request = new InvokeModelRequest
                 {
-                    var bodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(requestBody));
-                    var request = new InvokeModelRequest
-                    {
-                        ModelId = _config.DefaultModel,
-                        Body = new MemoryStream(bodyBytes),
-                        ContentType = "application/json",
-                        Accept = "application/json"
-                    };
+                    ModelId = _config.DefaultModel,
+                    Body = new MemoryStream(bodyBytes),
+                    ContentType = "application/json",
+                    Accept = "application/json"
+                };
 
-                    var response = await client.InvokeModelAsync(request, cancellationToken);
-                    if (response?.Body != null && response.Body.Length > 0)
-                        return (true, null);
+                var response = await client.InvokeModelAsync(request, cancellationToken);
+                if (response?.Body != null && response.Body.Length > 0)
+                    return (true, null);
 
-                    return (false, "Empty response from Bedrock");
-                }
+                return (false, "Empty response from Bedrock");
             }
             catch (AmazonBedrockRuntimeException ex)
             {
