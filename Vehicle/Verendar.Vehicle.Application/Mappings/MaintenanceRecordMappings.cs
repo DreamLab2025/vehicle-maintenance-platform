@@ -32,6 +32,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 MaintenanceRecordId = maintenanceRecordId,
                 PartCategoryId = partCategoryId,
                 PartProductId = partProductId,
+                CustomPartName = input.CustomPartName,
                 InstanceIdentifier = input.InstanceIdentifier,
                 Price = input.Price ?? 0,
                 Notes = input.ItemNotes,
@@ -111,6 +112,57 @@ namespace Verendar.Vehicle.Application.Mappings
             return new CreateMaintenanceRecordResponse
             {
                 MaintenanceRecordId = maintenanceRecordId,
+                Items = items,
+            };
+        }
+
+
+        public static MaintenanceRecordItemDto ToMaintenanceRecordItemDto(this MaintenanceRecordItem item)
+        {
+            var partName = item.PartProduct?.Name ?? item.CustomPartName ?? item.PartCategory?.Code ?? string.Empty;
+            return new MaintenanceRecordItemDto
+            {
+                Id = item.Id,
+                PartName = partName,
+                PartCategoryCode = item.PartCategory?.Code ?? string.Empty,
+                PartProductId = item.PartProductId,
+                InstanceIdentifier = item.InstanceIdentifier,
+                Price = item.Price,
+                Notes = item.Notes,
+            };
+        }
+
+        public static MaintenanceRecordSummaryDto ToMaintenanceRecordSummaryDto(this MaintenanceRecord record)
+        {
+            return new MaintenanceRecordSummaryDto
+            {
+                Id = record.Id,
+                UserVehicleId = record.UserVehicleId,
+                ServiceDate = record.ServiceDate,
+                OdometerAtService = record.OdometerAtService,
+                GarageName = record.GarageName,
+                TotalCost = record.TotalCost,
+                Notes = record.Notes,
+                InvoiceImageUrl = record.InvoiceImageUrl,
+                ItemCount = record.Items?.Count ?? 0,
+            };
+        }
+
+        public static MaintenanceRecordDetailDto ToMaintenanceRecordDetailDto(this MaintenanceRecord record)
+        {
+            var items = (record.Items ?? [])
+                .Select(i => i.ToMaintenanceRecordItemDto())
+                .ToList();
+            return new MaintenanceRecordDetailDto
+            {
+                Id = record.Id,
+                UserVehicleId = record.UserVehicleId,
+                ServiceDate = record.ServiceDate,
+                OdometerAtService = record.OdometerAtService,
+                GarageName = record.GarageName,
+                TotalCost = record.TotalCost,
+                Notes = record.Notes,
+                InvoiceImageUrl = record.InvoiceImageUrl,
                 Items = items,
             };
         }

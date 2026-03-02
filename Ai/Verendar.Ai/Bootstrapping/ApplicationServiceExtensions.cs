@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using Verendar.Ai.Apis;
 using Verendar.Ai.Application.Handlers;
 using Verendar.Ai.Application.Services.Implements;
@@ -27,13 +28,28 @@ namespace Verendar.Ai.Bootstrapping
             builder.Services.AddHttpClient();
             builder.Services.Configure<GeminiSettings>(
                 builder.Configuration.GetSection(GeminiSettings.SectionName));
+            builder.Services.Configure<BedrockSettings>(
+                builder.Configuration.GetSection(BedrockSettings.SectionName));
+            builder.Services.Configure<AiProviderOptions>(options =>
+            {
+                options.Provider = builder.Configuration.GetValue<string>(AiProviderOptions.ConfigKey) ?? "Gemini";
+            });
 
             // Register external service clients
             builder.AddClients();
 
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-            builder.Services.AddScoped<IGenerativeAiService, GeminiService>();
+            builder.Services.AddScoped<GeminiService>();
+            builder.Services.AddScoped<BedrockService>();
+            builder.Services.AddScoped<IGenerativeAiService>(sp =>
+            {
+                var options = sp.GetRequiredService<IOptions<AiProviderOptions>>().Value;
+                var provider = string.IsNullOrWhiteSpace(options.Provider) ? "Gemini" : options.Provider.Trim();
+                return provider.Equals("Bedrock", StringComparison.OrdinalIgnoreCase)
+                    ? sp.GetRequiredService<BedrockService>()
+                    : sp.GetRequiredService<GeminiService>();
+            });
             builder.Services.AddScoped<IVehicleMaintenanceAnalysisService, VehicleMaintenanceAnalysisService>();
 
             builder.Services.AddHttpContextAccessor();
@@ -51,6 +67,7 @@ namespace Verendar.Ai.Bootstrapping
             app.UseHttpsRedirection();
 
             app.MapVehicleQuestionnaireApi();
+            app.MapAiApi();
 
             return app;
         }

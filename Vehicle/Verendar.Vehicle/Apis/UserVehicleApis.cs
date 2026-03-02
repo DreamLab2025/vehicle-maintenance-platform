@@ -147,7 +147,7 @@ namespace Verendar.Vehicle.Apis
                 .WithName("GetReminders")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Lấy danh sách nhắc bảo trì (level cao → thấp) kèm thông tin PartCategory";
+                    operation.Summary = "Lấy danh sách nhắc bảo trì hiện tại (mỗi part category một reminder mới nhất)";
                     return operation;
                 })
                 .RequireAuthorization()

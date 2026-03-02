@@ -19,6 +19,31 @@ namespace Verendar.Vehicle.Apis
 
         public static RouteGroupBuilder MapMaintenanceRecordRoutes(this RouteGroupBuilder group)
         {
+            group.MapGet("/vehicles/{userVehicleId:guid}", GetMaintenanceHistory)
+                .WithName("GetMaintenanceHistory")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy lịch sử bảo dưỡng theo xe";
+                    operation.Description = "Trả về danh sách phiếu bảo dưỡng của xe (có product hoặc không đều đồng bộ qua PartName/ItemCount).";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<IReadOnlyList<MaintenanceRecordSummaryDto>>>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/{maintenanceRecordId:guid}", GetMaintenanceRecordDetail)
+                .WithName("GetMaintenanceRecordDetail")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy chi tiết phiếu bảo dưỡng";
+                    operation.Description = "Trả về chi tiết phiếu bảo dưỡng và danh sách phụ tùng; PartName đồng bộ (từ sản phẩm hoặc tên tùy chỉnh).";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<MaintenanceRecordDetailDto>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<MaintenanceRecordDetailDto>>(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             group.MapPost("/vehicles/{userVehicleId:guid}", CreateMaintenanceRecord)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<CreateMaintenanceRecordRequest>())
                 .WithName("CreateMaintenanceRecord")
@@ -34,6 +59,32 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
+        }
+
+        private static async Task<IResult> GetMaintenanceHistory(
+            Guid userVehicleId,
+            ICurrentUserService currentUserService,
+            IMaintenanceRecordService maintenanceRecordService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+                return Results.Unauthorized();
+
+            var result = await maintenanceRecordService.GetMaintenanceHistoryAsync(userId, userVehicleId);
+            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+        }
+
+        private static async Task<IResult> GetMaintenanceRecordDetail(
+            Guid maintenanceRecordId,
+            ICurrentUserService currentUserService,
+            IMaintenanceRecordService maintenanceRecordService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+                return Results.Unauthorized();
+
+            var result = await maintenanceRecordService.GetMaintenanceRecordDetailAsync(userId, maintenanceRecordId);
+            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
         }
 
         private static async Task<IResult> CreateMaintenanceRecord(

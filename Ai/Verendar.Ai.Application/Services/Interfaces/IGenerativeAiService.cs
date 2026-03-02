@@ -15,5 +15,6 @@ namespace Verendar.Ai.Application.Services.Interfaces
             int? maxTokens = null,
             decimal? temperature = null,
             decimal? topP = null);
+        Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Verendar.Common.EndpointFilters;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Services.Interfaces;
@@ -32,6 +33,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateModelImage)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<VehicleVariantRequest>())
                 .WithName("CreateModelImage")
                 .WithOpenApi(operation =>
                 {
@@ -44,6 +46,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{id:guid}", UpdateModelImage)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<VehicleVariantUpdateRequest>())
                 .WithName("UpdateModelImage")
                 .WithOpenApi(operation =>
                 {

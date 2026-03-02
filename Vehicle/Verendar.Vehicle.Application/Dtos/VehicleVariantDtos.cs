@@ -1,4 +1,4 @@
-﻿namespace Verendar.Vehicle.Application.Dtos
+﻿    namespace Verendar.Vehicle.Application.Dtos
 {
     public class VehicleVariantRequest
     {

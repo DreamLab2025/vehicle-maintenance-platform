@@ -176,5 +176,39 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<List<PartCategoryResponse>>.FailureResponse("Lỗi khi lấy danh mục phụ tùng đã khai báo theo xe");
             }
         }
+
+        public async Task<ApiResponse<List<ReminderWithPartCategoryDto>>> GetRemindersByCategoryCodeAsync(Guid userId, Guid userVehicleId, string partCategoryCode)
+        {
+            try
+            {
+                var vehicle = await _unitOfWork.UserVehicles
+                    .FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
+
+                if (vehicle == null)
+                {
+                    return ApiResponse<List<ReminderWithPartCategoryDto>>.FailureResponse("Không tìm thấy xe");
+                }
+
+                if (string.IsNullOrWhiteSpace(partCategoryCode))
+                {
+                    return ApiResponse<List<ReminderWithPartCategoryDto>>.FailureResponse("Part category code không hợp lệ");
+                }
+
+                var reminders = (await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(userVehicleId))
+                    .Where(r => string.Equals(r.PartTracking?.PartCategory?.Code, partCategoryCode.Trim(), StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToList();
+                var dtos = reminders.Select(r => r.ToReminderWithPartCategoryDto(vehicle.CurrentOdometer)).ToList();
+
+                return ApiResponse<List<ReminderWithPartCategoryDto>>.SuccessResponse(
+                    dtos,
+                    "Lấy lịch sử nhắc bảo trì theo danh mục thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting reminders by category {PartCategoryCode} for vehicle {UserVehicleId}", partCategoryCode, userVehicleId);
+                return ApiResponse<List<ReminderWithPartCategoryDto>>.FailureResponse("Lỗi khi lấy lịch sử nhắc bảo trì theo danh mục");
+            }
+        }
     }
 }

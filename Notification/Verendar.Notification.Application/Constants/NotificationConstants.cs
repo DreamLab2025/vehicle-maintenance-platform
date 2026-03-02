@@ -35,7 +35,7 @@ namespace Verendar.Notification.Application.Constants
         {
             public const string Otp = "Mã xác thực OTP";
             public const string OdometerReminder = "Nhắc nhở cập nhật số km";
-            public static readonly string MaintenanceCriticalPart = $"{MaintenanceLevelLabels.Critical}: cần thay";
+            public static readonly string MaintenanceCriticalPart = $"{MaintenanceLevelLabels.Critical}: Cần thay";
             public static readonly string MaintenanceCritical = $"{MaintenanceLevelLabels.Critical}: Cần thay linh kiện";
             public const string MaintenanceNormalPrefix = "Nhắc nhở bảo dưỡng";
         }

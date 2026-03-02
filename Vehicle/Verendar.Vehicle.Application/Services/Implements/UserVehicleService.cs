@@ -279,6 +279,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 var reminders = (await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(userVehicleId))
                     .Where(r => r.IsCurrent)
+                    .GroupBy(r => r.PartTracking?.PartCategoryId ?? Guid.Empty)
+                    .Where(g => g.Key != Guid.Empty)
+                    .Select(g => g.OrderByDescending(r => r.CreatedAt).First())
                     .ToList();
                 var dtos = reminders.Select(r => r.ToReminderWithPartCategoryDto(vehicle.CurrentOdometer)).ToList();
 
