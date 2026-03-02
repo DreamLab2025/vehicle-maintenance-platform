@@ -1,6 +1,6 @@
 # Verendar - Docker Compose Development
-# Chạy từ repo root: docker-compose -f Docker/docker-compose.dev.yml --env-file Docker/.env.dev up -d
-# Hoặc từ Docker/:   docker-compose -f docker-compose.dev.yml --env-file .env.dev up -d
+# Chạy từ repo root: docker-compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev up -d
+# Hoặc từ docker/:   docker-compose -f docker-compose.dev.yml --env-file .env.dev up -d
 
 x-common-environment: &common-environment
   ASPNETCORE_ENVIRONMENT: Development
@@ -62,8 +62,8 @@ x-ai-service-environment: &ai-service-environment
   Gemini__DefaultParameters__TopP: ${GEMINI_DEFAULT_PARAMETERS_TOP_P:-0.95}
   Gemini__DefaultParameters__TopK: ${GEMINI_DEFAULT_PARAMETERS_TOP_K:-40}
   Bedrock__Region: ${BEDROCK_REGION:-us-east-1}
-  Bedrock__AccessKeyId: ${BEDROCK_ACCESS_KEY_ID:-}
-  Bedrock__SecretAccessKey: ${BEDROCK_SECRET_ACCESS_KEY:-}
+  Bedrock__AccessKey: ${BEDROCK_ACCESS_KEY:-}
+  Bedrock__SecretKey: ${BEDROCK_SECRET_KEY:-}
   Bedrock__DefaultModel: ${BEDROCK_DEFAULT_MODEL:-anthropic.claude-3-5-sonnet-20241022-v2:0}
   Bedrock__MaxRetries: ${BEDROCK_MAX_RETRIES:-3}
   Bedrock__TimeoutSeconds: ${BEDROCK_TIMEOUT_SECONDS:-60}

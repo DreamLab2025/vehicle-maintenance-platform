@@ -4,8 +4,8 @@ namespace Verendar.Ai.Infrastructure.Configuration
     {
         public const string SectionName = "Bedrock";
         public string Region { get; set; } = "us-east-1";
-        public string? AccessKeyId { get; set; }
-        public string? SecretAccessKey { get; set; }
+        public string? AccessKey { get; set; }
+        public string? SecretKey { get; set; }
         public string DefaultModel { get; set; } = "anthropic.claude-3-5-sonnet-20241022-v2:0";
         public int MaxRetries { get; set; } = 3;
         public int TimeoutSeconds { get; set; } = 60;

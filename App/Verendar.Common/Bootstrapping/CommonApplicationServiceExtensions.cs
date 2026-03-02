@@ -1,4 +1,4 @@
-﻿using MassTransit;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.RateLimiting;
@@ -19,12 +19,32 @@ namespace Verendar.Common.Bootstrapping
         {
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAllClients", builder =>
+                options.AddPolicy("DevelopmentCors", policy =>
                 {
-                    builder.SetIsOriginAllowed(_ => true)
-                           .AllowAnyMethod()
-                           .AllowAnyHeader()
-                           .AllowCredentials();
+                    policy.SetIsOriginAllowed(_ => true)
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials();
+                });
+
+                var allowedOrigins = builder.Configuration
+                    .GetSection("Cors:AllowedOrigins")
+                    .Get<string[]>()
+                    ?? builder.Configuration["Cors:AllowedOrigins"]?
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(o => o.Trim())
+                        .ToArray()
+                    ?? [];
+
+                options.AddPolicy("ProductionCors", policy =>
+                {
+                    if (allowedOrigins.Length > 0)
+                        policy.WithOrigins(allowedOrigins)
+                              .AllowAnyMethod()
+                              .AllowAnyHeader()
+                              .AllowCredentials();
+                    else
+                        policy.SetIsOriginAllowed(_ => false); 
                 });
             });
 
@@ -187,7 +207,8 @@ namespace Verendar.Common.Bootstrapping
                 app.UseDefaultSwagger();
             }
             
-            app.UseCors("AllowAllClients");
+            var corsPolicyName = app.Environment.IsDevelopment() ? "DevelopmentCors" : "ProductionCors";
+            app.UseCors(corsPolicyName);
             app.UseMiddleware<GlobalExceptionsMiddleware>();
             app.UseAuthentication();
             app.UseAuthorization();

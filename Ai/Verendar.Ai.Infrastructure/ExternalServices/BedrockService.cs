@@ -40,11 +40,11 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
 
             try
             {
-                if (string.IsNullOrWhiteSpace(_config.AccessKeyId) || string.IsNullOrWhiteSpace(_config.SecretAccessKey))
+                if (string.IsNullOrWhiteSpace(_config.AccessKey) || string.IsNullOrWhiteSpace(_config.SecretKey))
                 {
-                    logger.LogError("Bedrock: AccessKeyId and SecretAccessKey are required. Set Bedrock:AccessKeyId and Bedrock:SecretAccessKey in User Secrets or appsettings.");
+                    logger.LogError("Bedrock: AccessKey and SecretKey are required. Set Bedrock:AccessKey and Bedrock:SecretKey in User Secrets or appsettings.");
                     return ApiResponse<GenerativeAiResponse>.FailureResponse(
-                        "AI service is not properly configured. Set Bedrock:AccessKeyId and Bedrock:SecretAccessKey in User Secrets or configuration.");
+                        "AI service is not properly configured. Set Bedrock:AccessKey and Bedrock:SecretKey in User Secrets or configuration.");
                 }
 
                 if (string.IsNullOrWhiteSpace(_config.Region))
@@ -77,7 +77,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 var jsonBody = JsonSerializer.Serialize(requestBody);
                 var bodyBytes = Encoding.UTF8.GetBytes(jsonBody);
 
-                var credentials = new BasicAWSCredentials(_config.AccessKeyId, _config.SecretAccessKey);
+                var credentials = new BasicAWSCredentials(_config.AccessKey, _config.SecretKey);
                 using var client = new AmazonBedrockRuntimeClient(credentials, RegionEndpoint.GetBySystemName(_config.Region));
 
                 var request = new InvokeModelRequest
@@ -306,8 +306,8 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
 
         public async Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(_config.AccessKeyId) || string.IsNullOrWhiteSpace(_config.SecretAccessKey))
-                return (false, "Bedrock: AccessKeyId and SecretAccessKey are required. Set in User Secrets or appsettings.");
+            if (string.IsNullOrWhiteSpace(_config.AccessKey) || string.IsNullOrWhiteSpace(_config.SecretKey))
+                return (false, "Bedrock: AccessKey and SecretKey are required. Set in User Secrets or appsettings.");
             if (string.IsNullOrWhiteSpace(_config.Region))
                 return (false, "Bedrock: Region is required.");
 
@@ -327,7 +327,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
 
             try
             {
-                var credentials = new BasicAWSCredentials(_config.AccessKeyId, _config.SecretAccessKey);
+                var credentials = new BasicAWSCredentials(_config.AccessKey, _config.SecretKey);
                 using var client = new AmazonBedrockRuntimeClient(credentials, RegionEndpoint.GetBySystemName(_config.Region));
 
                 var bodyBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(requestBody));

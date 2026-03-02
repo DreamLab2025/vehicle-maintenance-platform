@@ -1,12 +1,13 @@
-# Verendar - Docker Compose Production (thư mục Docker/)
+# Verendar - Docker Compose Production
 # Workflow: build local -> push Docker Hub -> trên server: pull và chạy (không build).
-# Cần set DOCKER_IMAGE_PREFIX (vd: dockerhub-username hoặc username/repo) và tùy chọn IMAGE_TAG trong .env.prod
-# Chạy từ repo root: docker-compose -f Docker/docker-compose.prod.yml --env-file Docker/.env.prod up -d
-# Hoặc từ Docker/:   docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
+# Cần set DOCKER_IMAGE_PREFIX, IMAGE_TAG và CORS_ALLOWED_ORIGINS trong .env.prod (xem .env.prod.example).
+# Chạy từ repo root: docker-compose -f docker/docker-compose.prod.yml --env-file docker/.env.prod up -d
+# Hoặc từ docker/:   docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
 
 x-common-environment: &common-environment
   ASPNETCORE_ENVIRONMENT: Production
   ASPNETCORE_URLS: http://+:8080
+  Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS}
   JwtBearer__SecretKey: ${JWT_BEARER_SECRET_KEY}
   JwtBearer__Issuer: ${JWT_BEARER_ISSUER}
   JwtBearer__Audience: ${JWT_BEARER_AUDIENCE}
@@ -55,8 +56,8 @@ x-ai-service-environment: &ai-service-environment
   Gemini__MaxRetries: ${GEMINI_MAX_RETRIES:-3}
   Gemini__TimeoutSeconds: ${GEMINI_TIMEOUT_SECONDS:-180}
   Bedrock__Region: ${BEDROCK_REGION:-us-east-1}
-  Bedrock__AccessKeyId: ${BEDROCK_ACCESS_KEY_ID:-}
-  Bedrock__SecretAccessKey: ${BEDROCK_SECRET_ACCESS_KEY:-}
+  Bedrock__AccessKey: ${BEDROCK_ACCESS_KEY:-}
+  Bedrock__SecretKey: ${BEDROCK_SECRET_KEY:-}
   Bedrock__DefaultModel: ${BEDROCK_DEFAULT_MODEL:-anthropic.claude-3-5-sonnet-20241022-v2:0}
   Bedrock__MaxRetries: ${BEDROCK_MAX_RETRIES:-3}
   Bedrock__TimeoutSeconds: ${BEDROCK_TIMEOUT_SECONDS:-60}
