@@ -100,6 +100,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             try
             {
+                paginationRequest.Normalize();
                 var query = _unitOfWork.PartCategories.AsQueryable()
                     .Where(c => c.DeletedAt == null);
 

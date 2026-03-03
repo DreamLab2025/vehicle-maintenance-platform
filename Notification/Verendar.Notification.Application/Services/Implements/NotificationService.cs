@@ -33,6 +33,7 @@ namespace Verendar.Notification.Application.Services.Implements
         {
             try
             {
+                request.Normalize();
                 var (items, totalCount) = await unitOfWork.Notifications.GetByUserIdWithInAppChannelPagedAsync(
                     userId, request.PageNumber, request.PageSize, cancellationToken);
 
