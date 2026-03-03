@@ -150,6 +150,14 @@ namespace Verendar.Vehicle.Application.Dtos
     {
         public DateOnly? FromDate { get; set; }
         public DateOnly? ToDate { get; set; }
+
+        /// <summary>
+        /// Chuẩn hóa pagination params.
+        /// </summary>
+        public override void Normalize()
+        {
+            base.Normalize();
+        }
     }
 
     public class OdometerHistoryItemDto

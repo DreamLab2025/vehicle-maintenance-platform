@@ -109,6 +109,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             try
             {
+                paginationRequest.Normalize();
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(categoryId);
                 if (category == null || category.DeletedAt != null)
                 {

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Mappings;
@@ -72,6 +72,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             try
             {
+                paginationRequest.Normalize();
                 var (items, totalCount) = await _unitOfWork.VehicleTypes.GetPagedAsync(
                     paginationRequest.PageNumber,
                     paginationRequest.PageSize,

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
@@ -97,6 +97,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             try
             {
+                filterRequest.Normalize();
                 var query = _unitOfWork.VehicleModels.AsQueryable()
                     .Include(m => m.Brand)
                     .Include(m => m.Brand).ThenInclude(b => b.VehicleType)
@@ -116,7 +117,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (!string.IsNullOrWhiteSpace(filterRequest.ModelName))
                 {
-                    query = query.Where(m => m.Name.Contains(filterRequest.ModelName));
+                    var searchLower = filterRequest.ModelName.ToLower();
+                    query = query.Where(m => m.Name.ToLower().Contains(searchLower));
                 }
 
                 if (filterRequest.TransmissionType.HasValue)
@@ -250,8 +252,10 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
         private async Task<bool> ModelNameExistsAsync(string name, Guid brandId, Guid? excludeId = null)
         {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            var nameLower = name.Trim().ToLower();
             var existingModel = await _unitOfWork.VehicleModels
-                .FindOneAsync(m => m.Name == name
+                .FindOneAsync(m => m.Name.ToLower() == nameLower
                     && m.VehicleBrandId == brandId
                     && m.DeletedAt == null);
 

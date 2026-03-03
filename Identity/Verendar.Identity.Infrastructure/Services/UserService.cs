@@ -15,6 +15,7 @@ namespace Verendar.Identity.Infrastructure.Services
 
         public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(PaginationRequest paginationRequest)
         {
+            paginationRequest.Normalize();
             var users = await _unitOfWork.Users.GetPagedAsync(
                 paginationRequest.PageNumber,
                 paginationRequest.PageSize,

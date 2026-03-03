@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Dtos;
@@ -76,6 +76,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             try
             {
+                paginationRequest.Normalize();
                 var query = _unitOfWork.VehicleBrands.AsQueryable()
                     .Where(b => b.DeletedAt == null);
 

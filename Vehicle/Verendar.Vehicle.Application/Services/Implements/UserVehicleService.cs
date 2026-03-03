@@ -70,7 +70,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 await _unitOfWork.OdometerHistories.AddAsync(initialOdometerHistory);
                 await _unitOfWork.SaveChangesAsync();
 
-                await InitializePartTrackingAsync(userVehicle.Id);
+                await InitializePartTrackingAsync(userVehicle.Id, vehicleVariant.VehicleModelId);
 
                 var createdVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(userVehicle.Id);
 
@@ -200,6 +200,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             try
             {
+                paginationRequest.Normalize();
                 var query = _unitOfWork.UserVehicles.GetQueryWithFullDetails()
                     .Where(v => v.UserId == userId);
 
@@ -300,6 +301,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             try
             {
+                query.Normalize();
                 var vehicle = await _unitOfWork.UserVehicles
                     .FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
 
@@ -553,16 +555,18 @@ namespace Verendar.Vehicle.Application.Services.Implements
             await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
         }
 
-        private async Task InitializePartTrackingAsync(Guid userVehicleId)
+        private async Task InitializePartTrackingAsync(Guid userVehicleId, Guid vehicleModelId)
         {
-            var partCategories = await _unitOfWork.PartCategories.AsQueryable()
-                .Where(pc => pc.DeletedAt == null)
-                .ToListAsync();
+            var schedules = await _unitOfWork.DefaultMaintenanceSchedules.GetByVehicleModelIdAsync(vehicleModelId);
+            var partCategoryIds = schedules
+                .Where(s => s.Status == EntityStatus.Active && s.PartCategoryId != Guid.Empty)
+                .Select(s => s.PartCategoryId)
+                .Distinct()
+                .ToList();
 
-            foreach (var partCategory in partCategories)
+            foreach (var partCategoryId in partCategoryIds)
             {
-                var tracking = userVehicleId.ToInitializePartTracking(partCategory.Id);
-
+                var tracking = userVehicleId.ToInitializePartTracking(partCategoryId);
                 await _unitOfWork.VehiclePartTrackings.AddAsync(tracking);
             }
 

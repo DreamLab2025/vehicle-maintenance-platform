@@ -1,4 +1,4 @@
-﻿using Verendar.Common.Shared;
+using Verendar.Common.Shared;
 using Verendar.Vehicle.Domain.Entities;
 
 namespace Verendar.Vehicle.Application.Dtos
@@ -56,5 +56,17 @@ namespace Verendar.Vehicle.Application.Dtos
         public VehicleTransmissionType? TransmissionType { get; set; }
         public int? EngineDisplacement { get; set; }
         public int? ReleaseYear { get; set; }
+
+        /// <summary>
+        /// Chuẩn hóa pagination và trim search string (ModelName).
+        /// </summary>
+        public override void Normalize()
+        {
+            base.Normalize();
+            if (!string.IsNullOrWhiteSpace(ModelName))
+                ModelName = ModelName.Trim();
+            else
+                ModelName = null;
+        }
     }
 }
