@@ -29,6 +29,7 @@ x-vehicle-service-environment: &vehicle-service-environment
   ConnectionStrings__vehicle-db: Host=postgres;Port=5432;Database=${VEHICLE_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
   ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  Identity__BaseUrl: ${IDENTITY_SERVICE_BASE_URL:-http://identity-service:8080}
 
 x-media-service-environment: &media-service-environment
   ConnectionStrings__media-db: Host=postgres;Port=5432;Database=${MEDIA_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
