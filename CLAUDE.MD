@@ -1,262 +1,147 @@
-# Verendar Project - Claude Context
+# Verendar Project — Claude Context
 
-## Project Overview
-Verendar is a microservices-based application built with .NET 9 and .NET Aspire orchestration. The system consists of multiple domain-driven services following clean architecture principles.
+## Stack
 
-## Architecture
-
-### Technology Stack
-- **.NET 9.0** - Target framework
-- **.NET Aspire 9.5.0** - Cloud-native orchestration
-- **PostgreSQL** - Primary database
-- **RabbitMQ** - Message broker for async communication
-- **Redis** - Caching and session management
-- **YARP** - Reverse proxy/API gateway
-
-### Solution Structure
-
-```
-Verendar/
-├── Verendar.AppHost/              # Aspire orchestration host
-├── Verendar.ServiceDefaults/      # Shared service configurations
-├── Verendar.Common/               # Shared utilities and cross-cutting concerns
-├── Verendar.DatabaseMigrationHelpers/ # Database migration utilities
-├── Identity/                      # Identity & authentication service
-│   ├── Verendar.Identity/        # API/Host project
-│   └── Verender.Identity.Contracts/ # Shared contracts
-├── Media/                         # Media management service
-│   ├── Verendar.Media/           # API/Host project
-│   ├── Verendar.Media.Application/ # Use cases & business logic
-│   ├── Verendar.Media.Domain/    # Domain models & entities
-│   └── Verendar.Media.Infrastructure/ # Data access & external services
-├── Vehicle/                       # Vehicle management service
-│   ├── Verendar.Vehicle/         # API/Host project
-│   ├── Verendar.Vehicle.Application/
-│   ├── Verendar.Vehicle.Domain/
-│   └── Verendar.Vehicle.Infrastructure/
-└── Notification/                  # Notification service
-    ├── Verendar.Notification/    # API/Host project
-    ├── Verendar.Notification.Application/
-    ├── Verendar.Notification.Domain/
-    └── Verendar.Notification.Infrastructure/
-```
+.NET 9 · Aspire 9.5 · PostgreSQL · RabbitMQ · Redis · YARP · Hangfire
 
 ## Services
 
-### 1. Identity Service
-- **Purpose**: User authentication, authorization, and identity management
-- **Architecture**: Monolithic service (single project)
-- **Database**: UserDbContext with PostgreSQL
-- **Key Features**:
-  - User registration and authentication
-  - Nullable email property support
-  - User Secrets for API key management
-  - OTP handling
+| Service      | Architecture | Purpose                                    |
+|--------------|--------------|--------------------------------------------|
+| Identity     | Clean Arch   | Auth, JWT, OTP, user management            |
+| Vehicle      | Clean Arch   | Vehicle tracking, maintenance, scheduling  |
+| Media        | Clean Arch   | File upload, storage, asset serving        |
+| Notification | Clean Arch   | Email/SMS, SignalR hubs, event-driven      |
+| Ai           | Clean Arch   | Gemini analysis, onboarding questionnaire  |
 
-### 2. Media Service
-- **Purpose**: Media file management and processing
-- **Architecture**: Clean Architecture (Domain/Application/Infrastructure layers)
-- **Responsibilities**:
-  - File upload and storage
-  - Media metadata management
-  - Asset serving
+## Solution Layout
 
-### 3. Vehicle Service
-- **Purpose**: Vehicle information and management
-- **Architecture**: Clean Architecture (Domain/Application/Infrastructure layers)
-- **Responsibilities**:
-  - Vehicle registration and tracking
-  - Vehicle maintenance scheduling and tracking
-  - Default maintenance schedules by manufacturer
-  - Part category management (engine oil, filters, etc.)
-
-### 4. Notification Service
-- **Purpose**: Multi-channel notification delivery
-- **Architecture**: Clean Architecture (Domain/Application/Infrastructure layers)
-- **Key Features**:
-  - OTP generation and delivery
-  - Multi-channel support (email, SMS, etc.)
-  - Notification factory pattern
-  - Event-driven architecture (subscribes to user registration events)
-
-### 5. AI Service
-- **Purpose**: AI-powered vehicle maintenance analysis
-- **Architecture**: Clean Architecture (Domain/Application/Infrastructure layers)
-- **Key Features**:
-  - Gemini AI integration (gemini-2.0-flash model)
-  - Vehicle questionnaire analysis for accurate tracking initialization
-  - Vietnamese prompt engineering for token optimization
-  - AI usage tracking (tokens, cost, response time)
-- **Responsibilities**:
-  - Analyze user questionnaire responses about vehicle condition
-  - Estimate last replacement dates and predict next service dates
-  - Provide confidence scores and reasoning for recommendations
-
-## Development Patterns
-
-### Clean Architecture
-Services following Clean Architecture (Media, Vehicle, Notification) are organized as:
-- **Domain**: Core business entities and rules
-- **Application**: Use cases, business logic, DTOs
-- **Infrastructure**: Data access, external services, implementations
-- **Host**: API endpoints, service configuration
-
-### Service Communication
-- **Synchronous**: HTTP/REST APIs (via YARP gateway)
-- **Asynchronous**: Event-driven via RabbitMQ
-- **Example**: User registration event triggers notification service
-
-### Database Strategy
-- Each service has its own database context
-- Database migrations managed via `Verendar.DatabaseMigrationHelpers`
-- Migration runs on application startup using `MigrateDbContextAsync<T>()`
-
-## Build & Run
-
-### Prerequisites
-- .NET 9.0 SDK
-- Docker (for PostgreSQL, RabbitMQ, Redis)
-- Visual Studio 2022 17.5+ or Rider
-
-### Running the Solution
-```bash
-# Start all services via Aspire
-dotnet run --project Verendar.AppHost
-
-# Build entire solution
-dotnet build Verendar.sln
-
-# Run specific service
-dotnet run --project Identity/Verendar.Identity
+```
+Verendar/
+├── App/
+│   ├── Verendar.AppHost/              # Aspire orchestration entry point
+│   │   └── Extensions/               # Per-service AppHost extension methods
+│   ├── Verendar.ServiceDefaults/      # Shared service configuration (telemetry, health)
+│   ├── Verendar.Common/              # Shared utilities (ApiResponse, Pagination, JWT, etc.)
+│   └── Verendar.DatabaseMigrationHelpers/
+├── Ai/
+│   ├── Verendar.Ai/                  # Host — Minimal API + Bootstrapping
+│   ├── Verendar.Ai.Application/      # Use cases, services, DTOs, prompts
+│   ├── Verendar.Ai.Domain/           # Entities, enums, repository interfaces
+│   └── Verendar.Ai.Infrastructure/   # EF Core, external services (Gemini)
+├── Identity/
+│   ├── Verendar.Identity/            # Host — Minimal API + Bootstrapping
+│   ├── Verendar.Identity.Application/
+│   ├── Verendar.Identity.Domain/
+│   ├── Verendar.Identity.Infrastructure/
+│   └── Verender.Identity.Contracts/  # Shared events (UserRegisteredEvent, etc.)
+├── Media/
+│   ├── Verendar.Media/               # Host
+│   ├── Verendar.Media.Application/
+│   ├── Verendar.Media.Domain/
+│   └── Verendar.Media.Infrastructure/
+├── Notification/
+│   ├── Verendar.Notification/        # Host — includes email Templates/
+│   ├── Verendar.Notification.Application/ # Consumers, Hubs (SignalR), Services
+│   ├── Verendar.Notification.Domain/
+│   └── Verendar.Notification.Infrastructure/
+├── Vehicle/
+│   ├── Verendar.Vehicle/             # Host — includes Jobs/ (Hangfire)
+│   ├── Verendar.Vehicle.Application/
+│   ├── Verendar.Vehicle.Contracts/   # Shared events
+│   ├── Verendar.Vehicle.Domain/
+│   └── Verendar.Vehicle.Infrastructure/
+├── docker/                           # Docker configs (gateway, postgres)
+└── Verendar.sln
 ```
 
-### Configuration
-- User Secrets enabled for sensitive data (API keys)
-- appsettings.json for service configuration
-- Aspire AppHost manages infrastructure (databases, message brokers)
+## Key Patterns
 
-## Recent Changes
+| Pattern | Convention |
+|---------|-----------|
+| **API** | Minimal API — `MapGroup` + `Map*Endpoints()`. Never Controllers. |
+| **DI** | Bootstrapping extension methods in `*/Bootstrapping/`. Not inline in Program.cs. |
+| **Mapping** | Static extension methods (`ToResponse()`, `ToEntity()`). No AutoMapper. |
+| **Validation** | FluentValidation in `Application/Validators/`. Vietnamese user-facing messages. |
+| **Response** | `ApiResponse<T>` from `App/Verendar.Common/Shared/ApiResponse.cs` wraps everything. |
+| **Secrets** | User Secrets only. Never in `appsettings.json`. |
 
-Based on git history:
-1. **User email nullability** - Email property made nullable in User entity
-2. **Enhanced notification system** - OTP handling and channel factory implementation
-3. **Security improvements** - Removed API keys from appsettings.json, enabled User Secrets
-4. **User registration events** - Event-driven notification trigger on user registration
-5. **AI-assisted onboarding** - Gemini integration for vehicle maintenance tracking initialization
-6. **Domain redesign** - Renamed entities (ConsumableItem → PartCategory, StandardMaintenanceSchedule → DefaultMaintenanceSchedule)
+## Response Shape
 
-## Key Files
+All endpoints return `ApiResponse<T>`:
 
-- `Verendar.AppHost/AppHost.cs` - Aspire orchestration entry point
-- `Verendar.AppHost/Extensions/` - Service registration and configuration
-- `*/Program.cs` - Individual service entry points
-- `*/Bootstrapping/` - Service-specific dependency injection setup
+```json
+// Success (single)
+{ "isSuccess": true, "message": "Success", "data": { ... }, "metadata": null }
 
-## Coding Conventions
+// Success (paginated) — data is List<T>, metadata is PagingMetadata
+{ "isSuccess": true, "message": "Success", "data": [ ... ],
+  "metadata": { "pageNumber": 1, "pageSize": 10, "totalItems": 3,
+                "totalPages": 1, "hasNextPage": false, "hasPreviousPage": false } }
 
-- Use C# nullable reference types
-- Follow Clean Architecture for domain services
-- Event-driven communication for cross-service operations
-- Database migrations run automatically on startup
-- User Secrets for sensitive configuration
+// Business failure
+{ "isSuccess": false, "message": "Vehicle not found.", "data": null, "metadata": null }
+```
 
-## Working with This Codebase
+**Exception**: FluentValidation errors and unhandled 500s use RFC 7807 Problem Details (not ApiResponse):
+```json
+{ "title": "One or more validation errors occurred.", "status": 400,
+  "errors": { "fieldName": ["message"] } }
+```
 
-### Adding a New Service
-1. Create service folder with Domain/Application/Infrastructure/Host projects
-2. Register in AppHost via extension methods
-3. Add database context and migration support
-4. Configure in Aspire orchestration
+## Architecture
 
-### Adding Features
-1. Start in Domain layer (entities, value objects)
-2. Implement use cases in Application layer
-3. Add infrastructure implementations
-4. Expose via API endpoints in Host project
+**Clean Architecture layers** (all services):
+```
+Domain → Application → Infrastructure → Host
+```
+- Domain: entities, value objects, domain events, interfaces
+- Application: use cases, validators, DTOs, service interfaces
+- Infrastructure: EF Core, repositories, external APIs
+- Host: Minimal API endpoints, program entry, bootstrapping
 
-### Database Changes
-1. Modify entity in Domain layer
-2. Update DbContext in Infrastructure
-3. Migration runs automatically on next startup
+**Communication**:
+- Sync: HTTP/REST via YARP reverse proxy
+- Async: RabbitMQ domain events (e.g., user registered → notification triggered)
 
-## AI-Assisted Vehicle Onboarding Flow
+**Database**: One PostgreSQL DB per service. Migrations auto-run on startup via `MigrateDbContextAsync<T>()`.
 
-The system implements an optional AI-assisted onboarding process to accurately initialize vehicle maintenance tracking:
+## AI-Assisted Onboarding Flow
 
-### Problem
-When users register a vehicle, the system doesn't know if parts (like engine oil) were replaced before registration. Using default "new vehicle" assumptions leads to inaccurate tracking until the first manual maintenance record.
+Allows users to initialize vehicle maintenance tracking accurately using AI.
 
-### Solution
-AI analyzes user responses to part-specific questionnaires to estimate the actual maintenance state.
+**Steps (all optional after vehicle creation)**:
+1. `POST /api/v1/user-vehicles` — creates vehicle with `NeedsOnboarding = true`, NO tracking yet
+2. `GET /api/v1/vehicle-models/{vehicleModelId}/part-categories/{code}/default-schedule` — manufacturer schedule
+3. Frontend shows questionnaire per part (e.g., "When did you last change oil?")
+4. `POST /api/v1/ai/vehicle-questionnaire/analyze` — AI analyzes ONE part, returns estimates + confidence
+5. `POST /api/v1/user-vehicles/{id}/apply-tracking` — creates/updates `VehiclePartTracking` with AI result
+6. Repeat steps 2–5 for other parts as needed
+7. `PATCH /api/v1/user-vehicles/{id}/complete-onboarding` — sets `NeedsOnboarding = false`
 
-### Flow Steps
+**Key decisions**:
+- Lazy tracking: records only created when user explicitly analyzes a part
+- Single-part per AI request (accuracy > batch)
+- AI reasoning stored in `VehiclePartTracking.AiAnalysisResult` (JSON, for audit)
+- Vietnamese prompts for Gemini (token cost optimization)
 
-1. **Create Vehicle** (Required)
-   - User creates UserVehicle via POST `/api/v1/user-vehicles`
-   - System sets `NeedsOnboarding = true`
-   - **NO tracking created** - trackings only created when user analyzes specific parts
+## Running Locally
 
-2. **Get Part Schedule** (Optional - Per Part)
-   - Frontend calls GET `/api/v1/vehicle-models/{vehicleModelId}/part-categories/{partCategoryCode}/default-schedule`
-   - Returns manufacturer's recommended schedule for specific part (e.g., engine_oil)
-   - Example: "First 1000km, then every 5000km or 6 months"
+```bash
+dotnet run --project App/Verendar.AppHost   # Starts all services + infrastructure
+dotnet build Verendar.sln               # Build check
+```
 
-3. **Show Questionnaire** (Optional - Per Part)
-   - Frontend displays part-specific questionnaire
-   - Questions configured by frontend (e.g., "Khi nào thay nhớt gần nhất?", "Xe đã chạy bao nhiêu km khi thay?")
-   - User can skip any part they don't want to track
+Prerequisites: .NET 9 SDK, Docker (Postgres 17, RabbitMQ 3, Redis Alpine via Aspire).
 
-4. **AI Analysis** (Optional - Per Part)
-   - Frontend sends to POST `/api/v1/ai/vehicle-questionnaire/analyze`
-   - Request includes:
-     - Vehicle info (brand, model, current odometer, purchase date)
-     - Default schedule for ONE part only (validated)
-     - User's questionnaire answers
-   - AI (Gemini 2.0-flash) analyzes and returns:
-     - Estimated LastReplacementOdometer and LastReplacementDate
-     - Predicted PredictedNextOdometer and PredictedNextDate
-     - Confidence score (0.0-1.0) and reasoning
+## Skills Reference
 
-5. **Review & Apply** (Optional - Per Part)
-   - Frontend shows AI recommendation to user
-   - If user confirms, frontend calls POST `/api/v1/user-vehicles/{id}/apply-tracking`
-   - System **CREATES NEW** VehiclePartTracking with AI recommendations (if not exists)
-   - Or updates existing tracking if part was already analyzed
-   - Stores AI reasoning and confidence score for audit trail
+`.claude/skills/backend-development/` — patterns, API design, mindset, performance, devops, code quality.
+Load it when making architectural decisions, designing endpoints, or reviewing code.
 
-6. **Repeat for Other Parts** (Optional)
-   - User can repeat steps 2-5 for other parts (oil_filter, air_filter, etc.)
-   - User can return later to add tracking for additional parts
-   - Only analyzed parts have tracking records
+## Notes
 
-7. **Complete Onboarding** (Optional)
-   - User finishes onboarding (may have analyzed 0, some, or all parts)
-   - Frontend calls PATCH `/api/v1/user-vehicles/{id}/complete-onboarding` to set `NeedsOnboarding = false`
-
-### Key Design Decisions
-
-- **Lazy Tracking Creation**: Tracking records only created when user explicitly chooses to analyze a part
-- **Single-Part Analysis**: AI analyzes ONE part per request for accuracy (validated on both request and response)
-- **Selective Tracking**: Users choose which parts to track; untracked parts have no reminder system
-- **Extendable**: Users can return later to add tracking for additional parts
-- **Vietnamese Prompts**: AI prompts optimized in Vietnamese to reduce token costs
-- **Audit Trail**: AI reasoning stored in `VehiclePartTracking.AiAnalysisResult` as JSON
-
-### Key Endpoints
-
-- `POST /api/v1/user-vehicles` - Create vehicle (no tracking created initially)
-- `GET /api/v1/vehicle-models/{vehicleModelId}/part-categories/{partCategoryCode}/default-schedule` - Get manufacturer schedule for specific part
-- `POST /api/v1/ai/vehicle-questionnaire/analyze` - AI analyzes questionnaire (1 part only)
-- `POST /api/v1/user-vehicles/{id}/apply-tracking` - Create/update tracking with AI recommendations
-- `PATCH /api/v1/user-vehicles/{id}/complete-onboarding` - Mark onboarding as complete
-
-## Notes for AI Assistants
-
-- This is a greenfield .NET Aspire project following modern practices
-- Services use clean architecture except Identity (simpler monolithic design)
-- Focus on domain-driven design and separation of concerns
-- Event-driven patterns used for cross-service communication
-- Security-conscious: no secrets in source control
-- **Minimal API pattern**: Use Minimal API endpoints, NOT Controllers
-- **Bootstrapping pattern**: Use extension methods in `Bootstrapping/` folders for DI registration
-- **Mapping pattern**: Use static extension methods for DTO transformations
+- All services follow Clean Architecture — Identity included
+- Never use Controllers — always Minimal API
+- No direct DB sharing between services — cross-service data via HTTP or events
+- `PaginationRequest` (default 10, max 100) on all list endpoints — no unbounded queries
