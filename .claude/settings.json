@@ -1,0 +1,15 @@
+{
+  "ignorePatterns": [
+    "**/bin/**",
+    "**/obj/**",
+    "**/.vs/**",
+    "**/.git/**",
+    "**/Migrations/**",
+    "**/TestResults/**",
+    "**/coverage/**",
+    "**/*.suo",
+    "**/*.user",
+    "**/*.lock.json",
+    "**/node_modules/**"
+  ]
+}
