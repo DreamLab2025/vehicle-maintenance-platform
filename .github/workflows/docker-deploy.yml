@@ -1,3 +1,6 @@
+# Build và push Docker images lên Docker Hub.
+# Secrets: DOCKER_USERNAME, DOCKER_PASSWORD. Caching: GitHub Actions cache (gha) cho layer Docker.
+
 name: Docker Build & Push
 
 on:
