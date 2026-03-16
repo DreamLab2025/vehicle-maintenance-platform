@@ -1,6 +1,4 @@
-# Verendar - Docker Compose Development
-# Chạy từ repo root: docker-compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev up -d
-# Hoặc từ docker/:   docker-compose -f docker-compose.dev.yml --env-file .env.dev up -d
+# docker-compose -f docker-compose.dev.yml --env-file .env.dev up -d
 
 x-common-environment: &common-environment
   ASPNETCORE_ENVIRONMENT: Development
@@ -185,7 +183,9 @@ services:
     ports:
       - "${GATEWAY_PORT:-8080}:80"
     volumes:
+      - ./data/gateway/etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/gateway/etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./data/gateway/etc/nginx/snippets:/etc/nginx/snippets:ro
     networks:
       - verendar-network
     restart: unless-stopped
