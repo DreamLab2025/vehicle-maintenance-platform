@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -28,10 +29,9 @@ namespace Verendar.Identity.Infrastructure.Services
         private readonly ICacheService _cacheService = cacheService;
         private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
-        private string GetOtpCode()
+        private static string GetOtpCode()
         {
-            var random = new Random();
-            return random.Next(100000, 999999).ToString();
+            return RandomNumberGenerator.GetInt32(100000, 1_000_000).ToString();
         }
 
         public async Task<ApiResponse<UserDto>> RegisterUserAsync(RegisterRequest request)
@@ -234,6 +234,9 @@ namespace Verendar.Identity.Infrastructure.Services
                     return ApiResponse<bool>.FailureResponse("Mã OTP không chính xác.");
                 }
 
+
+                await _cacheService.RemoveAsync(cacheKey);
+
                 var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == email);
                 if (user == null)
                 {
@@ -246,6 +249,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 }
 
                 user.Status = EntityStatus.Active;
+                user.EmailVerified = true;
                 user.UpdatedAt = DateTime.UtcNow;
 
                 await _unitOfWork.Users.UpdateAsync(user.Id, user);
@@ -262,8 +266,6 @@ namespace Verendar.Identity.Infrastructure.Services
                     EmailVerified = user.EmailVerified,
                     RegistrationDate = user.CreatedAt
                 });
-
-                await _cacheService.RemoveAsync(cacheKey);
                 return ApiResponse<bool>.SuccessResponse(true, "Kích hoạt tài khoản thành công. Bạn có thể đăng nhập ngay bây giờ.");
             }
             catch (Exception ex)
@@ -346,7 +348,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 }
 
                 var otpCode = GetOtpCode();
-                _logger.LogError("Send OTP code to email: {Email} with OTP: {OtpCode}", email, otpCode);
+                _logger.LogInformation("Send OTP code to email: {Email} with OTP: {OtpCode}", email, otpCode);
                 await _cacheService.SetAsync($"otp_forgot:{email}", otpCode, TimeSpan.FromMinutes(5));
                 await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
 
@@ -384,6 +386,8 @@ namespace Verendar.Identity.Infrastructure.Services
                     return ApiResponse<bool>.FailureResponse("Mã OTP không hợp lệ hoặc đã hết hạn.");
                 }
 
+                await _cacheService.RemoveAsync(cacheKey);
+
                 var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == email);
                 if (user == null)
                 {
@@ -398,8 +402,6 @@ namespace Verendar.Identity.Infrastructure.Services
 
                 await _unitOfWork.Users.UpdateAsync(user.Id, user);
                 await _unitOfWork.SaveChangesAsync();
-
-                await _cacheService.RemoveAsync(cacheKey);
                 _logger.LogInformation("Password reset successfully for: {Email}", email);
 
                 return ApiResponse<bool>.SuccessResponse(true, "Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.");
