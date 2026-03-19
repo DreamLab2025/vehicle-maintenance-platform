@@ -388,3 +388,5 @@ hangfire.db-shm
 hangfire.db-wal
 
 .vscode
+
+docs/*.md

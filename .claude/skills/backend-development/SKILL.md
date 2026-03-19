@@ -1,90 +1,102 @@
 ---
 name: backend-development
 description: >
-  Backend development mindset and patterns for .NET microservices. This skill should be used
-  when making architectural decisions, designing APIs, structuring services, reviewing code quality,
-  thinking about performance, or setting up infrastructure. Use it as a thinking framework —
-  not a strict rulebook — to reason about tradeoffs in Clean Architecture, event-driven design,
-  API contracts, SOLID principles, caching, DevOps, and cross-service communication.
-  Grounded in the Verendar project but applicable as general backend engineering principles.
+  .NET Clean Architecture backend guide (Minimal API, EF Core, RBAC). Use when
+  implementing features, designing APIs, writing or reviewing tests, reviewing
+  code quality, or optimizing performance. References: api-design, architecture,
+  solid, design-patterns, clean-code-refactoring, performance, testing. Repo: ResearchHub.
 ---
 
-# Backend Development
+# Backend Development — .NET Clean Architecture
 
-A thinking guide for backend engineering. Each reference file is a lens — use them to reason through decisions, not to copy-paste solutions.
+To apply standards, patterns, and conventions for .NET Clean Architecture backends (Minimal API, EF Core, RBAC). Load only the references needed for the task.
 
-**The core habit**: Before writing code, ask *why* the current pattern exists, *whether* it applies here, and *what* you'd change to improve it.
+## References
 
----
-
-## Reference Index
-
-| File | Use When Thinking About |
-|------|------------------------|
-| `references/backend-architecture.md` | Service boundaries, layers, when to simplify or split, event vs HTTP, scaling structure |
-| `references/backend-api-design.md` | Contract design, route shape, validation strategy, ApiResponse wrapper, versioning |
-| `references/backend-code-quality.md` | SOLID tradeoffs, naming, mapping approaches, DI structure, recognizing code smells |
-| `references/backend-devops.md` | Infrastructure setup, secrets, migrations, background jobs, running locally |
-| `references/backend-mindset.md` | Design decisions, lazy vs eager, audit trails, security posture, when to break patterns |
-| `references/backend-performance.md` | Query efficiency, caching strategy, async pitfalls, background job design, capacity signals |
+| Situation                                          | When to load           | File |
+| -------------------------------------------------- | ---------------------- | ---- |
+| New endpoint or API module                        | API design, routes     | `references/api-design.md` |
+| Where code lives, layer structure                  | Architecture decisions | `references/architecture.md` |
+| SOLID, patterns, clean code, refactoring           | Code quality           | `references/code-quality.md` |
+| Slow queries, N+1, caching, pagination             | Performance            | `references/performance.md` |
+| Unit/integration tests, coverage                   | Testing                | `references/testing.md` |
 
 ---
 
-## Principles to Internalize
+## Decision Tree
 
-These aren't rules — they're defaults worth questioning when context changes:
-
-- **Domain-first thinking** — understand the business before picking the pattern
-- **Prefer explicit over clever** — code that's obvious beats code that's "elegant"
-- **Paginate by default** — unbounded queries are a future incident waiting to happen
-- **Async by default** — blocking calls in async code are invisible until they're catastrophic
-- **Secrets outside source** — one leaked key can undo months of work
-- **One DB per service** — crossing DB boundaries couples services at the worst layer
-- **Validate at the boundary** — trust internal types, distrust external input
-
-Each of these has valid exceptions. The skill is knowing *when* to break them with intention.
-
----
-
-## Current Project Context
-
-**Stack**: .NET 9 · Aspire 9.5 · PostgreSQL · RabbitMQ · Redis · YARP · Hangfire
-
-**Services**: Identity · Vehicle · Media · Notification · AI
-
-**Architecture style**: Clean Architecture (Domain → Application → Infrastructure → Host) for domain services; monolithic for Identity (simpler, intentional).
-
-**Key patterns in use**:
-- Minimal API (`MapGroup` + `Map*Endpoints()`) instead of Controllers
-- Repository + UnitOfWork for data access
-- Static extension methods for DTO mapping (no AutoMapper)
-- FluentValidation for request validation
-- Bootstrapping extension methods for DI (not inline in Program.cs)
-- User Secrets for all sensitive config
+```
+TASK?
+│
+├─ New feature / endpoint
+│  ├─ Where does it live?          → references/architecture.md
+│  ├─ How to structure the API?    → references/api-design.md
+│  └─ Service + validation code?   → references/code-quality.md
+│
+├─ Code review / quality check
+│  ├─ Architecture violations?     → references/architecture.md
+│  ├─ API contract issues?         → references/api-design.md
+│  └─ Code style / patterns?       → references/code-quality.md
+│
+├─ Performance issue
+│  └─ Slow query / N+1 / memory    → references/performance.md
+│
+├─ Writing or reviewing tests
+│  └─ Unit, integration, E2E       → references/testing.md
+│
+└─ All of the above
+   └─ Read relevant reference(s) before writing code
+```
 
 ---
 
-## Adding a New Feature — Thinking Checklist
+## Project Stack
 
-Not a mechanical checklist — a sequence of questions:
+Stack below is for this repository; adapt for other .NET backends.
 
-1. **Which domain owns this?** Does it fit an existing service or need a new one?
-2. **What's the core entity?** Define it in Domain before touching anything else.
-3. **What does the API contract look like?** Design the endpoint shape before implementation.
-4. **What can go wrong?** Define validation rules and error states early.
-5. **What's the data access pattern?** Read-heavy? Write-heavy? Needs caching?
-6. **Any cross-service effects?** Event vs synchronous call — think about failure modes.
-7. **What's the migration impact?** New table, new column, or just new logic?
+| Concern      | Technology                                              |
+| ------------ | ------------------------------------------------------- |
+| Runtime      | .NET 10, C# 13                                          |
+| API style    | Minimal API (no Controllers)                            |
+| ORM          | EF Core + PostgreSQL                                    |
+| Validation   | FluentValidation                                        |
+| Auth         | JWT Bearer + RBAC (role_permissions table in this repo) |
+| Logging      | Serilog — console (dev), Seq port 8888 (prod)           |
+| Caching      | Redis (`ICacheService`)                                 |
+| Email        | Resend API                                              |
+| File storage | AWS S3 + CloudFront                                     |
+| Password     | `IPasswordHasher` (ASP.NET Core Identity hasher)        |
 
 ---
 
-## When to Deviate from Patterns
+## Solution Layout
 
-Patterns exist because they solved a problem. When context changes, the pattern may not fit:
+Generic 5-project layout. **In this repo:** project names are ResearchHub.\* (e.g. ResearchHub.Api, ResearchHub.Domain).
 
-- Small services can skip CA layers — a 3-endpoint service doesn't need 4 projects
-- Async events add complexity — synchronous HTTP is fine when latency is acceptable
-- Caching adds staleness risk — sometimes fresh data matters more than speed
-- Soft deletes add query complexity — hard deletes are fine when data has no audit value
+```
+src/
+├── Domain/          → Entities, Repository interfaces
+├── Application/     → Services, DTOs, Validators, Mappings, Constants/Messages (AppMessages, ValidatorMessages)
+├── Infrastructure/  → EF Core, Repository implementations, External services
+├── Common/           → ApiResponse, Pagination, Middleware, Extensions
+└── Api/              → Minimal API endpoints, Bootstrapping
+```
 
-**Always document why** you deviated. The next engineer will thank you.
+---
+
+## Core Rules (Non-Negotiable)
+
+1. **No AutoMapper** — static extension methods only (`ToResponse()`, `ToEntity()`, `ApplyUpdate()`)
+2. **No MediatR / CQRS** — services call repositories directly via `IUnitOfWork`
+3. **No Controllers** — Minimal API with `MapGroup` + `Map*Endpoints()` only
+4. **No string literals for roles** — use `RoleConstants.X` (`Domain/Constants/RoleConstants.cs`) in all `RequireRole()` calls; never write `"admin"` inline
+5. **Always async** — `async/await` throughout, never `.Result` or `.Wait()`
+6. **Always soft delete** — set `DeletedAt = DateTime.UtcNow`, never call `DbContext.Remove()`
+7. **Always paginate lists** — `PaginationRequest` + `GetPagedAsync`, never return unbounded lists
+
+---
+
+## Related
+
+- **Refs:** See References table; load only what the task needs.
+- **Other skills:** `code-review` for review feedback and verification gates. To update this skill: use `skill-creator` and apply format (frontmatter, References table, &lt;200 lines, imperative).

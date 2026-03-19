@@ -1,11 +1,25 @@
 ---
 name: code-review
-description: Use when receiving code review feedback (especially if unclear or technically questionable), when completing tasks or major features requiring review before proceeding, or before making any completion/success claims. Covers three practices - receiving feedback with technical rigor over performative agreement, requesting reviews via code-reviewer subagent, and verification gates requiring evidence before any status claims. Essential for subagent-driven development, pull requests, and preventing false completion claims.
+description: >
+  Use when receiving code review feedback (especially unclear or questionable),
+  when completing tasks or major features that need review, or before making
+  completion/success claims. Covers receiving feedback with technical rigor,
+  requesting reviews via code-reviewer subagent, and verification gates before
+  any status claims. References: code-review-reception.md, requesting-code-review.md,
+  verification-before-completion.md.
 ---
 
 # Code Review
 
-Guide proper code review practices emphasizing technical rigor, evidence-based claims, and verification over performative responses.
+To apply code review practices with technical rigor, evidence-based claims, and verification over performative responses.
+
+## References
+
+| Practice            | When to load        | File |
+| ------------------- | ------------------- | ---- |
+| Receiving feedback  | Unclear/questionable feedback, conflict with reviewer | `references/code-review-reception.md` |
+| Requesting review   | After each task, before merge | `references/requesting-code-review.md` |
+| Verification gates  | Before any completion/success claim | `references/verification-before-completion.md` |
 
 ## Overview
 
