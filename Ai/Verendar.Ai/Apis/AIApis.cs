@@ -22,8 +22,7 @@ namespace Verendar.Ai.Apis
                 .WithName("HealthCheck")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Health check";
-                    operation.Description = "Kiểm tra trạng thái kết nối của AI service với third-party (Gemini/Bedrock).";
+                    operation.Summary = "Kiểm tra trạng thái kết nối của AI service với third-party (Gemini/Bedrock).";
                     return operation;
                 })
                 .AllowAnonymous()

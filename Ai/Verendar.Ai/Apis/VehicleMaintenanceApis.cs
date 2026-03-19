@@ -24,9 +24,6 @@ namespace Verendar.Ai.Apis
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Phân tích câu hỏi về xe và đưa ra khuyến nghị bảo dưỡng";
-                    operation.Description = "Endpoint này nhận thông tin xe, lịch bảo dưỡng chuẩn, " +
-                                          "và câu trả lời của người dùng. AI sẽ phân tích và đưa ra " +
-                                          "khuyến nghị tracking chính xác cho từng linh kiện.";
                     return operation;
                 })
                 .RequireAuthorization()

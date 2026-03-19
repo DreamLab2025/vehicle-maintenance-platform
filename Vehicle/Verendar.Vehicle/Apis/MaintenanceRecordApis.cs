@@ -24,7 +24,6 @@ namespace Verendar.Vehicle.Apis
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Lấy lịch sử bảo dưỡng theo xe";
-                    operation.Description = "Trả về danh sách phiếu bảo dưỡng của xe (có product hoặc không đều đồng bộ qua PartName/ItemCount).";
                     return operation;
                 })
                 .RequireAuthorization()
@@ -36,7 +35,6 @@ namespace Verendar.Vehicle.Apis
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Lấy chi tiết phiếu bảo dưỡng";
-                    operation.Description = "Trả về chi tiết phiếu bảo dưỡng và danh sách phụ tùng; PartName đồng bộ (từ sản phẩm hoặc tên tùy chỉnh).";
                     return operation;
                 })
                 .RequireAuthorization()
@@ -50,7 +48,6 @@ namespace Verendar.Vehicle.Apis
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Tạo phiếu bảo dưỡng (1 lần maintenance, nhiều phụ tùng thay thế)";
-                    operation.Description = "Tạo một phiếu bảo dưỡng với nhiều item: cùng ngày/số km, mỗi item là một phụ tùng được thay thế và ghi nhận tracking tương ứng.";
                     return operation;
                 })
                 .RequireAuthorization()

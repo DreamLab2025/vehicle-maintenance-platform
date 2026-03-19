@@ -23,7 +23,6 @@ namespace Verendar.Vehicle.Apis
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Lấy danh mục linh kiện áp dụng cho mẫu xe";
-                    operation.Description = "Trả về chỉ các danh mục (category) có trong lịch bảo dưỡng mặc định của mẫu xe. Xe tay ga không có Nhông sên dĩa.";
                     return operation;
                 })
                 .RequireAuthorization()
@@ -36,7 +35,6 @@ namespace Verendar.Vehicle.Apis
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Lấy lịch bảo dưỡng cho MỘT linh kiện cụ thể";
-                    operation.Description = "Trả về lịch bảo dưỡng cho 1 linh kiện (engine_oil, tire, battery, etc.)";
                     return operation;
                 })
                 .RequireAuthorization()
