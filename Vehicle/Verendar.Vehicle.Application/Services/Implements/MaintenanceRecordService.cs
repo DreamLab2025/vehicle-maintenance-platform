@@ -167,11 +167,11 @@ namespace Verendar.Vehicle.Application.Services.Implements
                         trackingIdsForResponse.Add(tracking.Id);
                     }
 
-                    await _unitOfWork.SaveChangesAsync();
-
                     var trackingSummary = tracking.ToSummary(vehicle.CurrentOdometer);
                     itemResults.Add(MaintenanceRecordMappings.ToCreateMaintenanceRecordItemResult(item.Id, itemInput.PartCategoryCode, trackingSummary));
                 }
+
+                await _unitOfWork.SaveChangesAsync();
 
                 foreach (var trackingId in trackingIdsToResetReminders)
                 {

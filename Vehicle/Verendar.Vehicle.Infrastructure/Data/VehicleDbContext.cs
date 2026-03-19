@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Verendar.Common.Databases.Base;
+using Verendar.Common.Jwt;
 using Verendar.Vehicle.Domain.Entities;
 
 namespace Verendar.Vehicle.Infrastructure.Data
 {
-    public class VehicleDbContext(DbContextOptions<VehicleDbContext> options) : BaseDbContext(options)
+    public class VehicleDbContext(DbContextOptions<VehicleDbContext> options, ICurrentUserService? currentUserService = null) : BaseDbContext(options, currentUserService)
     {
 
         // Vehicle Catalog

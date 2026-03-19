@@ -99,6 +99,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<string>.FailureResponse("Không tìm thấy xe");
                 }
 
+                await _unitOfWork.BeginTransactionAsync();
+
                 var deletedAt = DateTime.UtcNow;
 
                 var reminders = await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(vehicleId);
@@ -106,7 +108,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 {
                     r.DeletedAt = deletedAt;
                     r.DeletedBy = userId;
-                    await _unitOfWork.MaintenanceReminders.UpdateAsync(r.Id, r);
                 }
 
                 var trackings = await _unitOfWork.VehiclePartTrackings.GetByUserVehicleIdAsync(vehicleId);
@@ -114,7 +115,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 {
                     t.DeletedAt = deletedAt;
                     t.DeletedBy = userId;
-                    await _unitOfWork.VehiclePartTrackings.UpdateAsync(t.Id, t);
                 }
 
                 var odometerHistories = await _unitOfWork.OdometerHistories.AsQueryable()
@@ -124,7 +124,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 {
                     h.DeletedAt = deletedAt;
                     h.DeletedBy = userId;
-                    await _unitOfWork.OdometerHistories.UpdateAsync(h.Id, h);
                 }
 
                 var records = await _unitOfWork.MaintenanceRecords.GetByUserVehicleIdAsync(vehicleId);
@@ -135,19 +134,16 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     {
                         item.DeletedAt = deletedAt;
                         item.DeletedBy = userId;
-                        await _unitOfWork.MaintenanceRecordItems.UpdateAsync(item.Id, item);
                     }
                     record.DeletedAt = deletedAt;
                     record.DeletedBy = userId;
-                    await _unitOfWork.MaintenanceRecords.UpdateAsync(record.Id, record);
                 }
 
                 vehicle.DeletedAt = deletedAt;
                 vehicle.DeletedBy = userId;
                 vehicle.Status = EntityStatus.Deleted;
-                await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
 
-                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
 
                 _logger.LogInformation("Soft deleted user vehicle with ID: {VehicleId} for user: {UserId} (cascade)", vehicleId, userId);
 
@@ -234,8 +230,16 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<VehicleStreakResponse>> GetVehicleStreakAsync(Guid userVehicleId)
+        public async Task<ApiResponse<VehicleStreakResponse>> GetVehicleStreakAsync(Guid userId, Guid userVehicleId)
         {
+            var vehicle = await _unitOfWork.UserVehicles
+                .FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
+
+            if (vehicle == null)
+            {
+                return ApiResponse<VehicleStreakResponse>.FailureResponse("Không tìm thấy xe");
+            }
+
             var streak = await _unitOfWork.OdometerHistories.GetCurrentStreakAsync(userVehicleId);
             return ApiResponse<VehicleStreakResponse>.SuccessResponse(streak.ToStreakResponse(userVehicleId), "Lấy chuỗi xe thành công");
         }
@@ -530,6 +534,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<UserVehicleResponse>.FailureResponse("Không tìm thấy xe");
                 }
 
+                if (!vehicle.NeedsOnboarding)
+                {
+                    return ApiResponse<UserVehicleResponse>.SuccessResponse(
+                        (await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(vehicleId))!.ToResponse(),
+                        "Onboarding đã hoàn thành trước đó");
+                }
+
                 vehicle.NeedsOnboarding = false;
                 await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
                 await _unitOfWork.SaveChangesAsync();
@@ -590,6 +601,21 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     (t.PredictedNextOdometer != null || t.PredictedNextDate != null))
                 .ToListAsync();
 
+            var trackingIds = trackings.Select(t => t.Id).ToList();
+
+            // Load all reminders for these trackings in one query
+            var allReminders = await _unitOfWork.MaintenanceReminders.AsQueryable()
+                .Where(r => trackingIds.Contains(r.VehiclePartTrackingId))
+                .ToListAsync();
+
+            var currentRemindersByTracking = allReminders
+                .Where(r => r.IsCurrent)
+                .ToDictionary(r => r.VehiclePartTrackingId);
+
+            var allRemindersByTracking = allReminders
+                .GroupBy(r => r.VehiclePartTrackingId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
             foreach (var tracking in trackings)
             {
                 var (percentageRemaining, targetDate) = ComputeReminderData(tracking, currentOdometer, today, kmPerDay);
@@ -603,8 +629,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 if (currentOdometer >= targetOdometer || (targetDate.HasValue && today >= targetDate.Value))
                     level = ReminderLevel.Critical;
 
-                var currentReminder = await _unitOfWork.MaintenanceReminders.AsQueryable()
-                    .FirstOrDefaultAsync(r => r.VehiclePartTrackingId == tracking.Id && r.IsCurrent);
+                currentRemindersByTracking.TryGetValue(tracking.Id, out var currentReminder);
 
                 var stateChanged = currentReminder != null && (
                     currentReminder.Level != level ||
@@ -615,7 +640,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 {
                     // Lưu lịch sử: đánh dấu reminder hiện tại không còn current, tạo bản ghi mới
                     currentReminder.IsCurrent = false;
-                    await _unitOfWork.MaintenanceReminders.UpdateAsync(currentReminder.Id, currentReminder);
 
                     var reminder = new MaintenanceReminder
                     {
@@ -633,17 +657,15 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 {
                     currentReminder.CurrentOdometer = currentOdometer;
                     currentReminder.PercentageRemaining = percentageRemaining.Value;
-                    await _unitOfWork.MaintenanceReminders.UpdateAsync(currentReminder.Id, currentReminder);
                 }
                 else
                 {
-                    var otherReminders = await _unitOfWork.MaintenanceReminders.AsQueryable()
-                        .Where(r => r.VehiclePartTrackingId == tracking.Id)
-                        .ToListAsync();
-                    foreach (var r in otherReminders)
+                    if (allRemindersByTracking.TryGetValue(tracking.Id, out var otherReminders))
                     {
-                        r.IsCurrent = false;
-                        await _unitOfWork.MaintenanceReminders.UpdateAsync(r.Id, r);
+                        foreach (var r in otherReminders)
+                        {
+                            r.IsCurrent = false;
+                        }
                     }
 
                     var reminder = new MaintenanceReminder

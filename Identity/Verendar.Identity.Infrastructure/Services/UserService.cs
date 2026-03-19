@@ -23,13 +23,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 q => q.OrderByDescending(u => u.CreatedAt)
             );
 
-            if (users.Items == null)
-            {
-                return ApiResponse<List<UserDto>>.FailureResponse("Không tìm thấy danh sách người dùng.");
-            }
-
-            var userItems = users.Items ?? new List<User>();
-            var userDtos = userItems.Select(u => u.ToDto()).ToList();
+            var userDtos = users.Items.Select(u => u.ToDto()).ToList();
 
             return ApiResponse<List<UserDto>>.SuccessPagedResponse(
                 userDtos,

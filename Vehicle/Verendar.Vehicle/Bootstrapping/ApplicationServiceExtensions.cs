@@ -77,10 +77,13 @@ namespace Verendar.Vehicle.Bootstrapping
 
             app.UseCommonService();
 
-            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            if (app.Environment.IsDevelopment())
             {
-                Authorization = Array.Empty<IDashboardAuthorizationFilter>()
-            });
+                app.UseHangfireDashboard("/hangfire", new DashboardOptions
+                {
+                    Authorization = Array.Empty<IDashboardAuthorizationFilter>()
+                });
+            }
 
             RecurringJob.AddOrUpdate<OdometerReminderJob>(
                 "odometer-reminder",

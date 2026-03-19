@@ -189,7 +189,13 @@ namespace Verendar.Vehicle.Apis
             IUserVehicleService userVehicleService,
             Guid userVehicleId)
         {
-            var result = await userVehicleService.GetVehicleStreakAsync(userVehicleId);
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+            {
+                return Results.Unauthorized();
+            }
+
+            var result = await userVehicleService.GetVehicleStreakAsync(userId, userVehicleId);
             return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
         }
 

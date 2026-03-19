@@ -58,5 +58,15 @@ namespace Verendar.Common.Databases.UnitOfWork
             _transaction?.Dispose();
             Context.Dispose();
         }
+
+        public virtual async ValueTask DisposeAsync()
+        {
+            if (_transaction != null)
+            {
+                await _transaction.DisposeAsync();
+                _transaction = null;
+            }
+            await Context.DisposeAsync();
+        }
     }
 }

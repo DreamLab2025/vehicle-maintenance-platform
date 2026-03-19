@@ -53,7 +53,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var otpCode = GetOtpCode();
-                _logger.LogInformation("Sending OTP code to email: {Email} with OTP: {OtpCode}", email, otpCode);
+                _logger.LogInformation("Sending OTP code to email: {Email}", email);
                 await _cacheService.SetAsync($"otp_register:{email}", otpCode, TimeSpan.FromMinutes(5));
 
                 _logger.LogInformation("Publishing OtpRequestedEvent for new user registration: {Email}", email);
@@ -295,17 +295,16 @@ namespace Verendar.Identity.Infrastructure.Services
                 }
 
                 var lockKey = $"otp_resend_lock:{email}";
-                var isLocked = await _cacheService.GetAsync<bool?>(lockKey);
-                if (isLocked == true)
+                var lockAcquired = await _cacheService.SetIfNotExistsAsync(lockKey, true, TimeSpan.FromSeconds(60));
+                if (!lockAcquired)
                 {
                     _logger.LogInformation("OTP resend attempted too soon for user: {Email}", email);
                     return ApiResponse<bool>.FailureResponse("Vui lòng đợi 60 giây trước khi gửi lại OTP.");
                 }
 
                 var otpCode = GetOtpCode();
-                _logger.LogInformation("Resending OTP code to email: {Email} with OTP: {OtpCode}", email, otpCode);
+                _logger.LogInformation("Resending OTP code to email: {Email}", email);
                 await _cacheService.SetAsync($"otp_register:{email}", otpCode, TimeSpan.FromMinutes(5));
-                await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
 
                 _logger.LogInformation("Publishing OtpRequestedEvent for resend OTP: {Email}", email);
                 await _publishEndpoint.Publish(new OtpRequestedEvent
@@ -333,9 +332,8 @@ namespace Verendar.Identity.Infrastructure.Services
             try
             {
                 var lockKey = $"otp_forgot_lock:{email}";
-                var isLocked = await _cacheService.GetAsync<bool?>(lockKey);
-
-                if (isLocked == true)
+                var lockAcquired = await _cacheService.SetIfNotExistsAsync(lockKey, true, TimeSpan.FromSeconds(60));
+                if (!lockAcquired)
                 {
                     return ApiResponse<bool>.FailureResponse("Vui lòng đợi 60 giây trước khi yêu cầu lại.");
                 }
@@ -348,9 +346,8 @@ namespace Verendar.Identity.Infrastructure.Services
                 }
 
                 var otpCode = GetOtpCode();
-                _logger.LogInformation("Send OTP code to email: {Email} with OTP: {OtpCode}", email, otpCode);
+                _logger.LogInformation("Sending forgot password OTP to email: {Email}", email);
                 await _cacheService.SetAsync($"otp_forgot:{email}", otpCode, TimeSpan.FromMinutes(5));
-                await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
 
                 _logger.LogInformation("Publishing OtpRequestedEvent for forgot password: {Email}", email);
                 await _publishEndpoint.Publish(new OtpRequestedEvent

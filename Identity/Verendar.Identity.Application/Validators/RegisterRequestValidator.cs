@@ -21,7 +21,13 @@ namespace Verendar.Identity.Application.Validators
                 .MinimumLength(8)
                 .WithMessage("Password tối thiểu 8 ký tự")
                 .MaximumLength(100)
-                .WithMessage("Password tối đa 100 ký tự");
+                .WithMessage("Password tối đa 100 ký tự")
+                .Matches(@"[A-Z]")
+                .WithMessage("Password phải chứa ít nhất 1 ký tự viết hoa")
+                .Matches(@"[a-z]")
+                .WithMessage("Password phải chứa ít nhất 1 ký tự viết thường")
+                .Matches(@"\d")
+                .WithMessage("Password phải chứa ít nhất 1 chữ số");
         }
     }
 }

@@ -60,7 +60,7 @@ namespace Verendar.Ai.Application.Services.Implements
 
                 var prompt = PromptGenerator.CreateVehicleMaintenancePrompt(vehicleInfo, defaultSchedule, request.Answers);
 
-                _logger.LogInformation("Generated prompt: {Prompt}", prompt);
+                _logger.LogDebug("Generated prompt: {Prompt}", prompt);
 
                 var aiResponse = await _aiService.GenerateContentAsync(
                     prompt,

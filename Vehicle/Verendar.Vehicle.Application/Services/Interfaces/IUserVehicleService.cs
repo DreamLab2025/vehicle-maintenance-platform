@@ -11,7 +11,7 @@ namespace Verendar.Vehicle.Application.Services.Interfaces
         Task<ApiResponse<UserVehicleResponse>> UpdateUserVehicleAsync(Guid userId, Guid vehicleId, UserVehicleRequest request);
         Task<ApiResponse<UserVehicleResponse>> UpdateOdometerAsync(Guid userId, Guid vehicleId, UpdateOdometerRequest request);
         Task<ApiResponse<string>> DeleteUserVehicleAsync(Guid userId, Guid vehicleId);
-        Task<ApiResponse<VehicleStreakResponse>> GetVehicleStreakAsync(Guid userVehicleId);
+        Task<ApiResponse<VehicleStreakResponse>> GetVehicleStreakAsync(Guid userId, Guid userVehicleId);
         Task<ApiResponse<VehiclePartTrackingSummary>> ApplyTrackingConfigAsync(Guid userId, Guid vehicleId, ApplyTrackingConfigRequest request);
         Task SyncMaintenanceRemindersForVehicleAsync(Guid vehicleId, int currentOdometer, Guid userId);
         Task<ApiResponse<List<UserVehiclePartSummary>>> GetPartsByUserVehicleAsync(Guid userId, Guid userVehicleId);

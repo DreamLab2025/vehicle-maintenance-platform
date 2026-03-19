@@ -9,7 +9,7 @@ namespace Verendar.Ai.Application.Helpers
             DefaultScheduleDto schedule,
             IEnumerable<QuestionAnswerDto>? answers)
       {
-        var today = DateTime.Now.ToString("yyyy-MM-dd");
+        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
         var scheduleBlock = $"ITEM: {{ \"Code\": \"{schedule.PartCategoryCode}\", \"Initial_Km\": {schedule.InitialKm}, \"Interval_Km\": {schedule.KmInterval}, \"Interval_Month\": {schedule.MonthsInterval} }}";
 

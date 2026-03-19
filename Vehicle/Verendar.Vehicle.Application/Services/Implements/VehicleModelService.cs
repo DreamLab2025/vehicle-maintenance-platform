@@ -99,7 +99,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
             {
                 filterRequest.Normalize();
                 var query = _unitOfWork.VehicleModels.AsQueryable()
-                    .Include(m => m.Brand)
                     .Include(m => m.Brand).ThenInclude(b => b.VehicleType)
                     .Include(m => m.Variants)
                     .Where(m => m.DeletedAt == null);
@@ -265,7 +264,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
         private async Task<VehicleModel?> GetModelWithDetailsAsync(Guid id)
         {
             return await _unitOfWork.VehicleModels.AsQueryable()
-                .Include(m => m.Brand)
                 .Include(m => m.Brand).ThenInclude(b => b.VehicleType)
                 .Include(m => m.Variants)
                 .FirstOrDefaultAsync(m => m.Id == id);
