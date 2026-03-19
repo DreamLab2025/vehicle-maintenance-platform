@@ -4,17 +4,18 @@ description: >
   .NET Clean Architecture backend guide (Minimal API, EF Core, RBAC). Use when
   implementing features, designing APIs, writing or reviewing tests, reviewing
   code quality, or optimizing performance. References: api-design, architecture,
-  solid, design-patterns, clean-code-refactoring, performance, testing. Repo: ResearchHub.
+  solid, design-patterns, clean-code-refactoring, performance, testing. Repo: Verendar.
 ---
 
 # Backend Development — .NET Clean Architecture
 
-To apply standards, patterns, and conventions for .NET Clean Architecture backends (Minimal API, EF Core, RBAC). Load only the references needed for the task.
+To apply standards, patterns, and conventions for .NET Clean Architecture backends (Minimal API, EF Core, JWT). Load only the references needed for the task.
 
 ## References
 
 | Situation                                          | When to load           | File |
 | -------------------------------------------------- | ---------------------- | ---- |
+| Full working template for any layer                | Starting a new feature | `references/service-template.md` |
 | New endpoint or API module                        | API design, routes     | `references/api-design.md` |
 | Where code lives, layer structure                  | Architecture decisions | `references/architecture.md` |
 | SOLID, patterns, clean code, refactoring           | Code quality           | `references/code-quality.md` |
@@ -52,47 +53,53 @@ TASK?
 
 ## Project Stack
 
-Stack below is for this repository; adapt for other .NET backends.
-
-| Concern      | Technology                                              |
-| ------------ | ------------------------------------------------------- |
-| Runtime      | .NET 10, C# 13                                          |
-| API style    | Minimal API (no Controllers)                            |
-| ORM          | EF Core + PostgreSQL                                    |
-| Validation   | FluentValidation                                        |
-| Auth         | JWT Bearer + RBAC (role_permissions table in this repo) |
-| Logging      | Serilog — console (dev), Seq port 8888 (prod)           |
-| Caching      | Redis (`ICacheService`)                                 |
-| Email        | Resend API                                              |
-| File storage | AWS S3 + CloudFront                                     |
-| Password     | `IPasswordHasher` (ASP.NET Core Identity hasher)        |
+| Concern        | Technology                                                         |
+| -------------- | ------------------------------------------------------------------ |
+| Runtime        | .NET 9, Aspire 9.5                                                 |
+| API style      | Minimal API (no Controllers)                                       |
+| ORM            | EF Core + PostgreSQL (one DB per service)                          |
+| Validation     | FluentValidation — Vietnamese user-facing messages                 |
+| Auth           | JWT Bearer — roles stored as `List<UserRole>` on the User entity   |
+| Messaging      | RabbitMQ via MassTransit (async cross-service events)              |
+| Caching        | Redis (`ICacheService`)                                            |
+| Background     | Hangfire (Vehicle service)                                         |
+| Reverse proxy  | YARP (gateway)                                                     |
+| Password       | `PasswordHasher<User>` (ASP.NET Core Identity hasher)              |
 
 ---
 
 ## Solution Layout
 
-Generic 5-project layout. **In this repo:** project names are ResearchHub.\* (e.g. ResearchHub.Api, ResearchHub.Domain).
+Five services, each following Clean Architecture. **Project names:** `Verendar.{Service}` (e.g. `Verendar.Vehicle`, `Verendar.Identity.Application`).
 
 ```
-src/
-├── Domain/          → Entities, Repository interfaces
-├── Application/     → Services, DTOs, Validators, Mappings, Constants/Messages (AppMessages, ValidatorMessages)
-├── Infrastructure/  → EF Core, Repository implementations, External services
-├── Common/           → ApiResponse, Pagination, Middleware, Extensions
-└── Api/              → Minimal API endpoints, Bootstrapping
+Verendar/
+├── App/
+│   ├── Verendar.AppHost/          # Aspire orchestration
+│   ├── Verendar.ServiceDefaults/  # Shared telemetry/health
+│   └── Verendar.Common/           # ApiResponse, Pagination, JWT, Middleware, CacheService
+├── {Service}/
+│   ├── Verendar.{Service}/        # Host — Minimal API + Bootstrapping/
+│   ├── Verendar.{Service}.Application/  # Use cases, DTOs, Validators, Mappings
+│   ├── Verendar.{Service}.Domain/       # Entities, enums, repository interfaces
+│   └── Verendar.{Service}.Infrastructure/ # EF Core, external services, repositories
 ```
+
+Services: Identity, Vehicle, Media, Notification, Ai.
 
 ---
 
 ## Core Rules (Non-Negotiable)
 
-1. **No AutoMapper** — static extension methods only (`ToResponse()`, `ToEntity()`, `ApplyUpdate()`)
+1. **No AutoMapper** — static extension methods only (`ToResponse()`, `ToEntity()`)
 2. **No MediatR / CQRS** — services call repositories directly via `IUnitOfWork`
-3. **No Controllers** — Minimal API with `MapGroup` + `Map*Endpoints()` only
-4. **No string literals for roles** — use `RoleConstants.X` (`Domain/Constants/RoleConstants.cs`) in all `RequireRole()` calls; never write `"admin"` inline
+3. **No Controllers** — Minimal API with `MapGroup` + `Map*Endpoints()` in `Bootstrapping/`
+4. **No string literals for roles** — use `UserRole` enum in all `RequireRole()` calls
 5. **Always async** — `async/await` throughout, never `.Result` or `.Wait()`
 6. **Always soft delete** — set `DeletedAt = DateTime.UtcNow`, never call `DbContext.Remove()`
 7. **Always paginate lists** — `PaginationRequest` + `GetPagedAsync`, never return unbounded lists
+8. **No DB sharing** — cross-service data via HTTP (YARP) or RabbitMQ events only
+9. **Secrets via User Secrets only** — never in `appsettings.json`
 
 ---
 

@@ -9,44 +9,91 @@ Minimal API conventions, auth patterns, validation flow, and response contract f
 One static class per module: two public extension methods and private handlers.
 
 ```csharp
-public static class ProjectEndpoints
+public static class UserVehicleApis
 {
-    // Called from Program.cs
-    public static IEndpointRouteBuilder MapProjectApi(this IEndpointRouteBuilder builder)
+    // 1. Register in UseApplicationServices() in Bootstrapping/ApplicationServiceExtensions.cs
+    public static IEndpointRouteBuilder MapUserVehicleApi(this IEndpointRouteBuilder builder)
     {
-        builder.MapGroup("/api/v1/projects")
-            .MapProjectRoutes()
-            .WithTags("Projects")
+        builder.MapGroup("/api/v1/user-vehicles")
+            .MapUserVehicleRoutes()
+            .WithTags("User Vehicle Api")
             .RequireRateLimiting("Fixed");
         return builder;
     }
 
-    // Route declarations — metadata only, no logic
-    public static RouteGroupBuilder MapProjectRoutes(this RouteGroupBuilder group)
+    // 2. Route declarations — metadata only, no logic
+    public static RouteGroupBuilder MapUserVehicleRoutes(this RouteGroupBuilder group)
     {
-        group.MapGet("/", GetAllAsync)
-            .WithName("GetAllProjects")
-            .RequireAuthorization(p => p.RequireRole(RoleConstants.Admin))
-            .Produces<ApiResponse<List<ProjectResponse>>>(200);
+        group.MapGet("/", GetUserVehicles)
+            .WithName("GetUserVehicles")
+            .WithOpenApi(op => { op.Summary = "Lấy danh sách xe"; return op; })
+            .RequireAuthorization()
+            .Produces<ApiResponse<List<UserVehicleResponse>>>(200);
 
-        group.MapPost("/", CreateAsync)
-            .WithName("CreateProject")
-            .RequireAuthorization(p => p.RequireRole(RoleConstants.LabLead, RoleConstants.CampusViceDirector))
-            .Produces<ApiResponse<ProjectResponse>>(200)
-            .Produces<ApiResponse<object>>(400);
+        group.MapGet("/{userVehicleId:guid}", GetUserVehicleById)
+            .WithName("GetUserVehicleById")
+            .WithOpenApi(op => { op.Summary = "Lấy chi tiết xe"; return op; })
+            .RequireAuthorization()
+            .Produces<ApiResponse<UserVehicleResponse>>(200)
+            .Produces<ApiResponse<UserVehicleResponse>>(404);
+
+        group.MapPost("/", CreateUserVehicle)
+            .AddEndpointFilter(ValidationEndpointFilter.Validate<UserVehicleRequest>())
+            .WithName("CreateUserVehicle")
+            .WithOpenApi(op => { op.Summary = "Thêm xe mới"; return op; })
+            .RequireAuthorization()
+            .Produces<ApiResponse<UserVehicleResponse>>(200)
+            .Produces<ApiResponse<UserVehicleResponse>>(400);
+
+        group.MapPut("/{userVehicleId:guid}", UpdateUserVehicle)
+            .AddEndpointFilter(ValidationEndpointFilter.Validate<UserVehicleRequest>())
+            .WithName("UpdateUserVehicle")
+            .WithOpenApi(op => { op.Summary = "Cập nhật thông tin xe"; return op; })
+            .RequireAuthorization()
+            .Produces<ApiResponse<UserVehicleResponse>>(200)
+            .Produces<ApiResponse<UserVehicleResponse>>(400);
+
+        group.MapPatch("/{userVehicleId:guid}/odometer", UpdateOdometer)
+            .AddEndpointFilter(ValidationEndpointFilter.Validate<UpdateOdometerRequest>())
+            .WithName("UpdateOdometer")
+            .WithOpenApi(op => { op.Summary = "Cập nhật số km"; return op; })
+            .RequireAuthorization()
+            .Produces<ApiResponse<UserVehicleResponse>>(200)
+            .Produces<ApiResponse<UserVehicleResponse>>(400);
+
+        group.MapDelete("/{userVehicleId:guid}", DeleteUserVehicle)
+            .WithName("DeleteUserVehicle")
+            .WithOpenApi(op => { op.Summary = "Xóa xe"; return op; })
+            .RequireAuthorization()
+            .Produces<ApiResponse<string>>(200)
+            .Produces<ApiResponse<string>>(400);
 
         return group;
     }
 
-    // Handlers — private, stateless, thin (validate → call service → return)
-    private static async Task<IResult> CreateAsync(
-        [FromBody] CreateProjectRequest request,
-        [FromServices] IProjectService service,
-        [FromServices] IValidator<CreateProjectRequest> validator,
-        CancellationToken ct = default)
+    // 3. Handlers — private, thin: extract userId → call service → return IResult
+    private static async Task<IResult> GetUserVehicles(
+        ICurrentUserService currentUserService,
+        [AsParameters] PaginationRequest pagination,
+        IUserVehicleService vehicleService)
     {
-        if (!request.ValidateRequest(validator, out var validationResult)) return validationResult!;
-        return (await service.CreateAsync(request, ct)).ToHttpResult();
+        var userId = currentUserService.UserId;
+        if (userId == Guid.Empty) return Results.Unauthorized();
+
+        var result = await vehicleService.GetUserVehiclesAsync(userId, pagination);
+        return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+    }
+
+    private static async Task<IResult> CreateUserVehicle(
+        UserVehicleRequest request,
+        ICurrentUserService currentUserService,
+        IUserVehicleService vehicleService)
+    {
+        var userId = currentUserService.UserId;
+        if (userId == Guid.Empty) return Results.Unauthorized();
+
+        var result = await vehicleService.CreateUserVehicleAsync(userId, request);
+        return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
     }
 }
 ```
@@ -55,14 +102,15 @@ public static class ProjectEndpoints
 
 ## REST route summary
 
-| Operation    | Method | Pattern                                  |
-| ------------ | ------ | ---------------------------------------- |
-| List (paged) | GET    | `/api/v1/{resources}`                    |
-| Get one      | GET    | `/api/v1/{resources}/{id:guid}`          |
-| Create       | POST   | `/api/v1/{resources}`                    |
-| Update       | PUT    | `/api/v1/{resources}/{id:guid}`          |
-| Delete       | DELETE | `/api/v1/{resources}/{id:guid}`          |
-| Sub-action   | POST   | `/api/v1/{resources}/{id:guid}/{action}` |
+| Operation         | Method | Pattern                                  |
+| ----------------- | ------ | ---------------------------------------- |
+| List (paged)      | GET    | `/api/v1/{resources}`                    |
+| Get one           | GET    | `/api/v1/{resources}/{id:guid}`          |
+| Create            | POST   | `/api/v1/{resources}`                    |
+| Full update       | PUT    | `/api/v1/{resources}/{id:guid}`          |
+| Partial update    | PATCH  | `/api/v1/{resources}/{id:guid}/{field}`  |
+| Delete            | DELETE | `/api/v1/{resources}/{id:guid}`          |
+| Sub-action        | POST   | `/api/v1/{resources}/{id:guid}/{action}` |
 
 ---
 
@@ -81,31 +129,31 @@ In the service, accept the identifying id (e.g. `projectCourseId`) and resolve `
 
 ## Authorization
 
-Role constants live in `Domain/Constants/RoleConstants.cs`. Class: `RoleConstants`.
+Verendar uses `UserRole` enum on the `User` entity. Most user-facing endpoints need no role restriction — just `.RequireAuthorization()`.
 
 ```csharp
-// Single role
-.RequireAuthorization(p => p.RequireRole(RoleConstants.Admin))
+// Any authenticated user
+.RequireAuthorization()
 
-// Multiple roles (any match)
-.RequireAuthorization(p => p.RequireRole(RoleConstants.LabLead, RoleConstants.CampusViceDirector))
+// Admin only (where needed)
+.RequireAuthorization(p => p.RequireRole(nameof(UserRole.Admin)))
 ```
 
-**Resource ownership** is checked inside the service, not on the route. Pass `currentUser.UserId` into the service method when needed.
+**Resource ownership** is checked inside the service by filtering queries with `v.UserId == userId`. Always extract `userId` in the handler and pass it to the service. Return `Results.Unauthorized()` if `userId == Guid.Empty`.
 
 ---
 
 ## Validation flow
 
 ```csharp
-// 1. FluentValidation checks structure (required, maxlength, format)
-if (!request.ValidateRequest(validator, out var validationResult)) return validationResult!;
-// On failure → 400 { code: "VALIDATION_ERROR", metadata: { errors: [{ field, message, code }] } }
+// 1. Structural validation — applied as endpoint filter, runs before handler
+group.MapPost("/", CreateAsync)
+    .AddEndpointFilter(ValidationEndpointFilter.Validate<CreateRequest>());
+// On failure → 400 RFC 7807 Problem Details { title, status, errors: { field: ["msg"] } }
 
-// 2. Service checks business rules (duplicates, FK existence, ownership)
-var response = await service.CreateAsync(request, ct);
-return response.ToHttpResult();
-// On failure → ApiResponse with appropriate statusCode and AppMessages constant
+// 2. Business rules — inside service, return ApiResponse<T>
+var result = await service.CreateAsync(userId, request);
+return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
 ```
 
 Never put business validation in validators. Never put structural validation in services.
@@ -114,101 +162,101 @@ Never put business validation in validators. Never put structural validation in 
 
 ## Pagination
 
-```csharp
-// Endpoint normalizes inputs
-var (page, size) = Normalize.Pagination(
-    pagination.PageNumber ?? 1,
-    pagination.PageSize   ?? PaginationConstants.DefaultPageSize,
-    PaginationConstants.DefaultPageSize,   // 10
-    PaginationConstants.MaxPageSize);       // 100
+`PaginationRequest` (default 10, max 100) via `Normalize()` before use:
 
-var response = await service.GetPagedAsync(page, size, ct);
-return response.ToHttpResult();
+```csharp
+// Service calls Normalize() at entry
+paginationRequest.Normalize();
+
+// Repository uses GetPagedAsync
+var (items, totalCount) = await _unitOfWork.UserVehicles.GetPagedAsync(
+    paginationRequest.PageNumber,
+    paginationRequest.PageSize,
+    filter: v => v.UserId == userId);
+
+return ApiResponse<UserVehicleResponse>.SuccessPagedResponse(
+    items.Select(v => v.ToResponse()).ToList(),
+    totalCount,
+    paginationRequest.PageNumber,
+    paginationRequest.PageSize,
+    "Lấy danh sách xe thành công");
 ```
 
 All list endpoints must paginate. Never return unbounded lists.
 
 **Search / filter params — inherit `PaginationRequest`:**
 
-When a list endpoint needs filter or search params, define a dedicated request class in `Application/Dtos/<Domain>/` that inherits `PaginationRequest` and adds the extra query fields. Use `[AsParameters]` on the derived class in the handler — do **not** mix `[AsParameters] PaginationRequest` with separate `[FromQuery]` filter params.
-
 ```csharp
-// Application/Dtos/User/UserListRequest.cs
-public class UserListRequest : PaginationRequest
+// Application/Dtos/Vehicle/ModelFilterRequest.cs
+public class ModelFilterRequest : PaginationRequest
 {
-    public string? Search { get; set; }   // maps to ?search=
-    public string? Role   { get; set; }   // maps to ?role=
+    public Guid? BrandId { get; set; }
+    public string? ModelName { get; set; }
 }
 
-// Endpoint handler
-private static async Task<IResult> GetAllAsync(
-    [AsParameters] UserListRequest req,
-    [FromServices] IUserService svc,
-    CancellationToken ct)
+// Endpoint handler — use [AsParameters]
+private static async Task<IResult> GetAllModels(
+    [AsParameters] ModelFilterRequest filter,
+    IVehicleModelService svc)
 {
-    var (page, size) = Normalize.Pagination(
-        req.PageNumber ?? 1,
-        req.PageSize   ?? PaginationConstants.DefaultPageSize,
-        PaginationConstants.DefaultPageSize,
-        PaginationConstants.MaxPageSize);
-
-    return (await svc.GetPagedAsync(req.Search, req.Role, page, size, ct)).ToHttpResult();
+    var result = await svc.GetAllModelsAsync(filter);
+    return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
 }
 ```
-
-> Use plain `[AsParameters] PaginationRequest` only when there are **no** filter/search params.
 
 ---
 
 ## Response contract
 
-Every endpoint returns `ApiResponse<T>` via `.ToHttpResult()`. Shape:
+Every endpoint returns `ApiResponse<T>` from `Verendar.Common.Shared`. Shape:
 
 ```json
-{ "isSuccess": true/false, "statusCode": 200, "code": null, "message": "...", "data": {...}, "metadata": null }
+// Success (single)
+{ "isSuccess": true, "message": "Thành công.", "data": {...}, "metadata": null }
+
+// Success (paginated)
+{ "isSuccess": true, "message": "...", "data": [...],
+  "metadata": { "pageNumber": 1, "pageSize": 10, "totalItems": 45, "totalPages": 5, "hasNextPage": true } }
+
+// Business failure
+{ "isSuccess": false, "message": "Không tìm thấy xe.", "data": null, "metadata": null }
 ```
 
-On failure, `code` is a machine-readable string from `AppMessages.X.Code` (e.g. `"USER_NOT_FOUND"`). On validation failure, `code` is `"VALIDATION_ERROR"` and `metadata` contains `{ "errors": [{ "field": "email", "message": "...", "code": "REQUIRED_EMAIL" }] }`.
+**Exception:** FluentValidation and unhandled 500s use RFC 7807 Problem Details (not ApiResponse).
 
-**Message:** Always pass an explicit `message` for every response (success and failure) to improve UX; do not rely on the default. Examples: "Project created successfully.", "Faculty list retrieved successfully.", "Project not found."
-
-Paginated metadata:
-
-```json
-"metadata": { "pageNumber": 1, "pageSize": 10, "totalItems": 45, "totalPages": 5, "hasNextPage": true }
-```
+**Message:** Always pass a Vietnamese message for user-facing responses.
 
 **Status codes:**
 
-| Situation                        | Code                             |
-| -------------------------------- | -------------------------------- |
-| Success                          | 200                              |
-| Not found                        | 404                              |
-| Validation / business rule       | 400                              |
-| Unauthorized                     | 401                              |
-| Forbidden (wrong role/ownership) | 403                              |
-| Unhandled exception              | 500 (GlobalExceptionsMiddleware) |
+| Situation                  | Handler return                            |
+| -------------------------- | ----------------------------------------- |
+| Success                    | `Results.Ok(result)`                      |
+| Business failure           | `Results.BadRequest(result)`              |
+| Not found                  | `Results.NotFound(result)`                |
+| Unauthenticated            | `Results.Unauthorized()`                  |
+| Unhandled exception        | 500 via `GlobalExceptionsMiddleware`      |
 
 ---
 
 ## Handler signatures
 
+No `[FromBody]`/`[FromServices]`/`[FromRoute]` attributes needed — Minimal API binds implicitly:
+
 ```csharp
 // GET list (no filters)
-([FromServices] IXxxService svc, [AsParameters] PaginationRequest pg, CancellationToken ct)
+(ICurrentUserService currentUserService, [AsParameters] PaginationRequest pg, IXxxService svc)
 
-// GET list with search/filter — inherit PaginationRequest
-([AsParameters] XxxListRequest req, [FromServices] IXxxService svc, CancellationToken ct)
+// GET list with filters — inherit PaginationRequest
+([AsParameters] XxxFilterRequest req, ICurrentUserService currentUserService, IXxxService svc)
 
-// GET by id
-([FromRoute] Guid id, [FromServices] IXxxService svc, CancellationToken ct)
+// GET by id (ownership check inside service)
+(Guid id, ICurrentUserService currentUserService, IXxxService svc)
 
-// POST / PUT (with validation)
-([FromBody] XxxRequest req, [FromServices] IXxxService svc,
- [FromServices] IValidator<XxxRequest> v, CancellationToken ct)
+// POST / PUT (validation via AddEndpointFilter on route declaration)
+(XxxRequest request, ICurrentUserService currentUserService, IXxxService svc)
 
 // DELETE
-([FromRoute] Guid id, [FromServices] IXxxService svc, CancellationToken ct)
+(Guid id, ICurrentUserService currentUserService, IXxxService svc)
 ```
 
 ---
@@ -217,8 +265,10 @@ Paginated metadata:
 
 - No Controllers — Minimal API only
 - URL depth: at most 3 levels after `/api/v1/`; if deeper, flatten
-- `RequireAuthorization()` on every non-public route
-- Handlers are thin: validate → delegate to service → return result
-- Resource ownership verified inside service, not in endpoint
-- Always use `ValidateRequest()` before calling service on write endpoints
-- Always use `GetPagedAsync()` + `Normalize.Pagination()` for list endpoints
+- `.RequireAuthorization()` on every non-public route
+- `.WithOpenApi(op => { op.Summary = "Vietnamese summary"; return op; })` on every route
+- `Produces<ApiResponse<T>>(statusCode)` — always typed, never `Produces<ApiResponse<object>>`
+- Handlers are thin: extract userId → check `Guid.Empty` → call service → return `Results.*`
+- Resource ownership verified inside service (filter queries by `userId`)
+- Validation via `AddEndpointFilter(ValidationEndpointFilter.Validate<T>())` on write endpoints
+- Pagination via `paginationRequest.Normalize()` + `GetPagedAsync()` in service
