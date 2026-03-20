@@ -389,4 +389,4 @@ hangfire.db-wal
 
 .vscode
 
-docs/*.md
+docs/*

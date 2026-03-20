@@ -24,8 +24,5 @@
     <ProjectReference Include="..\Verendar.Notification.Infrastructure\Verendar.Notification.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="Templates\Email\**\*" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
 
 </Project>

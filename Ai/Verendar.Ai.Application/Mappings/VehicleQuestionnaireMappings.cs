@@ -20,7 +20,7 @@ namespace Verendar.Ai.Application.Mappings
             };
         }
 
-        private static AiAnalysisMetadata ToAiAnalysisMetadata(this GenerativeAiResponse? aiResponse)
+        private static AiAnalysisMetadata ToAiAnalysisMetadata(GenerativeAiResponse? aiResponse)
         {
             return new AiAnalysisMetadata
             {

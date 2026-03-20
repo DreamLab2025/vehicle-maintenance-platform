@@ -9,9 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Application.Services.Interfaces;
-using Verendar.Ai.Domain.Entities;
 using Verendar.Ai.Domain.Enums;
-using Verendar.Ai.Domain.Repositories.Interfaces;
 using Verendar.Ai.Infrastructure.Configuration;
 using Verendar.Common.Shared;
 
@@ -19,7 +17,6 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
 {
     public class BedrockService(
         IOptions<BedrockSettings> config,
-        IUnitOfWork unitOfWork,
         ILogger<BedrockService> logger
     ) : IGenerativeAiService
     {
@@ -81,99 +78,92 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 using var client = new AmazonBedrockRuntimeClient(credentials, RegionEndpoint.GetBySystemName(_config.Region));
 
                 var request = new InvokeModelRequest
+                {
+                    ModelId = selectedModel,
+                    Body = new MemoryStream(bodyBytes),
+                    ContentType = "application/json",
+                    Accept = "application/json"
+                };
+
+                logger.LogInformation(
+                    "Calling Bedrock API - Model: {Model}, Operation: {Operation}, UserId: {UserId}, PromptLength: {PromptLength}, MaxTokens: {MaxTokens}, Temperature: {Temperature}",
+                    selectedModel, operation, userId, prompt?.Length ?? 0, requestBody["max_tokens"], requestBody.GetValueOrDefault("temperature"));
+
+                InvokeModelResponse? invokeResponse = null;
+                var lastError = string.Empty;
+
+                for (var attempt = 0; attempt <= _config.MaxRetries; attempt++)
+                {
+                    if (attempt > 0)
                     {
-                        ModelId = selectedModel,
-                        Body = new MemoryStream(bodyBytes),
-                        ContentType = "application/json",
-                        Accept = "application/json"
-                    };
-
-                    logger.LogInformation(
-                        "Calling Bedrock API - Model: {Model}, Operation: {Operation}, UserId: {UserId}, PromptLength: {PromptLength}, MaxTokens: {MaxTokens}, Temperature: {Temperature}",
-                        selectedModel, operation, userId, prompt?.Length ?? 0, requestBody["max_tokens"], requestBody.GetValueOrDefault("temperature"));
-
-                    InvokeModelResponse? invokeResponse = null;
-                    var lastError = string.Empty;
-
-                    for (var attempt = 0; attempt <= _config.MaxRetries; attempt++)
-                    {
-                        if (attempt > 0)
-                        {
-                            var delayMs = Math.Min((int)Math.Pow(2, attempt) * 1000, 60_000);
-                            logger.LogWarning(
-                                "Bedrock API retry {Attempt}/{MaxRetries} after {DelayMs}ms - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
-                                attempt, _config.MaxRetries, delayMs, selectedModel, operation, userId);
-                            await Task.Delay(delayMs);
-                        }
-
-                        try
-                        {
-                            invokeResponse = await client.InvokeModelAsync(request);
-                            break;
-                        }
-                        catch (AmazonBedrockRuntimeException ex)
-                        {
-                            lastError = ex.Message;
-                            if (ex.ErrorCode?.Contains("Timeout", StringComparison.OrdinalIgnoreCase) == true ||
-                                ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
-                            {
-                                stopwatch.Stop();
-                                logger.LogError(ex,
-                                    "Bedrock API timeout - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Attempt: {Attempt}",
-                                    selectedModel, operation, userId, attempt + 1);
-                                await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, lastError);
-                                return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service request timeout");
-                            }
-                            if (attempt >= _config.MaxRetries) break;
-                            if (ex.StatusCode != System.Net.HttpStatusCode.TooManyRequests &&
-                                ex.StatusCode != System.Net.HttpStatusCode.ServiceUnavailable)
-                                break;
-                            continue;
-                        }
-                    }
-
-                    stopwatch.Stop();
-
-                    if (invokeResponse == null || invokeResponse.Body == null || invokeResponse.Body.Length == 0)
-                    {
-                        logger.LogError(
-                            "Bedrock API error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ResponseTime: {ResponseTime}ms, Error: {Error}",
-                            selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, lastError);
-                        await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, lastError);
-                        return ApiResponse<GenerativeAiResponse>.FailureResponse(GetUserFriendlyMessage(lastError));
-                    }
-
-                    string responseContent;
-                    using (var reader = new StreamReader(invokeResponse.Body))
-                        responseContent = await reader.ReadToEndAsync();
-
-                    if (string.IsNullOrWhiteSpace(responseContent))
-                    {
+                        var delayMs = Math.Min((int)Math.Pow(2, attempt) * 1000, 60_000);
                         logger.LogWarning(
-                            "Bedrock API returned empty response - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
-                            selectedModel, operation, userId);
-                        await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, "Empty response from API");
-                        return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned empty response");
+                            "Bedrock API retry {Attempt}/{MaxRetries} after {DelayMs}ms - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
+                            attempt, _config.MaxRetries, delayMs, selectedModel, operation, userId);
+                        await Task.Delay(delayMs);
                     }
 
-                    var bedrockResponse = ParseBedrockResponse(responseContent, selectedModel, stopwatch.ElapsedMilliseconds);
-                    await TrackSuccessfulUsageAsync(userId, selectedModel, operation, promptId, bedrockResponse, prompt ?? string.Empty);
+                    try
+                    {
+                        invokeResponse = await client.InvokeModelAsync(request);
+                        break;
+                    }
+                    catch (AmazonBedrockRuntimeException ex)
+                    {
+                        lastError = ex.Message;
+                        if (ex.ErrorCode?.Contains("Timeout", StringComparison.OrdinalIgnoreCase) == true ||
+                            ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
+                        {
+                            stopwatch.Stop();
+                            logger.LogError(ex,
+                                "Bedrock API timeout - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Attempt: {Attempt}",
+                                selectedModel, operation, userId, attempt + 1);
+                            return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service request timeout");
+                        }
+                        if (attempt >= _config.MaxRetries) break;
+                        if (ex.StatusCode != System.Net.HttpStatusCode.TooManyRequests &&
+                            ex.StatusCode != System.Net.HttpStatusCode.ServiceUnavailable)
+                            break;
+                        continue;
+                    }
+                }
 
-                    logger.LogInformation(
-                        "Bedrock API success - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Tokens: {TotalTokens}, Cost: ${Cost:F4}, Time: {Time}ms",
-                        selectedModel, operation, userId, bedrockResponse.TotalTokens, bedrockResponse.TotalCost, stopwatch.ElapsedMilliseconds);
+                stopwatch.Stop();
 
-                    return ApiResponse<GenerativeAiResponse>.SuccessResponse(bedrockResponse);
+                if (invokeResponse == null || invokeResponse.Body == null || invokeResponse.Body.Length == 0)
+                {
+                    logger.LogError(
+                        "Bedrock API error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ResponseTime: {ResponseTime}ms, Error: {Error}",
+                        selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, lastError);
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(GetUserFriendlyMessage(lastError));
+                }
+
+                string responseContent;
+                using (var reader = new StreamReader(invokeResponse.Body))
+                    responseContent = await reader.ReadToEndAsync();
+
+                if (string.IsNullOrWhiteSpace(responseContent))
+                {
+                    logger.LogWarning(
+                        "Bedrock API returned empty response - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
+                        selectedModel, operation, userId);
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned empty response");
+                }
+
+                var bedrockResponse = ParseBedrockResponse(responseContent, selectedModel, stopwatch.ElapsedMilliseconds);
+
+                logger.LogInformation(
+                    "Bedrock API success - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Tokens: {TotalTokens}, Cost: ${Cost:F4}, Time: {Time}ms",
+                    selectedModel, operation, userId, bedrockResponse.TotalTokens, bedrockResponse.TotalCost, stopwatch.ElapsedMilliseconds);
+
+                return ApiResponse<GenerativeAiResponse>.SuccessResponse(bedrockResponse);
             }
             catch (Exception ex)
             {
                 stopwatch.Stop();
                 logger.LogError(ex,
                     "Bedrock API unexpected error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ElapsedTime: {ElapsedTime}ms, ExceptionType: {ExceptionType}",
-                    model ?? _config.DefaultModel, operation, userId, stopwatch.ElapsedMilliseconds, ex.GetType().Name);
-
-                await TrackFailedUsageAsync(userId, model ?? _config.DefaultModel, operation, promptId, stopwatch.ElapsedMilliseconds, ex.Message);
-
+                    selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, ex.GetType().Name);
                 return ApiResponse<GenerativeAiResponse>.FailureResponse("An unexpected error occurred while calling AI service");
             }
         }
@@ -207,6 +197,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
             return new GenerativeAiResponse
             {
                 Content = content,
+                Provider = AiProvider.Bedrock,
                 InputTokens = inputTokens,
                 OutputTokens = outputTokens,
                 TotalTokens = totalTokens,
@@ -228,80 +219,6 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
             if (error.Contains("AccessDenied", StringComparison.OrdinalIgnoreCase) || error.Contains("UnrecognizedClientException", StringComparison.OrdinalIgnoreCase))
                 return "Lỗi xác thực AWS. Kiểm tra cấu hình Bedrock.";
             return "Đã xảy ra lỗi khi gọi API AI. Vui lòng thử lại.";
-        }
-
-        private async Task TrackSuccessfulUsageAsync(
-            Guid userId,
-            string model,
-            AiOperation operation,
-            Guid? promptId,
-            GenerativeAiResponse response,
-            string requestSummary)
-        {
-            try
-            {
-                var inputCost = (response.InputTokens / 1_000_000m) * _config.Pricing.InputCostPer1MTokens;
-                var outputCost = (response.OutputTokens / 1_000_000m) * _config.Pricing.OutputCostPer1MTokens;
-                var usage = new AiUsage
-                {
-                    UserId = userId,
-                    Provider = AiProvider.Bedrock,
-                    Model = model,
-                    Operation = operation,
-                    InputTokens = response.InputTokens,
-                    OutputTokens = response.OutputTokens,
-                    TotalTokens = response.TotalTokens,
-                    InputCost = inputCost,
-                    OutputCost = outputCost,
-                    TotalCost = inputCost + outputCost,
-                    ResponseTimeMs = response.ResponseTimeMs,
-                    ErrorMessage = null,
-                    RequestSummary = requestSummary?.Length > 500 ? requestSummary[..500] : requestSummary
-                };
-
-                await unitOfWork.AiUsages.AddAsync(usage);
-                await unitOfWork.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error tracking successful AI usage (Bedrock)");
-            }
-        }
-
-        private async Task TrackFailedUsageAsync(
-            Guid userId,
-            string model,
-            AiOperation operation,
-            Guid? promptId,
-            long responseTimeMs,
-            string errorMessage)
-        {
-            try
-            {
-                var usage = new AiUsage
-                {
-                    UserId = userId,
-                    Provider = AiProvider.Bedrock,
-                    Model = model,
-                    Operation = operation,
-                    InputTokens = 0,
-                    OutputTokens = 0,
-                    TotalTokens = 0,
-                    InputCost = 0,
-                    OutputCost = 0,
-                    TotalCost = 0,
-                    ResponseTimeMs = (int)responseTimeMs,
-                    ErrorMessage = errorMessage?.Length > 1000 ? errorMessage[..1000] : errorMessage,
-                    RequestSummary = null
-                };
-
-                await unitOfWork.AiUsages.AddAsync(usage);
-                await unitOfWork.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error tracking failed AI usage (Bedrock)");
-            }
         }
 
         public async Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default)

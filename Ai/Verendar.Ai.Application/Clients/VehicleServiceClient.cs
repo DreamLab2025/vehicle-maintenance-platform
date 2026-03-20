@@ -11,121 +11,65 @@ namespace Verendar.Ai.Application.Clients
         private readonly HttpClient _httpClient = httpClient;
         private readonly ILogger<VehicleServiceClient> _logger = logger;
 
-        public async Task<ApiResponse<VehicleServiceUserVehicleResponse>> GetUserVehicleByIdAsync(
+        private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+        public Task<ApiResponse<VehicleServiceUserVehicleResponse>> GetUserVehicleByIdAsync(
             Guid userVehicleId,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default) =>
+            GetAsync<VehicleServiceUserVehicleResponse>(
+                $"/api/v1/user-vehicles/{userVehicleId}",
+                $"user vehicle {userVehicleId}",
+                cancellationToken);
+
+        public Task<ApiResponse<VehicleServiceDefaultScheduleResponse>> GetDefaultScheduleAsync(
+            Guid vehicleModelId,
+            string partCategoryCode,
+            CancellationToken cancellationToken = default) =>
+            GetAsync<VehicleServiceDefaultScheduleResponse>(
+                $"/api/v1/vehicle-models/{vehicleModelId}/part-categories/{partCategoryCode}/default-schedule",
+                $"default schedule for model {vehicleModelId}, part {partCategoryCode}",
+                cancellationToken);
+
+        private async Task<ApiResponse<T>> GetAsync<T>(
+            string url,
+            string logContext,
+            CancellationToken cancellationToken)
         {
             try
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/user-vehicles/{userVehicleId}");
+                _logger.LogInformation("Calling Vehicle Service: GET {Url}", url);
 
-                _logger.LogInformation("Calling Vehicle Service: GET /api/v1/user-vehicles/{UserVehicleId}", userVehicleId);
-
-                // Polly policies are automatically applied via AddPolicyHandler in Bootstrapping
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
                 var response = await _httpClient.SendAsync(request, cancellationToken);
 
                 if (!response.IsSuccessStatusCode)
                 {
                     var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                    _logger.LogError(
-                        "Vehicle Service returned error: {StatusCode} - {Content}",
-                        response.StatusCode, errorContent);
-
-                    return ApiResponse<VehicleServiceUserVehicleResponse>.FailureResponse(
-                        $"Vehicle Service error: {response.StatusCode}");
+                    _logger.LogError("Vehicle Service returned error: {StatusCode} - {Content}", response.StatusCode, errorContent);
+                    return ApiResponse<T>.FailureResponse($"Vehicle Service error: {response.StatusCode}");
                 }
 
                 var jsonContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                // Using lightweight DTO - JSON serializer will automatically ignore extra fields
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse<VehicleServiceUserVehicleResponse>>(
-                    jsonContent,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse<T>>(jsonContent, JsonOptions);
 
                 if (apiResponse == null || !apiResponse.IsSuccess || apiResponse.Data == null)
                 {
                     _logger.LogWarning("Vehicle Service returned unsuccessful response: {Message}", apiResponse?.Message);
-                    return ApiResponse<VehicleServiceUserVehicleResponse>.FailureResponse(
-                        apiResponse?.Message ?? "Failed to get user vehicle");
+                    return ApiResponse<T>.FailureResponse(apiResponse?.Message ?? "Failed to get data from Vehicle Service");
                 }
 
-                _logger.LogInformation("Successfully retrieved user vehicle {UserVehicleId}", userVehicleId);
+                _logger.LogInformation("Successfully retrieved {LogContext}", logContext);
                 return apiResponse;
             }
             catch (BrokenCircuitException ex)
             {
                 _logger.LogError(ex, "Circuit breaker is open. Vehicle Service is unavailable");
-                return ApiResponse<VehicleServiceUserVehicleResponse>.FailureResponse(
-                    "Vehicle Service is temporarily unavailable. Please try again later.");
+                return ApiResponse<T>.FailureResponse("Vehicle Service is temporarily unavailable. Please try again later.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error calling Vehicle Service to get user vehicle {UserVehicleId}", userVehicleId);
-                return ApiResponse<VehicleServiceUserVehicleResponse>.FailureResponse(
-                    $"Error calling Vehicle Service: {ex.Message}");
-            }
-        }
-
-        public async Task<ApiResponse<VehicleServiceDefaultScheduleResponse>> GetDefaultScheduleAsync(
-            Guid vehicleModelId,
-            string partCategoryCode,
-            CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                var request = new HttpRequestMessage(
-                    HttpMethod.Get,
-                    $"/api/v1/vehicle-models/{vehicleModelId}/part-categories/{partCategoryCode}/default-schedule");
-
-                _logger.LogInformation(
-                    "Calling Vehicle Service: GET /api/v1/vehicle-models/{VehicleModelId}/part-categories/{PartCategoryCode}/default-schedule",
-                    vehicleModelId, partCategoryCode);
-
-                // Polly policies are automatically applied via AddPolicyHandler in Bootstrapping
-                var response = await _httpClient.SendAsync(request, cancellationToken);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                    _logger.LogError(
-                        "Vehicle Service returned error: {StatusCode} - {Content}",
-                        response.StatusCode, errorContent);
-
-                    return ApiResponse<VehicleServiceDefaultScheduleResponse>.FailureResponse(
-                        $"Vehicle Service error: {response.StatusCode}");
-                }
-
-                var jsonContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse<VehicleServiceDefaultScheduleResponse>>(
-                    jsonContent,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                if (apiResponse == null || !apiResponse.IsSuccess || apiResponse.Data == null)
-                {
-                    _logger.LogWarning(
-                        "Vehicle Service returned unsuccessful response for schedule: {Message}",
-                        apiResponse?.Message);
-                    return ApiResponse<VehicleServiceDefaultScheduleResponse>.FailureResponse(
-                        apiResponse?.Message ?? "Failed to get default schedule");
-                }
-
-                _logger.LogInformation(
-                    "Successfully retrieved default schedule for model {VehicleModelId}, part {PartCategoryCode}",
-                    vehicleModelId, partCategoryCode);
-                return apiResponse;
-            }
-            catch (BrokenCircuitException ex)
-            {
-                _logger.LogError(ex, "Circuit breaker is open. Vehicle Service is unavailable");
-                return ApiResponse<VehicleServiceDefaultScheduleResponse>.FailureResponse(
-                    "Vehicle Service is temporarily unavailable. Please try again later.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex,
-                    "Error calling Vehicle Service to get default schedule for model {VehicleModelId}, part {PartCategoryCode}",
-                    vehicleModelId, partCategoryCode);
-                return ApiResponse<VehicleServiceDefaultScheduleResponse>.FailureResponse(
-                    $"Error calling Vehicle Service: {ex.Message}");
+                _logger.LogError(ex, "Error calling Vehicle Service: {LogContext}", logContext);
+                return ApiResponse<T>.FailureResponse($"Error calling Vehicle Service: {ex.Message}");
             }
         }
     }

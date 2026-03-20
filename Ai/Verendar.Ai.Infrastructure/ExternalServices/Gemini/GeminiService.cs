@@ -6,9 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Application.Services.Interfaces;
-using Verendar.Ai.Domain.Entities;
 using Verendar.Ai.Domain.Enums;
-using Verendar.Ai.Domain.Repositories.Interfaces;
 using Verendar.Ai.Infrastructure.Configuration;
 using Verendar.Common.Shared;
 
@@ -17,7 +15,6 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
     public class GeminiService(
         IOptions<GeminiSettings> config,
         IHttpClientFactory httpClientFactory,
-        IUnitOfWork unitOfWork,
         ILogger<GeminiService> logger
     ) : IGenerativeAiService
     {
@@ -74,7 +71,6 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 HttpResponseMessage? response = null;
                 var lastResponseContent = string.Empty;
 
-                // Manual retry logic with exponential backoff
                 for (var attempt = 0; attempt <= _config.MaxRetries; attempt++)
                 {
                     if (attempt > 0)
@@ -109,9 +105,6 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                         logger.LogError(ex,
                             "Gemini API timeout - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ConfiguredTimeout: {ConfiguredTimeout}s, ElapsedTime: {ElapsedTime:F2}s, Attempt: {Attempt}",
                             selectedModel, operation, userId, _config.TimeoutSeconds, elapsedSeconds, attempt + 1);
-
-                        var timeoutMessage = $"Request timeout after {elapsedSeconds:F2}s (configured: {_config.TimeoutSeconds}s)";
-                        await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, timeoutMessage);
                         return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service request timeout");
                     }
                     catch (HttpRequestException ex)
@@ -122,11 +115,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                             selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, attempt + 1);
 
                         if (attempt >= _config.MaxRetries)
-                        {
-                            await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, $"HTTP error: {ex.Message}");
                             return ApiResponse<GenerativeAiResponse>.FailureResponse($"Network error: {ex.Message}");
-                        }
-                        // Continue to retry
                         continue;
                     }
                 }
@@ -139,11 +128,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                         "Gemini API error - Status: {StatusCode}, Model: {Model}, Operation: {Operation}, UserId: {UserId}, ResponseTime: {ResponseTime}ms, Response: {Response}",
                         response?.StatusCode, selectedModel, operation, userId, stopwatch.ElapsedMilliseconds,
                         lastResponseContent?.Length > 1000 ? lastResponseContent[..1000] + "..." : lastResponseContent);
-
-                    await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, lastResponseContent ?? "Unknown error");
-
-                    var userMessage = GetUserFriendlyMessage(response?.StatusCode);
-                    return ApiResponse<GenerativeAiResponse>.FailureResponse(userMessage);
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(GetUserFriendlyMessage(response?.StatusCode));
                 }
 
                 if (string.IsNullOrEmpty(lastResponseContent))
@@ -151,13 +136,10 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                     logger.LogWarning(
                         "Gemini API returned empty response - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
                         selectedModel, operation, userId);
-                    await TrackFailedUsageAsync(userId, selectedModel, operation, promptId, stopwatch.ElapsedMilliseconds, "Empty response from API");
                     return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned empty response");
                 }
 
                 var geminiResponse = ParseGeminiResponse(lastResponseContent, selectedModel, stopwatch.ElapsedMilliseconds);
-
-                await TrackSuccessfulUsageAsync(userId, selectedModel, operation, promptId, geminiResponse, prompt ?? string.Empty);
 
                 logger.LogInformation(
                     "Gemini API success - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Tokens: {TotalTokens}, Cost: ${Cost:F4}, Time: {Time}ms",
@@ -170,10 +152,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 stopwatch.Stop();
                 logger.LogError(ex,
                     "Gemini API unexpected error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ElapsedTime: {ElapsedTime}ms, ExceptionType: {ExceptionType}",
-                    model ?? _config.DefaultModel, operation, userId, stopwatch.ElapsedMilliseconds, ex.GetType().Name);
-
-                await TrackFailedUsageAsync(userId, model ?? _config.DefaultModel, operation, promptId, stopwatch.ElapsedMilliseconds, ex.Message);
-
+                    selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, ex.GetType().Name);
                 return ApiResponse<GenerativeAiResponse>.FailureResponse("An unexpected error occurred while calling AI service");
             }
         }
@@ -200,6 +179,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
             return new GenerativeAiResponse
             {
                 Content = content,
+                Provider = AiProvider.Gemini,
                 InputTokens = promptTokenCount,
                 OutputTokens = candidatesTokenCount,
                 TotalTokens = totalTokenCount,
@@ -242,84 +222,10 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
             };
         }
 
-        private async Task TrackSuccessfulUsageAsync(
-            Guid userId,
-            string model,
-            AiOperation operation,
-            Guid? promptId,
-            GenerativeAiResponse response,
-            string requestSummary)
-        {
-            try
-            {
-                var usage = new AiUsage
-                {
-                    UserId = userId,
-                    Provider = AiProvider.Gemini,
-                    Model = model,
-                    Operation = operation,
-                    InputTokens = response.InputTokens,
-                    OutputTokens = response.OutputTokens,
-                    TotalTokens = response.TotalTokens,
-                    InputCost = response.InputCost,
-                    OutputCost = response.OutputCost,
-                    TotalCost = response.TotalCost,
-                    ResponseTimeMs = response.ResponseTimeMs,
-                    ErrorMessage = null,
-                    RequestSummary = requestSummary?.Length > 500 ? requestSummary[..500] : requestSummary
-                };
-
-                await unitOfWork.AiUsages.AddAsync(usage);
-                await unitOfWork.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error tracking successful AI usage");
-            }
-        }
-
-        private async Task TrackFailedUsageAsync(
-            Guid userId,
-            string model,
-            AiOperation operation,
-            Guid? promptId,
-            long responseTimeMs,
-            string errorMessage)
-        {
-            try
-            {
-                var usage = new AiUsage
-                {
-                    UserId = userId,
-                    Provider = AiProvider.Gemini,
-                    Model = model,
-                    Operation = operation,
-                    InputTokens = 0,
-                    OutputTokens = 0,
-                    TotalTokens = 0,
-                    InputCost = 0,
-                    OutputCost = 0,
-                    TotalCost = 0,
-                    ResponseTimeMs = (int)responseTimeMs,
-                    ErrorMessage = errorMessage?.Length > 1000 ? errorMessage[..1000] : errorMessage,
-                    RequestSummary = null
-                };
-
-                await unitOfWork.AiUsages.AddAsync(usage);
-                await unitOfWork.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error tracking failed AI usage");
-            }
-        }
-
         public async Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(_config.ApiKey))
-            {
                 return (false, "Gemini API key is not configured");
-            }
 
             var requestBody = new
             {
