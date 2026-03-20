@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Verendar.Common.Shared;
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Mapping;
@@ -7,8 +8,9 @@ using Verendar.Notification.Domain.Repositories.Interfaces;
 
 namespace Verendar.Notification.Application.Services.Implements
 {
-    public class NotificationService(IUnitOfWork unitOfWork) : INotificationService
+    public class NotificationService(ILogger<NotificationService> logger, IUnitOfWork unitOfWork) : INotificationService
     {
+        private readonly ILogger<NotificationService> _logger = logger;
         public async Task<ApiResponse<NotificationDetailDto>> GetNotificationDetailForUserAsync(
             Guid userId,
             Guid notificationId,
@@ -41,8 +43,9 @@ namespace Verendar.Notification.Application.Services.Implements
                 return ApiResponse<List<NotificationListItemDto>>.SuccessPagedResponse(
                     dtos, totalCount, request.PageNumber, request.PageSize);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error getting in-app notifications for user {UserId}", userId);
                 return ApiResponse<List<NotificationListItemDto>>.FailureResponse("Lỗi khi lấy danh sách thông báo.");
             }
         }

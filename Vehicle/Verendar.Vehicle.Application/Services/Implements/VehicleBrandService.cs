@@ -78,6 +78,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             {
                 paginationRequest.Normalize();
                 var query = _unitOfWork.VehicleBrands.AsQueryable()
+                    .Include(b => b.VehicleType)
                     .Where(b => b.DeletedAt == null);
 
                 var totalCount = await query.CountAsync();
@@ -94,15 +95,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     .Take(paginationRequest.PageSize)
                     .ToListAsync();
 
-                var brandResponses = new List<BrandResponse>();
-                foreach (var brand in items)
-                {
-                    var brandWithTypes = await _unitOfWork.VehicleBrands.GetByIdWithTypesAsync(brand.Id);
-                    brandResponses.Add(brandWithTypes!.ToResponse());
-                }
-
                 return ApiResponse<List<BrandResponse>>.SuccessPagedResponse(
-                    brandResponses,
+                    items.Select(b => b.ToResponse()).ToList(),
                     totalCount,
                     paginationRequest.PageNumber,
                     paginationRequest.PageSize,
@@ -125,22 +119,14 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     return ApiResponse<List<BrandResponse>>.FailureResponse("Không tìm thấy loại xe");
                 }
 
-                var brands = await _unitOfWork.VehicleBrands
-                    .GetAllAsync(b => b.VehicleTypeId == typeId && b.DeletedAt == null);
-
-                var brandResponses = new List<BrandResponse>();
-                foreach (var brand in brands)
-                {
-                    var brandWithType = await _unitOfWork.VehicleBrands.GetByIdWithTypesAsync(brand.Id);
-                    if (brandWithType != null)
-                    {
-                        brandResponses.Add(brandWithType.ToResponse());
-                    }
-                }
+                var brands = await _unitOfWork.VehicleBrands.AsQueryable()
+                    .Include(b => b.VehicleType)
+                    .Where(b => b.VehicleTypeId == typeId && b.DeletedAt == null)
+                    .ToListAsync();
 
                 return ApiResponse<List<BrandResponse>>.SuccessResponse(
-                    brandResponses,
-                    $"Lấy danh sách {brandResponses.Count} thương hiệu của loại xe '{type.Name}' thành công");
+                    brands.Select(b => b.ToResponse()).ToList(),
+                    $"Lấy danh sách {brands.Count} thương hiệu của loại xe '{type.Name}' thành công");
             }
             catch (Exception ex)
             {
