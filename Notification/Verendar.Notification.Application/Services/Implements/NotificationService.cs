@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Verendar.Common.Shared;
 using Verendar.Notification.Application.Dtos.Notifications;
@@ -96,6 +97,27 @@ namespace Verendar.Notification.Application.Services.Implements
             await unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return ApiResponse<bool>.SuccessResponse(true, "Đã xóa thông báo.");
+        }
+
+        public async Task MarkInAppDeliveredAsync(Guid notificationId, Guid userId, IReadOnlyDictionary<string, object?> metadata, CancellationToken cancellationToken = default)
+        {
+            var notification = await unitOfWork.Notifications.FindOneAsync(n => n.Id == notificationId && n.UserId == userId);
+            if (notification != null)
+            {
+                notification.MetadataJson = JsonSerializer.Serialize(metadata);
+                await unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
+            }
+
+            var delivery = await unitOfWork.NotificationDeliveries.FindOneAsync(d =>
+                d.NotificationId == notificationId && d.Channel == NotificationChannel.InApp);
+            if (delivery != null)
+            {
+                delivery.Status = NotificationStatus.Sent;
+                delivery.SentAt = delivery.DeliveredAt = DateTime.UtcNow;
+                await unitOfWork.NotificationDeliveries.UpdateAsync(delivery.Id, delivery);
+            }
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }
 }

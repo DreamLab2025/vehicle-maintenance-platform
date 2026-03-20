@@ -1,10 +1,7 @@
-using System.Text.Json;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Verendar.Notification.Application.Mapping;
 using Verendar.Notification.Application.Services.Interfaces;
-using Verendar.Notification.Domain.Enums;
-using Verendar.Notification.Domain.Repositories.Interfaces;
 using Verendar.Vehicle.Contracts.Events;
 
 namespace Verendar.Notification.Application.Consumers
@@ -13,12 +10,12 @@ namespace Verendar.Notification.Application.Consumers
         ILogger<MaintenanceReminderConsumer> logger,
         IEmailNotificationService emailNotificationService,
         IInAppNotificationService inAppNotificationService,
-        IUnitOfWork unitOfWork) : IConsumer<MaintenanceReminderEvent>
+        INotificationService notificationService) : IConsumer<MaintenanceReminderEvent>
     {
         private readonly ILogger<MaintenanceReminderConsumer> _logger = logger;
         private readonly IEmailNotificationService _emailNotificationService = emailNotificationService;
         private readonly IInAppNotificationService _inAppNotificationService = inAppNotificationService;
-        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly INotificationService _notificationService = notificationService;
 
         public async Task Consume(ConsumeContext<MaintenanceReminderEvent> context)
         {
@@ -43,12 +40,11 @@ namespace Verendar.Notification.Application.Consumers
                 var items = message.Items ?? [];
                 if (idsList.Count == items.Count && items.Count > 0)
                 {
-                    // Mỗi notification tương ứng 1 phụ tùng: gửi in-app riêng cho từng phần (title "Khẩn cấp: cần thay {phụ tùng}")
                     for (var i = 0; i < idsList.Count; i++)
                     {
                         var payload = message.ToInAppPayloadForItem(items[i]);
                         await _inAppNotificationService.SendAsync(message.UserId, payload, context.CancellationToken);
-                        await MarkInAppDeliverySentAndSaveMetadataAsync(idsList[i], message.UserId, payload.Metadata, context.CancellationToken);
+                        await _notificationService.MarkInAppDeliveredAsync(idsList[i], message.UserId, payload.Metadata, context.CancellationToken);
                     }
                 }
                 else
@@ -56,7 +52,7 @@ namespace Verendar.Notification.Application.Consumers
                     var inAppPayload = message.ToInAppPayload();
                     await _inAppNotificationService.SendAsync(message.UserId, inAppPayload, context.CancellationToken);
                     if (idsList.Count > 0)
-                        await MarkInAppDeliverySentAndSaveMetadataAsync(idsList[0], message.UserId, inAppPayload.Metadata, context.CancellationToken);
+                        await _notificationService.MarkInAppDeliveredAsync(idsList[0], message.UserId, inAppPayload.Metadata, context.CancellationToken);
                 }
             }
             catch (Exception ex)
@@ -65,27 +61,6 @@ namespace Verendar.Notification.Application.Consumers
                     messageId, message.UserId);
                 throw;
             }
-        }
-
-        private async Task MarkInAppDeliverySentAndSaveMetadataAsync(Guid notificationId, Guid userId, IReadOnlyDictionary<string, object?> metadata, CancellationToken cancellationToken)
-        {
-            var notification = await _unitOfWork.Notifications.FindOneAsync(n => n.Id == notificationId && n.UserId == userId);
-            if (notification != null)
-            {
-                notification.MetadataJson = JsonSerializer.Serialize(metadata);
-                await _unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
-            }
-
-            var delivery = await _unitOfWork.NotificationDeliveries.FindOneAsync(d =>
-                d.NotificationId == notificationId && d.Channel == NotificationChannel.InApp);
-            if (delivery != null)
-            {
-                delivery.Status = NotificationStatus.Sent;
-                delivery.SentAt = DateTime.UtcNow;
-                delivery.DeliveredAt = DateTime.UtcNow;
-                await _unitOfWork.NotificationDeliveries.UpdateAsync(delivery.Id, delivery);
-            }
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }
 }
