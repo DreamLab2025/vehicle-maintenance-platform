@@ -111,6 +111,7 @@ namespace Verendar.Vehicle.Bootstrapping
             app.MapDefaultMaintenanceScheduleApi();
             app.MapPartApi();
             app.MapMaintenanceRecordApi();
+            app.MapInternalVehicleApi();
 
             return app;
         }

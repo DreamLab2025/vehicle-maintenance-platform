@@ -1,0 +1,54 @@
+using Verendar.Common.Jwt;
+using Verendar.Common.Shared;
+using Verendar.Vehicle.Application.Dtos;
+using Verendar.Vehicle.Application.Services.Interfaces;
+
+namespace Verendar.Vehicle.Apis
+{
+    public static class InternalVehicleApis
+    {
+        public static IEndpointRouteBuilder MapInternalVehicleApi(this IEndpointRouteBuilder builder)
+        {
+            builder.MapGroup("/api/internal/vehicles")
+                .WithTags("Internal Vehicle Api")
+                .RequireAuthorization()
+                .MapInternalVehicleRoutes();
+
+            return builder;
+        }
+
+        private static RouteGroupBuilder MapInternalVehicleRoutes(this RouteGroupBuilder group)
+        {
+            group.MapGet("/user-vehicles/{userVehicleId:guid}", GetUserVehicleById)
+                .WithName("InternalGetUserVehicleById");
+
+            group.MapGet("/models/{vehicleModelId:guid}/part-categories/{partCategoryCode}/default-schedule", GetDefaultScheduleByPartCategory)
+                .WithName("InternalGetDefaultScheduleByPartCategory");
+
+            return group;
+        }
+
+        private static async Task<IResult> GetUserVehicleById(
+            Guid userVehicleId,
+            ICurrentUserService currentUserService,
+            IUserVehicleService vehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+                return Results.Unauthorized();
+
+            var result = await vehicleService.GetUserVehicleByIdAsync(userId, userVehicleId);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> GetDefaultScheduleByPartCategory(
+            Guid vehicleModelId,
+            string partCategoryCode,
+            IDefaultMaintenanceScheduleService service,
+            CancellationToken cancellationToken)
+        {
+            var result = await service.GetByVehicleModelAndPartCategoryAsync(vehicleModelId, partCategoryCode, cancellationToken);
+            return result.ToHttpResult();
+        }
+    }
+}

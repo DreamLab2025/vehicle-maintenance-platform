@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Options;
 using Verendar.Ai.Apis;
-using Verendar.Ai.Application.Handlers;
 using Verendar.Ai.Application.Services.Implements;
+using Verendar.Common.Http;
 using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Domain.Enums;
 using Verendar.Ai.Domain.Repositories.Interfaces;

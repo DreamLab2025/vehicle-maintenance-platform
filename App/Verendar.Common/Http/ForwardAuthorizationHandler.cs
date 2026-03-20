@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
-namespace Verendar.Ai.Application.Handlers
+namespace Verendar.Common.Http
 {
     public sealed class ForwardAuthorizationHandler(
         IHttpContextAccessor httpContextAccessor,
@@ -99,7 +99,7 @@ namespace Verendar.Ai.Application.Handlers
                 logger.LogWarning(
                     "ForwardAuthorizationHandler: Authorization header could not be parsed. Value length: {Length}, Value preview: {Preview}. Outgoing request to {RequestUri} will not include Authorization.",
                     authValue.Length,
-                    authValue.Length > 20 ? authValue.Substring(0, 20) + "..." : authValue,
+                    authValue.Length > 20 ? authValue[..20] + "..." : authValue,
                     request.RequestUri);
                 return;
             }

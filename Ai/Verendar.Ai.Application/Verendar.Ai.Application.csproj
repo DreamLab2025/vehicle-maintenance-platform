@@ -8,11 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Verendar.Ai.Domain\Verendar.Ai.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Polly" Version="8.4.2" />
-    <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+    <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
