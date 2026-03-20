@@ -1,8 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Media.Domain.Entities
 {
     [Index(nameof(UserId))]

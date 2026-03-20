@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Identity.Domain.Entities
 {
     public class User : BaseEntity

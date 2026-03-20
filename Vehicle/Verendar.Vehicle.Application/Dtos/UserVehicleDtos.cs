@@ -1,5 +1,3 @@
-using Verendar.Common.Shared;
-
 namespace Verendar.Vehicle.Application.Dtos
 {
     public class UserVehicleRequest

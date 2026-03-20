@@ -1,7 +1,4 @@
-﻿using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Domain.Entities;
-
-namespace Verendar.Vehicle.Application.Mappings
+﻿namespace Verendar.Vehicle.Application.Mappings
 {
     public static class TypeMappings
     {

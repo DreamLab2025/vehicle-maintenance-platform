@@ -1,12 +1,8 @@
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Verendar.Common.Shared;
 using Verendar.Media.Application.Configuration;
-using Verendar.Media.Application.Dtos;
 using Verendar.Media.Application.IStorage;
 using Verendar.Media.Application.Mappings;
 using Verendar.Media.Application.Services.Interfaces;
-using Verendar.Media.Domain.Entities;
 using Verendar.Media.Domain.Repositories.Interfaces;
 
 namespace Verendar.Media.Application.Services.Implements

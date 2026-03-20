@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Options;
 using Verendar.Ai.Application.Dtos.Health;
-using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Infrastructure.Configuration;
 
 namespace Verendar.Ai.Apis

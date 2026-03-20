@@ -1,7 +1,4 @@
-using MassTransit;
-using Microsoft.Extensions.Logging;
 using Verendar.Notification.Application.Mapping;
-using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Vehicle.Contracts.Events;
 
 namespace Verendar.Notification.Application.Consumers

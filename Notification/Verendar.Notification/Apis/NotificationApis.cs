@@ -1,8 +1,3 @@
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Notification.Application.Dtos.Notifications;
-using Verendar.Notification.Application.Services.Interfaces;
-
 namespace Verendar.Notification.Apis
 {
     public static class NotificationApis

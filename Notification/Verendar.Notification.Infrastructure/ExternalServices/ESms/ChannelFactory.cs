@@ -1,6 +1,4 @@
 using Verendar.Notification.Application.Services.Interfaces;
-using Verendar.Notification.Domain.Enums;
-
 namespace Verendar.Notification.Infrastructure.ExternalServices.ESms
 {
     public class ChannelFactory(IEnumerable<INotificationChannel> channels) : IChannelFactory

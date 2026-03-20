@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Verendar.Common.Databases.Base;
+﻿using Verendar.Common.Databases.Base;
 using Verendar.Common.Jwt;
 
 namespace Verendar.Media.Infrastructure.Data

@@ -1,9 +1,3 @@
-using Verendar.Common.EndpointFilters;
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Media.Application.Dtos;
-using Verendar.Media.Application.Services.Interfaces;
-
 namespace Verendar.Media.Apis
 {
     public static class MediaFileApis

@@ -1,7 +1,5 @@
 using Verendar.Notification.Application.Constants;
 using Verendar.Notification.Application.Dtos.Email;
-using Verendar.Notification.Application.Dtos.Notifications;
-using Verendar.Notification.Domain.Enums;
 using Verender.Identity.Contracts.Events;
 
 namespace Verendar.Notification.Application.Mapping

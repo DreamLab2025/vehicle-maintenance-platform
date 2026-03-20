@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Verendar.Common.Databases.Base;
 
 namespace Verendar.Vehicle.Domain.Entities
 {

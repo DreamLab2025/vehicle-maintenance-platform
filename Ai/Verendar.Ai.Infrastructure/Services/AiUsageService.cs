@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Application.Services.Interfaces;
-using Verendar.Ai.Domain.Entities;
 using Verendar.Ai.Domain.Enums;
 using Verendar.Ai.Domain.Repositories.Interfaces;
 

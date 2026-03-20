@@ -1,12 +1,10 @@
 using MassTransit;
-using Microsoft.Extensions.Logging;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Application.Clients;
 using Verendar.Vehicle.Contracts.Events;
 using Verendar.Vehicle.Domain.Enums;
 using ContractsLevel = Verendar.Vehicle.Contracts.Enums.ReminderLevel;
-using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {

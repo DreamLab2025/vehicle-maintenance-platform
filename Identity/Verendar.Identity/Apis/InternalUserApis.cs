@@ -1,5 +1,3 @@
-using Verendar.Identity.Application.Services.Interfaces;
-
 namespace Verendar.Identity.Apis
 {
     public static class InternalUserApis

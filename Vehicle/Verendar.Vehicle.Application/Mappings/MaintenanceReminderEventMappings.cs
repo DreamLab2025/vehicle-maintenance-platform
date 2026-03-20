@@ -1,5 +1,4 @@
 using Verendar.Vehicle.Contracts.Events;
-using Verendar.Vehicle.Domain.Entities;
 
 namespace Verendar.Vehicle.Application.Mappings
 {

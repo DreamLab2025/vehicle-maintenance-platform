@@ -1,12 +1,5 @@
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
-using Verendar.Common.Shared;
-using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Mapping;
-using Verendar.Notification.Application.Services.Interfaces;
-using Verendar.Notification.Domain.Enums;
-using Verendar.Notification.Domain.Repositories.Interfaces;
-
 namespace Verendar.Notification.Application.Services.Implements
 {
     public class NotificationService(ILogger<NotificationService> logger, IUnitOfWork unitOfWork) : INotificationService

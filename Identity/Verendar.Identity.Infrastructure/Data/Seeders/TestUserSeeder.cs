@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Verendar.Common.Databases.Base;
 using Verendar.Identity.Application.Helpers;
-using Verendar.Identity.Domain.Entities;
 
 namespace Verendar.Identity.Infrastructure.Data.Seeders
 {

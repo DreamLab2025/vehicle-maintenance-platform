@@ -1,9 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Verendar.Common.Databases.Base;
-using Verendar.Vehicle.Domain.Entities;
 using Verendar.Vehicle.Domain.Enums;
-using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Seeders;
 

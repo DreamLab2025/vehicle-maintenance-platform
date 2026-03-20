@@ -1,8 +1,5 @@
 using System.Text.Json;
 using Verendar.Notification.Application.Constants;
-using Verendar.Notification.Application.Dtos.Notifications;
-using Verendar.Notification.Domain.Entities;
-using Verendar.Notification.Domain.Enums;
 using Verender.Identity.Contracts.Events;
 using Verendar.Vehicle.Contracts.Enums;
 using Verendar.Vehicle.Contracts.Events;

@@ -1,13 +1,10 @@
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 using Verendar.Ai.Application.Prompts;
 using Verendar.Ai.Application.Mappings;
 using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Domain.Enums;
-using Verendar.Common.Shared;
-
 namespace Verendar.Ai.Application.Services.Implements
 {
     public class VehicleMaintenanceAnalysisService(

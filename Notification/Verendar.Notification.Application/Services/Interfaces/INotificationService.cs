@@ -1,6 +1,3 @@
-using Verendar.Common.Shared;
-using Verendar.Notification.Application.Dtos.Notifications;
-
 namespace Verendar.Notification.Application.Services.Interfaces
 {
     public interface INotificationService

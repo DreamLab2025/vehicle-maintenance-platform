@@ -1,8 +1,4 @@
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
-using Verendar.Ai.Application.Services.Interfaces;
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-
 namespace Verendar.Ai.Apis
 {
     public static class VehicleMaintenanceApis

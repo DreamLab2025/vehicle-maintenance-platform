@@ -11,5 +11,10 @@
     "**/*.user",
     "**/*.lock.json",
     "**/node_modules/**"
-  ]
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(node -e \":*)"
+    ]
+  }
 }

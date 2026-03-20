@@ -1,9 +1,5 @@
-using Microsoft.Extensions.Logging;
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {

@@ -9,7 +9,6 @@ using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Helpers;
 using Verendar.Identity.Application.Mappings;
 using Verendar.Identity.Application.Services.Interfaces;
-using Verendar.Identity.Domain.Entities;
 using Verendar.Identity.Domain.Repositories.Interfaces;
 using Verender.Identity.Contracts.Events;
 

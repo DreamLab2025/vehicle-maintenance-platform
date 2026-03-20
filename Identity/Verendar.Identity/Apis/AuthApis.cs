@@ -1,8 +1,4 @@
 using Verendar.Common.EndpointFilters;
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Identity.Application.Dtos;
-using Verendar.Identity.Application.Services.Interfaces;
 
 namespace Verendar.Identity.Apis
 {

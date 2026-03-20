@@ -1,5 +1,3 @@
-using Verendar.Media.Domain.Entities;
-
 namespace Verendar.Media.Application.Dtos
 {
     public class InitUploadRequest

@@ -1,7 +1,3 @@
-using FluentValidation;
-using Verendar.Media.Application.Dtos;
-using Verendar.Media.Domain.Entities;
-
 namespace Verendar.Media.Application.Validators
 {
     public class InitUploadRequestValidator : AbstractValidator<InitUploadRequest>

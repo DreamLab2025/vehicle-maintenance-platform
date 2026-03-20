@@ -1,5 +1,4 @@
 using Verendar.Common.Databases.Base;
-using Verendar.Vehicle.Domain.Entities;
 
 namespace Verendar.Vehicle.Infrastructure.Data;
 

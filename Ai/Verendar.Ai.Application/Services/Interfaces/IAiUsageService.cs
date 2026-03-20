@@ -1,4 +1,3 @@
-using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Domain.Enums;
 
 namespace Verendar.Ai.Application.Services.Interfaces

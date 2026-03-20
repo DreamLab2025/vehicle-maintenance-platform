@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Verendar.Common.Databases.Base;
-
-namespace Verendar.Vehicle.Domain.Entities
+﻿namespace Verendar.Vehicle.Domain.Entities
 {
     public class VehicleType : BaseEntity
     {

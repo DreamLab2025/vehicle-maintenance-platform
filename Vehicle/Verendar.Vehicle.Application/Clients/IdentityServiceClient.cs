@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Verendar.Common.Http;
 
 namespace Verendar.Vehicle.Application.Clients

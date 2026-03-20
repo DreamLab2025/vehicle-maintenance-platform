@@ -1,7 +1,3 @@
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Application.Services.Interfaces;
-
 namespace Verendar.Vehicle.Apis
 {
     public static class DefaultMaintenanceScheduleApis

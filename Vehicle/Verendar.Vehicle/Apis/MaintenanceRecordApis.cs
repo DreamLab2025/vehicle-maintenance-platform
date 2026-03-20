@@ -1,9 +1,3 @@
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Common.EndpointFilters;
-
 namespace Verendar.Vehicle.Apis
 {
     public static class MaintenanceRecordApis

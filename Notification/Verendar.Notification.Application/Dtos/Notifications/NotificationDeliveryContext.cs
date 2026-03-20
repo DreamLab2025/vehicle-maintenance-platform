@@ -1,5 +1,3 @@
-using Verendar.Notification.Domain.Enums;
-
 namespace Verendar.Notification.Application.Dtos.Notifications
 {
     public class NotificationDeliveryContext

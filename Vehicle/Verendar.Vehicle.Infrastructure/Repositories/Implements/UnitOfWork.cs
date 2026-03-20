@@ -1,6 +1,5 @@
 using Verendar.Common.Databases.UnitOfWork;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
-using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {

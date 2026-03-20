@@ -1,6 +1,3 @@
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Services.Interfaces
 {
     public interface IVehicleVariantService

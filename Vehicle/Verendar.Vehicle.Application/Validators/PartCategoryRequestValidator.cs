@@ -1,6 +1,3 @@
-using FluentValidation;
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Validators
 {
     public class PartCategoryRequestValidator : AbstractValidator<PartCategoryRequest>

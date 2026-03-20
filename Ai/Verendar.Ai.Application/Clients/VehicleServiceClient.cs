@@ -1,8 +1,5 @@
-using Microsoft.Extensions.Logging;
 using Verendar.Ai.Application.Dtos.VehicleService;
 using Verendar.Common.Http;
-using Verendar.Common.Shared;
-
 namespace Verendar.Ai.Application.Clients
 {
     public class VehicleServiceClient(HttpClient httpClient, ILogger<VehicleServiceClient> logger)

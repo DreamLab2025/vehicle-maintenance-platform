@@ -2,7 +2,6 @@ using Microsoft.Extensions.Options;
 using Verendar.Ai.Apis;
 using Verendar.Ai.Application.Services.Implements;
 using Verendar.Common.Http;
-using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Domain.Enums;
 using Verendar.Ai.Domain.Repositories.Interfaces;
 using Verendar.Ai.Infrastructure.Configuration;
@@ -11,7 +10,6 @@ using Verendar.Ai.Infrastructure.ExternalServices;
 using Verendar.Ai.Infrastructure.Repositories.Implements;
 using Verendar.Ai.Infrastructure.Services;
 using Verendar.Common.Bootstrapping;
-using Verendar.Common.Shared;
 using Verendar.ServiceDefaults;
 
 namespace Verendar.Ai.Bootstrapping

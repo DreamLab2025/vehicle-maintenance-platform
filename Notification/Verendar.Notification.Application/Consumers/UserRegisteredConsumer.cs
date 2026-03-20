@@ -1,8 +1,4 @@
-using MassTransit;
-using Microsoft.Extensions.Logging;
 using Verendar.Notification.Application.Mapping;
-using Verendar.Notification.Application.Services.Interfaces;
-using Verendar.Notification.Domain.Repositories.Interfaces;
 using Verender.Identity.Contracts.Events;
 
 namespace Verendar.Notification.Application.Consumers

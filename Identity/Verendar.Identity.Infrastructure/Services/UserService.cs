@@ -3,7 +3,6 @@ using Verendar.Common.Shared;
 using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Mappings;
 using Verendar.Identity.Application.Services.Interfaces;
-using Verendar.Identity.Domain.Entities;
 using Verendar.Identity.Domain.Repositories.Interfaces;
 
 namespace Verendar.Identity.Infrastructure.Services

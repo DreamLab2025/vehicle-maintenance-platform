@@ -1,7 +1,5 @@
 using Verendar.Common.Databases.UnitOfWork;
 using Verendar.Notification.Domain.Repositories.Interfaces;
-using Verendar.Notification.Infrastructure.Data;
-
 namespace Verendar.Notification.Infrastructure.Repositories.Implements
 {
     public class UnitOfWork(NotificationDbContext context) : BaseUnitOfWork<NotificationDbContext>(context), IUnitOfWork

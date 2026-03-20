@@ -1,11 +1,7 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Verendar.Notification.Application.Constants;
-using Verendar.Notification.Domain.Entities;
-using Verendar.Notification.Domain.Enums;
 using Verendar.Vehicle.Contracts.Enums;
-using Verendar.Notification.Infrastructure.Data;
 using NotificationEntity = Verendar.Notification.Domain.Entities.Notification;
 
 namespace Verendar.Notification.Infrastructure.Seeders;

@@ -1,8 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Verendar.Common.Databases.Base;
 using Verendar.Common.Jwt;
-using Verendar.Identity.Domain.Entities;
 
 namespace Verendar.Identity.Infrastructure.Data
 {

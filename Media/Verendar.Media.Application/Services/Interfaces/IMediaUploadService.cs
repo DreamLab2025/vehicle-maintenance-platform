@@ -1,6 +1,3 @@
-using Verendar.Common.Shared;
-using Verendar.Media.Application.Dtos;
-
 namespace Verendar.Media.Application.Services.Interfaces
 {
     public interface IMediaUploadService
