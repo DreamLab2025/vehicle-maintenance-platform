@@ -7,6 +7,7 @@ namespace Verendar.Notification.Application.Constants
         public static class TemplateKeys
         {
             public const string Otp = "Otp";
+            public const string Welcome = "Welcome";
             public const string OdometerReminder = "OdometerReminder";
             public const string MaintenanceReminder = "MaintenanceReminder";
         }
@@ -33,6 +34,7 @@ namespace Verendar.Notification.Application.Constants
         public static class Titles
         {
             public const string Otp = "Mã xác thực OTP";
+            public const string Welcome = "Chào mừng đến với Verendar!";
             public const string OdometerReminder = "Nhắc nhở cập nhật số km";
             public static readonly string MaintenanceCriticalPart = $"{MaintenanceLevelLabels.Critical}: Cần thay";
             public static readonly string MaintenanceCritical = $"{MaintenanceLevelLabels.Critical}: Cần thay linh kiện";

@@ -42,6 +42,37 @@ namespace Verendar.Notification.Infrastructure.Services
             return await SendEmailDeliveryAsync(notification, delivery, context, cancellationToken);
         }
 
+        public async Task<bool> SendWelcomeEmailAsync(UserRegisteredEvent message, CancellationToken cancellationToken = default)
+        {
+            var title = NotificationConstants.Titles.Welcome;
+            var messageContent = $"Chào mừng {message.FullName} đến với Verendar!";
+
+            var notification = message.UserRegisteredToNotificationEntity(title, messageContent, NotificationType.Welcome);
+            await _unitOfWork.Notifications.AddAsync(notification);
+
+            NotificationDelivery? emailDelivery = null;
+            if (!string.IsNullOrWhiteSpace(message.Email))
+            {
+                emailDelivery = notification.CreateDelivery(message.Email, EmailChannel);
+                await _unitOfWork.NotificationDeliveries.AddAsync(emailDelivery);
+            }
+            await _unitOfWork.NotificationDeliveries.AddAsync(notification.CreateDelivery(message.UserId.ToString(), InAppChannel));
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            if (emailDelivery == null)
+            {
+                _logger.LogDebug("UserRegisteredEvent has no Email for UserId {UserId}, only InApp delivery created", message.UserId);
+                return false;
+            }
+
+            var templateModel = message.ToWelcomeEmailModel();
+            var deliveryContext = EmailDeliveryContextMappings.ToDeliveryContext(
+                notification.Id, message.Email!, title, messageContent,
+                notification.NotificationType, templateModel, NotificationConstants.TemplateKeys.Welcome);
+
+            return await SendEmailDeliveryAsync(notification, emailDelivery, deliveryContext, cancellationToken);
+        }
+
         public async Task<(bool EmailSent, Guid? NotificationId)> SendOdometerReminderAsync(OdometerReminderEvent message, CancellationToken cancellationToken = default)
         {
             var days = message.StaleOdometerDays > 0 ? message.StaleOdometerDays : 3;

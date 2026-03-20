@@ -23,7 +23,6 @@ namespace Verendar.Notification.Application.Services.Interfaces
 
         Task<ApiResponse<bool>> SoftDeleteByIdAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken = default);
 
-        /// <summary>Marks the InApp delivery record as Sent and persists the notification metadata. Called by consumers after SignalR delivery.</summary>
         Task MarkInAppDeliveredAsync(Guid notificationId, Guid userId, IReadOnlyDictionary<string, object?> metadata, CancellationToken cancellationToken = default);
     }
 }

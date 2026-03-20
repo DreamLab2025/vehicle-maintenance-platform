@@ -1,4 +1,5 @@
 using Verendar.Notification.Application.Constants;
+using Verendar.Notification.Application.Dtos.Email;
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Domain.Enums;
 using Verender.Identity.Contracts.Events;
@@ -19,21 +20,30 @@ namespace Verendar.Notification.Application.Mapping
             {
                 NotificationId = notificationId,
                 RecipientEmail = message.TargetValue,
-                RecipientPhone = null,
                 Title = title,
                 Message = messageContent,
                 NotificationType = notificationType,
-                TemplateParameters = new Dictionary<string, string>
+                TemplateModel = new OtpEmailModel
                 {
-                    { "OTP", message.Otp },
-                    { "OtpCode", message.Otp },
-                    { "ExpiryMinutes", expiryMinutes.ToString() },
-                    { "ExpiryTime", message.ExpiryTime.ToString(NotificationConstants.DateFormats.DateTime) },
-                    { "Type", message.Type.ToString() }
+                    OtpCode = message.Otp,
+                    ExpiryMinutes = (int)Math.Ceiling(expiryMinutes),
+                    ExpiryTime = message.ExpiryTime,
+                    OtpType = message.Type.ToString()
                 },
-                Metadata = new Dictionary<string, object> { { NotificationConstants.MetadataKeys.TemplateKey, NotificationConstants.TemplateKeys.Otp } }
+                Metadata = new Dictionary<string, object>
+                {
+                    { NotificationConstants.MetadataKeys.TemplateKey, NotificationConstants.TemplateKeys.Otp }
+                }
             };
         }
+
+        public static WelcomeEmailModel ToWelcomeEmailModel(this UserRegisteredEvent message) => new()
+        {
+            FullName = message.FullName,
+            UserName = message.FullName,
+            UserEmail = message.Email,
+            RegistrationDate = message.RegistrationDate
+        };
 
         public static NotificationDeliveryContext ToDeliveryContext(
             Guid notificationId,
@@ -48,12 +58,14 @@ namespace Verendar.Notification.Application.Mapping
             {
                 NotificationId = notificationId,
                 RecipientEmail = recipientEmail,
-                RecipientPhone = null,
                 Title = title,
                 Message = messageContent,
                 NotificationType = notificationType,
-                Metadata = new Dictionary<string, object> { { NotificationConstants.MetadataKeys.TemplateKey, templateKey } },
-                TemplateModel = templateModel
+                TemplateModel = templateModel,
+                Metadata = new Dictionary<string, object>
+                {
+                    { NotificationConstants.MetadataKeys.TemplateKey, templateKey }
+                }
             };
         }
     }
