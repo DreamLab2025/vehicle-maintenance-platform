@@ -68,7 +68,7 @@ namespace Verendar.Notification.Application.Mapping
                 ["entityType"] = EntityTypeMaintenanceReminder,
                 ["entityId"] = item.ReminderId,
                 ["level"] = message.Level,
-                ["levelName"] = message.LevelName ?? string.Empty,
+                ["levelName"] = message.Level.ToString(),
                 ["items"] = new List<Dictionary<string, object?>> { itemData }
             };
             return new InAppNotificationPayload
@@ -103,7 +103,7 @@ namespace Verendar.Notification.Application.Mapping
                 ["entityType"] = EntityTypeMaintenanceReminder,
                 ["entityId"] = firstItem?.ReminderId,
                 ["level"] = message.Level,
-                ["levelName"] = message.LevelName ?? string.Empty,
+                ["levelName"] = message.Level.ToString(),
                 ["items"] = itemsData
             };
 

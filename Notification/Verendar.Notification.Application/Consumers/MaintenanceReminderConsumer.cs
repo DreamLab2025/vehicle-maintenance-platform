@@ -23,7 +23,7 @@ namespace Verendar.Notification.Application.Consumers
             var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
 
             _logger.LogDebug("Processing MaintenanceReminder - MessageId: {MessageId}, UserId: {UserId}, Level: {Level}",
-                messageId, message.UserId, message.LevelName);
+                messageId, message.UserId, message.Level);
 
             try
             {
@@ -33,7 +33,7 @@ namespace Verendar.Notification.Application.Consumers
                 if (emailSent)
                     _logger.LogInformation(
                         "MaintenanceReminder email sent - MessageId: {MessageId}, UserId: {UserId}, Level: {Level}, Notifications: {Count}",
-                        messageId, message.UserId, message.LevelName, idsList.Count);
+                        messageId, message.UserId, message.Level, idsList.Count);
                 else if (!string.IsNullOrWhiteSpace(message.TargetValue))
                     _logger.LogWarning("MaintenanceReminder email send failed - MessageId: {MessageId}, UserId: {UserId}", messageId, message.UserId);
 

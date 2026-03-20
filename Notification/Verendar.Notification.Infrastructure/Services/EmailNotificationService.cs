@@ -7,6 +7,7 @@ using Verendar.Notification.Domain.Entities;
 using Verendar.Notification.Domain.Enums;
 using Verendar.Notification.Domain.Repositories.Interfaces;
 using Verender.Identity.Contracts.Events;
+using Verendar.Vehicle.Contracts.Enums;
 using Verendar.Vehicle.Contracts.Events;
 using NotificationEntity = Verendar.Notification.Domain.Entities.Notification;
 
@@ -83,7 +84,7 @@ namespace Verendar.Notification.Infrastructure.Services
         public async Task<(bool EmailSent, IReadOnlyList<Guid> NotificationIds)> SendMaintenanceReminderAsync(MaintenanceReminderEvent message, CancellationToken cancellationToken = default)
         {
             var items = message.Items ?? [];
-            var isCriticalWithParts = message.Level >= MaintenanceReminderMappings.CriticalLevel && items.Count > 0;
+            var isCriticalWithParts = message.Level >= ReminderLevel.Critical && items.Count > 0;
 
             if (isCriticalWithParts)
             {
