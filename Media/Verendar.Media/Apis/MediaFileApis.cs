@@ -57,7 +57,7 @@ namespace Verendar.Media.Apis
             if (userId == Guid.Empty) return Results.Unauthorized();
 
             var result = await mediaUploadService.InitiateUploadAsync(request, userId);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> ConfirmUploadFile(
@@ -69,7 +69,7 @@ namespace Verendar.Media.Apis
             if (userId == Guid.Empty) return Results.Unauthorized();
 
             var result = await mediaUploadService.ConfirmUploadFileAsync(id, userId);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
     }
 }

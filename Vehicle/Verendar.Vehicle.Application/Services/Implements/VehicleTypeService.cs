@@ -21,7 +21,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (existingType != null)
                 {
-                    return ApiResponse<TypeResponse>.FailureResponse("Loại xe đã tồn tại");
+                    return ApiResponse<TypeResponse>.ConflictResponse("Loại xe đã tồn tại");
                 }
 
                 var vehicleType = request.ToEntity();
@@ -30,7 +30,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 _logger.LogInformation("Created vehicle type with ID: {TypeId}", vehicleType.Id);
 
-                return ApiResponse<TypeResponse>.SuccessResponse(
+                return ApiResponse<TypeResponse>.CreatedResponse(
                     vehicleType.ToResponse(),
                     "Tạo loại xe thành công");
             }
@@ -49,7 +49,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicleType == null || vehicleType.DeletedAt != null)
                 {
-                    return ApiResponse<string>.FailureResponse("Không tìm thấy loại xe");
+                    return ApiResponse<string>.NotFoundResponse("Không tìm thấy loại xe");
                 }
 
                 await _unitOfWork.VehicleTypes.DeleteAsync(id);
@@ -108,7 +108,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicleType == null || vehicleType.DeletedAt != null)
                 {
-                    return ApiResponse<TypeResponse>.FailureResponse("Không tìm thấy loại xe");
+                    return ApiResponse<TypeResponse>.NotFoundResponse("Không tìm thấy loại xe");
                 }
 
                 var existingType = await _unitOfWork.VehicleTypes
@@ -116,7 +116,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (existingType != null)
                 {
-                    return ApiResponse<TypeResponse>.FailureResponse("Tên loại xe đã tồn tại");
+                    return ApiResponse<TypeResponse>.ConflictResponse("Tên loại xe đã tồn tại");
                 }
 
                 vehicleType.UpdateEntity(request);

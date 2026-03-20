@@ -25,7 +25,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 if (vehicleModel == null)
                 {
                     _logger.LogWarning("Vehicle model not found: {VehicleModelId}", vehicleModelId);
-                    return ApiResponse<List<PartCategoryResponse>>.FailureResponse("Không tìm thấy mẫu xe");
+                    return ApiResponse<List<PartCategoryResponse>>.NotFoundResponse("Không tìm thấy mẫu xe");
                 }
 
                 var schedules = await _unitOfWork.DefaultMaintenanceSchedules.GetByVehicleModelIdAsync(vehicleModelId, cancellationToken);
@@ -69,7 +69,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 if (vehicleModel == null)
                 {
                     _logger.LogWarning("Vehicle model not found: {VehicleModelId}", vehicleModelId);
-                    return ApiResponse<DefaultMaintenanceScheduleResponse>.FailureResponse(
+                    return ApiResponse<DefaultMaintenanceScheduleResponse>.NotFoundResponse(
                         "Không tìm thấy mẫu xe");
                 }
 
@@ -88,7 +88,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     _logger.LogWarning(
                         "No active schedule found for vehicle model {VehicleModelId} and part category {PartCategoryCode}",
                         vehicleModelId, partCategoryCode);
-                    return ApiResponse<DefaultMaintenanceScheduleResponse>.FailureResponse(
+                    return ApiResponse<DefaultMaintenanceScheduleResponse>.NotFoundResponse(
                         $"Không tìm thấy lịch bảo dưỡng cho linh kiện '{partCategoryCode}'");
                 }
 

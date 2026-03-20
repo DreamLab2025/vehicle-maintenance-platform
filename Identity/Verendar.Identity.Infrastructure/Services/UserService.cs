@@ -41,7 +41,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 var user = await _unitOfWork.Users.GetByIdAsync(userId);
                 if (user == null)
                 {
-                    return ApiResponse<UserDto>.FailureResponse("Người dùng không tồn tại.");
+                    return ApiResponse<UserDto>.NotFoundResponse("Người dùng không tồn tại.");
                 }
                 return ApiResponse<UserDto>.SuccessResponse(user.ToDto(), "Lấy thông tin người dùng thành công.");
             }

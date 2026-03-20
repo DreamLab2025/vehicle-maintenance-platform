@@ -43,6 +43,8 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status201Created)
                 .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{id:guid}", UpdateModelImage)
@@ -56,6 +58,8 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<VehicleVariantResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapDelete("/{id:guid}", DeleteModelImage)
@@ -73,37 +77,28 @@ namespace Verendar.Vehicle.Apis
             return group;
         }
 
-        private static async Task<IResult> GetImagesByModelId(
-            Guid vehicleModelId,
-            IVehicleVariantService modelImageService)
+        private static async Task<IResult> GetImagesByModelId(Guid vehicleModelId, IVehicleVariantService modelImageService)
         {
             var result = await modelImageService.GetImagesByModelIdAsync(vehicleModelId);
-            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> CreateModelImage(
-            [FromBody] VehicleVariantRequest request,
-            IVehicleVariantService modelImageService)
+        private static async Task<IResult> CreateModelImage([FromBody] VehicleVariantRequest request, IVehicleVariantService modelImageService)
         {
             var result = await modelImageService.CreateImageAsync(request);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateModelImage(
-            Guid id,
-            [FromBody] VehicleVariantUpdateRequest request,
-            IVehicleVariantService modelImageService)
+        private static async Task<IResult> UpdateModelImage(Guid id, [FromBody] VehicleVariantUpdateRequest request, IVehicleVariantService modelImageService)
         {
             var result = await modelImageService.UpdateImageAsync(id, request);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> DeleteModelImage(
-            Guid id,
-            IVehicleVariantService modelImageService)
+        private static async Task<IResult> DeleteModelImage(Guid id, IVehicleVariantService modelImageService)
         {
             var result = await modelImageService.DeleteImageAsync(id);
-            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+            return result.ToHttpResult();
         }
     }
 }

@@ -42,7 +42,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 var existingUser = await _unitOfWork.Users.FindOneAsync(u => u.Email == email);
                 if (existingUser != null)
                 {
-                    return ApiResponse<UserDto>.FailureResponse("Email đã được đăng ký");
+                    return ApiResponse<UserDto>.ConflictResponse("Email đã được đăng ký");
                 }
 
                 var user = request.ToEntity(string.Empty);
@@ -97,7 +97,7 @@ namespace Verendar.Identity.Infrastructure.Services
 
                 if (user.Status != EntityStatus.Active)
                 {
-                    return ApiResponse<TokenResponse>.FailureResponse("Tài khoản người dùng chưa được kích hoạt");
+                    return ApiResponse<TokenResponse>.ForbiddenResponse("Tài khoản người dùng chưa được kích hoạt");
                 }
 
                 var tokenResponse = _tokenService.GenerateTokens(user.ToTokenClaims());
@@ -130,12 +130,12 @@ namespace Verendar.Identity.Infrastructure.Services
                 var user = await _unitOfWork.Users.GetByIdAsync(userId);
                 if (user == null)
                 {
-                    return ApiResponse<TokenResponse>.FailureResponse("Không tìm thấy người dùng");
+                    return ApiResponse<TokenResponse>.NotFoundResponse("Không tìm thấy người dùng");
                 }
 
                 if (user.Status != EntityStatus.Active)
                 {
-                    return ApiResponse<TokenResponse>.FailureResponse("Tài khoản người dùng chưa được kích hoạt");
+                    return ApiResponse<TokenResponse>.ForbiddenResponse("Tài khoản người dùng chưa được kích hoạt");
                 }
 
                 if (string.IsNullOrWhiteSpace(user.RefreshToken) ||
@@ -194,7 +194,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 if (user == null)
                 {
                     _logger.LogWarning("User not found for password change: {UserId}", userId);
-                    return ApiResponse<UserDto>.FailureResponse("Người dùng không tồn tại");
+                    return ApiResponse<UserDto>.NotFoundResponse("Người dùng không tồn tại");
                 }
                 var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.OldPassword);
                 if (verificationResult == PasswordVerificationResult.Failed)
@@ -240,7 +240,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == email);
                 if (user == null)
                 {
-                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                    return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
                 }
 
                 if (user.Status == EntityStatus.Active)
@@ -285,7 +285,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 if (user == null)
                 {
                     _logger.LogWarning("User not found for OTP resend: {Email}", email);
-                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                    return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
                 }
 
                 if (user.Status == EntityStatus.Active)
@@ -342,7 +342,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 if (user == null)
                 {
                     _logger.LogWarning("User not found for forgot password: {Email}", email);
-                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                    return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
                 }
 
                 var otpCode = GetOtpCode();
@@ -389,7 +389,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 if (user == null)
                 {
                     _logger.LogWarning("User not found for password reset: {Email}", email);
-                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                    return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
                 }
 
                 user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);

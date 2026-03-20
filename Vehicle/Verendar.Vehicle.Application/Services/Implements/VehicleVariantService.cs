@@ -19,7 +19,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var model = await _unitOfWork.VehicleModels.GetByIdAsync(vehicleModelId);
                 if (model == null)
                 {
-                    return ApiResponse<List<VehicleVariantResponse>>.FailureResponse("Không tìm thấy mẫu xe");
+                    return ApiResponse<List<VehicleVariantResponse>>.NotFoundResponse("Không tìm thấy mẫu xe");
                 }
 
                 var images = await _unitOfWork.VehicleVariants.GetImagesByVehicleModelIdAsync(vehicleModelId);
@@ -40,14 +40,14 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var model = await _unitOfWork.VehicleModels.GetByIdAsync(request.VehicleModelId);
                 if (model == null)
                 {
-                    return ApiResponse<VehicleVariantResponse>.FailureResponse("Không tìm thấy mẫu xe");
+                    return ApiResponse<VehicleVariantResponse>.NotFoundResponse("Không tìm thấy mẫu xe");
                 }
 
                 var existingImage = await _unitOfWork.VehicleVariants.GetImageByVehicleModelIdAndColorAsync(request.VehicleModelId, request.Color);
 
                 if (existingImage != null)
                 {
-                    return ApiResponse<VehicleVariantResponse>.FailureResponse("Màu xe này đã tồn tại cho mẫu xe");
+                    return ApiResponse<VehicleVariantResponse>.ConflictResponse("Màu xe này đã tồn tại cho mẫu xe");
                 }
 
                 var image = request.ToEntity();
@@ -57,7 +57,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 _logger.LogInformation("Created model image for model {VehicleModelId} with color {Color}",
                     request.VehicleModelId, request.Color);
 
-                return ApiResponse<VehicleVariantResponse>.SuccessResponse(
+                return ApiResponse<VehicleVariantResponse>.CreatedResponse(
                     image.ToResponse(),
                     "Tạo hình ảnh xe thành công");
             }
@@ -75,7 +75,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var image = await _unitOfWork.VehicleVariants.GetByIdAsync(id);
                 if (image == null)
                 {
-                    return ApiResponse<VehicleVariantResponse>.FailureResponse("Không tìm thấy hình ảnh");
+                    return ApiResponse<VehicleVariantResponse>.NotFoundResponse("Không tìm thấy hình ảnh");
                 }
 
                 if (image.Color != request.Color)
@@ -84,7 +84,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                     if (existingImage != null)
                     {
-                        return ApiResponse<VehicleVariantResponse>.FailureResponse("Màu xe này đã tồn tại cho mẫu xe");
+                        return ApiResponse<VehicleVariantResponse>.ConflictResponse("Màu xe này đã tồn tại cho mẫu xe");
                     }
                 }
 
@@ -112,7 +112,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var image = await _unitOfWork.VehicleVariants.GetByIdAsync(id);
                 if (image == null)
                 {
-                    return ApiResponse<string>.FailureResponse("Không tìm thấy hình ảnh");
+                    return ApiResponse<string>.NotFoundResponse("Không tìm thấy hình ảnh");
                 }
 
                 await _unitOfWork.VehicleVariants.DeleteAsync(id);

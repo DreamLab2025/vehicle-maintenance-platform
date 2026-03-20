@@ -19,13 +19,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
             {
                 if (await BrandNameExistsAsync(request.Name))
                 {
-                    return ApiResponse<BrandResponse>.FailureResponse("Thương hiệu đã tồn tại");
+                    return ApiResponse<BrandResponse>.ConflictResponse("Thương hiệu đã tồn tại");
                 }
 
                 var vehicleType = await _unitOfWork.VehicleTypes.GetByIdAsync(request.VehicleTypeId);
                 if (vehicleType == null || vehicleType.DeletedAt != null)
                 {
-                    return ApiResponse<BrandResponse>.FailureResponse("Không tìm thấy loại xe");
+                    return ApiResponse<BrandResponse>.NotFoundResponse("Không tìm thấy loại xe");
                 }
 
                 var brand = request.ToEntity();
@@ -37,7 +37,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     brand.Name, brand.Id, vehicleType.Name);
 
                 var createdBrand = await _unitOfWork.VehicleBrands.GetByIdWithTypesAsync(brand.Id);
-                return ApiResponse<BrandResponse>.SuccessResponse(
+                return ApiResponse<BrandResponse>.CreatedResponse(
                     createdBrand!.ToResponse(),
                     "Tạo thương hiệu thành công");
             }
@@ -55,7 +55,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var brand = await _unitOfWork.VehicleBrands.GetByIdAsync(id);
                 if (brand == null || brand.DeletedAt != null)
                 {
-                    return ApiResponse<string>.FailureResponse("Không tìm thấy thương hiệu");
+                    return ApiResponse<string>.NotFoundResponse("Không tìm thấy thương hiệu");
                 }
 
                 await _unitOfWork.VehicleBrands.DeleteAsync(id);
@@ -116,7 +116,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var type = await _unitOfWork.VehicleTypes.GetByIdAsync(typeId);
                 if (type == null || type.DeletedAt != null)
                 {
-                    return ApiResponse<List<BrandResponse>>.FailureResponse("Không tìm thấy loại xe");
+                    return ApiResponse<List<BrandResponse>>.NotFoundResponse("Không tìm thấy loại xe");
                 }
 
                 var brands = await _unitOfWork.VehicleBrands.AsQueryable()
@@ -142,18 +142,18 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var brand = await _unitOfWork.VehicleBrands.GetByIdAsync(id);
                 if (brand == null || brand.DeletedAt != null)
                 {
-                    return ApiResponse<BrandResponse>.FailureResponse("Không tìm thấy thương hiệu");
+                    return ApiResponse<BrandResponse>.NotFoundResponse("Không tìm thấy thương hiệu");
                 }
 
                 if (await BrandNameExistsAsync(request.Name, id))
                 {
-                    return ApiResponse<BrandResponse>.FailureResponse("Tên thương hiệu đã tồn tại");
+                    return ApiResponse<BrandResponse>.ConflictResponse("Tên thương hiệu đã tồn tại");
                 }
 
                 var vehicleType = await _unitOfWork.VehicleTypes.GetByIdAsync(request.VehicleTypeId);
                 if (vehicleType == null || vehicleType.DeletedAt != null)
                 {
-                    return ApiResponse<BrandResponse>.FailureResponse("Không tìm thấy loại xe");
+                    return ApiResponse<BrandResponse>.NotFoundResponse("Không tìm thấy loại xe");
                 }
 
                 brand.UpdateEntity(request);

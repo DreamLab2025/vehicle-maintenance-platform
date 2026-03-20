@@ -5,6 +5,7 @@ using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Application.Clients;
 using Verendar.Vehicle.Contracts.Events;
 using Verendar.Vehicle.Domain.Enums;
+using ContractsLevel = Verendar.Vehicle.Contracts.Enums.ReminderLevel;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements
@@ -72,8 +73,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                             UserId = userId,
                             TargetValue = email,
                             UserName = null,
-                            Level = (int)level,
-                            LevelName = level.ToString(),
+                            Level = (ContractsLevel)(int)level,
                             Items = items
                         }, cancellationToken);
 

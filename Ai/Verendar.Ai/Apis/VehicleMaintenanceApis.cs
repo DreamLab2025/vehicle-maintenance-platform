@@ -48,9 +48,7 @@ namespace Verendar.Ai.Apis
 
             var result = await analysisService.AnalyzeQuestionnaireAsync(userId, request, cancellationToken);
 
-            return result.IsSuccess
-                ? Results.Ok(result)
-                : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
     }
 }

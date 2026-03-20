@@ -20,7 +20,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(request.PartCategoryId);
                 if (category == null || category.DeletedAt != null)
                 {
-                    return ApiResponse<PartProductResponse>.FailureResponse("Không tìm thấy danh mục phụ tùng");
+                    return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
                 }
 
                 var product = request.ToEntity();
@@ -33,7 +33,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 _logger.LogInformation("Created part product {ProductName} (ID: {ProductId})", product.Name, product.Id);
 
-                return ApiResponse<PartProductResponse>.SuccessResponse(
+                return ApiResponse<PartProductResponse>.CreatedResponse(
                     createdProduct!.ToResponse(),
                     "Tạo phụ tùng thành công");
             }
@@ -51,13 +51,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var product = await _unitOfWork.PartProducts.GetByIdAsync(id);
                 if (product == null || product.DeletedAt != null)
                 {
-                    return ApiResponse<PartProductResponse>.FailureResponse("Không tìm thấy phụ tùng");
+                    return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy phụ tùng");
                 }
 
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(request.PartCategoryId);
                 if (category == null || category.DeletedAt != null)
                 {
-                    return ApiResponse<PartProductResponse>.FailureResponse("Không tìm thấy danh mục phụ tùng");
+                    return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
                 }
 
                 product.UpdateEntity(request);
@@ -88,7 +88,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var product = await _unitOfWork.PartProducts.GetByIdAsync(id);
                 if (product == null || product.DeletedAt != null)
                 {
-                    return ApiResponse<string>.FailureResponse("Product not found");
+                    return ApiResponse<string>.NotFoundResponse("Không tìm thấy phụ tùng");
                 }
 
                 await _unitOfWork.PartProducts.DeleteAsync(id);
@@ -113,7 +113,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(categoryId);
                 if (category == null || category.DeletedAt != null)
                 {
-                    return ApiResponse<List<PartProductResponse>>.FailureResponse("Không tìm thấy danh mục phụ tùng");
+                    return ApiResponse<List<PartProductResponse>>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
                 }
 
                 var query = _unitOfWork.PartProducts.AsQueryable()
@@ -154,7 +154,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (product == null)
                 {
-                    return ApiResponse<PartProductResponse>.FailureResponse("Không tìm thấy phụ tùng");
+                    return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy phụ tùng");
                 }
 
                 return ApiResponse<PartProductResponse>.SuccessResponse(

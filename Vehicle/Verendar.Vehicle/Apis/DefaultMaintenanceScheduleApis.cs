@@ -51,9 +51,7 @@ namespace Verendar.Vehicle.Apis
             CancellationToken cancellationToken)
         {
             var result = await service.GetPartCategoriesByVehicleModelAsync(vehicleModelId, cancellationToken);
-            return result.IsSuccess
-                ? Results.Ok(result)
-                : Results.NotFound(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> GetDefaultScheduleByPartCategory(
@@ -63,9 +61,7 @@ namespace Verendar.Vehicle.Apis
             CancellationToken cancellationToken)
         {
             var result = await service.GetByVehicleModelAndPartCategoryAsync(vehicleModelId, partCategoryCode, cancellationToken);
-            return result.IsSuccess
-                ? Results.Ok(result)
-                : Results.NotFound(result);
+            return result.ToHttpResult();
         }
     }
 }

@@ -47,7 +47,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicleVariant == null)
                 {
-                    return ApiResponse<UserVehicleResponse>.FailureResponse("Phiên bản xe không tồn tại");
+                    return ApiResponse<UserVehicleResponse>.NotFoundResponse("Phiên bản xe không tồn tại");
                 }
 
                 var existingVehicle = await _unitOfWork.UserVehicles
@@ -57,7 +57,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 {
                     _logger.LogWarning("Attempt to create duplicate vehicle with license plate: {LicensePlate} for user: {UserId}",
                         request.LicensePlate, userId);
-                    return ApiResponse<UserVehicleResponse>.FailureResponse("Biển số xe đã tồn tại trong danh sách của bạn");
+                    return ApiResponse<UserVehicleResponse>.ConflictResponse("Biển số xe đã tồn tại trong danh sách của bạn");
                 }
 
                 var userVehicle = request.ToEntity(userId);
@@ -76,7 +76,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 _logger.LogInformation("Created user vehicle with ID: {VehicleId} for user: {UserId}", userVehicle.Id, userId);
 
-                return ApiResponse<UserVehicleResponse>.SuccessResponse(
+                return ApiResponse<UserVehicleResponse>.CreatedResponse(
                     createdVehicle!.ToResponse(),
                     "Thêm xe thành công");
             }
@@ -96,7 +96,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicle == null)
                 {
-                    return ApiResponse<string>.FailureResponse("Không tìm thấy xe");
+                    return ApiResponse<string>.NotFoundResponse("Không tìm thấy xe");
                 }
 
                 await _unitOfWork.BeginTransactionAsync();
@@ -166,7 +166,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicle == null)
                 {
-                    return ApiResponse<UserVehicleDetailResponse>.FailureResponse("Không tìm thấy xe");
+                    return ApiResponse<UserVehicleDetailResponse>.NotFoundResponse("Không tìm thấy xe");
                 }
 
                 var recordsQuery = _unitOfWork.MaintenanceRecords.AsQueryable()
@@ -237,7 +237,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
             if (vehicle == null)
             {
-                return ApiResponse<VehicleStreakResponse>.FailureResponse("Không tìm thấy xe");
+                return ApiResponse<VehicleStreakResponse>.NotFoundResponse("Không tìm thấy xe");
             }
 
             var streak = await _unitOfWork.OdometerHistories.GetCurrentStreakAsync(userVehicleId);
@@ -253,7 +253,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicle == null)
                 {
-                    return ApiResponse<List<UserVehiclePartSummary>>.FailureResponse("Không tìm thấy xe");
+                    return ApiResponse<List<UserVehiclePartSummary>>.NotFoundResponse("Không tìm thấy xe");
                 }
 
                 var trackings = await _unitOfWork.VehiclePartTrackings.GetByUserVehicleIdAsync(userVehicleId);
@@ -279,7 +279,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicle == null)
                 {
-                    return ApiResponse<List<ReminderWithPartCategoryDto>>.FailureResponse("Không tìm thấy xe");
+                    return ApiResponse<List<ReminderWithPartCategoryDto>>.NotFoundResponse("Không tìm thấy xe");
                 }
 
                 var reminders = (await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(userVehicleId))
@@ -311,7 +311,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicle == null)
                 {
-                    return ApiResponse<List<OdometerHistoryItemDto>>.FailureResponse("Không tìm thấy xe");
+                    return ApiResponse<List<OdometerHistoryItemDto>>.NotFoundResponse("Không tìm thấy xe");
                 }
 
                 var isDescending = query.IsDescending ?? true;
@@ -348,7 +348,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicle == null)
                 {
-                    return ApiResponse<UserVehicleResponse>.FailureResponse("Không tìm thấy xe");
+                    return ApiResponse<UserVehicleResponse>.NotFoundResponse("Không tìm thấy xe");
                 }
 
                 if (request.CurrentOdometer < vehicle.CurrentOdometer)
@@ -395,7 +395,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicle == null)
                 {
-                    return ApiResponse<UserVehicleResponse>.FailureResponse("Không tìm thấy xe");
+                    return ApiResponse<UserVehicleResponse>.NotFoundResponse("Không tìm thấy xe");
                 }
 
                 var vehicleVariant = await _unitOfWork.VehicleVariants
@@ -403,7 +403,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicleVariant == null)
                 {
-                    return ApiResponse<UserVehicleResponse>.FailureResponse("Phiên bản xe không tồn tại");
+                    return ApiResponse<UserVehicleResponse>.NotFoundResponse("Phiên bản xe không tồn tại");
                 }
 
                 var existingVehicle = await _unitOfWork.UserVehicles
@@ -414,7 +414,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (existingVehicle != null)
                 {
-                    return ApiResponse<UserVehicleResponse>.FailureResponse("Biển số xe đã tồn tại trong danh sách của bạn");
+                    return ApiResponse<UserVehicleResponse>.ConflictResponse("Biển số xe đã tồn tại trong danh sách của bạn");
                 }
 
                 vehicle.UpdateEntity(request);
@@ -450,7 +450,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicle == null)
                 {
-                    return ApiResponse<VehiclePartTrackingSummary>.FailureResponse("Không tìm thấy xe");
+                    return ApiResponse<VehiclePartTrackingSummary>.NotFoundResponse("Không tìm thấy xe");
                 }
 
                 // Find the PartCategory by code
@@ -459,7 +459,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (partCategory == null)
                 {
-                    return ApiResponse<VehiclePartTrackingSummary>.FailureResponse(
+                    return ApiResponse<VehiclePartTrackingSummary>.NotFoundResponse(
                         $"Không tìm thấy linh kiện với mã '{request.PartCategoryCode}'");
                 }
 
@@ -531,7 +531,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicle == null)
                 {
-                    return ApiResponse<UserVehicleResponse>.FailureResponse("Không tìm thấy xe");
+                    return ApiResponse<UserVehicleResponse>.NotFoundResponse("Không tìm thấy xe");
                 }
 
                 if (!vehicle.NeedsOnboarding)

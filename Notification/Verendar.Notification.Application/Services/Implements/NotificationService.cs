@@ -19,7 +19,7 @@ namespace Verendar.Notification.Application.Services.Implements
         {
             var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
             if (notification == null)
-                return ApiResponse<NotificationDetailDto>.FailureResponse("Không tìm thấy thông báo.");
+                return ApiResponse<NotificationDetailDto>.NotFoundResponse("Không tìm thấy thông báo.");
 
             var hasInApp = await unitOfWork.NotificationDeliveries.FindOneAsync(d =>
                 d.NotificationId == notificationId && d.Channel == NotificationChannel.InApp) != null;
@@ -74,7 +74,7 @@ namespace Verendar.Notification.Application.Services.Implements
         {
             var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
             if (notification == null)
-                return ApiResponse<bool>.FailureResponse("Không tìm thấy thông báo.");
+                return ApiResponse<bool>.NotFoundResponse("Không tìm thấy thông báo.");
 
             if (notification.IsRead)
                 return ApiResponse<bool>.SuccessResponse(true, "Thông báo đã được đánh dấu đọc trước đó.");
@@ -90,7 +90,7 @@ namespace Verendar.Notification.Application.Services.Implements
         {
             var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
             if (notification == null)
-                return ApiResponse<bool>.FailureResponse("Không tìm thấy thông báo.");
+                return ApiResponse<bool>.NotFoundResponse("Không tìm thấy thông báo.");
 
             notification.DeletedAt = DateTime.UtcNow;
             notification.DeletedBy = userId;

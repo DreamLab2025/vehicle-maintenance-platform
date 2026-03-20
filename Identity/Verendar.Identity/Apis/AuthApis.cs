@@ -30,7 +30,8 @@ namespace Verendar.Identity.Apis
                 })
                 .AllowAnonymous()
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status400BadRequest);
+                .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status403Forbidden);
 
             group.MapPost("/register", RegisterUser)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<RegisterRequest>())
@@ -42,7 +43,8 @@ namespace Verendar.Identity.Apis
                 })
                 .AllowAnonymous()
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest);
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status409Conflict);
 
             group.MapPost("/refresh-token", RefreshToken)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<RefreshTokenRequest>())
@@ -123,120 +125,57 @@ namespace Verendar.Identity.Apis
         private static async Task<IResult> ForgotPassword(ForgotPasswordRequest request, IAuthService authService)
         {
             var result = await authService.ForgotPasswordAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> ResetPassword(
-            ResetPasswordRequest request,
-            IAuthService authService)
+        private static async Task<IResult> ResetPassword(ResetPasswordRequest request, IAuthService authService)
         {
             var result = await authService.ResetPasswordAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> ResendOtp(ResendOtpRequest request, IAuthService authService)
         {
             var result = await authService.ResendRegisterOtpAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> VerifyOtp(VerifyOtpRequest request, IAuthService authService)
         {
             var result = await authService.VerifyRegisterOtpAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> ChangePassword(ChangePasswordRequest request, IAuthService authService, ICurrentUserService currentUserService)
         {
             var userId = currentUserService.UserId;
-
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await authService.ChangePasswordAsync(userId, request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> RefreshToken(
-            RefreshTokenRequest request,
-            ICurrentUserService currentUser,
-            IAuthService authService)
+        private static async Task<IResult> RefreshToken(RefreshTokenRequest request, ICurrentUserService currentUser, IAuthService authService)
         {
             var userId = currentUser.UserId;
-
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await authService.RefreshTokenAsync(userId, request.RefreshToken);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> RegisterUser(
-            RegisterRequest request,
-            IAuthService authService)
+        private static async Task<IResult> RegisterUser(RegisterRequest request, IAuthService authService)
         {
             var result = await authService.RegisterUserAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> LoginUser(
-            LoginRequest request,
-            IAuthService authService)
+        private static async Task<IResult> LoginUser(LoginRequest request, IAuthService authService)
         {
             var result = await authService.LoginUserAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
     }
 }

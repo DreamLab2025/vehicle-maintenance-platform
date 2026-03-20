@@ -68,7 +68,7 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
 
             var result = await maintenanceRecordService.GetMaintenanceHistoryAsync(userId, userVehicleId);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> GetMaintenanceRecordDetail(
@@ -81,7 +81,7 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
 
             var result = await maintenanceRecordService.GetMaintenanceRecordDetailAsync(userId, maintenanceRecordId);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> CreateMaintenanceRecord(
@@ -95,7 +95,7 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
 
             var result = await maintenanceRecordService.CreateMaintenanceRecordAsync(userId, userVehicleId, request);
-            return result.IsSuccess ? Results.Created(string.Empty, result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
     }
 }

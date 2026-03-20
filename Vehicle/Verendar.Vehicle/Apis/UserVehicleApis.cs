@@ -29,7 +29,6 @@ namespace Verendar.Vehicle.Apis
                 })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<UserVehicleResponse>>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<List<UserVehicleResponse>>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/{userVehicleId:guid}", GetUserVehicleById)
@@ -79,6 +78,8 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization()
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status201Created)
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{userVehicleId:guid}", UpdateUserVehicle)
@@ -92,6 +93,8 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization()
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPatch("/{userVehicleId:guid}/odometer", UpdateOdometer)
@@ -105,6 +108,7 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization()
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapDelete("/{userVehicleId:guid}", DeleteUserVehicle)
@@ -116,7 +120,7 @@ namespace Verendar.Vehicle.Apis
                 })
                 .RequireAuthorization()
                 .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<string>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/{userVehicleId:guid}/streak", GetVehicleStreak)
@@ -141,6 +145,7 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization()
                 .Produces<ApiResponse<VehiclePartTrackingSummary>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<VehiclePartTrackingSummary>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<VehiclePartTrackingSummary>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/{userVehicleId:guid}/reminders", GetReminders)
@@ -171,186 +176,124 @@ namespace Verendar.Vehicle.Apis
             return group;
         }
 
-        private static async Task<IResult> IsAllowedToCreateVehicle(
-            ICurrentUserService currentUserService,
-            IUserVehicleService userVehicleService)
+        private static async Task<IResult> IsAllowedToCreateVehicle(ICurrentUserService currentUserService, IUserVehicleService userVehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
+
             var result = await userVehicleService.IsAllowedToCreateVehicleAsync(userId);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetVehicleStreak(
-            ICurrentUserService currentUserService,
-            IUserVehicleService userVehicleService,
-            Guid userVehicleId)
+        private static async Task<IResult> GetVehicleStreak(ICurrentUserService currentUserService, IUserVehicleService userVehicleService, Guid userVehicleId)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await userVehicleService.GetVehicleStreakAsync(userId, userVehicleId);
-            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetUserVehicles(
-            ICurrentUserService currentUserService,
-            [AsParameters] PaginationRequest paginationRequest,
-            IUserVehicleService vehicleService)
+        private static async Task<IResult> GetUserVehicles(ICurrentUserService currentUserService, [AsParameters] PaginationRequest paginationRequest, IUserVehicleService vehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await vehicleService.GetUserVehiclesAsync(userId, paginationRequest);
-            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetUserVehicleById(
-            Guid userVehicleId,
-            ICurrentUserService currentUserService,
-            IUserVehicleService vehicleService)
+        private static async Task<IResult> GetUserVehicleById(Guid userVehicleId, ICurrentUserService currentUserService, IUserVehicleService vehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await vehicleService.GetUserVehicleByIdAsync(userId, userVehicleId);
-            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetUserVehicleParts(
-            Guid userVehicleId,
-            ICurrentUserService currentUserService,
-            IUserVehicleService vehicleService)
+        private static async Task<IResult> GetUserVehicleParts(Guid userVehicleId, ICurrentUserService currentUserService, IUserVehicleService vehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await vehicleService.GetPartsByUserVehicleAsync(userId, userVehicleId);
-            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> CreateUserVehicle(
-            UserVehicleRequest request,
-            ICurrentUserService currentUserService,
-            IUserVehicleService vehicleService)
+        private static async Task<IResult> CreateUserVehicle(UserVehicleRequest request, ICurrentUserService currentUserService, IUserVehicleService vehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await vehicleService.CreateUserVehicleAsync(userId, request);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateUserVehicle(
-            Guid userVehicleId,
-            UserVehicleRequest request,
-            ICurrentUserService currentUserService,
-            IUserVehicleService vehicleService)
+        private static async Task<IResult> UpdateUserVehicle(Guid userVehicleId, UserVehicleRequest request, ICurrentUserService currentUserService, IUserVehicleService vehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await vehicleService.UpdateUserVehicleAsync(userId, userVehicleId, request);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateOdometer(
-            Guid userVehicleId,
-            UpdateOdometerRequest request,
-            ICurrentUserService currentUserService,
-            IUserVehicleService vehicleService)
+        private static async Task<IResult> UpdateOdometer(Guid userVehicleId, UpdateOdometerRequest request, ICurrentUserService currentUserService, IUserVehicleService vehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await vehicleService.UpdateOdometerAsync(userId, userVehicleId, request);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> DeleteUserVehicle(
-            Guid userVehicleId,
-            ICurrentUserService currentUserService,
-            IUserVehicleService vehicleService)
+        private static async Task<IResult> DeleteUserVehicle(Guid userVehicleId, ICurrentUserService currentUserService, IUserVehicleService vehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await vehicleService.DeleteUserVehicleAsync(userId, userVehicleId);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetReminders(
-            Guid userVehicleId,
-            ICurrentUserService currentUserService,
-            IUserVehicleService vehicleService)
+        private static async Task<IResult> GetReminders(Guid userVehicleId, ICurrentUserService currentUserService, IUserVehicleService vehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await vehicleService.GetRemindersAsync(userId, userVehicleId);
-            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetOdometerHistory(
-            Guid userVehicleId,
-            [AsParameters] OdometerHistoryQueryRequest query,
-            ICurrentUserService currentUserService,
-            IUserVehicleService vehicleService)
+        private static async Task<IResult> GetOdometerHistory(Guid userVehicleId, [AsParameters] OdometerHistoryQueryRequest query, ICurrentUserService currentUserService, IUserVehicleService vehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await vehicleService.GetOdometerHistoryPagedAsync(userId, userVehicleId, query);
-            return result.IsSuccess ? Results.Ok(result) : Results.NotFound(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> ApplyTrackingConfig(
-            Guid userVehicleId,
-            ApplyTrackingConfigRequest request,
-            ICurrentUserService currentUserService,
-            IUserVehicleService vehicleService)
+        private static async Task<IResult> ApplyTrackingConfig(Guid userVehicleId, ApplyTrackingConfigRequest request, ICurrentUserService currentUserService, IUserVehicleService vehicleService)
         {
             var userId = currentUserService.UserId;
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await vehicleService.ApplyTrackingConfigAsync(userId, userVehicleId, request);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            return result.ToHttpResult();
         }
     }
 }

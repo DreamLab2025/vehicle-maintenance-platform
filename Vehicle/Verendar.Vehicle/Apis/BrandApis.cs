@@ -27,7 +27,6 @@ namespace Verendar.Vehicle.Apis
                 })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/types/{typeId:guid}", GetBrandsByType)
@@ -53,6 +52,7 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status201Created)
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{id:guid}", UpdateVehicleBrand)
@@ -66,6 +66,8 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapDelete("/{id:guid}", DeleteVehicleBrand)
@@ -77,7 +79,7 @@ namespace Verendar.Vehicle.Apis
                 })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<string>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
@@ -86,51 +88,31 @@ namespace Verendar.Vehicle.Apis
         private static async Task<IResult> DeleteVehicleBrand(Guid id, IVehicleBrandService brandService)
         {
             var result = await brandService.DeleteBrandAsync(id);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> UpdateVehicleBrand(Guid id, BrandRequest request, IVehicleBrandService brandService)
         {
             var result = await brandService.UpdateBrandAsync(id, request);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> CreateVehicleBrand(BrandRequest request, IVehicleBrandService brandService)
         {
             var result = await brandService.CreateBrandAsync(request);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> GetAllBrands([AsParameters] PaginationRequest paginationRequest, IVehicleBrandService brandService)
         {
             var results = await brandService.GetAllBrandsAsync(paginationRequest);
-            if (results.IsSuccess)
-            {
-                return Results.Ok(results);
-            }
-            return Results.NotFound(results);
+            return results.ToHttpResult();
         }
 
         private static async Task<IResult> GetBrandsByType(Guid typeId, IVehicleBrandService brandService)
         {
             var results = await brandService.GetBrandsByTypeIdAsync(typeId);
-            if (results.IsSuccess)
-            {
-                return Results.Ok(results);
-            }
-            return Results.NotFound(results);
+            return results.ToHttpResult();
         }
     }
 }
