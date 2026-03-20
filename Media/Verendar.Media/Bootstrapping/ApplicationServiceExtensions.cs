@@ -1,12 +1,15 @@
 ﻿using Amazon.S3;
+using FluentValidation;
 using Microsoft.Extensions.Options;
 using Verendar.Common.Bootstrapping;
 using Verendar.Common.Shared;
 using Verendar.Media.Apis;
 using Verendar.Media.Application.Configuration;
+using Verendar.Media.Application.Dtos;
 using Verendar.Media.Application.IStorage;
 using Verendar.Media.Application.Services.Implements;
 using Verendar.Media.Application.Services.Interfaces;
+using Verendar.Media.Application.Validators;
 using Verendar.Media.Domain.Repositories.Interfaces;
 using Verendar.Media.Infrastructure.Configuration;
 using Verendar.Media.Infrastructure.Data;
@@ -53,6 +56,7 @@ namespace Verendar.Media.Bootstrapping
 
             // Register Services
             builder.Services.AddScoped<IMediaUploadService, MediaUploadService>();
+            builder.Services.AddScoped<IValidator<InitUploadRequest>, InitUploadRequestValidator>();
 
             return builder;
         }
