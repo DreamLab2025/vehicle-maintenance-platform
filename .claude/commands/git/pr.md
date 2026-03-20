@@ -4,7 +4,7 @@ Create a pull request for the current branch. Arguments: $ARGUMENTS (optional: t
 2. Run `git diff main...HEAD` to understand all changes
 3. Push the branch to origin if not already pushed
 4. Create a PR with:
-   - **Title**: concise, imperative, under 70 chars (e.g., "feat: add vehicle part tracking endpoint")
+   - **Title**: concise, imperative, under 70 chars (e.g., "feat: add project CRUD endpoints")
    - **Body** sections:
      - `## What` — what changed (bullet list)
      - `## Why` — the business/technical reason

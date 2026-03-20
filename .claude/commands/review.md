@@ -2,7 +2,7 @@ Review the following code for quality and correctness: $ARGUMENTS
 
 Read all referenced files before commenting. Understand intent before criticizing.
 
-## Review checklist
+## Checklist
 
 **Correctness**
 - Does the logic do what it intends?
@@ -10,24 +10,29 @@ Read all referenced files before commenting. Understand intent before criticizin
 - Is resource ownership verified for user-scoped data?
 
 **Architecture**
-- Is business logic in Application, not Host or Infrastructure?
+- Is business logic in Application/Services, not Host or Infrastructure?
 - Does Infrastructure depend only on Domain interfaces?
-- Are cross-service calls done via HTTP or events (not shared DB)?
+- Are domain entities free of framework dependencies?
+
+**Authorization**
+- Is JWT role check correct? (User / GarageOwner / Mechanic / Admin)
+- Is resource ownership verified after role check?
 
 **API contract**
-- Is the response wrapped in `ApiResponse<T>`?
-- Are paginated endpoints using `PaginationRequest` + `SuccessPagedResponse`?
-- Are HTTP status codes correct (201 for create, 204 for void delete, 404 for not found)?
+- Are paginated endpoints using `PaginationRequest` + `GetPagedAsync`?
+- Are HTTP status codes correct? (201 create, 204 delete, 404 not found)
+- Is `.RequireAuthorization()` on every non-public endpoint?
+- Is response wrapped in `ApiResponse<T>`?
 
 **Code quality**
-- Are mapping methods static extensions (not AutoMapper)?
-- Is FluentValidation used for request DTOs?
+- Are mapping methods static extensions (`ToResponse()`, `ToEntity()`), not AutoMapper?
+- Is FluentValidation used for structural rules; business rules inside service?
 - Are async methods actually awaited? No `.Result` or `.Wait()`?
-- Are nullable reference types handled correctly?
+- Soft delete used (`DeletedAt = DateTime.UtcNow`), not `DbContext.Remove()`?
 
 **Security**
-- Is `.RequireAuthorization()` on every non-public endpoint?
 - Are no secrets hardcoded or logged?
+- Is file upload size validated?
 
-## Output format
-Group findings by: **Must fix** / **Should fix** / **Consider**. Skip categories with no findings.
+## Output
+Group findings: **Must fix** / **Should fix** / **Consider**. Skip empty categories.

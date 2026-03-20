@@ -1,20 +1,15 @@
 Implement the following feature for the Verendar .NET backend: $ARGUMENTS
 
-Follow these conventions strictly:
-- Clean Architecture: start in Domain (entity/value object), then Application (use case, validator, DTO), then Infrastructure (repo, EF config), then Host (Minimal API endpoint)
-- Minimal API only — never Controllers. Use `MapGroup` + `Map*Endpoints()` in `Bootstrapping/`
-- Static extension methods for DTO mapping (`ToResponse()`, `ToEntity()`) — no AutoMapper
-- FluentValidation for all request DTOs, Vietnamese error messages for user-facing fields
-- All list endpoints must be paginated with `PaginationRequest` (default 10, max 100)
-- Wrap all responses in `ApiResponse<T>` from `App/Verendar.Common/Shared/ApiResponse.cs`
-- Use `ApiResponse<T>.SuccessResponse()`, `SuccessPagedResponse()`, or `FailureResponse()` — never construct manually
-- Authorization: `.RequireAuthorization()` on every endpoint, resource-level ownership check inside handler
-- One DB per service — never cross DB boundaries
-- Async/await throughout, no blocking calls
+Scope: full feature (entity → repo → service → DTOs → API) or single function. Only touch layers that change.
 
-Before writing any code, briefly state:
-1. Which service owns this feature
-2. What entity/aggregate is involved
-3. What the API contract looks like (method, route, request shape, response shape)
+## Before coding
+1. Which service owns this (Identity, Vehicle, Garage, Location, Media, Notification, Ai)?
+2. Which aggregate and entities are involved?
+3. Request/response shape and status codes
 
-Then implement layer by layer.
+## Follow
+- Architecture checklist: `.claude/skills/backend-development/references/architecture.md`
+- API conventions: `.claude/skills/backend-development/references/api-design.md`
+- CLAUDE.md: no AutoMapper, Minimal API only, soft delete, paginate lists, no MediatR
+
+Adding one route to an existing module → use **Add endpoint** command instead.
