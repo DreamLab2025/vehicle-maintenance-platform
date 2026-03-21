@@ -1,6 +1,3 @@
-using FluentValidation;
-using Verendar.Identity.Application.Dtos;
-
 namespace Verendar.Identity.Application.Validators
 {
     public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRequest>

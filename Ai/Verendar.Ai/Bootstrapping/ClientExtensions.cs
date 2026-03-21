@@ -1,7 +1,7 @@
 using Polly;
 using Polly.Extensions.Http;
 using Verendar.Ai.Application.Clients;
-using Verendar.Ai.Application.Handlers;
+using Verendar.Common.Http;
 
 namespace Verendar.Ai.Bootstrapping
 {
@@ -12,8 +12,7 @@ namespace Verendar.Ai.Bootstrapping
             builder.Services.AddHttpClient<IVehicleServiceClient, VehicleServiceClient>(client =>
             {
                 var baseUrl = builder.Configuration["VehicleService:BaseUrl"]
-                    ?? builder.Configuration["Services:Vehicle:BaseUrl"]
-                    ?? "https://localhost:8002";
+                    ?? builder.Configuration["Services:Vehicle:BaseUrl"];
                 client.BaseAddress = new Uri(baseUrl);
                 client.Timeout = TimeSpan.FromSeconds(30);
             })

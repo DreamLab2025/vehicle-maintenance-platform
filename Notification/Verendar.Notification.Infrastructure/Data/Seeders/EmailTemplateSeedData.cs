@@ -1,5 +1,3 @@
-using Verendar.Notification.Domain.Enums;
-
 namespace Verendar.Notification.Infrastructure.Seeders
 {
     public static class EmailTemplateSeedData

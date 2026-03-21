@@ -1,6 +1,4 @@
-# Verendar - Docker Compose Development
-# Chạy từ repo root: docker-compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev up -d
-# Hoặc từ docker/:   docker-compose -f docker-compose.dev.yml --env-file .env.dev up -d
+# docker-compose -f docker-compose.dev.yml --env-file .env.dev up -d
 
 x-common-environment: &common-environment
   ASPNETCORE_ENVIRONMENT: Development
@@ -44,6 +42,16 @@ x-notification-service-environment: &notification-service-environment
   ConnectionStrings__notification-db: Host=postgres;Port=5432;Database=${NOTIFICATION_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
   ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  Resend__ApiKey: ${RESEND_API_KEY}
+  Resend__FromEmail: ${RESEND_FROM_EMAIL}
+  Resend__FromName: ${RESEND_FROM_NAME:-Verendar}
+  Resend__ReplyTo: ${RESEND_REPLY_TO:-}
+  Resend__Timeout: ${RESEND_TIMEOUT:-30}
+  Resend__EnableTracking: ${RESEND_ENABLE_TRACKING:-true}
+  Resend__TemplateBasePath: ${RESEND_TEMPLATE_BASE_PATH:-Templates/Email}
+  Resend__EnableTemplateCache: ${RESEND_ENABLE_TEMPLATE_CACHE:-true}
+  Resend__TemplateCacheExpirationMinutes: ${RESEND_TEMPLATE_CACHE_EXPIRATION_MINUTES:-60}
+  Resend__UseDatabaseTemplates: ${RESEND_USE_DATABASE_TEMPLATES:-false}
 
 x-ai-service-environment: &ai-service-environment
   ConnectionStrings__ai-db: Host=postgres;Port=5432;Database=${AI_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
@@ -175,7 +183,9 @@ services:
     ports:
       - "${GATEWAY_PORT:-8080}:80"
     volumes:
+      - ./data/gateway/etc/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/gateway/etc/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./data/gateway/etc/nginx/snippets:/etc/nginx/snippets:ro
     networks:
       - verendar-network
     restart: unless-stopped

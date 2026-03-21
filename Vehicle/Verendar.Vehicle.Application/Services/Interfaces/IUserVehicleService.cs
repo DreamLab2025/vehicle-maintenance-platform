@@ -1,6 +1,3 @@
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Services.Interfaces
 {
     public interface IUserVehicleService
@@ -9,15 +6,8 @@ namespace Verendar.Vehicle.Application.Services.Interfaces
         Task<ApiResponse<UserVehicleDetailResponse>> GetUserVehicleByIdAsync(Guid userId, Guid vehicleId);
         Task<ApiResponse<UserVehicleResponse>> CreateUserVehicleAsync(Guid userId, UserVehicleRequest request);
         Task<ApiResponse<UserVehicleResponse>> UpdateUserVehicleAsync(Guid userId, Guid vehicleId, UserVehicleRequest request);
-        Task<ApiResponse<UserVehicleResponse>> UpdateOdometerAsync(Guid userId, Guid vehicleId, UpdateOdometerRequest request);
         Task<ApiResponse<string>> DeleteUserVehicleAsync(Guid userId, Guid vehicleId);
-        Task<ApiResponse<VehicleStreakResponse>> GetVehicleStreakAsync(Guid userVehicleId);
-        Task<ApiResponse<VehiclePartTrackingSummary>> ApplyTrackingConfigAsync(Guid userId, Guid vehicleId, ApplyTrackingConfigRequest request);
-        Task SyncMaintenanceRemindersForVehicleAsync(Guid vehicleId, int currentOdometer, Guid userId);
-        Task<ApiResponse<List<UserVehiclePartSummary>>> GetPartsByUserVehicleAsync(Guid userId, Guid userVehicleId);
         Task<ApiResponse<UserVehicleResponse>> CompleteOnboardingAsync(Guid userId, Guid vehicleId);
         Task<ApiResponse<IsAllowedToCreateVehicleResponse>> IsAllowedToCreateVehicleAsync(Guid userId);
-        Task<ApiResponse<List<ReminderWithPartCategoryDto>>> GetRemindersAsync(Guid userId, Guid userVehicleId);
-        Task<ApiResponse<List<OdometerHistoryItemDto>>> GetOdometerHistoryPagedAsync(Guid userId, Guid userVehicleId, OdometerHistoryQueryRequest query);
     }
 }

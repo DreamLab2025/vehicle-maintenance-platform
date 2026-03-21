@@ -1,0 +1,11 @@
+namespace Verendar.Vehicle.Contracts.Enums
+{
+    public enum ReminderLevel
+    {
+        Normal = 0,
+        Low = 1,
+        Medium = 2,
+        High = 3,
+        Critical = 4
+    }
+}

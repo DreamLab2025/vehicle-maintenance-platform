@@ -1,13 +1,10 @@
-﻿using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Domain.Entities;
-
-namespace Verendar.Vehicle.Application.Mappings
+﻿namespace Verendar.Vehicle.Application.Mappings
 {
     public static class ModelMappings
     {
-        public static VehicleModel ToEntity(this ModelRequest request)
+        public static Model ToEntity(this ModelRequest request)
         {
-            return new VehicleModel
+            return new Model
             {
                 Name = request.Name,
                 Code = request.Code ?? string.Empty,
@@ -20,7 +17,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static ModelResponse ToModelResponse(this VehicleModel entity)
+        public static ModelResponse ToModelResponse(this Model entity)
         {
             return new ModelResponse
             {
@@ -42,7 +39,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static ModelResponseWithVariants ToModelResponseWithVariants(this VehicleModel entity)
+        public static ModelResponseWithVariants ToModelResponseWithVariants(this Model entity)
         {
             return new ModelResponseWithVariants
             {
@@ -65,7 +62,23 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static void UpdateEntity(this VehicleModel entity, ModelRequest request)
+        public static ModelSummary ToModelSummary(this Model entity)
+        {
+            return new ModelSummary
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                BrandId = entity.VehicleBrandId,
+                BrandName = entity.Brand?.Name ?? string.Empty,
+                TypeId = entity.Brand?.VehicleTypeId ?? Guid.Empty,
+                TypeName = entity.Brand?.VehicleType?.Name ?? string.Empty,
+                ReleaseYear = entity.ManufactureYear,
+                FuelTypeName = entity.FuelType.HasValue ? GetFuelTypeName(entity.FuelType.Value) : string.Empty,
+                TransmissionTypeName = entity.TransmissionType.HasValue ? GetTransmissionTypeName(entity.TransmissionType.Value) : string.Empty
+            };
+        }
+
+        public static void UpdateEntity(this Model entity, ModelRequest request)
         {
             entity.Name = request.Name;
             entity.Code = request.Code ?? string.Empty;

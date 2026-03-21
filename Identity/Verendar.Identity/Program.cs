@@ -11,8 +11,9 @@ var app = builder.Build();
 
 await app.MigrateDbContextAsync<UserDbContext>();
 
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<UserDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     await TestUserSeeder.SeedAsync(db, logger);

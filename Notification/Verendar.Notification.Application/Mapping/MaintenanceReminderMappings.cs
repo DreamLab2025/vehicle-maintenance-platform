@@ -1,5 +1,6 @@
 using Verendar.Notification.Application.Constants;
 using Verendar.Notification.Application.Dtos.Email;
+using Verendar.Vehicle.Contracts.Enums;
 using Verendar.Vehicle.Contracts.Events;
 
 namespace Verendar.Notification.Application.Mapping
@@ -13,8 +14,6 @@ namespace Verendar.Notification.Application.Mapping
         private const string PartListEmpty = "Các linh kiện cần bảo dưỡng/thay thế.";
         private const string CtaUpdateApp = "\n\nVui lòng vào app cập nhật sau khi thay linh kiện để dừng nhắc nhở.";
         private const string PartLineFormat = "• {0} (số km hiện tại: {1:N0}, cần thay trước: {2:N0})";
-
-        public const int CriticalLevel = 4;
 
         public static (string Title, string Message) BuildSingleItemCriticalContent(this MaintenanceReminderItemDto item)
         {
@@ -31,7 +30,7 @@ namespace Verendar.Notification.Application.Mapping
                 ? string.Join("\n", items.Select(i => string.Format(PartLineFormat, i.PartCategoryName, i.CurrentOdometer, i.TargetOdometer)))
                 : PartListEmpty;
 
-            if (message.Level >= CriticalLevel)
+            if (message.Level >= ReminderLevel.Critical)
             {
                 var title = NotificationConstants.Titles.MaintenanceCritical;
                 var body = CriticalIntro + "\n\n" + PartListHeader + "\n" + partList + CtaUpdateApp;
@@ -41,9 +40,9 @@ namespace Verendar.Notification.Application.Mapping
             var partNames = items.Count > 0
                 ? string.Join(", ", items.Select(i => i.PartCategoryName))
                 : string.Empty;
-            var levelLabel = NotificationConstants.MaintenanceLevelLabels.GetLabel(message.LevelName);
+            var levelLabel = NotificationConstants.MaintenanceLevelLabels.GetLabel(message.Level);
             var normalTitle = string.IsNullOrEmpty(partNames)
-                ? $"{levelLabel}: {NotificationConstants.Titles.MaintenanceNormalPrefix} ({message.LevelName})"
+                ? $"{levelLabel}: {NotificationConstants.Titles.MaintenanceNormalPrefix}"
                 : $"{levelLabel}: {NotificationConstants.Titles.MaintenanceNormalPrefix} {partNames}";
             var normalBody = NormalIntro + "\n\n" + partList;
             return (normalTitle, normalBody);
@@ -57,7 +56,6 @@ namespace Verendar.Notification.Application.Mapping
                 TargetValue = message.TargetValue,
                 UserName = message.UserName,
                 Level = message.Level,
-                LevelName = message.LevelName,
                 Items = [item]
             };
         }
@@ -78,7 +76,7 @@ namespace Verendar.Notification.Application.Mapping
             UserName = message.UserName ?? string.Empty,
             UserEmail = message.TargetValue,
             Title = title,
-            LevelName = message.LevelName,
+            LevelName = NotificationConstants.MaintenanceLevelLabels.GetLabel(message.Level),
             IsCritical = true,
             Items = [singleItem.ToEmailDto()]
         };
@@ -88,8 +86,8 @@ namespace Verendar.Notification.Application.Mapping
             UserName = message.UserName ?? string.Empty,
             UserEmail = message.TargetValue,
             Title = title,
-            LevelName = message.LevelName,
-            IsCritical = message.Level >= CriticalLevel,
+            LevelName = NotificationConstants.MaintenanceLevelLabels.GetLabel(message.Level),
+            IsCritical = message.Level >= ReminderLevel.Critical,
             Items = (items ?? []).Select(i => i.ToEmailDto()).ToList()
         };
     }

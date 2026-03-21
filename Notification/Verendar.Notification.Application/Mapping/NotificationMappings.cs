@@ -1,9 +1,8 @@
 using System.Text.Json;
-using Verendar.Notification.Domain.Entities;
-using Verendar.Notification.Domain.Enums;
+using Verendar.Notification.Application.Constants;
 using Verender.Identity.Contracts.Events;
+using Verendar.Vehicle.Contracts.Enums;
 using Verendar.Vehicle.Contracts.Events;
-using Verendar.Notification.Application.Dtos.Notifications;
 
 
 namespace Verendar.Notification.Application.Mapping
@@ -88,10 +87,10 @@ namespace Verendar.Notification.Application.Mapping
 
             var priority = message.Level switch
             {
-                1 => NotificationPriority.Low,
-                2 => NotificationPriority.Medium,
-                3 => NotificationPriority.High,
-                4 => NotificationPriority.Critical,
+                ReminderLevel.Low => NotificationPriority.Low,
+                ReminderLevel.Medium => NotificationPriority.Medium,
+                ReminderLevel.High => NotificationPriority.High,
+                ReminderLevel.Critical => NotificationPriority.Critical,
                 _ => NotificationPriority.Medium
             };
 
@@ -108,7 +107,7 @@ namespace Verendar.Notification.Application.Mapping
                 {
                     Type = "MaintenanceReminder",
                     Level = message.Level,
-                    LevelName = message.LevelName,
+                    LevelName = NotificationConstants.MaintenanceLevelLabels.GetLabel(message.Level),
                     Items = message.Items
                 }),
                 EntityType = "MaintenanceReminder",

@@ -1,13 +1,10 @@
-﻿using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Domain.Entities;
-
-namespace Verendar.Vehicle.Application.Mappings
+﻿namespace Verendar.Vehicle.Application.Mappings
 {
     public static class BrandMappings
     {
-        public static VehicleBrand ToEntity(this BrandRequest request)
+        public static Brand ToEntity(this BrandRequest request)
         {
-            return new VehicleBrand
+            return new Brand
             {
                 VehicleTypeId = request.VehicleTypeId,
                 Name = request.Name,
@@ -17,7 +14,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static BrandResponse ToResponse(this VehicleBrand entity)
+        public static BrandResponse ToResponse(this Brand entity)
         {
             return new BrandResponse
             {
@@ -33,7 +30,19 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static void UpdateEntity(this VehicleBrand entity, BrandRequest request)
+        public static BrandSummary ToSummary(this Brand entity)
+        {
+            return new BrandSummary
+            {
+                Id = entity.Id,
+                VehicleTypeId = entity.VehicleTypeId,
+                VehicleTypeName = entity.VehicleType?.Name ?? string.Empty,
+                Name = entity.Name,
+                LogoUrl = entity.LogoUrl
+            };
+        }
+
+        public static void UpdateEntity(this Brand entity, BrandRequest request)
         {
             entity.VehicleTypeId = request.VehicleTypeId;
             entity.Name = request.Name;

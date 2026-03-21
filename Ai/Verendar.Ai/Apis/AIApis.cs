@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Options;
 using Verendar.Ai.Application.Dtos.Health;
-using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Infrastructure.Configuration;
 
 namespace Verendar.Ai.Apis
@@ -22,8 +21,7 @@ namespace Verendar.Ai.Apis
                 .WithName("HealthCheck")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Health check";
-                    operation.Description = "Kiểm tra trạng thái kết nối của AI service với third-party (Gemini/Bedrock).";
+                    operation.Summary = "Kiểm tra trạng thái kết nối của AI service với third-party (Gemini/Bedrock).";
                     return operation;
                 })
                 .AllowAnonymous()

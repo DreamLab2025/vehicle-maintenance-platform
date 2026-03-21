@@ -1,12 +1,10 @@
 using Verendar.Common.Databases.Base;
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Domain.Entities;
 
 namespace Verendar.Vehicle.Application.Mappings
 {
     public static class MaintenanceRecordMappings
     {
-        public static MaintenanceRecord ToMaintenanceRecord(this CreateMaintenanceRecordRequest request, Guid userVehicleId)
+        public static MaintenanceRecord ToMaintenanceRecord(this CreateRecordRequest request, Guid userVehicleId)
         {
             return new MaintenanceRecord
             {
@@ -22,7 +20,7 @@ namespace Verendar.Vehicle.Application.Mappings
         }
 
         public static MaintenanceRecordItem ToMaintenanceRecordItem(
-            this MaintenanceRecordItemInput input,
+            this RecordItemInput input,
             Guid maintenanceRecordId,
             Guid partCategoryId,
             Guid? partProductId)
@@ -40,7 +38,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static VehiclePartTracking ToNewVehiclePartTracking(
+        public static PartTracking ToNewVehiclePartTracking(
             Guid userVehicleId,
             Guid partCategoryId,
             string? instanceIdentifier,
@@ -52,7 +50,7 @@ namespace Verendar.Vehicle.Application.Mappings
             int? customMonthsInterval,
             Guid? currentPartProductId)
         {
-            return new VehiclePartTracking
+            return new PartTracking
             {
                 UserVehicleId = userVehicleId,
                 PartCategoryId = partCategoryId,
@@ -70,7 +68,7 @@ namespace Verendar.Vehicle.Application.Mappings
         }
 
         public static void ApplyMaintenanceRecordUpdate(
-            this VehiclePartTracking tracking,
+            this PartTracking tracking,
             Guid? currentPartProductId,
             string? instanceIdentifier,
             int lastOdometer,
@@ -92,12 +90,12 @@ namespace Verendar.Vehicle.Application.Mappings
             tracking.IsDeclared = true;
         }
 
-        public static CreateMaintenanceRecordItemResult ToCreateMaintenanceRecordItemResult(
+        public static RecordItemResult ToRecordItemResult(
             Guid maintenanceRecordItemId,
             string partCategoryCode,
-            VehiclePartTrackingSummary tracking)
+            PartTrackingSummary tracking)
         {
-            return new CreateMaintenanceRecordItemResult
+            return new RecordItemResult
             {
                 MaintenanceRecordItemId = maintenanceRecordItemId,
                 PartCategoryCode = partCategoryCode,
@@ -105,11 +103,11 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static CreateMaintenanceRecordResponse ToCreateMaintenanceRecordResponse(
+        public static CreateRecordResponse ToCreateRecordResponse(
             Guid maintenanceRecordId,
-            List<CreateMaintenanceRecordItemResult> items)
+            List<RecordItemResult> items)
         {
-            return new CreateMaintenanceRecordResponse
+            return new CreateRecordResponse
             {
                 MaintenanceRecordId = maintenanceRecordId,
                 Items = items,
@@ -117,10 +115,10 @@ namespace Verendar.Vehicle.Application.Mappings
         }
 
 
-        public static MaintenanceRecordItemDto ToMaintenanceRecordItemDto(this MaintenanceRecordItem item)
+        public static RecordItemDto ToRecordItemDto(this MaintenanceRecordItem item)
         {
             var partName = item.PartProduct?.Name ?? item.CustomPartName ?? item.PartCategory?.Code ?? string.Empty;
-            return new MaintenanceRecordItemDto
+            return new RecordItemDto
             {
                 Id = item.Id,
                 PartName = partName,
@@ -132,9 +130,9 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static MaintenanceRecordSummaryDto ToMaintenanceRecordSummaryDto(this MaintenanceRecord record)
+        public static RecordSummaryDto ToRecordSummaryDto(this MaintenanceRecord record)
         {
-            return new MaintenanceRecordSummaryDto
+            return new RecordSummaryDto
             {
                 Id = record.Id,
                 UserVehicleId = record.UserVehicleId,
@@ -148,12 +146,12 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static MaintenanceRecordDetailDto ToMaintenanceRecordDetailDto(this MaintenanceRecord record)
+        public static RecordDetailDto ToRecordDetailDto(this MaintenanceRecord record)
         {
             var items = (record.Items ?? [])
-                .Select(i => i.ToMaintenanceRecordItemDto())
+                .Select(i => i.ToRecordItemDto())
                 .ToList();
-            return new MaintenanceRecordDetailDto
+            return new RecordDetailDto
             {
                 Id = record.Id,
                 UserVehicleId = record.UserVehicleId,

@@ -1,8 +1,3 @@
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Identity.Application.Dtos;
-using Verendar.Identity.Application.Services.Interfaces;
-
 namespace Verendar.Identity.Apis
 {
     public static class UserApis
@@ -57,39 +52,23 @@ namespace Verendar.Identity.Apis
         private static async Task<IResult> GetCurrentUser(ICurrentUserService currentUserService, IUserService userService)
         {
             var userId = currentUserService.UserId;
-
             if (userId == Guid.Empty)
-            {
                 return Results.Unauthorized();
-            }
 
             var result = await userService.GetUserByIdAsync(userId);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.NotFound(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> GetAllUsers([AsParameters] PaginationRequest paginationRequest, IUserService userService)
         {
             var result = await userService.GetAllUsersAsync(paginationRequest);
-
             return Results.Ok(result);
         }
 
         private static async Task<IResult> GetUserById(Guid id, IUserService userService)
         {
             var result = await userService.GetUserByIdAsync(id);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.NotFound(result);
+            return result.ToHttpResult();
         }
     }
 }

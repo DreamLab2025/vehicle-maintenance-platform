@@ -1,8 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
-using Verendar.Common.Databases.Base;
-using Verendar.Notification.Domain.Enums;
-
 namespace Verendar.Notification.Domain.Entities
 {
     [Index(nameof(NotificationId), nameof(Channel))]

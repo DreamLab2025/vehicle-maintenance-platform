@@ -3,8 +3,9 @@ using Microsoft.Extensions.Logging;
 using Verendar.Vehicle.Application.Clients;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Contracts.Events;
-using Verendar.Vehicle.Domain.Enums;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
+using ContractsLevel = Verendar.Vehicle.Contracts.Enums.ReminderLevel;
+using DomainLevel = Verendar.Vehicle.Domain.Enums.ReminderLevel;
 
 namespace Verendar.Vehicle.Jobs
 {
@@ -16,17 +17,17 @@ namespace Verendar.Vehicle.Jobs
     {
         public async Task ExecuteAsync(CancellationToken cancellationToken = default)
         {
-            logger.LogInformation("MaintenanceReminderJob: Finding Critical reminders (daily until replaced)");
+            logger.LogInformation("MaintenanceReminderJob: Finding {Level} reminders (daily until replaced)", DomainLevel.Critical);
 
             var reminders = await unitOfWork.MaintenanceReminders.GetByLevelWithDetailsAsync(
-                ReminderLevel.Critical,
+                DomainLevel.Critical,
                 includeAlreadyNotified: true,
                 cancellationToken);
 
             var remindersList = reminders.ToList();
             if (remindersList.Count == 0)
             {
-                logger.LogInformation("MaintenanceReminderJob: No Critical reminders");
+                logger.LogInformation("MaintenanceReminderJob: No {Level} reminders", DomainLevel.Critical);
                 return;
             }
 
@@ -34,8 +35,8 @@ namespace Verendar.Vehicle.Jobs
                 .Where(r => r.PartTracking?.UserVehicle != null && r.PartTracking.PartCategory != null)
                 .GroupBy(r => r.PartTracking!.UserVehicle!.UserId);
 
-            logger.LogInformation("MaintenanceReminderJob: Publishing reminder events for {UserCount} users ({ReminderCount} Critical reminders)",
-                byUser.Count(), remindersList.Count);
+            logger.LogInformation("MaintenanceReminderJob: Publishing reminder events for {UserCount} users ({ReminderCount} {Level} reminders)",
+                byUser.Count(), remindersList.Count, DomainLevel.Critical);
 
             foreach (var group in byUser)
             {
@@ -56,8 +57,7 @@ namespace Verendar.Vehicle.Jobs
                         UserId = userId,
                         TargetValue = email,
                         UserName = null,
-                        Level = (int)ReminderLevel.Critical,
-                        LevelName = nameof(ReminderLevel.Critical),
+                        Level = ContractsLevel.Critical,
                         Items = items
                     }, cancellationToken);
 

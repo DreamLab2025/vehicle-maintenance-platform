@@ -7,6 +7,8 @@ namespace Verendar.Notification.Application.Services.Interfaces
     {
         Task<bool> SendOtpEmailAsync(OtpRequestedEvent message, CancellationToken cancellationToken = default);
 
+        Task<bool> SendWelcomeEmailAsync(UserRegisteredEvent message, CancellationToken cancellationToken = default);
+
         Task<(bool EmailSent, Guid? NotificationId)> SendOdometerReminderAsync(OdometerReminderEvent message, CancellationToken cancellationToken = default);
 
         Task<(bool EmailSent, IReadOnlyList<Guid> NotificationIds)> SendMaintenanceReminderAsync(MaintenanceReminderEvent message, CancellationToken cancellationToken = default);

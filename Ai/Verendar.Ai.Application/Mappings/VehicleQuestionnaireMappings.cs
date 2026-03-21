@@ -1,5 +1,4 @@
 using System.Globalization;
-using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 
 namespace Verendar.Ai.Application.Mappings
@@ -20,7 +19,7 @@ namespace Verendar.Ai.Application.Mappings
             };
         }
 
-        private static AiAnalysisMetadata ToAiAnalysisMetadata(this GenerativeAiResponse? aiResponse)
+        private static AiAnalysisMetadata ToAiAnalysisMetadata(GenerativeAiResponse? aiResponse)
         {
             return new AiAnalysisMetadata
             {

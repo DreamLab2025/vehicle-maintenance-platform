@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -8,7 +9,6 @@ using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Helpers;
 using Verendar.Identity.Application.Mappings;
 using Verendar.Identity.Application.Services.Interfaces;
-using Verendar.Identity.Domain.Entities;
 using Verendar.Identity.Domain.Repositories.Interfaces;
 using Verender.Identity.Contracts.Events;
 
@@ -28,10 +28,9 @@ namespace Verendar.Identity.Infrastructure.Services
         private readonly ICacheService _cacheService = cacheService;
         private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
-        private string GetOtpCode()
+        private static string GetOtpCode()
         {
-            var random = new Random();
-            return random.Next(100000, 999999).ToString();
+            return RandomNumberGenerator.GetInt32(100000, 1_000_000).ToString();
         }
 
         public async Task<ApiResponse<UserDto>> RegisterUserAsync(RegisterRequest request)
@@ -42,7 +41,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 var existingUser = await _unitOfWork.Users.FindOneAsync(u => u.Email == email);
                 if (existingUser != null)
                 {
-                    return ApiResponse<UserDto>.FailureResponse("Email đã được đăng ký");
+                    return ApiResponse<UserDto>.ConflictResponse("Email đã được đăng ký");
                 }
 
                 var user = request.ToEntity(string.Empty);
@@ -53,7 +52,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 await _unitOfWork.SaveChangesAsync();
 
                 var otpCode = GetOtpCode();
-                _logger.LogInformation("Sending OTP code to email: {Email} with OTP: {OtpCode}", email, otpCode);
+                _logger.LogInformation("Sending OTP code to email: {Email}", email);
                 await _cacheService.SetAsync($"otp_register:{email}", otpCode, TimeSpan.FromMinutes(5));
 
                 _logger.LogInformation("Publishing OtpRequestedEvent for new user registration: {Email}", email);
@@ -97,7 +96,10 @@ namespace Verendar.Identity.Infrastructure.Services
 
                 if (user.Status != EntityStatus.Active)
                 {
-                    return ApiResponse<TokenResponse>.FailureResponse("Tài khoản người dùng chưa được kích hoạt");
+                    return ApiResponse<TokenResponse>.FailureResponse(
+                        "Tài khoản chưa được kích hoạt, vui lòng xác thực OTP",
+                        403,
+                        new { requiresOtpVerification = true, email });
                 }
 
                 var tokenResponse = _tokenService.GenerateTokens(user.ToTokenClaims());
@@ -130,12 +132,12 @@ namespace Verendar.Identity.Infrastructure.Services
                 var user = await _unitOfWork.Users.GetByIdAsync(userId);
                 if (user == null)
                 {
-                    return ApiResponse<TokenResponse>.FailureResponse("Không tìm thấy người dùng");
+                    return ApiResponse<TokenResponse>.NotFoundResponse("Không tìm thấy người dùng");
                 }
 
                 if (user.Status != EntityStatus.Active)
                 {
-                    return ApiResponse<TokenResponse>.FailureResponse("Tài khoản người dùng chưa được kích hoạt");
+                    return ApiResponse<TokenResponse>.ForbiddenResponse("Tài khoản người dùng chưa được kích hoạt");
                 }
 
                 if (string.IsNullOrWhiteSpace(user.RefreshToken) ||
@@ -194,7 +196,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 if (user == null)
                 {
                     _logger.LogWarning("User not found for password change: {UserId}", userId);
-                    return ApiResponse<UserDto>.FailureResponse("Người dùng không tồn tại");
+                    return ApiResponse<UserDto>.NotFoundResponse("Người dùng không tồn tại");
                 }
                 var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.OldPassword);
                 if (verificationResult == PasswordVerificationResult.Failed)
@@ -234,10 +236,13 @@ namespace Verendar.Identity.Infrastructure.Services
                     return ApiResponse<bool>.FailureResponse("Mã OTP không chính xác.");
                 }
 
+
+                await _cacheService.RemoveAsync(cacheKey);
+
                 var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == email);
                 if (user == null)
                 {
-                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                    return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
                 }
 
                 if (user.Status == EntityStatus.Active)
@@ -246,6 +251,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 }
 
                 user.Status = EntityStatus.Active;
+                user.EmailVerified = true;
                 user.UpdatedAt = DateTime.UtcNow;
 
                 await _unitOfWork.Users.UpdateAsync(user.Id, user);
@@ -262,8 +268,6 @@ namespace Verendar.Identity.Infrastructure.Services
                     EmailVerified = user.EmailVerified,
                     RegistrationDate = user.CreatedAt
                 });
-
-                await _cacheService.RemoveAsync(cacheKey);
                 return ApiResponse<bool>.SuccessResponse(true, "Kích hoạt tài khoản thành công. Bạn có thể đăng nhập ngay bây giờ.");
             }
             catch (Exception ex)
@@ -283,7 +287,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 if (user == null)
                 {
                     _logger.LogWarning("User not found for OTP resend: {Email}", email);
-                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                    return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
                 }
 
                 if (user.Status == EntityStatus.Active)
@@ -293,17 +297,16 @@ namespace Verendar.Identity.Infrastructure.Services
                 }
 
                 var lockKey = $"otp_resend_lock:{email}";
-                var isLocked = await _cacheService.GetAsync<bool?>(lockKey);
-                if (isLocked == true)
+                var lockAcquired = await _cacheService.SetIfNotExistsAsync(lockKey, true, TimeSpan.FromSeconds(60));
+                if (!lockAcquired)
                 {
                     _logger.LogInformation("OTP resend attempted too soon for user: {Email}", email);
                     return ApiResponse<bool>.FailureResponse("Vui lòng đợi 60 giây trước khi gửi lại OTP.");
                 }
 
                 var otpCode = GetOtpCode();
-                _logger.LogInformation("Resending OTP code to email: {Email} with OTP: {OtpCode}", email, otpCode);
+                _logger.LogInformation("Resending OTP code to email: {Email}", email);
                 await _cacheService.SetAsync($"otp_register:{email}", otpCode, TimeSpan.FromMinutes(5));
-                await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
 
                 _logger.LogInformation("Publishing OtpRequestedEvent for resend OTP: {Email}", email);
                 await _publishEndpoint.Publish(new OtpRequestedEvent
@@ -331,9 +334,8 @@ namespace Verendar.Identity.Infrastructure.Services
             try
             {
                 var lockKey = $"otp_forgot_lock:{email}";
-                var isLocked = await _cacheService.GetAsync<bool?>(lockKey);
-
-                if (isLocked == true)
+                var lockAcquired = await _cacheService.SetIfNotExistsAsync(lockKey, true, TimeSpan.FromSeconds(60));
+                if (!lockAcquired)
                 {
                     return ApiResponse<bool>.FailureResponse("Vui lòng đợi 60 giây trước khi yêu cầu lại.");
                 }
@@ -342,13 +344,12 @@ namespace Verendar.Identity.Infrastructure.Services
                 if (user == null)
                 {
                     _logger.LogWarning("User not found for forgot password: {Email}", email);
-                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                    return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
                 }
 
                 var otpCode = GetOtpCode();
-                _logger.LogError("Send OTP code to email: {Email} with OTP: {OtpCode}", email, otpCode);
+                _logger.LogInformation("Sending forgot password OTP to email: {Email}", email);
                 await _cacheService.SetAsync($"otp_forgot:{email}", otpCode, TimeSpan.FromMinutes(5));
-                await _cacheService.SetAsync(lockKey, true, TimeSpan.FromSeconds(60));
 
                 _logger.LogInformation("Publishing OtpRequestedEvent for forgot password: {Email}", email);
                 await _publishEndpoint.Publish(new OtpRequestedEvent
@@ -384,11 +385,13 @@ namespace Verendar.Identity.Infrastructure.Services
                     return ApiResponse<bool>.FailureResponse("Mã OTP không hợp lệ hoặc đã hết hạn.");
                 }
 
+                await _cacheService.RemoveAsync(cacheKey);
+
                 var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == email);
                 if (user == null)
                 {
                     _logger.LogWarning("User not found for password reset: {Email}", email);
-                    return ApiResponse<bool>.FailureResponse("Người dùng không tồn tại.");
+                    return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
                 }
 
                 user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
@@ -398,8 +401,6 @@ namespace Verendar.Identity.Infrastructure.Services
 
                 await _unitOfWork.Users.UpdateAsync(user.Id, user);
                 await _unitOfWork.SaveChangesAsync();
-
-                await _cacheService.RemoveAsync(cacheKey);
                 _logger.LogInformation("Password reset successfully for: {Email}", email);
 
                 return ApiResponse<bool>.SuccessResponse(true, "Đặt lại mật khẩu thành công. Vui lòng đăng nhập lại.");

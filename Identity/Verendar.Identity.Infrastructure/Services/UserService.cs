@@ -3,7 +3,6 @@ using Verendar.Common.Shared;
 using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Mappings;
 using Verendar.Identity.Application.Services.Interfaces;
-using Verendar.Identity.Domain.Entities;
 using Verendar.Identity.Domain.Repositories.Interfaces;
 
 namespace Verendar.Identity.Infrastructure.Services
@@ -23,13 +22,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 q => q.OrderByDescending(u => u.CreatedAt)
             );
 
-            if (users.Items == null)
-            {
-                return ApiResponse<List<UserDto>>.FailureResponse("Không tìm thấy danh sách người dùng.");
-            }
-
-            var userItems = users.Items ?? new List<User>();
-            var userDtos = userItems.Select(u => u.ToDto()).ToList();
+            var userDtos = users.Items.Select(u => u.ToDto()).ToList();
 
             return ApiResponse<List<UserDto>>.SuccessPagedResponse(
                 userDtos,
@@ -47,7 +40,7 @@ namespace Verendar.Identity.Infrastructure.Services
                 var user = await _unitOfWork.Users.GetByIdAsync(userId);
                 if (user == null)
                 {
-                    return ApiResponse<UserDto>.FailureResponse("Người dùng không tồn tại.");
+                    return ApiResponse<UserDto>.NotFoundResponse("Người dùng không tồn tại.");
                 }
                 return ApiResponse<UserDto>.SuccessResponse(user.ToDto(), "Lấy thông tin người dùng thành công.");
             }

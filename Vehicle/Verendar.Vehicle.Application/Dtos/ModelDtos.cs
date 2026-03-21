@@ -1,6 +1,3 @@
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Domain.Entities;
-
 namespace Verendar.Vehicle.Application.Dtos
 {
     public class ModelRequest
@@ -45,7 +42,20 @@ namespace Verendar.Vehicle.Application.Dtos
 
     public class ModelResponseWithVariants : ModelResponse
     {
-        public List<VehicleVariantResponse> Variants { get; set; } = new();
+        public List<VariantResponse> Variants { get; set; } = new();
+    }
+
+    public class ModelSummary
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public Guid BrandId { get; set; }
+        public string BrandName { get; set; } = null!;
+        public Guid TypeId { get; set; }
+        public string TypeName { get; set; } = null!;
+        public int? ReleaseYear { get; set; }
+        public string FuelTypeName { get; set; } = null!;
+        public string TransmissionTypeName { get; set; } = null!;
     }
 
     public class ModelFilterRequest : PaginationRequest

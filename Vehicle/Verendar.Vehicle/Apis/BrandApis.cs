@@ -1,8 +1,3 @@
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Common.EndpointFilters;
-
 namespace Verendar.Vehicle.Apis
 {
     public static class BrandApis
@@ -22,24 +17,24 @@ namespace Verendar.Vehicle.Apis
                 .WithName("GetAllBrands")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Lấy danh sách tất cả thương hiệu";
+                    operation.Summary = "Lấy danh sách thương hiệu, lọc theo loại xe nếu có typeId";
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<List<BrandSummary>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<BrandSummary>>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapGet("/types/{typeId:guid}", GetBrandsByType)
-                .WithName("GetBrandsByType")
+            group.MapGet("/{id:guid}", GetBrandById)
+                .WithName("GetBrandById")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Lấy danh sách thương hiệu theo loại xe";
+                    operation.Summary = "Lấy thông tin thương hiệu theo ID";
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateVehicleBrand)
@@ -53,6 +48,7 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status201Created)
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{id:guid}", UpdateVehicleBrand)
@@ -66,6 +62,8 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapDelete("/{id:guid}", DeleteVehicleBrand)
@@ -77,60 +75,46 @@ namespace Verendar.Vehicle.Apis
                 })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<string>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
         }
 
-        private static async Task<IResult> DeleteVehicleBrand(Guid id, IVehicleBrandService brandService)
+        private static async Task<IResult> GetBrandById(Guid id, IBrandService brandService)
+        {
+            var result = await brandService.GetBrandByIdAsync(id);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> DeleteVehicleBrand(Guid id, IBrandService brandService)
         {
             var result = await brandService.DeleteBrandAsync(id);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateVehicleBrand(Guid id, BrandRequest request, IVehicleBrandService brandService)
+        private static async Task<IResult> UpdateVehicleBrand(Guid id, BrandRequest request, IBrandService brandService)
         {
             var result = await brandService.UpdateBrandAsync(id, request);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> CreateVehicleBrand(BrandRequest request, IVehicleBrandService brandService)
+        private static async Task<IResult> CreateVehicleBrand(BrandRequest request, IBrandService brandService)
         {
             var result = await brandService.CreateBrandAsync(request);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetAllBrands([AsParameters] PaginationRequest paginationRequest, IVehicleBrandService brandService)
+        private static async Task<IResult> GetAllBrands([AsParameters] BrandFilterRequest request, IBrandService brandService)
         {
-            var results = await brandService.GetAllBrandsAsync(paginationRequest);
-            if (results.IsSuccess)
+            if (request.TypeId.HasValue)
             {
-                return Results.Ok(results);
+                var filtered = await brandService.GetBrandsByTypeIdAsync(request.TypeId.Value);
+                return filtered.ToHttpResult();
             }
-            return Results.NotFound(results);
-        }
 
-        private static async Task<IResult> GetBrandsByType(Guid typeId, IVehicleBrandService brandService)
-        {
-            var results = await brandService.GetBrandsByTypeIdAsync(typeId);
-            if (results.IsSuccess)
-            {
-                return Results.Ok(results);
-            }
-            return Results.NotFound(results);
+            var results = await brandService.GetAllBrandsAsync(request);
+            return results.ToHttpResult();
         }
     }
 }

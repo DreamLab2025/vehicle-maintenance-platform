@@ -1,8 +1,3 @@
-using Verendar.Common.EndpointFilters;
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Application.Services.Interfaces;
-
 namespace Verendar.Vehicle.Apis
 {
     public static class ModelApis
@@ -28,8 +23,7 @@ namespace Verendar.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<ModelResponseWithVariants>>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<List<ModelResponseWithVariants>>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<List<ModelSummary>>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateVehicleModel)
@@ -43,6 +37,8 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status201Created)
                 .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{id:guid}", UpdateVehicleModel)
@@ -56,6 +52,8 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapDelete("/{id:guid}", DeleteVehicleModel)
@@ -67,7 +65,7 @@ namespace Verendar.Vehicle.Apis
                 })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<string>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/{id:guid}", GetModelById)
@@ -82,58 +80,55 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/{id:guid}/variants", GetVariantsByModelId)
+                .WithName("GetVariantsByModelId")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy danh sách hình ảnh/màu theo mẫu xe";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<VariantResponse>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<VariantResponse>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             return group;
         }
 
-        private static async Task<IResult> DeleteVehicleModel(Guid id, IVehicleModelService modelService)
+        private static async Task<IResult> DeleteVehicleModel(Guid id, IModelService modelService)
         {
             var result = await modelService.DeleteModelAsync(id);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateVehicleModel(Guid id, ModelRequest request, IVehicleModelService modelService)
+        private static async Task<IResult> UpdateVehicleModel(Guid id, ModelRequest request, IModelService modelService)
         {
             var result = await modelService.UpdateModelAsync(id, request);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> CreateVehicleModel(ModelRequest request, IVehicleModelService modelService)
+        private static async Task<IResult> CreateVehicleModel(ModelRequest request, IModelService modelService)
         {
             var result = await modelService.CreateModelAsync(request);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetAllModels([AsParameters] ModelFilterRequest filterRequest, IVehicleModelService modelService)
+        private static async Task<IResult> GetAllModels([AsParameters] ModelFilterRequest filterRequest, IModelService modelService)
         {
             var results = await modelService.GetAllModelsAsync(filterRequest);
-            if (results.IsSuccess)
-            {
-                return Results.Ok(results);
-            }
-            return Results.NotFound(results);
+            return results.ToHttpResult();
         }
 
-        private static async Task<IResult> GetModelById(Guid id, IVehicleModelService modelService)
+        private static async Task<IResult> GetModelById(Guid id, IModelService modelService)
         {
             var result = await modelService.GetModelByIdAsync(id);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.NotFound(result);
+            return result.ToHttpResult();
         }
 
+        private static async Task<IResult> GetVariantsByModelId(Guid id, IVariantService variantService)
+        {
+            var result = await variantService.GetImagesByModelIdAsync(id);
+            return result.ToHttpResult();
+        }
     }
 }

@@ -1,11 +1,8 @@
-using FluentValidation;
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Validators
 {
-    public class CreateMaintenanceRecordRequestValidator : AbstractValidator<CreateMaintenanceRecordRequest>
+    public class CreateRecordRequestValidator : AbstractValidator<CreateRecordRequest>
     {
-        public CreateMaintenanceRecordRequestValidator()
+        public CreateRecordRequestValidator()
         {
             RuleFor(x => x.OdometerAtService)
                 .GreaterThanOrEqualTo(0)

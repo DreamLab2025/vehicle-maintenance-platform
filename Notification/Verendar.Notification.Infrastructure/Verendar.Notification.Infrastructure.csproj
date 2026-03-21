@@ -20,4 +20,10 @@
     <ProjectReference Include="..\Verendar.Notification.Domain\Verendar.Notification.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Templates\Email\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

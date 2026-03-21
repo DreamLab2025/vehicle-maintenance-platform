@@ -1,5 +1,3 @@
-using Verendar.Identity.Application.Services.Interfaces;
-
 namespace Verendar.Identity.Apis
 {
     public static class InternalUserApis
@@ -7,7 +5,8 @@ namespace Verendar.Identity.Apis
         public static IEndpointRouteBuilder MapInternalUserApi(this IEndpointRouteBuilder builder)
         {
             var group = builder.MapGroup("/api/internal/users")
-                .WithTags("Internal User Api");
+                .WithTags("Internal User Api")
+                .RequireAuthorization();
 
             group.MapGet("/{id:guid}/email", GetUserEmailById)
                 .WithName("GetUserEmailById")

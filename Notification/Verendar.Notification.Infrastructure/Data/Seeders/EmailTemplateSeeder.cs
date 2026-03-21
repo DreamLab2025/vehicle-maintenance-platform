@@ -1,9 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Verendar.Notification.Domain.Entities;
-using Verendar.Notification.Domain.Enums;
-using Verendar.Notification.Infrastructure.Data;
-
 namespace Verendar.Notification.Infrastructure.Seeders
 {
     public static class EmailTemplateSeeder

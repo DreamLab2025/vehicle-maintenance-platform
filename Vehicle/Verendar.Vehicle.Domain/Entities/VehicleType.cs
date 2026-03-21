@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Verendar.Common.Databases.Base;
-
-namespace Verendar.Vehicle.Domain.Entities
+﻿namespace Verendar.Vehicle.Domain.Entities
 {
     public class VehicleType : BaseEntity
     {
@@ -21,6 +18,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        public List<VehicleBrand> Brands { get; set; } = [];
+        public List<Brand> Brands { get; set; } = [];
     }
 }

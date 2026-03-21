@@ -1,9 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Verendar.Common.Databases.Base;
-using Verendar.Vehicle.Domain.Entities;
 using Verendar.Vehicle.Domain.Enums;
-using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Seeders;
 
@@ -133,7 +130,7 @@ public static class MaintenanceReminderTestDataSeeder
             var lastReplacementDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-monthsAgo));
             var predictedNextDate = lastReplacementDate.AddMonths(monthsInterval);
 
-            var partTracking = new VehiclePartTracking
+            var partTracking = new PartTracking
             {
                 Id = Guid.CreateVersion7(),
                 UserVehicleId = userVehicle.Id,
@@ -172,7 +169,7 @@ public static class MaintenanceReminderTestDataSeeder
 
         foreach (var partCategoryId in UndeclaredPartCategoryIds)
         {
-            var partTracking = new VehiclePartTracking
+            var partTracking = new PartTracking
             {
                 Id = Guid.CreateVersion7(),
                 UserVehicleId = userVehicle.Id,
@@ -228,7 +225,7 @@ public static class MaintenanceReminderTestDataSeeder
                 var lastReplacementDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-monthsAgo));
                 var predictedNextDate = lastReplacementDate.AddMonths(monthsInterval);
 
-                partTracking = new VehiclePartTracking
+                partTracking = new PartTracking
                 {
                     Id = Guid.CreateVersion7(),
                     UserVehicleId = userVehicleId,
@@ -297,7 +294,7 @@ public static class MaintenanceReminderTestDataSeeder
             if (exists)
                 continue;
 
-            var partTracking = new VehiclePartTracking
+            var partTracking = new PartTracking
             {
                 Id = Guid.CreateVersion7(),
                 UserVehicleId = userVehicleId,

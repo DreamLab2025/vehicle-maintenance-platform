@@ -1,12 +1,8 @@
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Verendar.Common.Shared;
 using Verendar.Media.Application.Configuration;
-using Verendar.Media.Application.Dtos;
 using Verendar.Media.Application.IStorage;
 using Verendar.Media.Application.Mappings;
 using Verendar.Media.Application.Services.Interfaces;
-using Verendar.Media.Domain.Entities;
 using Verendar.Media.Domain.Repositories.Interfaces;
 
 namespace Verendar.Media.Application.Services.Implements
@@ -107,17 +103,10 @@ namespace Verendar.Media.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<InitUploadResponse>> InitiateUploadAsync(InitUploadRequest request, Guid userId, string folderKey)
+        public async Task<ApiResponse<InitUploadResponse>> InitiateUploadAsync(InitUploadRequest request, Guid userId)
         {
             try
             {
-                var fileType = ParseFolderKeyToFileType(folderKey);
-                if (fileType == null)
-                {
-                    return ApiResponse<InitUploadResponse>.FailureResponse(
-                        $"Folder key không hợp lệ: '{folderKey}'. Cho phép: avatar, vehicle-types, vehicle-brands, vehicle-variants, part-categories, misc");
-                }
-
                 if (!_uploadConfig.IsContentTypeAllowed(request.ContentType))
                 {
                     return ApiResponse<InitUploadResponse>.FailureResponse(
@@ -132,22 +121,15 @@ namespace Verendar.Media.Application.Services.Implements
                         $"Kích thước file vượt quá giới hạn {maxSizeMB:F2} MB cho loại '{request.ContentType}'");
                 }
 
-                if (request.Size <= 0)
-                {
-                    return ApiResponse<InitUploadResponse>.FailureResponse("Kích thước file phải lớn hơn 0");
-                }
-
-                string fileKey = GenerateFilePath(fileType.Value, userId, request.FileName);
-
+                string fileKey = GenerateFilePath(request.FileType, userId, request.FileName);
                 var presignedUrl = await _storageService.GeneratePresignedUrlAsync(fileKey, request.ContentType);
-
-                var mediaFile = request.ToEntity(userId, fileKey, fileType.Value);
+                var mediaFile = request.ToEntity(userId, fileKey, request.FileType);
 
                 await _unitOfWork.MediaFileRepository.AddAsync(mediaFile);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.LogInformation("Initiated upload for file {FileName} (Folder: {FolderKey}) with ID: {FileId}",
-                    request.FileName, folderKey, mediaFile.Id);
+                _logger.LogInformation("Initiated upload for file {FileName} (Type: {FileType}) with ID: {FileId}",
+                    request.FileName, request.FileType, mediaFile.Id);
 
                 return ApiResponse<InitUploadResponse>.SuccessResponse(
                     mediaFile.ToInitUploadResponse(presignedUrl),
@@ -158,20 +140,6 @@ namespace Verendar.Media.Application.Services.Implements
                 _logger.LogError(ex, "Error initiating upload for file {FileName}", request.FileName);
                 return ApiResponse<InitUploadResponse>.FailureResponse("Lỗi khi khởi tạo upload");
             }
-        }
-
-        private static FileType? ParseFolderKeyToFileType(string folderKey)
-        {
-            return folderKey?.ToLowerInvariant() switch
-            {
-                "avatar" => FileType.Avatar,
-                "vehicle-types" => FileType.VehicleType,
-                "vehicle-brands" => FileType.VehicleBrand,
-                "vehicle-variants" => FileType.VehicleVariant,
-                "part-categories" => FileType.PartCategory,
-                "misc" => FileType.Other,
-                _ => null
-            };
         }
 
         private string GenerateFilePath(FileType fileType, Guid userId, string fileName)

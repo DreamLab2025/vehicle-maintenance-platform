@@ -1,9 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using Verendar.Common.Databases.Base;
-using Verendar.Common.Databases.Implements;
-using Verendar.Vehicle.Domain.Entities;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
-using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
@@ -57,18 +53,20 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 
         public async Task<(bool IsAllowed, string Message)> CheckCanCreateVehicleAsync(Guid userId, bool isPremiumUser = false)
         {
-            var existingVehicles = await _dbSet
+            var currentCount = await _dbSet
                 .Where(v => v.UserId == userId && v.Status == EntityStatus.Active && v.DeletedAt == null)
-                .ToListAsync();
+                .CountAsync();
 
-            var currentCount = existingVehicles.Count();
             if (currentCount == 0)
             {
                 return (true, "Success.");
             }
             if (currentCount == 1)
             {
-                var currentVehicleId = existingVehicles.First().Id;
+                var currentVehicleId = await _dbSet
+                    .Where(v => v.UserId == userId && v.Status == EntityStatus.Active && v.DeletedAt == null)
+                    .Select(v => v.Id)
+                    .FirstAsync();
 
                 bool passStreakChallenge = await HasContinuousOdometerUpdatesAsync(currentVehicleId, daysRequired: 7);
 
@@ -104,7 +102,16 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .Distinct()
                 .ToListAsync();
 
-            return logDates.Count >= daysRequired;
+            if (logDates.Count < daysRequired)
+                return false;
+
+            var logDateSet = new HashSet<DateOnly>(logDates);
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                if (!logDateSet.Contains(date))
+                    return false;
+            }
+            return true;
         }
 
         public async Task<IReadOnlyList<Guid>> GetDistinctUserIdsWithStaleOdometerAsync(int olderThanDays, CancellationToken cancellationToken = default)

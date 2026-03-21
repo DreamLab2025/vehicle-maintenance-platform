@@ -1,6 +1,4 @@
-using Verendar.Common.Databases.Interfaces;
 using Verendar.Vehicle.Domain.Entities;
-using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Domain.Repositories.Interfaces
 {

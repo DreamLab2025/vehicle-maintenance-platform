@@ -1,8 +1,3 @@
-using Verendar.Common.EndpointFilters;
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Application.Services.Interfaces;
-
 namespace Verendar.Vehicle.Apis
 {
     public static class TypeApis
@@ -26,8 +21,19 @@ namespace Verendar.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<TypeResponse>>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<List<TypeResponse>>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<List<TypeSummary>>>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/{id:guid}", GetTypeById)
+                .WithName("GetTypeById")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy thông tin loại xe theo ID";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateVehicleType)
@@ -41,6 +47,7 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status201Created)
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPut("/{id:guid}", UpdateVehicleType)
@@ -54,6 +61,8 @@ namespace Verendar.Vehicle.Apis
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapDelete("/{id:guid}", DeleteVehicleType)
@@ -65,50 +74,40 @@ namespace Verendar.Vehicle.Apis
                 })
                 .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
                 .Produces<ApiResponse<string>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<string>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<string>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
         }
 
-        private static async Task<IResult> DeleteVehicleType(Guid id, IVehicleTypeService typeService)
+        private static async Task<IResult> GetTypeById(Guid id, ITypeService typeService)
+        {
+            var result = await typeService.GetTypeByIdAsync(id);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> DeleteVehicleType(Guid id, ITypeService typeService)
         {
             var result = await typeService.DeleteTypeAsync(id);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateVehicleType(Guid id, TypeRequest request, IVehicleTypeService typeService)
+        private static async Task<IResult> UpdateVehicleType(Guid id, TypeRequest request, ITypeService typeService)
         {
             var result = await typeService.UpdateTypeAsync(id, request);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> CreateVehicleType(TypeRequest request, IVehicleTypeService typeService)
+        private static async Task<IResult> CreateVehicleType(TypeRequest request, ITypeService typeService)
         {
             var result = await typeService.CreateTypeAsync(request);
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetAllTypes([AsParameters] PaginationRequest paginationRequest, IVehicleTypeService typeService)
+        private static async Task<IResult> GetAllTypes([AsParameters] PaginationRequest paginationRequest, ITypeService typeService)
         {
             var results = await typeService.GetAllTypesAsync(paginationRequest);
-            if (results.IsSuccess)
-            {
-                return Results.Ok(results);
-            }
-            return Results.NotFound(results);
+            return results.ToHttpResult();
         }
     }
 }

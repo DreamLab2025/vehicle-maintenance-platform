@@ -1,10 +1,7 @@
 using System.Text.Json;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Verendar.Notification.Application.Constants;
-using Verendar.Notification.Domain.Entities;
-using Verendar.Notification.Domain.Enums;
-using Verendar.Notification.Infrastructure.Data;
+using Verendar.Vehicle.Contracts.Enums;
 using NotificationEntity = Verendar.Notification.Domain.Entities.Notification;
 
 namespace Verendar.Notification.Infrastructure.Seeders;
@@ -46,10 +43,10 @@ public static class NotificationSeeder
         ("Lọc dầu", "Loại bỏ tạp chất trong dầu động cơ", SeedCurrentOdometer, 15250, 5m)
     };
 
-    private static readonly (string PartName, string Description, int CurrentOdo, int TargetOdo, decimal Pct, int Level, string LevelName)[] NormalReminders =
+    private static readonly (string PartName, string Description, int CurrentOdo, int TargetOdo, decimal Pct, ReminderLevel Level)[] NormalReminders =
     {
-        ("Lốp xe", "Đảm bảo độ bám đường và an toàn khi di chuyển", SeedCurrentOdometer, 20000, 25m, 3, "High"),
-        ("Má phanh", "Đảm bảo khả năng phanh an toàn", SeedCurrentOdometer, 18000, 30m, 2, "Medium")
+        ("Lốp xe", "Đảm bảo độ bám đường và an toàn khi di chuyển", SeedCurrentOdometer, 20000, 25m, ReminderLevel.High),
+        ("Má phanh", "Đảm bảo khả năng phanh an toàn", SeedCurrentOdometer, 18000, 30m, ReminderLevel.Medium)
     };
 
     public static async Task SeedAsync(NotificationDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
@@ -137,10 +134,10 @@ public static class NotificationSeeder
             totalSeeded++;
         }
 
-        foreach (var (partName, description, currentOdo, targetOdo, pct, level, levelName) in NormalReminders)
+        foreach (var (partName, description, currentOdo, targetOdo, pct, level) in NormalReminders)
         {
             var reminderId = SeedReminderIds[reminderIdIndex++];
-            var levelLabel = NotificationConstants.MaintenanceLevelLabels.GetLabel(levelName);
+            var levelLabel = NotificationConstants.MaintenanceLevelLabels.GetLabel(level);
             var title = $"{levelLabel}: {NotificationConstants.Titles.MaintenanceNormalPrefix} {partName}";
             var partLine = string.Format(PartLineFormat, partName, currentOdo, targetOdo);
             var message = NormalIntro + "\n\n" + partLine;
@@ -163,12 +160,12 @@ public static class NotificationSeeder
                 type = "MaintenanceReminder",
                 entityType = "MaintenanceReminder",
                 entityId = reminderId,
-                level,
-                levelName,
+                level = (int)level,
+                levelName = level.ToString(),
                 items = new[] { itemData }
             }, JsonOptions);
 
-            var priority = level == 3 ? NotificationPriority.High : NotificationPriority.Medium;
+            var priority = level == ReminderLevel.High ? NotificationPriority.High : NotificationPriority.Medium;
             await AddNotificationWithDeliveriesAsync(db, TestUserId, title, message, priority,
                 "MaintenanceReminder", SeedUserVehicleId, metadataJson, cancellationToken);
             totalSeeded++;

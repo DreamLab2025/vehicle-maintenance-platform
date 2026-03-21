@@ -12,7 +12,10 @@
       "Bash(done)",
       "Bash(Select-String -Pattern \"error|Build\")",
       "Bash(taskkill:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(Get-Content \"E:\\\\Working\\\\DreamLab\\\\Verendar\\\\.claude\\\\worktrees\\\\fervent-gagarin\\\\.claude\\\\skills\\\\backend-development\\\\references\\\\backend-api-design.md\")",
+      "Bash(Measure-Object -Line)",
+      "Bash(Select-Object -ExpandProperty Lines)"
     ]
   }
 }

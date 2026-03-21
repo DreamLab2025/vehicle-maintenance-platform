@@ -1,7 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Verendar.Notification.Domain.Entities;
-using Verendar.Notification.Domain.Enums;
-
 namespace Verendar.Notification.Infrastructure.Data
 {
     public static class NotificationDataSeeder

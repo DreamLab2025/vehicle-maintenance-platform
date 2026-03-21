@@ -1,14 +1,10 @@
-using Verendar.Common.Shared;
-using Verendar.Notification.Application.Dtos.Notifications;
+using System.Text.Json;
 using Verendar.Notification.Application.Mapping;
-using Verendar.Notification.Application.Services.Interfaces;
-using Verendar.Notification.Domain.Enums;
-using Verendar.Notification.Domain.Repositories.Interfaces;
-
 namespace Verendar.Notification.Application.Services.Implements
 {
-    public class NotificationService(IUnitOfWork unitOfWork) : INotificationService
+    public class NotificationService(ILogger<NotificationService> logger, IUnitOfWork unitOfWork) : INotificationService
     {
+        private readonly ILogger<NotificationService> _logger = logger;
         public async Task<ApiResponse<NotificationDetailDto>> GetNotificationDetailForUserAsync(
             Guid userId,
             Guid notificationId,
@@ -16,7 +12,7 @@ namespace Verendar.Notification.Application.Services.Implements
         {
             var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
             if (notification == null)
-                return ApiResponse<NotificationDetailDto>.FailureResponse("Không tìm thấy thông báo.");
+                return ApiResponse<NotificationDetailDto>.NotFoundResponse("Không tìm thấy thông báo.");
 
             var hasInApp = await unitOfWork.NotificationDeliveries.FindOneAsync(d =>
                 d.NotificationId == notificationId && d.Channel == NotificationChannel.InApp) != null;
@@ -41,8 +37,9 @@ namespace Verendar.Notification.Application.Services.Implements
                 return ApiResponse<List<NotificationListItemDto>>.SuccessPagedResponse(
                     dtos, totalCount, request.PageNumber, request.PageSize);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error getting in-app notifications for user {UserId}", userId);
                 return ApiResponse<List<NotificationListItemDto>>.FailureResponse("Lỗi khi lấy danh sách thông báo.");
             }
         }
@@ -70,7 +67,7 @@ namespace Verendar.Notification.Application.Services.Implements
         {
             var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
             if (notification == null)
-                return ApiResponse<bool>.FailureResponse("Không tìm thấy thông báo.");
+                return ApiResponse<bool>.NotFoundResponse("Không tìm thấy thông báo.");
 
             if (notification.IsRead)
                 return ApiResponse<bool>.SuccessResponse(true, "Thông báo đã được đánh dấu đọc trước đó.");
@@ -86,13 +83,34 @@ namespace Verendar.Notification.Application.Services.Implements
         {
             var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
             if (notification == null)
-                return ApiResponse<bool>.FailureResponse("Không tìm thấy thông báo.");
+                return ApiResponse<bool>.NotFoundResponse("Không tìm thấy thông báo.");
 
             notification.DeletedAt = DateTime.UtcNow;
             notification.DeletedBy = userId;
             await unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return ApiResponse<bool>.SuccessResponse(true, "Đã xóa thông báo.");
+        }
+
+        public async Task MarkInAppDeliveredAsync(Guid notificationId, Guid userId, IReadOnlyDictionary<string, object?> metadata, CancellationToken cancellationToken = default)
+        {
+            var notification = await unitOfWork.Notifications.FindOneAsync(n => n.Id == notificationId && n.UserId == userId);
+            if (notification != null)
+            {
+                notification.MetadataJson = JsonSerializer.Serialize(metadata);
+                await unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
+            }
+
+            var delivery = await unitOfWork.NotificationDeliveries.FindOneAsync(d =>
+                d.NotificationId == notificationId && d.Channel == NotificationChannel.InApp);
+            if (delivery != null)
+            {
+                delivery.Status = NotificationStatus.Sent;
+                delivery.SentAt = delivery.DeliveredAt = DateTime.UtcNow;
+                await unitOfWork.NotificationDeliveries.UpdateAsync(delivery.Id, delivery);
+            }
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }
 }

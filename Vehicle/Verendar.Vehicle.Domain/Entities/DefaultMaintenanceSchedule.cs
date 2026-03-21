@@ -1,6 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Vehicle.Domain.Entities
 {
     public class DefaultMaintenanceSchedule : BaseEntity
@@ -19,7 +16,7 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        public VehicleModel VehicleModel { get; set; } = null!;
+        public Model VehicleModel { get; set; } = null!;
         public PartCategory PartCategory { get; set; } = null!;
     }
 }
