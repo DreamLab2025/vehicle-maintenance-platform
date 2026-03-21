@@ -1,5 +1,10 @@
 namespace Verendar.Vehicle.Application.Dtos
 {
+    public class BrandFilterRequest : PaginationRequest
+    {
+        public Guid? TypeId { get; set; }
+    }
+
     public class BrandRequest
     {
         public Guid VehicleTypeId { get; set; }

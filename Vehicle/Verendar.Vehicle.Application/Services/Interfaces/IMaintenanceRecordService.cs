@@ -1,12 +1,9 @@
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Services.Interfaces
 {
     public interface IMaintenanceRecordService
     {
-        Task<ApiResponse<CreateMaintenanceRecordResponse>> CreateMaintenanceRecordAsync(Guid userId, Guid vehicleId, CreateMaintenanceRecordRequest request);
-        Task<ApiResponse<IReadOnlyList<MaintenanceRecordSummaryDto>>> GetMaintenanceHistoryAsync(Guid userId, Guid userVehicleId);
-        Task<ApiResponse<MaintenanceRecordDetailDto>> GetMaintenanceRecordDetailAsync(Guid userId, Guid maintenanceRecordId);
+        Task<ApiResponse<CreateRecordResponse>> CreateMaintenanceRecordAsync(Guid userId, Guid vehicleId, CreateRecordRequest request);
+        Task<ApiResponse<IReadOnlyList<RecordSummaryDto>>> GetMaintenanceHistoryAsync(Guid userId, Guid userVehicleId);
+        Task<ApiResponse<RecordDetailDto>> GetMaintenanceRecordDetailAsync(Guid userId, Guid maintenanceRecordId);
     }
 }

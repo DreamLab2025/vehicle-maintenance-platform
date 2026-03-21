@@ -1,9 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Verendar.Ai.Domain.Enums;
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Ai.Domain.Entities
 {
     [Index(nameof(UserId), nameof(CreatedAt))]

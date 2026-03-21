@@ -1,6 +1,6 @@
 namespace Verendar.Vehicle.Application.Dtos
 {
-    public class DefaultMaintenanceScheduleResponse
+    public class DefaultScheduleResponse
     {
         public int InitialKm { get; set; }
         public int KmInterval { get; set; }

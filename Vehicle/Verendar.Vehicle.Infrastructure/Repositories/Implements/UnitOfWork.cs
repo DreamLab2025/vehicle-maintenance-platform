@@ -1,28 +1,27 @@
 using Verendar.Common.Databases.UnitOfWork;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
-using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
     public class UnitOfWork(VehicleDbContext context) : BaseUnitOfWork<VehicleDbContext>(context), IUnitOfWork
     {
         // Vehicle Catalog
-        private IVehicleTypeRepository? _vehicleTypes;
-        private IVehicleBrandRepository? _vehicleBrands;
-        private IVehicleModelRepository? _vehicleModels;
-        private IVehicleVariantRepository? _vehicleVariants;
+        private ITypeRepository? _types;
+        private IBrandRepository? _brands;
+        private IModelRepository? _models;
+        private IVariantRepository? _variants;
 
         // Part Catalog
         private IPartCategoryRepository? _partCategories;
         private IPartProductRepository? _partProducts;
 
         // Maintenance Schedule
-        private IDefaultMaintenanceScheduleRepository? _defaultMaintenanceSchedules;
+        private IDefaultScheduleRepository? _defaultSchedules;
 
         // User Vehicle & Tracking
         private IUserVehicleRepository? _userVehicles;
         private IOdometerHistoryRepository? _odometerHistories;
-        private IVehiclePartTrackingRepository? _vehiclePartTrackings;
+        private IPartTrackingRepository? _partTrackings;
         private IMaintenanceReminderRepository? _maintenanceReminders;
 
         // Maintenance History
@@ -30,17 +29,17 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         private IMaintenanceRecordItemRepository? _maintenanceRecordItems;
 
         // Vehicle Catalog
-        public IVehicleTypeRepository VehicleTypes =>
-            _vehicleTypes ??= new VehicleTypeRepository(Context);
+        public ITypeRepository Types =>
+            _types ??= new TypeRepository(Context);
 
-        public IVehicleBrandRepository VehicleBrands =>
-            _vehicleBrands ??= new VehicleBrandRepository(Context);
+        public IBrandRepository Brands =>
+            _brands ??= new BrandRepository(Context);
 
-        public IVehicleModelRepository VehicleModels =>
-            _vehicleModels ??= new VehicleModelRepository(Context);
+        public IModelRepository Models =>
+            _models ??= new ModelRepository(Context);
 
-        public IVehicleVariantRepository VehicleVariants =>
-            _vehicleVariants ??= new VehicleVariantRepository(Context);
+        public IVariantRepository Variants =>
+            _variants ??= new VariantRepository(Context);
 
         // Part Catalog
         public IPartCategoryRepository PartCategories =>
@@ -50,8 +49,8 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
             _partProducts ??= new PartProductRepository(Context);
 
         // Maintenance Schedule
-        public IDefaultMaintenanceScheduleRepository DefaultMaintenanceSchedules =>
-            _defaultMaintenanceSchedules ??= new DefaultMaintenanceScheduleRepository(Context);
+        public IDefaultScheduleRepository DefaultSchedules =>
+            _defaultSchedules ??= new DefaultScheduleRepository(Context);
 
         // User Vehicle & Tracking
         public IUserVehicleRepository UserVehicles =>
@@ -60,8 +59,8 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         public IOdometerHistoryRepository OdometerHistories =>
             _odometerHistories ??= new OdometerHistoryRepository(Context);
 
-        public IVehiclePartTrackingRepository VehiclePartTrackings =>
-            _vehiclePartTrackings ??= new VehiclePartTrackingRepository(Context);
+        public IPartTrackingRepository PartTrackings =>
+            _partTrackings ??= new PartTrackingRepository(Context);
 
         public IMaintenanceReminderRepository MaintenanceReminders =>
             _maintenanceReminders ??= new MaintenanceReminderRepository(Context);

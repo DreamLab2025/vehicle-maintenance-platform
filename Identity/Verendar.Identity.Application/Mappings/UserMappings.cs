@@ -1,7 +1,5 @@
 using Verendar.Common.Databases.Base;
-using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Helpers;
-using Verendar.Identity.Domain.Entities;
 
 namespace Verendar.Identity.Application.Mappings
 {

@@ -1,13 +1,11 @@
 using FluentValidation;
 using Verendar.Common.Bootstrapping;
-using Verendar.Common.Shared;
 using Verendar.Identity.Apis;
 using Verendar.Identity.Application.Validators;
 using Verendar.Identity.Infrastructure.Data;
 using Verendar.Identity.Infrastructure.Repositories.Implements;
 using Verendar.Identity.Infrastructure.Services;
 using Verendar.Identity.Domain.Repositories.Interfaces;
-using Verendar.Identity.Application.Services.Interfaces;
 using Verendar.ServiceDefaults;
 
 namespace Verendar.Identity.Bootstrapping

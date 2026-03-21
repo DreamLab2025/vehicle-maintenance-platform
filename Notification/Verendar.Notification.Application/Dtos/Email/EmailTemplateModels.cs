@@ -84,19 +84,4 @@ namespace Verendar.Notification.Application.Dtos.Email
         public int DaysSinceUpdate { get; set; }
     }
 
-    // Order confirmation email model (example for future use)
-    public class OrderConfirmationEmailModel : EmailTemplateModel
-    {
-        public string OrderNumber { get; set; } = string.Empty;
-        public decimal TotalAmount { get; set; }
-        public DateTime OrderDate { get; set; }
-        public List<OrderItem> Items { get; set; } = new();
-    }
-
-    public class OrderItem
-    {
-        public string Name { get; set; } = string.Empty;
-        public int Quantity { get; set; }
-        public decimal Price { get; set; }
-    }
 }

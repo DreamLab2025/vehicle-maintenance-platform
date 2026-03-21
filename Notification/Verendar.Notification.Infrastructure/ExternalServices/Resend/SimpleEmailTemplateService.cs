@@ -247,14 +247,36 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
 
         private string GetTemplatePath(string templateKey)
         {
+            var fileName = $"{templateKey}.html";
             var templateDirectory = GetTemplateDirectory();
-            return Path.Combine(templateDirectory, $"{templateKey}.html");
+            var primaryPath = Path.Combine(templateDirectory, fileName);
+
+            if (File.Exists(primaryPath))
+            {
+                return primaryPath;
+            }
+
+            var fallbackDirectory = GetFallbackTemplateDirectory();
+            return Path.Combine(fallbackDirectory, fileName);
         }
 
         private string GetTemplateDirectory()
         {
             var basePath = _environment.ContentRootPath ?? AppDomain.CurrentDomain.BaseDirectory;
             return Path.Combine(basePath, _options.TemplateBasePath);
+        }
+
+        private string GetFallbackTemplateDirectory()
+        {
+            var basePath = _environment.ContentRootPath ?? AppDomain.CurrentDomain.BaseDirectory;
+            return Path.GetFullPath(Path.Combine(
+                basePath,
+                "..",
+                "Verendar.Notification.Infrastructure",
+                "ExternalServices",
+                "Resend",
+                "Templates",
+                "Email"));
         }
     }
 }

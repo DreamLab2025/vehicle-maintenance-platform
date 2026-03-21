@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using Verendar.Common.Jwt;
 using Verendar.Common.Middlewares;
 using Verendar.Common.Shared;
 using Verendar.ServiceDefaults;
@@ -195,6 +196,7 @@ namespace Verendar.Common.Bootstrapping
             });
 
             builder.AddJwtAuthentication();
+            builder.Services.AddSingleton<IServiceTokenProvider, ServiceTokenProvider>();
             builder.AddDefaultSwagger();
 
             return builder;

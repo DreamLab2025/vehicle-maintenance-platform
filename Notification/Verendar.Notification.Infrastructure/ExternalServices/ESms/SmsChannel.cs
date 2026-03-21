@@ -1,6 +1,5 @@
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Services.Interfaces;
-using Verendar.Notification.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Verendar.Notification.Infrastructure.ExternalServices.ESms

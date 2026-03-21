@@ -1,8 +1,6 @@
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Services.Interfaces;
 using Microsoft.Extensions.Logging;
-using Verendar.Notification.Domain.Enums;
-
 namespace Verendar.Notification.Infrastructure.ExternalServices.ESms
 {
     public class ZaloChannel(IESmsService esmsService, ILogger<ZaloChannel> logger) : INotificationChannel

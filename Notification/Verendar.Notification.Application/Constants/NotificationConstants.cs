@@ -1,3 +1,5 @@
+using Verendar.Vehicle.Contracts.Enums;
+
 namespace Verendar.Notification.Application.Constants
 {
     public static class NotificationConstants
@@ -5,6 +7,7 @@ namespace Verendar.Notification.Application.Constants
         public static class TemplateKeys
         {
             public const string Otp = "Otp";
+            public const string Welcome = "Welcome";
             public const string OdometerReminder = "OdometerReminder";
             public const string MaintenanceReminder = "MaintenanceReminder";
         }
@@ -17,23 +20,21 @@ namespace Verendar.Notification.Application.Constants
             public const string Low = "Thấp";
             public const string Normal = "Bình thường";
 
-            public static string GetLabel(string? levelName)
+            public static string GetLabel(ReminderLevel level) => level switch
             {
-                return levelName switch
-                {
-                    "Critical" => Critical,
-                    "High" => High,
-                    "Medium" => Medium,
-                    "Low" => Low,
-                    "Normal" => Normal,
-                    _ => levelName ?? string.Empty
-                };
-            }
+                ReminderLevel.Critical => Critical,
+                ReminderLevel.High => High,
+                ReminderLevel.Medium => Medium,
+                ReminderLevel.Low => Low,
+                ReminderLevel.Normal => Normal,
+                _ => level.ToString()
+            };
         }
 
         public static class Titles
         {
             public const string Otp = "Mã xác thực OTP";
+            public const string Welcome = "Chào mừng đến với Verendar!";
             public const string OdometerReminder = "Nhắc nhở cập nhật số km";
             public static readonly string MaintenanceCriticalPart = $"{MaintenanceLevelLabels.Critical}: Cần thay";
             public static readonly string MaintenanceCritical = $"{MaintenanceLevelLabels.Critical}: Cần thay linh kiện";

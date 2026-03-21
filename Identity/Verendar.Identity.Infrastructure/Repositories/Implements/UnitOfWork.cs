@@ -1,6 +1,5 @@
 using Verendar.Common.Databases.UnitOfWork;
 using Verendar.Identity.Domain.Repositories.Interfaces;
-using Verendar.Identity.Infrastructure.Data;
 
 namespace Verendar.Identity.Infrastructure.Repositories.Implements
 {

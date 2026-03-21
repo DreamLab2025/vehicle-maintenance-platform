@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Verendar.Common.Databases.Base;
 
 namespace Verendar.Vehicle.Domain.Entities
 {
@@ -33,7 +31,7 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public PartCategory Category { get; set; } = null!;
 
-        public List<VehiclePartTracking> PartTrackings { get; set; } = [];
+        public List<PartTracking> PartTrackings { get; set; } = [];
         public List<MaintenanceRecordItem> MaintenanceItems { get; set; } = [];
     }
 }

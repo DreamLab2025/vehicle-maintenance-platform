@@ -1,10 +1,8 @@
-using Microsoft.EntityFrameworkCore;
 using Verendar.Common.Databases.Base;
-using Verendar.Notification.Domain.Entities;
-
+using Verendar.Common.Jwt;
 namespace Verendar.Notification.Infrastructure.Data
 {
-    public class NotificationDbContext(DbContextOptions<NotificationDbContext> options) : BaseDbContext(options)
+    public class NotificationDbContext(DbContextOptions<NotificationDbContext> options, ICurrentUserService? currentUserService = null) : BaseDbContext(options, currentUserService)
     {
         public DbSet<Domain.Entities.Notification> Notifications { get; set; } = null!;
         public DbSet<NotificationDelivery> NotificationDeliveries { get; set; } = null!;

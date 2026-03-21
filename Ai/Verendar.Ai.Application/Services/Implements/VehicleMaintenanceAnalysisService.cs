@@ -1,13 +1,10 @@
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
-using Verendar.Ai.Application.Helpers;
+using Verendar.Ai.Application.Prompts;
 using Verendar.Ai.Application.Mappings;
 using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Domain.Enums;
-using Verendar.Common.Shared;
-
 namespace Verendar.Ai.Application.Services.Implements
 {
     public class VehicleMaintenanceAnalysisService(
@@ -60,7 +57,7 @@ namespace Verendar.Ai.Application.Services.Implements
 
                 var prompt = PromptGenerator.CreateVehicleMaintenancePrompt(vehicleInfo, defaultSchedule, request.Answers);
 
-                _logger.LogInformation("Generated prompt: {Prompt}", prompt);
+                _logger.LogDebug("Generated prompt: {Prompt}", prompt);
 
                 var aiResponse = await _aiService.GenerateContentAsync(
                     prompt,
@@ -71,9 +68,9 @@ namespace Verendar.Ai.Application.Services.Implements
 
                 if (!aiResponse.IsSuccess || aiResponse.Data == null)
                 {
-                    _logger.LogError("AI service failed: {Content}", aiResponse.Data?.Content);
+                    _logger.LogError("AI service failed: {Message}", aiResponse.Message);
                     return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
-                        aiResponse.Data?.Content ?? "Không thể phân tích dữ liệu");
+                        aiResponse.Message ?? "Không thể phân tích dữ liệu");
                 }
 
                 var content = aiResponse.Data.Content;

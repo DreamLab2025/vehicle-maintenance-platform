@@ -1,6 +1,3 @@
-using Verendar.Notification.Application.Dtos.Notifications;
-using Verendar.Notification.Domain.Enums;
-
 namespace Verendar.Notification.Application.Services.Interfaces
 {
     public interface INotificationChannel

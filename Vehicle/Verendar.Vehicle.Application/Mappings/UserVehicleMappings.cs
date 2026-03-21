@@ -1,6 +1,4 @@
 using Verendar.Common.Databases.Base;
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Domain.Entities;
 using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Application.Mappings
@@ -28,7 +26,7 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 UserId = entity.UserId,
-                UserVehicleVariant = entity.Variant!.ToUserVehicleVariantResponse(),
+                UserVehicleVariant = entity.Variant!.ToUserVariantResponse(),
                 LicensePlate = entity.LicensePlate,
                 VinNumber = entity.VIN,
                 PurchaseDate = entity.PurchaseDate?.ToDateTime(TimeOnly.MinValue),
@@ -51,7 +49,7 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 UserId = entity.UserId,
-                UserVehicleVariant = entity.Variant!.ToUserVehicleVariantResponse(),
+                UserVehicleVariant = entity.Variant!.ToUserVariantResponse(),
                 LicensePlate = entity.LicensePlate,
                 VinNumber = entity.VIN,
                 PurchaseDate = entity.PurchaseDate?.ToDateTime(TimeOnly.MinValue),
@@ -68,9 +66,9 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static UserVehiclePartSummary ToUserVehiclePartSummary(this VehiclePartTracking entity)
+        public static PartSummary ToPartSummary(this PartTracking entity)
         {
-            return new UserVehiclePartSummary
+            return new PartSummary
             {
                 Id = entity.Id,
                 PartCategoryId = entity.PartCategoryId,
@@ -82,9 +80,9 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static VehiclePartTrackingSummary ToSummary(this VehiclePartTracking entity, int? vehicleCurrentOdometer = null)
+        public static PartTrackingSummary ToSummary(this PartTracking entity, int? vehicleCurrentOdometer = null)
         {
-            return new VehiclePartTrackingSummary
+            return new PartTrackingSummary
             {
                 Id = entity.Id,
                 PartCategoryId = entity.PartCategoryId,
@@ -104,10 +102,10 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static MaintenanceReminderSummary ToSummary(this MaintenanceReminder entity, int? vehicleCurrentOdometer = null)
+        public static ReminderSummary ToSummary(this MaintenanceReminder entity, int? vehicleCurrentOdometer = null)
         {
             var currentOdo = vehicleCurrentOdometer ?? entity.CurrentOdometer;
-            return new MaintenanceReminderSummary
+            return new ReminderSummary
             {
                 Id = entity.Id,
                 Level = entity.Level.ToString(),
@@ -149,9 +147,9 @@ namespace Verendar.Vehicle.Application.Mappings
             }
         }
 
-        public static VehicleStreakResponse ToStreakResponse(this int streak, Guid userVehicleId)
+        public static StreakResponse ToStreakResponse(this int streak, Guid userVehicleId)
         {
-            return new VehicleStreakResponse
+            return new StreakResponse
             {
                 VehicleId = userVehicleId,
                 CurrentStreak = streak,
@@ -169,9 +167,9 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static VehiclePartTracking ToInitializePartTracking(this Guid userVehicleId, Guid partCategoryId)
+        public static PartTracking ToInitializePartTracking(this Guid userVehicleId, Guid partCategoryId)
         {
-            return new VehiclePartTracking
+            return new PartTracking
             {
                 UserVehicleId = userVehicleId,
                 PartCategoryId = partCategoryId,
@@ -180,9 +178,9 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static VehiclePartTracking ToPartTracking(this Guid userVehicleId, Guid partCategoryId, ApplyTrackingConfigRequest request)
+        public static PartTracking ToPartTracking(this Guid userVehicleId, Guid partCategoryId, ApplyTrackingConfigRequest request)
         {
-            return new VehiclePartTracking
+            return new PartTracking
             {
                 UserVehicleId = userVehicleId,
                 PartCategoryId = partCategoryId,
@@ -196,7 +194,7 @@ namespace Verendar.Vehicle.Application.Mappings
         }
 
 
-        public static void ApplyTrackingConfig(this VehiclePartTracking entity, ApplyTrackingConfigRequest request)
+        public static void ApplyTrackingConfig(this PartTracking entity, ApplyTrackingConfigRequest request)
         {
             entity.LastReplacementOdometer = request.LastReplacementOdometer;
             entity.LastReplacementDate = request.LastReplacementDate;
@@ -229,10 +227,10 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static ReminderWithPartCategoryDto ToReminderWithPartCategoryDto(this MaintenanceReminder entity, int? vehicleCurrentOdometer = null)
+        public static ReminderDetailDto ToReminderDetailDto(this MaintenanceReminder entity, int? vehicleCurrentOdometer = null)
         {
             var currentOdo = vehicleCurrentOdometer ?? entity.CurrentOdometer;
-            return new ReminderWithPartCategoryDto
+            return new ReminderDetailDto
             {
                 Id = entity.Id,
                 VehiclePartTrackingId = entity.VehiclePartTrackingId,
@@ -247,13 +245,13 @@ namespace Verendar.Vehicle.Application.Mappings
                 IsDismissed = entity.IsDismissed,
                 DismissedDate = entity.DismissedDate,
                 IsCurrent = entity.IsCurrent,
-                PartCategory = entity.PartTracking?.PartCategory?.ToPartCategoryInfoDto() ?? new PartCategoryInfoDto()
+                PartCategory = entity.PartTracking?.PartCategory?.ToCategoryInfoDto() ?? new CategoryInfoDto()
             };
         }
 
-        public static PartCategoryInfoDto ToPartCategoryInfoDto(this PartCategory entity)
+        public static CategoryInfoDto ToCategoryInfoDto(this PartCategory entity)
         {
-            return new PartCategoryInfoDto
+            return new CategoryInfoDto
             {
                 Id = entity.Id,
                 Name = entity.Name,

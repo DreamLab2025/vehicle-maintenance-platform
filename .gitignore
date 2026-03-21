@@ -364,7 +364,29 @@ FodyWeavers.xsd
 
 # dotenv environment variable files
 .env
+.env.local
+.env.*.local
 
-!vicobi.user/
+# Local appsettings overrides (may contain secrets)
+appsettings.Local.json
+appsettings.Secret.json
+
+# JetBrains Rider
+.idea/
+
+# .NET Aspire local runtime data
+.aspire/
+
+# Claude Code — local settings only (commands + skills are committed)
+.claude/settings.local.json
+.claude/worktrees/
+.claude/plans/
+
+# Hangfire local SQLite (if used in dev)
+hangfire.db
+hangfire.db-shm
+hangfire.db-wal
 
 .vscode
+
+docs/*

@@ -1,9 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Verendar.Common.Databases.Base;
-using Verendar.Notification.Domain.Enums;
-
 namespace Verendar.Notification.Domain.Entities
 {
     [Index(nameof(Code), IsUnique = true)]

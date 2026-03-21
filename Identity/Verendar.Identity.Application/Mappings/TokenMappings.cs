@@ -1,6 +1,3 @@
-using Verendar.Identity.Application.Dtos;
-using Verendar.Identity.Domain.Entities;
-
 namespace Verendar.Identity.Application.Mappings
 {
     public static class TokenMappings

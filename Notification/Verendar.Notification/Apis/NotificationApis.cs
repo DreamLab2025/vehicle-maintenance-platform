@@ -1,8 +1,3 @@
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Notification.Application.Dtos.Notifications;
-using Verendar.Notification.Application.Services.Interfaces;
-
 namespace Verendar.Notification.Apis
 {
     public static class NotificationApis
@@ -51,7 +46,7 @@ namespace Verendar.Notification.Apis
                     return operation;
                 })
                 .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
-                .Produces(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/{id:guid}", GetNotificationDetailForUser)
@@ -62,7 +57,7 @@ namespace Verendar.Notification.Apis
                     return operation;
                 })
                 .Produces<ApiResponse<NotificationDetailDto>>(StatusCodes.Status200OK)
-                .Produces(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<NotificationDetailDto>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapDelete("/{id:guid}", SoftDeleteNotificationById)
@@ -73,7 +68,7 @@ namespace Verendar.Notification.Apis
                     return operation;
                 })
                 .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
-                .Produces(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return builder;
@@ -90,7 +85,7 @@ namespace Verendar.Notification.Apis
                 return Results.Unauthorized();
 
             var response = await notificationService.GetInAppNotificationsForUserAsync(userId, request, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.BadRequest(response);
+            return response.ToHttpResult();
         }
 
         private static async Task<IResult> GetNotificationDetailForUser(
@@ -104,7 +99,7 @@ namespace Verendar.Notification.Apis
                 return Results.Unauthorized();
 
             var response = await notificationService.GetNotificationDetailForUserAsync(userId, id, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.NotFound(response);
+            return response.ToHttpResult();
         }
 
         private static async Task<IResult> GetNotificationStatus(
@@ -117,7 +112,7 @@ namespace Verendar.Notification.Apis
                 return Results.Unauthorized();
 
             var response = await notificationService.GetStatusAsync(userId, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.BadRequest(response);
+            return response.ToHttpResult();
         }
 
         private static async Task<IResult> MarkAllNotificationsAsRead(
@@ -130,7 +125,7 @@ namespace Verendar.Notification.Apis
                 return Results.Unauthorized();
 
             var response = await notificationService.MarkAllAsReadAsync(userId, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.BadRequest(response);
+            return response.ToHttpResult();
         }
 
         private static async Task<IResult> MarkOneNotificationAsRead(
@@ -144,7 +139,7 @@ namespace Verendar.Notification.Apis
                 return Results.Unauthorized();
 
             var response = await notificationService.MarkAsReadAsync(userId, id, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.NotFound(response);
+            return response.ToHttpResult();
         }
 
         private static async Task<IResult> SoftDeleteNotificationById(
@@ -158,7 +153,7 @@ namespace Verendar.Notification.Apis
                 return Results.Unauthorized();
 
             var response = await notificationService.SoftDeleteByIdAsync(userId, id, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.NotFound(response);
+            return response.ToHttpResult();
         }
     }
 }

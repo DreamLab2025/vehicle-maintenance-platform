@@ -3,12 +3,11 @@ using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Verendar.Common.Bootstrapping;
-using Verendar.Common.Shared;
+using Verendar.Common.Http;
 using Verendar.ServiceDefaults;
 using Verendar.Vehicle.Application.Validators;
 using Verendar.Vehicle.Apis;
 using Verendar.Vehicle.Application.Services.Implements;
-using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Application.Clients;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 using Verendar.Vehicle.Infrastructure.Data;
@@ -38,6 +37,8 @@ namespace Verendar.Vehicle.Bootstrapping
 
             builder.Services.AddHangfireServer();
 
+            builder.Services.AddScoped<ForwardAuthorizationHandler>();
+
             builder.Services.AddHttpClient<IIdentityServiceClient, IdentityServiceClient>(client =>
             {
                 var baseUrl = builder.Configuration["Identity:BaseUrl"]
@@ -45,7 +46,8 @@ namespace Verendar.Vehicle.Bootstrapping
                     ?? "https://localhost:8001";
                 client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
                 client.Timeout = TimeSpan.FromSeconds(10);
-            });
+            })
+            .AddHttpMessageHandler<ForwardAuthorizationHandler>();
 
             builder.Services.AddScoped<OdometerReminderJob>();
             builder.Services.AddScoped<MaintenanceReminderJob>();
@@ -54,13 +56,15 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Register Services
-            builder.Services.AddScoped<IVehicleTypeService, VehicleTypeService>();
-            builder.Services.AddScoped<IVehicleBrandService, VehicleBrandService>();
-            builder.Services.AddScoped<IVehicleModelService, VehicleModelService>();
-            builder.Services.AddScoped<IVehicleVariantService, VehicleVariantService>();
+            builder.Services.AddScoped<ITypeService, TypeService>();
+            builder.Services.AddScoped<IBrandService, BrandService>();
+            builder.Services.AddScoped<IModelService, ModelService>();
+            builder.Services.AddScoped<IVariantService, VariantService>();
             builder.Services.AddScoped<IUserVehicleService, UserVehicleService>();
             builder.Services.AddScoped<IMaintenanceReminderService, MaintenanceReminderService>();
-            builder.Services.AddScoped<IDefaultMaintenanceScheduleService, DefaultMaintenanceScheduleService>();
+            builder.Services.AddScoped<IOdometerHistoryService, OdometerHistoryService>();
+            builder.Services.AddScoped<IPartTrackingService, PartTrackingService>();
+            builder.Services.AddScoped<IDefaultScheduleService, DefaultScheduleService>();
             builder.Services.AddScoped<IPartCategoryService, PartCategoryService>();
             builder.Services.AddScoped<IPartProductService, PartProductService>();
             builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
@@ -77,10 +81,13 @@ namespace Verendar.Vehicle.Bootstrapping
 
             app.UseCommonService();
 
-            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            if (app.Environment.IsDevelopment())
             {
-                Authorization = Array.Empty<IDashboardAuthorizationFilter>()
-            });
+                app.UseHangfireDashboard("/hangfire", new DashboardOptions
+                {
+                    Authorization = Array.Empty<IDashboardAuthorizationFilter>()
+                });
+            }
 
             RecurringJob.AddOrUpdate<OdometerReminderJob>(
                 "odometer-reminder",
@@ -106,8 +113,10 @@ namespace Verendar.Vehicle.Bootstrapping
             app.MapUserVehicleApi();
             app.MapOdometerHistoryApi();
             app.MapDefaultMaintenanceScheduleApi();
-            app.MapPartApi();
             app.MapMaintenanceRecordApi();
+            app.MapPartCategoryApi();
+            app.MapPartProductApi();
+            app.MapInternalVehicleApi();
 
             return app;
         }

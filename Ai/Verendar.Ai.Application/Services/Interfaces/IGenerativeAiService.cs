@@ -1,7 +1,4 @@
-using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Domain.Enums;
-using Verendar.Common.Shared;
-
 namespace Verendar.Ai.Application.Services.Interfaces
 {
     public interface IGenerativeAiService

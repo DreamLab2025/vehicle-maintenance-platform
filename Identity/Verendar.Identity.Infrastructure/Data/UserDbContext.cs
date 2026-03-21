@@ -1,11 +1,10 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Verendar.Common.Databases.Base;
-using Verendar.Identity.Domain.Entities;
+using Verendar.Common.Jwt;
 
 namespace Verendar.Identity.Infrastructure.Data
 {
-    public class UserDbContext(DbContextOptions<UserDbContext> options) : BaseDbContext(options)
+    public class UserDbContext(DbContextOptions<UserDbContext> options, ICurrentUserService? currentUserService = null) : BaseDbContext(options, currentUserService)
     {
         public DbSet<User> Users { get; set; } = null!;
 

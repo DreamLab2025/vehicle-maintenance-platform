@@ -1,11 +1,11 @@
 using MassTransit;
-using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Application.Clients;
 using Verendar.Vehicle.Contracts.Events;
 using Verendar.Vehicle.Domain.Enums;
-using Verendar.Vehicle.Domain.Repositories.Interfaces;
+using ContractsLevel = Verendar.Vehicle.Contracts.Enums.ReminderLevel;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
@@ -19,6 +19,133 @@ namespace Verendar.Vehicle.Application.Services.Implements
         private readonly IIdentityServiceClient _identityClient = identityClient;
         private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
         private readonly ILogger<MaintenanceReminderService> _logger = logger;
+
+        public async Task<ApiResponse<List<ReminderDetailDto>>> GetRemindersAsync(Guid userId, Guid userVehicleId)
+        {
+            try
+            {
+                var vehicle = await _unitOfWork.UserVehicles
+                    .FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
+
+                if (vehicle == null)
+                    return ApiResponse<List<ReminderDetailDto>>.NotFoundResponse("Không tìm thấy xe");
+
+                var reminders = (await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(userVehicleId))
+                    .Where(r => r.IsCurrent)
+                    .GroupBy(r => r.PartTracking?.PartCategoryId ?? Guid.Empty)
+                    .Where(g => g.Key != Guid.Empty)
+                    .Select(g => g.OrderByDescending(r => r.CreatedAt).First())
+                    .ToList();
+                var dtos = reminders.Select(r => r.ToReminderDetailDto(vehicle.CurrentOdometer)).ToList();
+
+                return ApiResponse<List<ReminderDetailDto>>.SuccessResponse(
+                    dtos,
+                    "Lấy danh sách nhắc bảo trì thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting reminders for user vehicle {UserVehicleId}", userVehicleId);
+                return ApiResponse<List<ReminderDetailDto>>.FailureResponse("Lỗi khi lấy danh sách nhắc bảo trì");
+            }
+        }
+
+        public async Task SyncRemindersAsync(Guid vehicleId, int currentOdometer, Guid userId)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var kmPerDay = await GetKmPerDayFromLast3MonthsAsync(vehicleId);
+
+            if (kmPerDay is null)
+            {
+                var vehicle = await _unitOfWork.UserVehicles.FindOneAsync(v => v.Id == vehicleId);
+                if (vehicle?.AverageKmPerDay is > 0)
+                    kmPerDay = vehicle.AverageKmPerDay.Value;
+            }
+
+            var trackings = await _unitOfWork.PartTrackings.AsQueryable()
+                .Where(t => t.UserVehicleId == vehicleId && t.IsDeclared &&
+                    (t.PredictedNextOdometer != null || t.PredictedNextDate != null))
+                .ToListAsync();
+
+            var trackingIds = trackings.Select(t => t.Id).ToList();
+
+            var allReminders = await _unitOfWork.MaintenanceReminders.AsQueryable()
+                .Where(r => trackingIds.Contains(r.VehiclePartTrackingId))
+                .ToListAsync();
+
+            var currentRemindersByTracking = allReminders
+                .Where(r => r.IsCurrent)
+                .ToDictionary(r => r.VehiclePartTrackingId);
+
+            var allRemindersByTracking = allReminders
+                .GroupBy(r => r.VehiclePartTrackingId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var tracking in trackings)
+            {
+                var (percentageRemaining, targetDate) = ComputeReminderData(tracking, currentOdometer, today, kmPerDay);
+                if (percentageRemaining is null)
+                    continue;
+
+                var targetOdometer = tracking.PredictedNextOdometer ?? currentOdometer;
+                var level = GetLevelFromPercentage(percentageRemaining.Value);
+
+                if (currentOdometer >= targetOdometer || (targetDate.HasValue && today >= targetDate.Value))
+                    level = ReminderLevel.Critical;
+
+                currentRemindersByTracking.TryGetValue(tracking.Id, out var currentReminder);
+
+                var stateChanged = currentReminder != null && (
+                    currentReminder.Level != level ||
+                    currentReminder.TargetOdometer != targetOdometer ||
+                    currentReminder.TargetDate != targetDate);
+
+                if (currentReminder != null && stateChanged)
+                {
+                    currentReminder.IsCurrent = false;
+
+                    var reminder = new MaintenanceReminder
+                    {
+                        VehiclePartTrackingId = tracking.Id,
+                        CurrentOdometer = currentOdometer,
+                        TargetOdometer = targetOdometer,
+                        TargetDate = targetDate,
+                        Level = level,
+                        PercentageRemaining = percentageRemaining.Value,
+                        IsCurrent = true,
+                    };
+                    await _unitOfWork.MaintenanceReminders.AddAsync(reminder);
+                }
+                else if (currentReminder != null)
+                {
+                    currentReminder.CurrentOdometer = currentOdometer;
+                    currentReminder.PercentageRemaining = percentageRemaining.Value;
+                }
+                else
+                {
+                    if (allRemindersByTracking.TryGetValue(tracking.Id, out var otherReminders))
+                    {
+                        foreach (var r in otherReminders)
+                        {
+                            r.IsCurrent = false;
+                        }
+                    }
+
+                    var reminder = new MaintenanceReminder
+                    {
+                        VehiclePartTrackingId = tracking.Id,
+                        CurrentOdometer = currentOdometer,
+                        TargetOdometer = targetOdometer,
+                        TargetDate = targetDate,
+                        Level = level,
+                        PercentageRemaining = percentageRemaining.Value,
+                        IsCurrent = true,
+                    };
+                    await _unitOfWork.MaintenanceReminders.AddAsync(reminder);
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+        }
 
         public async Task PublishMaintenanceReminderIfNeededAsync(Guid vehicleId, Guid userId, CancellationToken cancellationToken = default)
         {
@@ -72,8 +199,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                             UserId = userId,
                             TargetValue = email,
                             UserName = null,
-                            Level = (int)level,
-                            LevelName = level.ToString(),
+                            Level = (ContractsLevel)(int)level,
                             Items = items
                         }, cancellationToken);
 
@@ -98,6 +224,88 @@ namespace Verendar.Vehicle.Application.Services.Implements
             {
                 _logger.LogError(ex, "Error in PublishMaintenanceReminderIfNeededAsync for vehicle {VehicleId}", vehicleId);
             }
+        }
+
+        private async Task<decimal?> GetKmPerDayFromLast3MonthsAsync(Guid vehicleId)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var fromDate = today.AddMonths(-3);
+
+            var history = await _unitOfWork.OdometerHistories.AsQueryable()
+                .Where(h => h.UserVehicleId == vehicleId && h.RecordedDate >= fromDate)
+                .OrderBy(h => h.RecordedDate)
+                .Select(h => new { h.RecordedDate, h.OdometerValue })
+                .ToListAsync();
+
+            if (history.Count < 2)
+                return null;
+
+            var first = history.First();
+            var last = history.Last();
+            var totalKm = last.OdometerValue - first.OdometerValue;
+            var totalDays = last.RecordedDate.DayNumber - first.RecordedDate.DayNumber;
+
+            if (totalDays <= 0 || totalKm < 0)
+                return null;
+
+            return Math.Round((decimal)totalKm / totalDays, 2);
+        }
+
+        private static ReminderLevel GetLevelFromPercentage(decimal percentageRemaining)
+        {
+            if (percentageRemaining > 40) return ReminderLevel.Normal;
+            if (percentageRemaining > 25) return ReminderLevel.Low;
+            if (percentageRemaining > 15) return ReminderLevel.Medium;
+            if (percentageRemaining > 5) return ReminderLevel.High;
+            return ReminderLevel.Critical;
+        }
+
+        private static (decimal? PercentageRemaining, DateOnly? TargetDate) ComputeReminderData(
+            PartTracking tracking,
+            int currentOdometer,
+            DateOnly today,
+            decimal? kmPerDay)
+        {
+            decimal? percentageKm = null;
+            decimal? percentageDate = null;
+            DateOnly? targetDate = tracking.PredictedNextDate;
+
+            if (tracking.PredictedNextOdometer.HasValue)
+            {
+                int intervalKm = tracking.LastReplacementOdometer.HasValue
+                    ? tracking.PredictedNextOdometer.Value - tracking.LastReplacementOdometer.Value
+                    : (tracking.CustomKmInterval ?? 1);
+                if (intervalKm <= 0) intervalKm = 1;
+                var remainingKm = tracking.PredictedNextOdometer.Value - currentOdometer;
+                percentageKm = Math.Clamp(remainingKm * 100m / intervalKm, 0, 100);
+
+                if (!tracking.PredictedNextDate.HasValue && kmPerDay.HasValue && kmPerDay > 0 && remainingKm > 0)
+                {
+                    var estimatedDaysRemaining = remainingKm / kmPerDay.Value;
+                    var estimatedTargetDate = today.AddDays((int)Math.Ceiling(estimatedDaysRemaining));
+                    targetDate = estimatedTargetDate;
+
+                    var intervalDays = intervalKm / kmPerDay.Value;
+                    if (intervalDays <= 0) intervalDays = 30;
+                    percentageDate = Math.Clamp(estimatedDaysRemaining * 100m / intervalDays, 0, 100);
+                }
+            }
+
+            if (tracking.PredictedNextDate.HasValue)
+            {
+                int intervalDays = tracking.LastReplacementDate.HasValue
+                    ? tracking.PredictedNextDate.Value.DayNumber - tracking.LastReplacementDate.Value.DayNumber
+                    : (tracking.CustomMonthsInterval ?? 1) * 30;
+                if (intervalDays <= 0) intervalDays = 30;
+                var remainingDays = tracking.PredictedNextDate.Value.DayNumber - today.DayNumber;
+                percentageDate = Math.Clamp(remainingDays * 100m / intervalDays, 0, 100);
+            }
+
+            decimal? percentage = percentageKm.HasValue && percentageDate.HasValue
+                ? Math.Min(percentageKm.Value, percentageDate.Value)
+                : (percentageKm ?? percentageDate);
+
+            return (percentage, targetDate);
         }
     }
 }

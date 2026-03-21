@@ -32,6 +32,13 @@ namespace Verendar.Common.Caching
             await _database.StringSetAsync(fullKey, jsonValue, expiry);
         }
 
+        public async Task<bool> SetIfNotExistsAsync<T>(string key, T value, TimeSpan? expiry = null)
+        {
+            var fullKey = GetFullKey(key);
+            var jsonValue = JsonSerializer.Serialize(value);
+            return await _database.StringSetAsync(fullKey, jsonValue, expiry, When.NotExists);
+        }
+
         public async Task RemoveAsync(string key)
         {
             var fullKey = GetFullKey(key);

@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Verendar.Common.Databases.Base;
+﻿using Verendar.Common.Databases.Base;
+using Verendar.Common.Jwt;
 
 namespace Verendar.Media.Infrastructure.Data
 {
-    public class MediaDbContext(DbContextOptions<MediaDbContext> options) : BaseDbContext(options)
+    public class MediaDbContext(DbContextOptions<MediaDbContext> options, ICurrentUserService? currentUserService = null) : BaseDbContext(options, currentUserService)
     {
         public DbSet<Domain.Entities.MediaFile> Files { get; set; } = null!;
 

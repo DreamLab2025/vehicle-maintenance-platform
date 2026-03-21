@@ -1,6 +1,4 @@
 using System.Text.Json;
-using Verendar.Notification.Domain.Enums;
-
 namespace Verendar.Notification.Application.Dtos.Notifications
 {
     public record NotificationListItemDto

@@ -1,4 +1,5 @@
 using Verendar.Common.Contracts;
+using Verendar.Vehicle.Contracts.Enums;
 
 namespace Verendar.Vehicle.Contracts.Events
 {
@@ -12,9 +13,7 @@ namespace Verendar.Vehicle.Contracts.Events
 
         public string? UserName { get; set; }
 
-        public int Level { get; set; }
-
-        public string LevelName { get; set; } = string.Empty;
+        public ReminderLevel Level { get; set; }
 
         public List<MaintenanceReminderItemDto> Items { get; set; } = [];
     }
