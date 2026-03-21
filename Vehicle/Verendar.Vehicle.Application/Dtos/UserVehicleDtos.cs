@@ -172,4 +172,22 @@ namespace Verendar.Vehicle.Application.Dtos
         public int? KmOnRecordedDate { get; set; }
         public string Source { get; set; } = null!;
     }
+
+    public class VehicleHealthScoreResponse
+    {
+        public Guid VehicleId { get; set; }
+        public decimal? Score { get; set; }
+        public int TrackedPartCount { get; set; }
+        public List<PartHealthItem> Breakdown { get; set; } = [];
+    }
+
+    public class PartHealthItem
+    {
+        public Guid PartTrackingId { get; set; }
+        public string PartCategoryCode { get; set; } = null!;
+        public string PartCategoryName { get; set; } = null!;
+        public string? IconUrl { get; set; }
+        public int HealthScore { get; set; }
+        public string Status { get; set; } = null!;
+    }
 }

@@ -295,5 +295,48 @@ namespace Verendar.Vehicle.Application.Mappings
                 Source = entity.Source.ToString()
             };
         }
+
+        public static VehicleHealthScoreResponse ToHealthScoreResponse(this IEnumerable<PartTracking> trackings, Guid vehicleId)
+        {
+            var breakdown = trackings.Select(t => t.ToHealthItem()).ToList();
+
+            decimal? score = breakdown.Count == 0
+                ? null
+                : breakdown.Average(p => (decimal)p.HealthScore);
+
+            return new VehicleHealthScoreResponse
+            {
+                VehicleId = vehicleId,
+                Score = score,
+                TrackedPartCount = breakdown.Count,
+                Breakdown = breakdown
+            };
+        }
+
+        public static PartHealthItem ToHealthItem(this PartTracking tracking)
+        {
+            var activeCycle = tracking.Cycles
+                .Where(c => c.Status == CycleStatus.Active)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefault();
+
+            var activeReminder = activeCycle?.Reminders
+                .Where(r => r.Status == ReminderStatus.Active)
+                .OrderByDescending(r => r.CreatedAt)
+                .FirstOrDefault();
+
+            var score = (int)(activeReminder?.PercentageRemaining ?? 100);
+            var status = score >= 50 ? "Healthy" : score > 0 ? "Warning" : "Overdue";
+
+            return new PartHealthItem
+            {
+                PartTrackingId = tracking.Id,
+                PartCategoryCode = tracking.PartCategory?.Code ?? string.Empty,
+                PartCategoryName = tracking.PartCategory?.Name ?? string.Empty,
+                IconUrl = tracking.PartCategory?.IconUrl,
+                HealthScore = score,
+                Status = status
+            };
+        }
     }
 }

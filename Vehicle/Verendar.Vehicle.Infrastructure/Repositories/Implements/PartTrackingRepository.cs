@@ -20,6 +20,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .Include(x => x.PartCategory)
                 .Include(x => x.CurrentPartProduct)
                 .Include(x => x.Cycles)
+                    .ThenInclude(c => c.Reminders)
                 .Where(x => x.UserVehicleId == userVehicleId && x.IsDeclared)
                 .ToListAsync(cancellationToken);
         }
