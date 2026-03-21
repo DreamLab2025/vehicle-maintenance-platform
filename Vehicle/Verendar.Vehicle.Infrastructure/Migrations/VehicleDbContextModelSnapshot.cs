@@ -343,7 +343,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasColumnType("character varying(1000)");
 
                     b.Property<decimal?>("EngineCapacity")
-                        .HasColumnType("decimal(4,2)");
+                        .HasColumnType("decimal(8,2)");
 
                     b.Property<int?>("EngineDisplacement")
                         .HasColumnType("integer");

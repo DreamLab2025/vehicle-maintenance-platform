@@ -27,7 +27,7 @@ namespace Verendar.AppHost.Extensions
                 .WithImageTag("alpine");
 
             var seq = builder.AddSeq("seq")
-                .WithLifetime(ContainerLifetime.Persistent)
+                .WithDataVolume()
                 .ExcludeFromManifest();
 
             var identityDb = postgres.AddDatabase("identity-db", "Identities");

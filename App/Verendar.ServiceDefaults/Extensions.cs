@@ -65,9 +65,9 @@ namespace Verendar.ServiceDefaults
                 })
                 .WithTracing(tracing =>
                 {
-                    tracing.AddSource(builder.Environment.ApplicationName)
+                    tracing.SetSampler(new HangfireFilterSampler())
+                        .AddSource(builder.Environment.ApplicationName)
                         .AddAspNetCoreInstrumentation(tracing =>
-                            // Exclude health check requests from tracing
                             tracing.Filter = context =>
                                 !context.Request.Path.StartsWithSegments(HealthEndpointPath)
                                 && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath)
@@ -76,8 +76,6 @@ namespace Verendar.ServiceDefaults
                 });
 
             builder.AddSeqEndpoint("seq");
-
-            builder.AddOpenTelemetryExporters();
 
             return builder;
         }
@@ -128,6 +126,27 @@ namespace Verendar.ServiceDefaults
             });
 
             return app;
+        }
+    }
+
+    internal sealed class HangfireFilterSampler : Sampler
+    {
+        public override SamplingResult ShouldSample(in SamplingParameters samplingParameters)
+        {
+            if (samplingParameters.Tags != null)
+            {
+                foreach (var tag in samplingParameters.Tags)
+                {
+                    if (tag.Key == "db.statement" &&
+                        tag.Value is string sql &&
+                        sql.Contains("hangfire", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return new SamplingResult(SamplingDecision.Drop);
+                    }
+                }
+            }
+
+            return new SamplingResult(SamplingDecision.RecordAndSample);
         }
     }
 }
