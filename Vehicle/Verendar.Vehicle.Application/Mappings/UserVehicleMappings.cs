@@ -154,18 +154,22 @@ namespace Verendar.Vehicle.Application.Mappings
         public static void UpdateOdometer(this UserVehicle entity, int newOdometer)
         {
             var oldOdometer = entity.CurrentOdometer;
-            entity.CurrentOdometer = newOdometer;
-            entity.LastOdometerUpdate = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-            // Calculate average km per day
-            if (entity.PurchaseDate.HasValue)
+            // Calculate average km/day from the delta since the last recorded odometer update.
+            // Using the absolute odometer value would produce wildly inflated numbers for used
+            // vehicles that already had high mileage when first registered.
+            if (entity.LastOdometerUpdate.HasValue && newOdometer > oldOdometer)
             {
-                var daysSincePurchase = DateOnly.FromDateTime(DateTime.UtcNow).DayNumber - entity.PurchaseDate.Value.DayNumber;
-                if (daysSincePurchase > 0)
+                var daysSinceLastUpdate = today.DayNumber - entity.LastOdometerUpdate.Value.DayNumber;
+                if (daysSinceLastUpdate > 0)
                 {
-                    entity.AverageKmPerDay = newOdometer / daysSincePurchase;
+                    entity.AverageKmPerDay = (newOdometer - oldOdometer) / daysSinceLastUpdate;
                 }
             }
+
+            entity.CurrentOdometer = newOdometer;
+            entity.LastOdometerUpdate = today;
         }
 
         public static StreakResponse ToStreakResponse(this int streak, Guid userVehicleId)

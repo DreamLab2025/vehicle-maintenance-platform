@@ -390,3 +390,4 @@ hangfire.db-wal
 .vscode
 
 docs/*
+.claude/settings.local.json
