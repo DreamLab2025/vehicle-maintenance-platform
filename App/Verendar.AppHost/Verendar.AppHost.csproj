@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Ai\Verendar.Ai\Verendar.Ai.csproj" />
     <ProjectReference Include="..\..\Identity\Verendar.Identity\Verendar.Identity.csproj" />
+    <ProjectReference Include="..\..\Location\Verendar.Location\Verendar.Location.csproj" />
     <ProjectReference Include="..\..\Media\Verendar.Media\Verendar.Media.csproj" />
     <ProjectReference Include="..\..\Vehicle\Verendar.Vehicle\Verendar.Vehicle.csproj" />
     <ProjectReference Include="..\..\Notification\Verendar.Notification\Verendar.Notification.csproj" />

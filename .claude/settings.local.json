@@ -15,7 +15,22 @@
       "Bash(git restore:*)",
       "Bash(Get-Content \"E:\\\\Working\\\\DreamLab\\\\Verendar\\\\.claude\\\\worktrees\\\\fervent-gagarin\\\\.claude\\\\skills\\\\backend-development\\\\references\\\\backend-api-design.md\")",
       "Bash(Measure-Object -Line)",
-      "Bash(Select-Object -ExpandProperty Lines)"
+      "Bash(Select-Object -ExpandProperty Lines)",
+      "Bash(mkdir -p /d/DreamLab/vehicle-maintenance-platform/Location/Verendar.Location)",
+      "Bash(mkdir -p /d/DreamLab/vehicle-maintenance-platform/Location/Verendar.Location.Application)",
+      "Bash(mkdir -p /d/DreamLab/vehicle-maintenance-platform/Location/Verendar.Location.Domain)",
+      "Bash(mkdir -p /d/DreamLab/vehicle-maintenance-platform/Location/Verendar.Location.Infrastructure)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet restore:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/thanglequoc/vietnamese-provinces-database/master/postgresql/postgres_ImportData_vn_units.sql\")",
+      "Bash(curl -s https://raw.githubusercontent.com/thanglequoc/vietnamese-provinces-database/master/postgresql/postgres_ImportData_vn_units.sql)",
+      "Bash(timeout 10 dotnet run)",
+      "Read(//api/v1/**)",
+      "Read(//tmp/**)",
+      "Bash(cat:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/thanglequoc/vietnamese-provinces-database/master/postgresql/postgres_ImportData_vn_units.sql\" -o \"D:/DreamLab/vehicle-maintenance-platform/Location/Verendar.Location.Infrastructure/Data/Seeders/seed_data.sql\")"
     ]
   }
 }

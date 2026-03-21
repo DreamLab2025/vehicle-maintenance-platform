@@ -31,6 +31,7 @@ namespace Verendar.AppHost.Extensions
             var mediaDb = postgres.AddDatabase("media-db", "Media");
             var notificationDb = postgres.AddDatabase("notification-db", "Notifications");
             var aiDb = postgres.AddDatabase("ai-db", "Ais");
+            var locationDb = postgres.AddDatabase("location-db", "Locations");
 
             var identityService = builder.AddProject<Projects.Verendar_Identity>("Verendar-identity")
                 .WithReference(identityDb)
@@ -64,6 +65,12 @@ namespace Verendar.AppHost.Extensions
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
 
+            var locationService = builder.AddProject<Projects.Verendar_Location>("Verendar-location")
+                .WithReference(locationDb)
+                .WithReference(redis)
+                .WaitFor(postgres)
+                .WaitFor(redis);
+
 
             var apiGateway = builder.AddYarp("api-gateway")
                 .WithContainerName("ApiGateway")
@@ -96,12 +103,16 @@ namespace Verendar.AppHost.Extensions
                     var notificationCluster = yarp.AddProjectCluster(notificationService);
                     yarp.AddRoute("/api/v1/notifications/{**catch-all}", notificationCluster);
                     yarp.AddRoute("/hubs/{**catch-all}", notificationCluster);
+
+                    var locationCluster = yarp.AddProjectCluster(locationService);
+                    yarp.AddRoute("/api/v1/locations/{**catch-all}", locationCluster);
                 })
                 .WaitFor(identityService)
                 .WaitFor(vehicleService)
                 .WaitFor(mediaService)
                 .WaitFor(notificationService)
-                .WaitFor(aiService);
+                .WaitFor(aiService)
+                .WaitFor(locationService);
 
             return builder;
         }
