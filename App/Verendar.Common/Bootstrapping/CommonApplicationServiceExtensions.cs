@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using Verendar.Common.Jwt;
 using Verendar.Common.Middlewares;
 using Verendar.Common.Shared;
 using Verendar.ServiceDefaults;
@@ -50,17 +52,20 @@ namespace Verendar.Common.Bootstrapping
 
             builder.Services.AddRateLimiter(options =>
             {
-                options.AddFixedWindowLimiter(policyName: "Fixed", options =>
-                {
-                    options.PermitLimit = 100;
-                    options.Window = TimeSpan.FromMinutes(1);
-                    options.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
-                    options.QueueLimit = 0;
-                });
-            });
+                // Per-IP fixed window: 200 req/min per client with a small queue buffer.
+                // Previously this was a global (shared) limiter — 100 req/min for ALL users combined,
+                // causing legitimate users to get 429/503 at 20-30 concurrent users.
+                options.AddPolicy("Fixed", context =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 200,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            QueueLimit = 10,
+                        }));
 
-            builder.Services.Configure<RateLimiterOptions>(options =>
-            {
                 options.RejectionStatusCode = 429;
             });
 
