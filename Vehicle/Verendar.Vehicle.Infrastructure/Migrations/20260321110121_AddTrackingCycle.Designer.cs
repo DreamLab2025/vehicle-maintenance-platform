@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Verendar.Vehicle.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Verendar.Vehicle.Infrastructure.Data;
 namespace Verendar.Vehicle.Infrastructure.Migrations
 {
     [DbContext(typeof(VehicleDbContext))]
-    partial class VehicleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260321110121_AddTrackingCycle")]
+    partial class AddTrackingCycle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,6 +56,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("SupportPhone")
                         .HasMaxLength(20)
@@ -112,6 +118,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid>("PartCategoryId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -167,6 +176,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.Property<DateOnly>("ServiceDate")
                         .HasColumnType("date");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("TotalCost")
                         .HasColumnType("decimal(18,2)");
@@ -362,6 +374,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("TransmissionType")
                         .HasColumnType("integer");
 
@@ -382,7 +397,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("\"DeletedAt\" IS NULL");
 
-                    b.HasIndex("VehicleBrandId")
+                    b.HasIndex("VehicleBrandId", "Status")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("VehicleModels");
@@ -491,6 +506,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<bool>("RequiresTimeTracking")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -503,7 +521,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("\"DeletedAt\" IS NULL");
 
-                    b.HasIndex("DisplayOrder")
+                    b.HasIndex("DisplayOrder", "Status")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("PartCategories");
@@ -556,6 +574,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<decimal?>("ReferencePrice")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -564,7 +585,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PartCategoryId")
+                    b.HasIndex("PartCategoryId", "Status")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("PartProducts");
@@ -617,6 +638,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasColumnType("date");
 
                     b.Property<int?>("PredictedNextOdometer")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -727,6 +751,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<DateOnly?>("PurchaseDate")
                         .HasColumnType("date");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -748,10 +775,10 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
-                        .HasFilter("\"DeletedAt\" IS NULL");
-
                     b.HasIndex("VariantId");
+
+                    b.HasIndex("UserId", "Status")
+                        .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("UserVehicles");
                 });
@@ -840,6 +867,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");

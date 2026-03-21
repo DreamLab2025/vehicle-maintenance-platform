@@ -1,4 +1,3 @@
-using Verendar.Common.Databases.Base;
 using Verendar.Identity.Application.Helpers;
 
 namespace Verendar.Identity.Application.Mappings
@@ -15,7 +14,6 @@ namespace Verendar.Identity.Application.Mappings
                 PhoneNumber = user.PhoneNumber ?? string.Empty,
                 EmailVerified = user.EmailVerified,
                 PhoneNumberVerified = user.PhoneNumberVerified,
-                Status = user.Status.ToString(),
                 Roles = user.Roles.Select(r => r.ToString()).ToList(),
                 CreatedAt = user.CreatedAt
             };
@@ -31,7 +29,6 @@ namespace Verendar.Identity.Application.Mappings
                 Email = normalizedEmail,
                 PasswordHash = passwordHash,
                 FullName = normalizedEmail,
-                Status = EntityStatus.Active,
                 Roles = new List<UserRole> { UserRole.User },
                 PhoneNumberVerified = false,
                 EmailVerified = false,

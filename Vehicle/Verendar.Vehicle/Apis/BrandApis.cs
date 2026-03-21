@@ -37,7 +37,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/", CreateVehicleBrand)
+            group.MapPost("/", CreateBrand)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<BrandRequest>())
                 .WithName("CreateBrand")
                 .WithOpenApi(operation =>
@@ -51,7 +51,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPut("/{id:guid}", UpdateVehicleBrand)
+            group.MapPut("/{id:guid}", UpdateBrand)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<BrandRequest>())
                 .WithName("UpdateBrand")
                 .WithOpenApi(operation =>
@@ -66,7 +66,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapDelete("/{id:guid}", DeleteVehicleBrand)
+            group.MapDelete("/{id:guid}", DeleteBrand)
                 .WithName("DeleteBrand")
                 .WithOpenApi(operation =>
                 {
@@ -87,19 +87,19 @@ namespace Verendar.Vehicle.Apis
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> DeleteVehicleBrand(Guid id, IBrandService brandService)
+        private static async Task<IResult> DeleteBrand(Guid id, IBrandService brandService)
         {
             var result = await brandService.DeleteBrandAsync(id);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateVehicleBrand(Guid id, BrandRequest request, IBrandService brandService)
+        private static async Task<IResult> UpdateBrand(Guid id, BrandRequest request, IBrandService brandService)
         {
             var result = await brandService.UpdateBrandAsync(id, request);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> CreateVehicleBrand(BrandRequest request, IBrandService brandService)
+        private static async Task<IResult> CreateBrand(BrandRequest request, IBrandService brandService)
         {
             var result = await brandService.CreateBrandAsync(request);
             return result.ToHttpResult();

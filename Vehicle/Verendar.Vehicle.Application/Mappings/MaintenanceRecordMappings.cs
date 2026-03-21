@@ -1,5 +1,3 @@
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Vehicle.Application.Mappings
 {
     public static class MaintenanceRecordMappings
@@ -15,7 +13,6 @@ namespace Verendar.Vehicle.Application.Mappings
                 TotalCost = request.TotalCost ?? 0,
                 Notes = request.Notes,
                 InvoiceImageUrl = request.InvoiceImageUrl,
-                Status = EntityStatus.Active,
             };
         }
 
@@ -63,7 +60,6 @@ namespace Verendar.Vehicle.Application.Mappings
                 CustomKmInterval = customKmInterval,
                 CustomMonthsInterval = customMonthsInterval,
                 IsDeclared = true,
-                Status = EntityStatus.Active,
             };
         }
 

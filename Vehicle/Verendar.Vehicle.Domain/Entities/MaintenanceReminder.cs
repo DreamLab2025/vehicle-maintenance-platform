@@ -5,7 +5,7 @@ namespace Verendar.Vehicle.Domain.Entities
     public class MaintenanceReminder : BaseEntity
     {
         [Required]
-        public Guid VehiclePartTrackingId { get; set; }
+        public Guid TrackingCycleId { get; set; }
 
         public int CurrentOdometer { get; set; }
 
@@ -26,9 +26,9 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public DateOnly? DismissedDate { get; set; }
 
-        public bool IsCurrent { get; set; } = false;
+        public ReminderStatus Status { get; set; } = ReminderStatus.Active;
 
-        [ForeignKey("VehiclePartTrackingId")]
-        public PartTracking PartTracking { get; set; } = null!;
+        [ForeignKey("TrackingCycleId")]
+        public TrackingCycle TrackingCycle { get; set; } = null!;
     }
 }

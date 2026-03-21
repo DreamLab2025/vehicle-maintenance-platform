@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Infrastructure.Seeders;
@@ -21,11 +20,8 @@ public static class MaintenanceReminderTestDataSeeder
     private static readonly (Guid PartCategoryId, ReminderLevel Level, int LastReplacementOdometer, int PredictedNextOdometer, int KmInterval, int MonthsInterval, decimal PercentageRemaining, int MonthsAgo)[] DeclaredPartReminderConfigs =
     {
         (Guid.Parse("c0000001-0000-0000-0000-000000000001"), ReminderLevel.Critical, 12500, 14500, 2000, 3, 0m, 2),
-
         (Guid.Parse("c0000002-0000-0000-0000-000000000002"), ReminderLevel.High, 0, 16000, 16000, 24, 6.25m, 10),
-
         (Guid.Parse("c0000005-0000-0000-0000-000000000005"), ReminderLevel.High, 8000, 16000, 8000, 12, 12.5m, 5),
-
         (Guid.Parse("c0000004-0000-0000-0000-000000000004"), ReminderLevel.Medium, 11000, 21000, 10000, 12, 60m, 3),
     };
 
@@ -33,8 +29,8 @@ public static class MaintenanceReminderTestDataSeeder
 
     private static readonly Guid[] UndeclaredPartCategoryIds =
     {
-        Guid.Parse("c0000006-0000-0000-0000-000000000006"), // Air Filter
-        Guid.Parse("c0000007-0000-0000-0000-000000000007"), // Chain Sprocket
+        Guid.Parse("c0000006-0000-0000-0000-000000000006"),
+        Guid.Parse("c0000007-0000-0000-0000-000000000007"),
     };
 
     public static async Task SeedAsync(VehicleDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
@@ -52,7 +48,6 @@ public static class MaintenanceReminderTestDataSeeder
         }
 
         var staleDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-5);
-
         var purchaseDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-10));
 
         var userVehicle = new UserVehicle
@@ -66,14 +61,12 @@ public static class MaintenanceReminderTestDataSeeder
             LastOdometerUpdate = staleDate,
             AverageKmPerDay = 50,
             NeedsOnboarding = false,
-            Status = EntityStatus.Active,
             CreatedAt = DateTime.UtcNow,
             CreatedBy = TestUserId
         };
         db.UserVehicles.Add(userVehicle);
         await db.SaveChangesAsync(cancellationToken);
 
-        // Lịch sử Odometer rải đều trong 10 tháng
         var odometerHistories = new[]
         {
             new OdometerHistory
@@ -142,24 +135,39 @@ public static class MaintenanceReminderTestDataSeeder
                 CustomKmInterval = kmInterval,
                 CustomMonthsInterval = monthsInterval,
                 IsDeclared = true,
-                Status = EntityStatus.Active,
+
                 CreatedAt = DateTime.UtcNow.AddMonths(-monthsAgo),
                 CreatedBy = TestUserId
             };
             db.VehiclePartTrackings.Add(partTracking);
             await db.SaveChangesAsync(cancellationToken);
 
+            var cycle = new TrackingCycle
+            {
+                Id = Guid.CreateVersion7(),
+                PartTrackingId = partTracking.Id,
+                StartOdometer = lastReplacementOdo,
+                StartDate = lastReplacementDate,
+                TargetOdometer = predictedNextOdo,
+                TargetDate = predictedNextDate,
+                Status = CycleStatus.Active,
+                CreatedAt = DateTime.UtcNow.AddMonths(-monthsAgo),
+                CreatedBy = TestUserId
+            };
+            db.TrackingCycles.Add(cycle);
+            await db.SaveChangesAsync(cancellationToken);
+
             var reminder = new MaintenanceReminder
             {
                 Id = TestReminderIds[reminderIndex++],
-                VehiclePartTrackingId = partTracking.Id,
+                TrackingCycleId = cycle.Id,
                 CurrentOdometer = SeedCurrentOdometer,
                 TargetOdometer = predictedNextOdo,
                 TargetDate = predictedNextDate,
                 Level = level,
                 PercentageRemaining = pct,
-                IsNotified = level == ReminderLevel.Critical, // Đánh dấu đã báo nếu quá hạn
-                IsCurrent = true,
+                IsNotified = level == ReminderLevel.Critical,
+                Status = ReminderStatus.Active,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = TestUserId
             };
@@ -175,7 +183,7 @@ public static class MaintenanceReminderTestDataSeeder
                 UserVehicleId = userVehicle.Id,
                 PartCategoryId = partCategoryId,
                 IsDeclared = false,
-                Status = EntityStatus.Active,
+
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = TestUserId
             };
@@ -194,14 +202,6 @@ public static class MaintenanceReminderTestDataSeeder
         ILogger? logger,
         CancellationToken cancellationToken)
     {
-        var existingLevels = await db.MaintenanceReminders
-            .IgnoreQueryFilters()
-            .Include(m => m.PartTracking)
-            .Where(m => m.PartTracking!.UserVehicleId == userVehicleId)
-            .Select(m => m.Level)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-
         var reminderIndex = 0;
         var addedCount = 0;
         foreach (var (partCategoryId, level, lastReplacementOdo, predictedNextOdo, kmInterval, monthsInterval, pct, monthsAgo) in DeclaredPartReminderConfigs)
@@ -220,11 +220,11 @@ public static class MaintenanceReminderTestDataSeeder
                 .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(pt => pt.UserVehicleId == userVehicleId && pt.PartCategoryId == partCategoryId, cancellationToken);
 
+            var lastReplacementDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-monthsAgo));
+            var predictedNextDate = lastReplacementDate.AddMonths(monthsInterval);
+
             if (partTracking == null)
             {
-                var lastReplacementDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-monthsAgo));
-                var predictedNextDate = lastReplacementDate.AddMonths(monthsInterval);
-
                 partTracking = new PartTracking
                 {
                     Id = Guid.CreateVersion7(),
@@ -237,7 +237,7 @@ public static class MaintenanceReminderTestDataSeeder
                     CustomKmInterval = kmInterval,
                     CustomMonthsInterval = monthsInterval,
                     IsDeclared = true,
-                    Status = EntityStatus.Active,
+    
                     CreatedAt = DateTime.UtcNow.AddMonths(-monthsAgo),
                     CreatedBy = TestUserId
                 };
@@ -245,46 +245,58 @@ public static class MaintenanceReminderTestDataSeeder
                 await db.SaveChangesAsync(cancellationToken);
             }
 
-            var existingRemindersForTracking = await db.MaintenanceReminders
+            // Complete any existing active cycle
+            var existingCycles = await db.TrackingCycles
                 .IgnoreQueryFilters()
-                .Where(r => r.VehiclePartTrackingId == partTracking.Id)
+                .Include(c => c.Reminders)
+                .Where(c => c.PartTrackingId == partTracking.Id && c.Status == CycleStatus.Active)
                 .ToListAsync(cancellationToken);
 
-            foreach (var r in existingRemindersForTracking)
+            foreach (var c in existingCycles)
             {
-                if (r.IsCurrent)
-                {
-                    r.IsCurrent = false;
-                    db.MaintenanceReminders.Update(r);
-                }
+                c.Status = CycleStatus.Completed;
+                foreach (var r in c.Reminders)
+                    r.Status = ReminderStatus.Resolved;
             }
+            await db.SaveChangesAsync(cancellationToken);
+
+            var cycle = new TrackingCycle
+            {
+                Id = Guid.CreateVersion7(),
+                PartTrackingId = partTracking.Id,
+                StartOdometer = lastReplacementOdo,
+                StartDate = lastReplacementDate,
+                TargetOdometer = predictedNextOdo,
+                TargetDate = predictedNextDate,
+                Status = CycleStatus.Active,
+                CreatedAt = DateTime.UtcNow.AddMonths(-monthsAgo),
+                CreatedBy = TestUserId
+            };
+            db.TrackingCycles.Add(cycle);
             await db.SaveChangesAsync(cancellationToken);
 
             var reminder = new MaintenanceReminder
             {
                 Id = TestReminderIds[reminderIndex++],
-                VehiclePartTrackingId = partTracking.Id,
+                TrackingCycleId = cycle.Id,
                 CurrentOdometer = SeedCurrentOdometer,
                 TargetOdometer = predictedNextOdo,
                 TargetDate = partTracking.PredictedNextDate,
                 Level = level,
                 PercentageRemaining = pct,
                 IsNotified = level == ReminderLevel.Critical,
-                IsCurrent = true,
+                Status = ReminderStatus.Active,
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = TestUserId
             };
             db.MaintenanceReminders.Add(reminder);
             await db.SaveChangesAsync(cancellationToken);
-            existingLevels.Add(level);
             addedCount++;
             logger?.LogInformation("Added MaintenanceReminder level {Level} for test vehicle {UserVehicleId}", level, userVehicleId);
         }
 
         if (addedCount > 0)
-        {
             logger?.LogInformation("Added {Count} maintenance reminders for test vehicle {UserVehicleId}", addedCount, userVehicleId);
-        }
 
         foreach (var partCategoryId in UndeclaredPartCategoryIds)
         {
@@ -300,7 +312,7 @@ public static class MaintenanceReminderTestDataSeeder
                 UserVehicleId = userVehicleId,
                 PartCategoryId = partCategoryId,
                 IsDeclared = false,
-                Status = EntityStatus.Active,
+
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = TestUserId
             };

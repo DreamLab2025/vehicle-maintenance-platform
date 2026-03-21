@@ -24,8 +24,6 @@
 
         public bool NeedsOnboarding { get; set; } = true;
 
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
-
         public Variant Variant { get; set; } = null!;
 
         public ICollection<OdometerHistory> OdometerHistory { get; set; } = new List<OdometerHistory>();

@@ -1,4 +1,3 @@
-using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Application.Mappings
@@ -80,8 +79,30 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
+        public static TrackingCycleSummary ToSummary(this TrackingCycle cycle, int? vehicleCurrentOdometer = null)
+        {
+            return new TrackingCycleSummary
+            {
+                Id = cycle.Id,
+                Status = cycle.Status.ToString(),
+                StartOdometer = cycle.StartOdometer,
+                StartDate = cycle.StartDate,
+                TargetOdometer = cycle.TargetOdometer,
+                TargetDate = cycle.TargetDate,
+                Reminders = cycle.Reminders
+                    .OrderByDescending(r => r.CreatedAt)
+                    .Select(r => r.ToSummary(vehicleCurrentOdometer))
+                    .ToList()
+            };
+        }
+
         public static PartTrackingSummary ToSummary(this PartTracking entity, int? vehicleCurrentOdometer = null)
         {
+            var activeCycle = entity.Cycles?
+                .Where(c => c.Status == CycleStatus.Active)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefault();
+
             return new PartTrackingSummary
             {
                 Id = entity.Id,
@@ -98,7 +119,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 PredictedNextOdometer = entity.PredictedNextOdometer,
                 PredictedNextDate = entity.PredictedNextDate,
                 IsDeclared = entity.IsDeclared,
-                Reminders = entity.Reminders?.Where(r => r.IsCurrent).Select(r => r.ToSummary(vehicleCurrentOdometer)).ToList() ?? new()
+                ActiveCycle = activeCycle?.ToSummary(vehicleCurrentOdometer)
             };
         }
 
@@ -109,6 +130,7 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 Level = entity.Level.ToString(),
+                Status = entity.Status.ToString(),
                 CurrentOdometer = currentOdo,
                 TargetOdometer = entity.TargetOdometer,
                 RemainingKm = entity.TargetOdometer - currentOdo,
@@ -118,7 +140,6 @@ namespace Verendar.Vehicle.Application.Mappings
                 NotifiedDate = entity.NotifiedDate,
                 IsDismissed = entity.IsDismissed,
                 DismissedDate = entity.DismissedDate,
-                IsCurrent = entity.IsCurrent
             };
         }
 
@@ -173,7 +194,6 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 UserVehicleId = userVehicleId,
                 PartCategoryId = partCategoryId,
-                Status = EntityStatus.Active,
                 IsDeclared = false,
             };
         }
@@ -184,7 +204,6 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 UserVehicleId = userVehicleId,
                 PartCategoryId = partCategoryId,
-                Status = EntityStatus.Active,
                 IsDeclared = true,
                 LastReplacementOdometer = request.LastReplacementOdometer,
                 LastReplacementDate = request.LastReplacementDate,
@@ -233,8 +252,9 @@ namespace Verendar.Vehicle.Application.Mappings
             return new ReminderDetailDto
             {
                 Id = entity.Id,
-                VehiclePartTrackingId = entity.VehiclePartTrackingId,
+                TrackingCycleId = entity.TrackingCycleId,
                 Level = entity.Level.ToString(),
+                Status = entity.Status.ToString(),
                 CurrentOdometer = currentOdo,
                 TargetOdometer = entity.TargetOdometer,
                 RemainingKm = entity.TargetOdometer - currentOdo,
@@ -244,8 +264,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 NotifiedDate = entity.NotifiedDate,
                 IsDismissed = entity.IsDismissed,
                 DismissedDate = entity.DismissedDate,
-                IsCurrent = entity.IsCurrent,
-                PartCategory = entity.PartTracking?.PartCategory?.ToCategoryInfoDto() ?? new CategoryInfoDto()
+                PartCategory = entity.TrackingCycle?.PartTracking?.PartCategory?.ToCategoryInfoDto() ?? new CategoryInfoDto()
             };
         }
 

@@ -39,6 +39,34 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
+        public async Task<ApiResponse<List<TrackingCycleSummary>>> GetCyclesForPartAsync(Guid userId, Guid vehicleId, Guid partTrackingId)
+        {
+            try
+            {
+                var vehicle = await _unitOfWork.UserVehicles
+                    .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId);
+
+                if (vehicle == null)
+                    return ApiResponse<List<TrackingCycleSummary>>.NotFoundResponse("Không tìm thấy xe");
+
+                var partTracking = await _unitOfWork.PartTrackings
+                    .FindOneAsync(t => t.Id == partTrackingId && t.UserVehicleId == vehicleId);
+
+                if (partTracking == null)
+                    return ApiResponse<List<TrackingCycleSummary>>.NotFoundResponse("Không tìm thấy phụ tùng");
+
+                var cycles = await _unitOfWork.TrackingCycles.GetByPartTrackingIdAsync(partTrackingId);
+                var summaries = cycles.Select(c => c.ToSummary(vehicle.CurrentOdometer)).ToList();
+
+                return ApiResponse<List<TrackingCycleSummary>>.SuccessResponse(summaries, "Lấy danh sách tracking cycle thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting cycles for part tracking {PartTrackingId}", partTrackingId);
+                return ApiResponse<List<TrackingCycleSummary>>.FailureResponse("Lỗi khi lấy danh sách tracking cycle");
+            }
+        }
+
         public async Task<ApiResponse<PartTrackingSummary>> ApplyTrackingConfigAsync(Guid userId, Guid vehicleId, ApplyTrackingConfigRequest request)
         {
             try
@@ -83,6 +111,32 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     _logger.LogInformation("Updated existing tracking for vehicle {VehicleId}, part {PartCode}", vehicleId, request.PartCategoryCode);
                 }
 
+                // Complete old cycle and resolve its reminders
+                var existingCycle = await _unitOfWork.TrackingCycles.AsQueryable()
+                    .Include(c => c.Reminders)
+                    .FirstOrDefaultAsync(c => c.PartTrackingId == tracking.Id && c.Status == CycleStatus.Active);
+
+                if (existingCycle != null)
+                {
+                    existingCycle.Status = CycleStatus.Completed;
+                    foreach (var r in existingCycle.Reminders)
+                        r.Status = ReminderStatus.Resolved;
+                }
+
+                // Start new cycle
+                var newCycle = new TrackingCycle
+                {
+                    PartTrackingId = tracking.Id,
+                    StartOdometer = vehicle.CurrentOdometer,
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    TargetOdometer = request.PredictedNextOdometer,
+                    TargetDate = request.PredictedNextDate,
+                    Status = CycleStatus.Active,
+                };
+                await _unitOfWork.TrackingCycles.AddAsync(newCycle);
+                await _unitOfWork.SaveChangesAsync();
+
+                // Sync will lazily create first reminder for the new cycle
                 await _maintenanceReminderService.SyncRemindersAsync(vehicleId, vehicle.CurrentOdometer, userId);
                 await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
 
@@ -101,7 +155,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             var schedules = await _unitOfWork.DefaultSchedules.GetByVehicleModelIdAsync(vehicleModelId);
             var partCategoryIds = schedules
-                .Where(s => s.Status == EntityStatus.Active && s.PartCategoryId != Guid.Empty)
+                .Where(s => s.PartCategoryId != Guid.Empty)
                 .Select(s => s.PartCategoryId)
                 .Distinct()
                 .ToList();

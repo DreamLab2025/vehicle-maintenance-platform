@@ -16,8 +16,6 @@
         [MaxLength(500)]
         public string? ImageUrl { get; set; }
 
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
-
         public List<Brand> Brands { get; set; } = [];
     }
 }

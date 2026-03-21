@@ -2,23 +2,23 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Verendar.Vehicle.Apis
 {
-    public static class VehicleVariantApis
+    public static class VariantApis
     {
-        public static IEndpointRouteBuilder MapModelImageApi(this IEndpointRouteBuilder builder)
+        public static IEndpointRouteBuilder MapVariantApi(this IEndpointRouteBuilder builder)
         {
             builder.MapGroup("/api/v1/variants")
-                .MapModelImageRoutes()
-                .WithTags("Model Image Api")
+                .MapVariantRoutes()
+                .WithTags("Variant Api")
                 .RequireRateLimiting("Fixed");
 
             return builder;
         }
 
-        public static RouteGroupBuilder MapModelImageRoutes(this RouteGroupBuilder group)
+        public static RouteGroupBuilder MapVariantRoutes(this RouteGroupBuilder group)
         {
-            group.MapPost("/", CreateModelImage)
+            group.MapPost("/", CreateVariant)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<VariantRequest>())
-                .WithName("CreateModelImage")
+                .WithName("CreateVariant")
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Tạo hình ảnh/màu mới cho mẫu xe (Admin)";
@@ -31,9 +31,9 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<VariantResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPut("/{id:guid}", UpdateModelImage)
+            group.MapPut("/{id:guid}", UpdateVariant)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<VariantUpdateRequest>())
-                .WithName("UpdateModelImage")
+                .WithName("UpdateVariant")
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Cập nhật hình ảnh/màu xe (Admin)";
@@ -46,8 +46,8 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<VariantResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapDelete("/{id:guid}", DeleteModelImage)
-                .WithName("DeleteModelImage")
+            group.MapDelete("/{id:guid}", DeleteVariant)
+                .WithName("DeleteVariant")
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Xóa hình ảnh/màu xe (Admin)";
@@ -61,21 +61,21 @@ namespace Verendar.Vehicle.Apis
             return group;
         }
 
-        private static async Task<IResult> CreateModelImage([FromBody] VariantRequest request, IVariantService modelImageService)
+        private static async Task<IResult> CreateVariant([FromBody] VariantRequest request, IVariantService service)
         {
-            var result = await modelImageService.CreateImageAsync(request);
+            var result = await service.CreateImageAsync(request);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateModelImage(Guid id, [FromBody] VariantUpdateRequest request, IVariantService modelImageService)
+        private static async Task<IResult> UpdateVariant(Guid id, [FromBody] VariantUpdateRequest request, IVariantService service)
         {
-            var result = await modelImageService.UpdateImageAsync(id, request);
+            var result = await service.UpdateImageAsync(id, request);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> DeleteModelImage(Guid id, IVariantService modelImageService)
+        private static async Task<IResult> DeleteVariant(Guid id, IVariantService service)
         {
-            var result = await modelImageService.DeleteImageAsync(id);
+            var result = await service.DeleteImageAsync(id);
             return result.ToHttpResult();
         }
     }

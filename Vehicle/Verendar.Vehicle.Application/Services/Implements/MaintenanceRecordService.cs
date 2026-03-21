@@ -186,13 +186,18 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 foreach (var trackingId in trackingIdsToResetReminders)
                 {
-                    var reminders = await _unitOfWork.MaintenanceReminders.AsQueryable()
-                        .Where(r => r.VehiclePartTrackingId == trackingId)
+                    var cycles = await _unitOfWork.TrackingCycles.AsQueryable()
+                        .Include(c => c.Reminders)
+                        .Where(c => c.PartTrackingId == trackingId && c.Status == CycleStatus.Active)
                         .ToListAsync();
-                    foreach (var r in reminders)
+                    foreach (var cycle in cycles)
                     {
-                        r.IsCurrent = false;
-                        await _unitOfWork.MaintenanceReminders.UpdateAsync(r.Id, r);
+                        cycle.Status = CycleStatus.Completed;
+                        foreach (var r in cycle.Reminders)
+                        {
+                            r.Status = ReminderStatus.Resolved;
+                            await _unitOfWork.MaintenanceReminders.UpdateAsync(r.Id, r);
+                        }
                     }
                 }
                 if (trackingIdsToResetReminders.Count > 0)
@@ -207,7 +212,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                         .Where(t => trackingIdsForResponse.Contains(t.Id))
                         .Include(t => t.PartCategory)
                         .Include(t => t.CurrentPartProduct)
-                        .Include(t => t.Reminders)
+                        .Include(t => t.Cycles).ThenInclude(c => c.Reminders)
                         .ToListAsync();
                     var trackingMap = trackingsWithReminders.ToDictionary(t => t.Id);
                     for (var i = 0; i < itemResults.Count && i < trackingIdsForResponse.Count; i++)

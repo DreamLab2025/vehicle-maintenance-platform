@@ -21,6 +21,7 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
         IUserVehicleRepository UserVehicles { get; }
         IOdometerHistoryRepository OdometerHistories { get; }
         IPartTrackingRepository PartTrackings { get; }
+        ITrackingCycleRepository TrackingCycles { get; }
         IMaintenanceReminderRepository MaintenanceReminders { get; }
 
         // Maintenance History

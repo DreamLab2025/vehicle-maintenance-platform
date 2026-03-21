@@ -1,4 +1,3 @@
-using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
@@ -19,7 +18,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .Include(v => v.PartTrackings)
                     .ThenInclude(pt => pt.CurrentPartProduct)
                 .Include(v => v.PartTrackings)
-                    .ThenInclude(pt => pt.Reminders)
+                    .ThenInclude(pt => pt.Cycles)
                 .Where(v => v.DeletedAt == null);
         }
 
@@ -54,7 +53,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         public async Task<(bool IsAllowed, string Message)> CheckCanCreateVehicleAsync(Guid userId, bool isPremiumUser = false)
         {
             var currentCount = await _dbSet
-                .Where(v => v.UserId == userId && v.Status == EntityStatus.Active && v.DeletedAt == null)
+                .Where(v => v.UserId == userId && v.DeletedAt == null)
                 .CountAsync();
 
             if (currentCount == 0)
@@ -64,7 +63,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
             if (currentCount == 1)
             {
                 var currentVehicleId = await _dbSet
-                    .Where(v => v.UserId == userId && v.Status == EntityStatus.Active && v.DeletedAt == null)
+                    .Where(v => v.UserId == userId && v.DeletedAt == null)
                     .Select(v => v.Id)
                     .FirstAsync();
 
@@ -120,7 +119,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 
             var userIds = await _dbSet
                 .Where(v => v.DeletedAt == null
-                            && v.Status == EntityStatus.Active
                             && (v.LastOdometerUpdate == null || v.LastOdometerUpdate < cutoffDate))
                 .Select(v => v.UserId)
                 .Distinct()
@@ -137,7 +135,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .Include(v => v.Variant)
                     .ThenInclude(vv => vv.VehicleModel)
                 .Where(v => v.DeletedAt == null
-                            && v.Status == EntityStatus.Active
                             && v.UserId == userId
                             && (v.LastOdometerUpdate == null || v.LastOdometerUpdate < cutoffDate))
                 .ToListAsync(cancellationToken);

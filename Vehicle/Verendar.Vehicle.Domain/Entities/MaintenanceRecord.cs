@@ -22,8 +22,6 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(500)]
         public string? InvoiceImageUrl { get; set; }
 
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
-
         public UserVehicle UserVehicle { get; set; } = null!;
 
         public List<MaintenanceRecordItem> Items { get; set; } = [];

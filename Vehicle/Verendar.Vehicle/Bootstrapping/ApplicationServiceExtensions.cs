@@ -109,10 +109,10 @@ namespace Verendar.Vehicle.Bootstrapping
             app.MapBrandApi();
             app.MapTypeApi();
             app.MapModelApi();
-            app.MapModelImageApi();
+            app.MapVariantApi();
             app.MapUserVehicleApi();
             app.MapOdometerHistoryApi();
-            app.MapDefaultMaintenanceScheduleApi();
+            app.MapModelScheduleApi();
             app.MapMaintenanceRecordApi();
             app.MapPartCategoryApi();
             app.MapPartProductApi();

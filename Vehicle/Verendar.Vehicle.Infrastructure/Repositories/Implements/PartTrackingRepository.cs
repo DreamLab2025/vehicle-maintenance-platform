@@ -9,7 +9,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
             return await _dbSet
                 .Include(x => x.PartCategory)
                 .Include(x => x.CurrentPartProduct)
-                .Include(x => x.Reminders)
+                .Include(x => x.Cycles)
                 .Where(x => x.UserVehicleId == userVehicleId)
                 .ToListAsync(cancellationToken);
         }
@@ -19,7 +19,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
             return await _dbSet
                 .Include(x => x.PartCategory)
                 .Include(x => x.CurrentPartProduct)
-                .Include(x => x.Reminders)
+                .Include(x => x.Cycles)
                 .Where(x => x.UserVehicleId == userVehicleId && x.IsDeclared)
                 .ToListAsync(cancellationToken);
         }

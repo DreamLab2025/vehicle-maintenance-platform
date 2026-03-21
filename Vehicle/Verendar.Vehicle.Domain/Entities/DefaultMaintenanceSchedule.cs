@@ -14,8 +14,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public int MonthsInterval { get; set; }
 
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
-
         public Model VehicleModel { get; set; } = null!;
         public PartCategory PartCategory { get; set; } = null!;
     }

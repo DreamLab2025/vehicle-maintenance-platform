@@ -1,18 +1,18 @@
 namespace Verendar.Vehicle.Apis
 {
-    public static class DefaultMaintenanceScheduleApis
+    public static class ModelScheduleApis
     {
-        public static IEndpointRouteBuilder MapDefaultMaintenanceScheduleApi(this IEndpointRouteBuilder builder)
+        public static IEndpointRouteBuilder MapModelScheduleApi(this IEndpointRouteBuilder builder)
         {
             builder.MapGroup("/api/v1/vehicle-models")
-                .MapDefaultMaintenanceScheduleRoutes()
-                .WithTags("Default Maintenance Schedule Api")
+                .MapModelScheduleRoutes()
+                .WithTags("Model Schedule Api")
                 .RequireRateLimiting("Fixed");
 
             return builder;
         }
 
-        public static RouteGroupBuilder MapDefaultMaintenanceScheduleRoutes(this RouteGroupBuilder group)
+        public static RouteGroupBuilder MapModelScheduleRoutes(this RouteGroupBuilder group)
         {
             group.MapGet("/{vehicleModelId:guid}/part-categories", GetPartCategoriesByVehicleModel)
                 .WithName("GetPartCategoriesByVehicleModel")
@@ -37,6 +37,5 @@ namespace Verendar.Vehicle.Apis
             var result = await service.GetPartCategoriesByVehicleModelAsync(vehicleModelId, cancellationToken);
             return result.ToHttpResult();
         }
-
     }
 }

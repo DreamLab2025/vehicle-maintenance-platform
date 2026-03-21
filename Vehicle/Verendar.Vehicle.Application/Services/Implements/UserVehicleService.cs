@@ -129,7 +129,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 vehicle.DeletedAt = deletedAt;
                 vehicle.DeletedBy = userId;
-                vehicle.Status = EntityStatus.Deleted;
 
                 await _unitOfWork.CommitTransactionAsync();
 

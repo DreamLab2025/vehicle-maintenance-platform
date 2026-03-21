@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using Verendar.Common.Databases.Base;
 using Verendar.Identity.Application.Helpers;
 
 namespace Verendar.Identity.Infrastructure.Data.Seeders
@@ -33,7 +32,6 @@ namespace Verendar.Identity.Infrastructure.Data.Seeders
                 PasswordHash = string.Empty,
                 EmailVerified = true,
                 PhoneNumberVerified = false,
-                Status = EntityStatus.Active,
                 Roles = [UserRole.Admin],
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = AdminUserId

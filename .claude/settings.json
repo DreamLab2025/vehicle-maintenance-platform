@@ -30,7 +30,9 @@
       "Bash(mv \"$BASE/VehicleVariantService.cs\" \"$BASE/VariantService.cs\")",
       "Bash(tasklist)",
       "Bash(tasklist /FI 'IMAGENAME eq dotnet.exe' /FO CSV)",
-      "Bash(powershell -Command \"Stop-Process -Id 13672 -Force\")"
+      "Bash(powershell -Command \"Stop-Process -Id 13672 -Force\")",
+      "Read(//e/Working/DreamLab/Verendar/.clone/worktrees/fervent-gagarin/Vehicle/Verendar.Vehicle/Apis/**)",
+      "Bash(find . -type f \\\\\\(-name *.cs -o -name *.csv -o -name *.md -o -name *.json \\\\\\) ! -path ./.git/* ! -path ./.*)"
     ]
   },
   "ignorePatterns": [

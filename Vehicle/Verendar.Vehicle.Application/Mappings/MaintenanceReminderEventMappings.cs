@@ -6,7 +6,7 @@ namespace Verendar.Vehicle.Application.Mappings
     {
         public static MaintenanceReminderItemDto ToEventItem(this MaintenanceReminder r)
         {
-            var pt = r.PartTracking;
+            var pt = r.TrackingCycle?.PartTracking;
             var uv = pt?.UserVehicle;
             var vehicleDisplay = uv?.Variant?.VehicleModel != null
                 ? $"{uv.Variant.VehicleModel.Name}" + (string.IsNullOrEmpty(uv.LicensePlate) ? "" : $" - {uv.LicensePlate}")

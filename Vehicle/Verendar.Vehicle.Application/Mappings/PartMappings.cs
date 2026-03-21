@@ -29,7 +29,6 @@ namespace Verendar.Vehicle.Application.Mappings
                 Description = entity.Description,
                 IconUrl = entity.IconUrl,
                 DisplayOrder = entity.DisplayOrder,
-                Status = entity.Status,
                 RequiresOdometerTracking = entity.RequiresOdometerTracking,
                 RequiresTimeTracking = entity.RequiresTimeTracking,
                 AllowsMultipleInstances = entity.AllowsMultipleInstances,
@@ -49,7 +48,6 @@ namespace Verendar.Vehicle.Application.Mappings
                 Code = entity.Code,
                 IconUrl = entity.IconUrl,
                 DisplayOrder = entity.DisplayOrder,
-                Status = entity.Status
             };
         }
 
@@ -99,7 +97,6 @@ namespace Verendar.Vehicle.Application.Mappings
                 ReferencePrice = entity.ReferencePrice,
                 RecommendedKmInterval = entity.RecommendedKmInterval,
                 RecommendedMonthsInterval = entity.RecommendedMonthsInterval,
-                Status = entity.Status,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -116,7 +113,6 @@ namespace Verendar.Vehicle.Application.Mappings
                 Brand = entity.Brand,
                 ImageUrl = entity.ImageUrl,
                 ReferencePrice = entity.ReferencePrice,
-                Status = entity.Status
             };
         }
 

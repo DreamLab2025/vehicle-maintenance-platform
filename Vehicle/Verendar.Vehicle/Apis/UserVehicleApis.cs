@@ -128,6 +128,18 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<PartTrackingSummary>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/{userVehicleId:guid}/parts/{partTrackingId:guid}/cycles", GetPartCycles)
+                .WithName("GetPartCycles")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy toàn bộ tracking cycle của một phụ tùng";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<TrackingCycleSummary>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<TrackingCycleSummary>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             group.MapGet("/{userVehicleId:guid}/reminders", GetReminders)
                 .WithName("GetReminders")
                 .WithOpenApi(operation =>
@@ -220,6 +232,16 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
 
             var result = await vehicleService.DeleteUserVehicleAsync(userId, userVehicleId);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> GetPartCycles(Guid userVehicleId, Guid partTrackingId, ICurrentUserService currentUserService, IPartTrackingService trackingService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+                return Results.Unauthorized();
+
+            var result = await trackingService.GetCyclesForPartAsync(userId, userVehicleId, partTrackingId);
             return result.ToHttpResult();
         }
 

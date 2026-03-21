@@ -27,8 +27,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public int? RecommendedMonthsInterval { get; set; }
 
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
-
         public PartCategory Category { get; set; } = null!;
 
         public List<PartTracking> PartTrackings { get; set; } = [];
