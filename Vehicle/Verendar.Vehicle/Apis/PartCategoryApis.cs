@@ -17,7 +17,7 @@ namespace Verendar.Vehicle.Apis
                 .WithName("GetAllPartCategories")
                 .WithOpenApi(op => { op.Summary = "Lấy danh mục phụ tùng; truyền userVehicleId để lọc theo xe của user"; return op; })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<PartCategoryResponse>>>(StatusCodes.Status200OK);
+                .Produces<ApiResponse<List<PartCategorySummary>>>(StatusCodes.Status200OK);
 
             group.MapGet("/{id:guid}", GetCategoryById)
                 .WithName("GetPartCategoryById")

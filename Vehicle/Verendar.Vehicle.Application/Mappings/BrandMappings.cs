@@ -30,6 +30,18 @@
             };
         }
 
+        public static BrandSummary ToSummary(this Brand entity)
+        {
+            return new BrandSummary
+            {
+                Id = entity.Id,
+                VehicleTypeId = entity.VehicleTypeId,
+                VehicleTypeName = entity.VehicleType?.Name ?? string.Empty,
+                Name = entity.Name,
+                LogoUrl = entity.LogoUrl
+            };
+        }
+
         public static void UpdateEntity(this Brand entity, BrandRequest request)
         {
             entity.VehicleTypeId = request.VehicleTypeId;

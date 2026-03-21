@@ -21,8 +21,20 @@ namespace Verendar.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<List<BrandResponse>>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<List<BrandSummary>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<BrandSummary>>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/{id:guid}", GetBrandById)
+                .WithName("GetBrandById")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy thông tin thương hiệu theo ID";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<BrandResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateVehicleBrand)
@@ -67,6 +79,12 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
+        }
+
+        private static async Task<IResult> GetBrandById(Guid id, IBrandService brandService)
+        {
+            var result = await brandService.GetBrandByIdAsync(id);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> DeleteVehicleBrand(Guid id, IBrandService brandService)

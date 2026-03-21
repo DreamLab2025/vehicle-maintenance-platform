@@ -30,4 +30,13 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
+
+    public class BrandSummary
+    {
+        public Guid Id { get; set; }
+        public Guid VehicleTypeId { get; set; }
+        public string VehicleTypeName { get; set; } = null!;
+        public string Name { get; set; } = null!;
+        public string? LogoUrl { get; set; }
+    }
 }

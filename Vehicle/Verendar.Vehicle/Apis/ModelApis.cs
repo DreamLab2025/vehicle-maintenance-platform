@@ -23,7 +23,7 @@ namespace Verendar.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<ModelResponseWithVariants>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<ModelSummary>>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateVehicleModel)

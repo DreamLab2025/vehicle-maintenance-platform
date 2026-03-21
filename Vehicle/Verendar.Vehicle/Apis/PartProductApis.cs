@@ -17,8 +17,8 @@ namespace Verendar.Vehicle.Apis
                 .WithName("GetProductsByCategory")
                 .WithOpenApi(op => { op.Summary = "Get products by category (paginated)"; return op; })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<PartProductResponse>>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<List<PartProductResponse>>>(StatusCodes.Status404NotFound);
+                .Produces<ApiResponse<List<PartProductSummary>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<PartProductSummary>>>(StatusCodes.Status404NotFound);
 
             group.MapGet("/{id:guid}", GetProductById)
                 .WithName("GetPartProductById")
