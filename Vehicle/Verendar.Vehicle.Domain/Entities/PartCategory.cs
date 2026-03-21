@@ -1,5 +1,7 @@
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(Code), IsUnique = true)]
+    [Index(nameof(DisplayOrder))]
     public class PartCategory : BaseEntity
     {
         [Required]

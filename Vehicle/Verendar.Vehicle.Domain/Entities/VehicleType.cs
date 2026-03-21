@@ -1,5 +1,6 @@
 ﻿namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(Code), IsUnique = true)]
     public class VehicleType : BaseEntity
     {
         [Required]

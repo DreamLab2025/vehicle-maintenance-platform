@@ -1,7 +1,6 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(TrackingCycleId), nameof(Level))]
     public class MaintenanceReminder : BaseEntity
     {
         [Required]
@@ -15,7 +14,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public ReminderLevel Level { get; set; }
 
-        [Column(TypeName = "decimal(5,2)")]
         public decimal PercentageRemaining { get; set; }
 
         public bool IsNotified { get; set; } = false;
@@ -28,7 +26,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public ReminderStatus Status { get; set; } = ReminderStatus.Active;
 
-        [ForeignKey("TrackingCycleId")]
         public TrackingCycle TrackingCycle { get; set; } = null!;
     }
 }

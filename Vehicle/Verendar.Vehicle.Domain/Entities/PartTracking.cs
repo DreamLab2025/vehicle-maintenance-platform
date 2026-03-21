@@ -1,5 +1,6 @@
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(UserVehicleId), nameof(PartCategoryId), nameof(InstanceIdentifier), IsUnique = true)]
     public class PartTracking : BaseEntity
     {
         [Required]

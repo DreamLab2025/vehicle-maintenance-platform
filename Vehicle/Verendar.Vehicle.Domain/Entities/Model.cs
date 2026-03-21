@@ -1,8 +1,9 @@
 ﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(Code), IsUnique = true)]
+    [Index(nameof(VehicleBrandId))]
     public class Model : BaseEntity
     {
         [Required]
@@ -24,7 +25,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public int? EngineDisplacement { get; set; }
 
-        [Column(TypeName = "decimal(4,2)")]
         public decimal? EngineCapacity { get; set; }
 
         [MaxLength(1000)]

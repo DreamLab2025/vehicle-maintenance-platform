@@ -156,9 +156,6 @@ namespace Verendar.Vehicle.Application.Mappings
             var oldOdometer = entity.CurrentOdometer;
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-            // Calculate average km/day from the delta since the last recorded odometer update.
-            // Using the absolute odometer value would produce wildly inflated numbers for used
-            // vehicles that already had high mileage when first registered.
             if (entity.LastOdometerUpdate.HasValue && newOdometer > oldOdometer)
             {
                 var daysSinceLastUpdate = today.DayNumber - entity.LastOdometerUpdate.Value.DayNumber;

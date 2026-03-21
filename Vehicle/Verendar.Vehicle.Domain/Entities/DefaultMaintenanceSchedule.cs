@@ -1,5 +1,6 @@
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(VehicleModelId), nameof(PartCategoryId), IsUnique = true)]
     public class DefaultMaintenanceSchedule : BaseEntity
     {
         [Required]

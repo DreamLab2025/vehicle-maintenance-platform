@@ -1,5 +1,6 @@
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(UserVehicleId), nameof(RecordedDate))]
     public class OdometerHistory : BaseEntity
     {
         [Required]
