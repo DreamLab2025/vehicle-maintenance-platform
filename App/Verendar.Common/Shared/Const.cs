@@ -15,6 +15,10 @@ namespace Verendar.Common.Shared
         public const string NotificationDatabase = "notification-db";
 
         public const string AiDatabase = "ai-db";
+
+        public const string CorrelationIdHeaderName = "X-Correlation-ID";
+
+        public const string CorrelationIdKey = "CorrelationId";
     }
 
     public enum RoleType

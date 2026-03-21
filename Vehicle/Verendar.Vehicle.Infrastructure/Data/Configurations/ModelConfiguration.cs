@@ -12,7 +12,7 @@ namespace Verendar.Vehicle.Infrastructure.Data.Configurations
                 .HasForeignKey(m => m.VehicleBrandId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Property(m => m.EngineCapacity).HasColumnType("decimal(4,2)");
+            builder.Property(m => m.EngineCapacity).HasColumnType("decimal(8,2)");
         }
     }
 }

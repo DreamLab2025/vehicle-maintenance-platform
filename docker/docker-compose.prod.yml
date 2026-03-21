@@ -5,6 +5,7 @@ x-common-environment: &common-environment
   ASPNETCORE_ENVIRONMENT: Production
   ASPNETCORE_URLS: http://+:8080
   Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS}
+  ConnectionStrings__seq: http://seq:5341
   JwtBearer__SecretKey: ${JWT_BEARER_SECRET_KEY}
   JwtBearer__Issuer: ${JWT_BEARER_ISSUER}
   JwtBearer__Audience: ${JWT_BEARER_AUDIENCE}
@@ -130,6 +131,22 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
+  seq:
+    image: datalust/seq:latest
+    container_name: verendar-seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "127.0.0.1:5341:5341"   # ingestion (internal only)
+      - "127.0.0.1:5340:80"     # UI — access via SSH tunnel: ssh -L 5340:localhost:5340 ec2-user@<ip>
+    volumes:
+      - seq_data:/data
+    mem_limit: 192m
+    cpus: 0.3
     networks:
       - verendar-network
     restart: unless-stopped
@@ -269,6 +286,7 @@ volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
+  seq_data:
 
 networks:
   verendar-network:

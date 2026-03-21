@@ -26,6 +26,10 @@ namespace Verendar.AppHost.Extensions
             var redis = builder.AddRedis("redis-cache")
                 .WithImageTag("alpine");
 
+            var seq = builder.AddSeq("seq")
+                .WithDataVolume()
+                .ExcludeFromManifest();
+
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
             var vehicleDb = postgres.AddDatabase("vehicle-db", "Vehicles");
             var mediaDb = postgres.AddDatabase("media-db", "Media");
@@ -36,33 +40,43 @@ namespace Verendar.AppHost.Extensions
                 .WithReference(identityDb)
                 .WithReference(rabbitMq)
                 .WithReference(redis)
+                .WithReference(seq)
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq)
-                .WaitFor(redis);
+                .WaitFor(redis)
+                .WaitFor(seq);
 
             var vehicleService = builder.AddProject<Projects.Verendar_Vehicle>("Verendar-vehicle")
                 .WithReference(vehicleDb)
                 .WithReference(rabbitMq)
+                .WithReference(seq)
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq);
+                .WaitFor(rabbitMq)
+                .WaitFor(seq);
 
             var mediaService = builder.AddProject<Projects.Verendar_Media>("Verendar-media")
                 .WithReference(mediaDb)
                 .WithReference(rabbitMq)
+                .WithReference(seq)
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq);
+                .WaitFor(rabbitMq)
+                .WaitFor(seq);
 
             var notificationService = builder.AddProject<Projects.Verendar_Notification>("Verendar-notification")
                 .WithReference(notificationDb)
                 .WithReference(rabbitMq)
+                .WithReference(seq)
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq);
+                .WaitFor(rabbitMq)
+                .WaitFor(seq);
 
             var aiService = builder.AddProject<Projects.Verendar_Ai>("Verendar-ai")
                 .WithReference(aiDb)
                 .WithReference(rabbitMq)
+                .WithReference(seq)
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq);
+                .WaitFor(rabbitMq)
+                .WaitFor(seq);
 
 
             var apiGateway = builder.AddYarp("api-gateway")
