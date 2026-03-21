@@ -2,9 +2,9 @@
 {
     public static class ModelMappings
     {
-        public static VehicleModel ToEntity(this ModelRequest request)
+        public static Model ToEntity(this ModelRequest request)
         {
-            return new VehicleModel
+            return new Model
             {
                 Name = request.Name,
                 Code = request.Code ?? string.Empty,
@@ -17,7 +17,7 @@
             };
         }
 
-        public static ModelResponse ToModelResponse(this VehicleModel entity)
+        public static ModelResponse ToModelResponse(this Model entity)
         {
             return new ModelResponse
             {
@@ -39,7 +39,7 @@
             };
         }
 
-        public static ModelResponseWithVariants ToModelResponseWithVariants(this VehicleModel entity)
+        public static ModelResponseWithVariants ToModelResponseWithVariants(this Model entity)
         {
             return new ModelResponseWithVariants
             {
@@ -62,7 +62,7 @@
             };
         }
 
-        public static void UpdateEntity(this VehicleModel entity, ModelRequest request)
+        public static void UpdateEntity(this Model entity, ModelRequest request)
         {
             entity.Name = request.Name;
             entity.Code = request.Code ?? string.Empty;

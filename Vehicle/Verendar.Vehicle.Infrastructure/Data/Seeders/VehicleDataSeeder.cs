@@ -54,10 +54,10 @@ public static class VehicleDataSeeder
         })).ToList();
     }
 
-    public static List<VehicleBrand> GetVehicleBrands()
+    public static List<Brand> GetVehicleBrands()
     {
         var rows = SeedDataLoader.ReadCsvAsDictionaries("VehicleBrands.csv");
-        return rows.Select(row => BaseAudit(new VehicleBrand
+        return rows.Select(row => BaseAudit(new Brand
         {
             Id = G(row, "Id"),
             VehicleTypeId = G(row, "VehicleTypeId"),
@@ -70,10 +70,10 @@ public static class VehicleDataSeeder
         })).ToList();
     }
 
-    public static List<VehicleModel> GetVehicleModels()
+    public static List<Model> GetVehicleModels()
     {
         var rows = SeedDataLoader.ReadCsvAsDictionaries("VehicleModels.csv");
-        return rows.Select(row => BaseAudit(new VehicleModel
+        return rows.Select(row => BaseAudit(new Model
         {
             Id = G(row, "Id"),
             VehicleBrandId = G(row, "VehicleBrandId"),
@@ -89,12 +89,12 @@ public static class VehicleDataSeeder
         })).ToList();
     }
 
-    public static List<VehicleVariant> GetVehicleVariants()
+    public static List<Variant> GetVehicleVariants()
     {
         var rows = SeedDataLoader.ReadCsvAsDictionaries("VehicleVariants.csv");
         return rows
             .Where(row => !string.IsNullOrWhiteSpace(Get(row, "ImageUrl")))
-            .Select(row => BaseAudit(new VehicleVariant
+            .Select(row => BaseAudit(new Variant
             {
                 Id = G(row, "Id"),
                 VehicleModelId = G(row, "VehicleModelId"),

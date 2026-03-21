@@ -26,10 +26,10 @@
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        public VehicleVariant Variant { get; set; } = null!;
+        public Variant Variant { get; set; } = null!;
 
         public ICollection<OdometerHistory> OdometerHistory { get; set; } = new List<OdometerHistory>();
-        public ICollection<VehiclePartTracking> PartTrackings { get; set; } = new List<VehiclePartTracking>();
+        public ICollection<PartTracking> PartTrackings { get; set; } = new List<PartTracking>();
         public ICollection<MaintenanceRecord> MaintenanceRecords { get; set; } = new List<MaintenanceRecord>();
     }
 }

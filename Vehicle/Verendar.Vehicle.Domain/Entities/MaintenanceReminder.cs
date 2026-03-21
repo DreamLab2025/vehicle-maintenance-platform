@@ -28,6 +28,7 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public bool IsCurrent { get; set; } = false;
 
-        public VehiclePartTracking PartTracking { get; set; } = null!;
+        [ForeignKey("VehiclePartTrackingId")]
+        public PartTracking PartTracking { get; set; } = null!;
     }
 }

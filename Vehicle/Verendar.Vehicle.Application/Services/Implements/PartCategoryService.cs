@@ -155,7 +155,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 if (vehicle == null)
                     return ApiResponse<List<PartCategoryResponse>>.NotFoundResponse("Không tìm thấy xe");
 
-                var trackings = await _unitOfWork.VehiclePartTrackings.GetDeclaredByUserVehicleIdAsync(userVehicleId);
+                var trackings = await _unitOfWork.PartTrackings.GetDeclaredByUserVehicleIdAsync(userVehicleId);
                 var categories = trackings
                     .Where(t => t.PartCategory != null)
                     .Select(t => t.PartCategory!)
@@ -177,7 +177,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<ReminderWithPartCategoryDto>>> GetRemindersByCategoryCodeAsync(Guid userId, Guid userVehicleId, string partCategoryCode)
+        public async Task<ApiResponse<List<ReminderDetailDto>>> GetRemindersByCategoryCodeAsync(Guid userId, Guid userVehicleId, string partCategoryCode)
         {
             try
             {
@@ -186,28 +186,28 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (vehicle == null)
                 {
-                    return ApiResponse<List<ReminderWithPartCategoryDto>>.NotFoundResponse("Không tìm thấy xe");
+                    return ApiResponse<List<ReminderDetailDto>>.NotFoundResponse("Không tìm thấy xe");
                 }
 
                 if (string.IsNullOrWhiteSpace(partCategoryCode))
                 {
-                    return ApiResponse<List<ReminderWithPartCategoryDto>>.FailureResponse("Part category code không hợp lệ");
+                    return ApiResponse<List<ReminderDetailDto>>.FailureResponse("Part category code không hợp lệ");
                 }
 
                 var reminders = (await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(userVehicleId))
                     .Where(r => string.Equals(r.PartTracking?.PartCategory?.Code, partCategoryCode.Trim(), StringComparison.OrdinalIgnoreCase))
                     .OrderByDescending(r => r.CreatedAt)
                     .ToList();
-                var dtos = reminders.Select(r => r.ToReminderWithPartCategoryDto(vehicle.CurrentOdometer)).ToList();
+                var dtos = reminders.Select(r => r.ToReminderDetailDto(vehicle.CurrentOdometer)).ToList();
 
-                return ApiResponse<List<ReminderWithPartCategoryDto>>.SuccessResponse(
+                return ApiResponse<List<ReminderDetailDto>>.SuccessResponse(
                     dtos,
                     "Lấy lịch sử nhắc bảo trì theo danh mục thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting reminders by category {PartCategoryCode} for vehicle {UserVehicleId}", partCategoryCode, userVehicleId);
-                return ApiResponse<List<ReminderWithPartCategoryDto>>.FailureResponse("Lỗi khi lấy lịch sử nhắc bảo trì theo danh mục");
+                return ApiResponse<List<ReminderDetailDto>>.FailureResponse("Lỗi khi lấy lịch sử nhắc bảo trì theo danh mục");
             }
         }
     }

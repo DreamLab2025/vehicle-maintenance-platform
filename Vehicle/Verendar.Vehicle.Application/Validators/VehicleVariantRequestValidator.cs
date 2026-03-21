@@ -1,8 +1,8 @@
 namespace Verendar.Vehicle.Application.Validators
 {
-    public class VehicleVariantRequestValidator : AbstractValidator<VehicleVariantRequest>
+    public class VariantRequestValidator : AbstractValidator<VariantRequest>
     {
-        public VehicleVariantRequestValidator()
+        public VariantRequestValidator()
         {
             RuleFor(x => x.VehicleModelId)
                 .NotEmpty()

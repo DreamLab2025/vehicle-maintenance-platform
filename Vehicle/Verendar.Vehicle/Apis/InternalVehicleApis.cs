@@ -17,9 +17,6 @@ namespace Verendar.Vehicle.Apis
             group.MapGet("/user-vehicles/{userVehicleId:guid}", GetUserVehicleById)
                 .WithName("InternalGetUserVehicleById");
 
-            group.MapGet("/models/{vehicleModelId:guid}/part-categories/{partCategoryCode}/default-schedule", GetDefaultScheduleByPartCategory)
-                .WithName("InternalGetDefaultScheduleByPartCategory");
-
             return group;
         }
 
@@ -36,14 +33,5 @@ namespace Verendar.Vehicle.Apis
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetDefaultScheduleByPartCategory(
-            Guid vehicleModelId,
-            string partCategoryCode,
-            IDefaultMaintenanceScheduleService service,
-            CancellationToken cancellationToken)
-        {
-            var result = await service.GetByVehicleModelAndPartCategoryAsync(vehicleModelId, partCategoryCode, cancellationToken);
-            return result.ToHttpResult();
-        }
     }
 }

@@ -1,4 +1,38 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(node -e \":*)",
+      "Bash(del \"e:\\\\Working\\\\DreamLab\\\\Verendar\\\\.claude\\\\worktrees\\\\fervent-gagarin\\\\Vehicle\\\\Verendar.Vehicle\\\\Apis\\\\PartApis.cs\")",
+      "Bash(BASE=\"e:/Working/DreamLab/Verendar/.claude/worktrees/fervent-gagarin/Vehicle\")",
+      "Bash(mv \"$BASE/Verendar.Vehicle.Domain/Entities/VehicleBrand.cs\" \"$BASE/Verendar.Vehicle.Domain/Entities/Brand.cs\")",
+      "Bash(mv \"$BASE/Verendar.Vehicle.Domain/Entities/VehicleModel.cs\" \"$BASE/Verendar.Vehicle.Domain/Entities/Model.cs\")",
+      "Bash(mv \"$BASE/Verendar.Vehicle.Domain/Entities/VehicleVariant.cs\" \"$BASE/Verendar.Vehicle.Domain/Entities/Variant.cs\")",
+      "Bash(mv \"$BASE/Verendar.Vehicle.Domain/Entities/VehiclePartTracking.cs\" \"$BASE/Verendar.Vehicle.Domain/Entities/PartTracking.cs\")",
+      "Bash(BASE=\"e:/Working/DreamLab/Verendar/.claude/worktrees/fervent-gagarin/Vehicle/Verendar.Vehicle.Domain/Repositories/Interfaces\")",
+      "Bash(mv \"$BASE/IVehicleBrandRepository.cs\" \"$BASE/IBrandRepository.cs\")",
+      "Bash(mv \"$BASE/IVehicleModelRepository.cs\" \"$BASE/IModelRepository.cs\")",
+      "Bash(mv \"$BASE/IVehicleTypeRepository.cs\" \"$BASE/ITypeRepository.cs\")",
+      "Bash(mv \"$BASE/IVehicleVariantRepository.cs\" \"$BASE/IVariantRepository.cs\")",
+      "Bash(BASE=\"e:/Working/DreamLab/Verendar/.claude/worktrees/fervent-gagarin/Vehicle/Verendar.Vehicle.Infrastructure/Repositories/Implements\")",
+      "Bash(mv \"$BASE/VehicleBrandRepository.cs\" \"$BASE/BrandRepository.cs\")",
+      "Bash(mv \"$BASE/VehicleModelRepository.cs\" \"$BASE/ModelRepository.cs\")",
+      "Bash(mv \"$BASE/VehicleTypeRepository.cs\" \"$BASE/TypeRepository.cs\")",
+      "Bash(mv \"$BASE/VehicleVariantRepository.cs\" \"$BASE/VariantRepository.cs\")",
+      "Bash(BASE=\"e:/Working/DreamLab/Verendar/.claude/worktrees/fervent-gagarin/Vehicle/Verendar.Vehicle.Application/Services/Interfaces\")",
+      "Bash(mv \"$BASE/IVehicleBrandService.cs\" \"$BASE/IBrandService.cs\")",
+      "Bash(mv \"$BASE/IVehicleModelService.cs\" \"$BASE/IModelService.cs\")",
+      "Bash(mv \"$BASE/IVehicleTypeService.cs\" \"$BASE/ITypeService.cs\")",
+      "Bash(mv \"$BASE/IVehicleVariantService.cs\" \"$BASE/IVariantService.cs\")",
+      "Bash(BASE=\"e:/Working/DreamLab/Verendar/.claude/worktrees/fervent-gagarin/Vehicle/Verendar.Vehicle.Application/Services/Implements\")",
+      "Bash(mv \"$BASE/VehicleBrandService.cs\" \"$BASE/BrandService.cs\")",
+      "Bash(mv \"$BASE/VehicleModelService.cs\" \"$BASE/ModelService.cs\")",
+      "Bash(mv \"$BASE/VehicleTypeService.cs\" \"$BASE/TypeService.cs\")",
+      "Bash(mv \"$BASE/VehicleVariantService.cs\" \"$BASE/VariantService.cs\")",
+      "Bash(tasklist)",
+      "Bash(tasklist /FI 'IMAGENAME eq dotnet.exe' /FO CSV)",
+      "Bash(powershell -Command \"Stop-Process -Id 13672 -Force\")"
+    ]
+  },
   "ignorePatterns": [
     "**/bin/**",
     "**/obj/**",
@@ -11,10 +45,5 @@
     "**/*.user",
     "**/*.lock.json",
     "**/node_modules/**"
-  ],
-  "permissions": {
-    "allow": [
-      "Bash(node -e \":*)"
-    ]
-  }
+  ]
 }

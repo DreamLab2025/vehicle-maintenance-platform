@@ -56,13 +56,15 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Register Services
-            builder.Services.AddScoped<IVehicleTypeService, VehicleTypeService>();
-            builder.Services.AddScoped<IVehicleBrandService, VehicleBrandService>();
-            builder.Services.AddScoped<IVehicleModelService, VehicleModelService>();
-            builder.Services.AddScoped<IVehicleVariantService, VehicleVariantService>();
+            builder.Services.AddScoped<ITypeService, TypeService>();
+            builder.Services.AddScoped<IBrandService, BrandService>();
+            builder.Services.AddScoped<IModelService, ModelService>();
+            builder.Services.AddScoped<IVariantService, VariantService>();
             builder.Services.AddScoped<IUserVehicleService, UserVehicleService>();
             builder.Services.AddScoped<IMaintenanceReminderService, MaintenanceReminderService>();
-            builder.Services.AddScoped<IDefaultMaintenanceScheduleService, DefaultMaintenanceScheduleService>();
+            builder.Services.AddScoped<IOdometerHistoryService, OdometerHistoryService>();
+            builder.Services.AddScoped<IPartTrackingService, PartTrackingService>();
+            builder.Services.AddScoped<IDefaultScheduleService, DefaultScheduleService>();
             builder.Services.AddScoped<IPartCategoryService, PartCategoryService>();
             builder.Services.AddScoped<IPartProductService, PartProductService>();
             builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
@@ -111,8 +113,9 @@ namespace Verendar.Vehicle.Bootstrapping
             app.MapUserVehicleApi();
             app.MapOdometerHistoryApi();
             app.MapDefaultMaintenanceScheduleApi();
-            app.MapPartApi();
             app.MapMaintenanceRecordApi();
+            app.MapPartCategoryApi();
+            app.MapPartProductApi();
             app.MapInternalVehicleApi();
 
             return app;

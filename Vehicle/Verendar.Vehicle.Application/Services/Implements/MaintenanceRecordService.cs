@@ -8,19 +8,19 @@ namespace Verendar.Vehicle.Application.Services.Implements
 {
     public class MaintenanceRecordService(
         IUnitOfWork unitOfWork,
-        IUserVehicleService userVehicleService,
+        IMaintenanceReminderService maintenanceReminderService,
         ILogger<MaintenanceRecordService> logger) : IMaintenanceRecordService
     {
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IUserVehicleService _userVehicleService = userVehicleService;
+        private readonly IMaintenanceReminderService _maintenanceReminderService = maintenanceReminderService;
         private readonly ILogger<MaintenanceRecordService> _logger = logger;
 
-        public async Task<ApiResponse<CreateMaintenanceRecordResponse>> CreateMaintenanceRecordAsync(Guid userId, Guid vehicleId, CreateMaintenanceRecordRequest request)
+        public async Task<ApiResponse<CreateRecordResponse>> CreateMaintenanceRecordAsync(Guid userId, Guid vehicleId, CreateRecordRequest request)
         {
             try
             {
                 if (request.Items == null || request.Items.Count == 0)
-                    return ApiResponse<CreateMaintenanceRecordResponse>.FailureResponse("Cần ít nhất một phụ tùng thay thế trong phiếu bảo dưỡng");
+                    return ApiResponse<CreateRecordResponse>.FailureResponse("Cần ít nhất một phụ tùng thay thế trong phiếu bảo dưỡng");
 
                 var vehicle = await _unitOfWork.UserVehicles.AsQueryable()
                     .Include(v => v.Variant)
@@ -28,7 +28,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     .FirstOrDefaultAsync(v => v.Id == vehicleId && v.UserId == userId);
 
                 if (vehicle == null)
-                    return ApiResponse<CreateMaintenanceRecordResponse>.NotFoundResponse("Không tìm thấy xe");
+                    return ApiResponse<CreateRecordResponse>.NotFoundResponse("Không tìm thấy xe");
 
                 var record = request.ToMaintenanceRecord(vehicleId);
                 await _unitOfWork.MaintenanceRecords.AddAsync(record);
@@ -36,7 +36,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 int lastOdo = record.OdometerAtService;
                 DateOnly lastDate = record.ServiceDate;
-                var itemResults = new List<CreateMaintenanceRecordItemResult>();
+                var itemResults = new List<RecordItemResult>();
                 var trackingIdsToResetReminders = new List<Guid>();
                 var trackingIdsForResponse = new List<Guid>();
 
@@ -81,10 +81,10 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 foreach (var itemInput in request.Items)
                 {
                     if (!partCategoriesMap.TryGetValue(itemInput.PartCategoryCode, out var partCategory))
-                        return ApiResponse<CreateMaintenanceRecordResponse>.NotFoundResponse(
+                        return ApiResponse<CreateRecordResponse>.NotFoundResponse(
                             $"Không tìm thấy linh kiện với mã '{itemInput.PartCategoryCode}'");
 
-                    var existingTracking = await _unitOfWork.VehiclePartTrackings.AsQueryable()
+                    var existingTracking = await _unitOfWork.PartTrackings.AsQueryable()
                         .Include(t => t.PartCategory)
                         .Include(t => t.CurrentPartProduct)
                         .FirstOrDefaultAsync(t => t.UserVehicleId == vehicleId
@@ -102,7 +102,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     {
                         if (!partProductsMap.TryGetValue(itemInput.PartProductId!.Value, out var product)
                             || product.PartCategoryId != partCategory.Id)
-                            return ApiResponse<CreateMaintenanceRecordResponse>.NotFoundResponse(
+                            return ApiResponse<CreateRecordResponse>.NotFoundResponse(
                                 $"Phụ tùng không tồn tại hoặc không thuộc danh mục '{itemInput.PartCategoryCode}'");
 
                         customKm = product.RecommendedKmInterval;
@@ -143,7 +143,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     var item = itemInput.ToMaintenanceRecordItem(record.Id, partCategory.Id, currentPartProductId);
                     await _unitOfWork.MaintenanceRecordItems.AddAsync(item);
 
-                    VehiclePartTracking tracking;
+                    PartTracking tracking;
                     if (existingTracking == null)
                     {
                         tracking = MaintenanceRecordMappings.ToNewVehiclePartTracking(
@@ -157,7 +157,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                             customKm,
                             customMonths,
                             currentPartProductId);
-                        await _unitOfWork.VehiclePartTrackings.AddAsync(tracking);
+                        await _unitOfWork.PartTrackings.AddAsync(tracking);
                         tracking.PartCategory = partCategory;
                         trackingIdsForResponse.Add(tracking.Id);
                     }
@@ -172,14 +172,14 @@ namespace Verendar.Vehicle.Application.Services.Implements
                             predictedNextDate,
                             customKm,
                             customMonths);
-                        await _unitOfWork.VehiclePartTrackings.UpdateAsync(existingTracking.Id, existingTracking);
+                        await _unitOfWork.PartTrackings.UpdateAsync(existingTracking.Id, existingTracking);
                         tracking = existingTracking;
                         trackingIdsToResetReminders.Add(tracking.Id);
                         trackingIdsForResponse.Add(tracking.Id);
                     }
 
                     var trackingSummary = tracking.ToSummary(vehicle.CurrentOdometer);
-                    itemResults.Add(MaintenanceRecordMappings.ToCreateMaintenanceRecordItemResult(item.Id, itemInput.PartCategoryCode, trackingSummary));
+                    itemResults.Add(MaintenanceRecordMappings.ToRecordItemResult(item.Id, itemInput.PartCategoryCode, trackingSummary));
                 }
 
                 await _unitOfWork.SaveChangesAsync();
@@ -198,11 +198,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 if (trackingIdsToResetReminders.Count > 0)
                     await _unitOfWork.SaveChangesAsync();
 
-                await _userVehicleService.SyncMaintenanceRemindersForVehicleAsync(vehicleId, vehicle.CurrentOdometer, userId);
+                await _maintenanceReminderService.SyncRemindersAsync(vehicleId, vehicle.CurrentOdometer, userId);
+                await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
 
                 if (trackingIdsForResponse.Count > 0)
                 {
-                    var trackingsWithReminders = await _unitOfWork.VehiclePartTrackings.AsQueryable()
+                    var trackingsWithReminders = await _unitOfWork.PartTrackings.AsQueryable()
                         .Where(t => trackingIdsForResponse.Contains(t.Id))
                         .Include(t => t.PartCategory)
                         .Include(t => t.CurrentPartProduct)
@@ -217,41 +218,41 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     }
                 }
 
-                var response = MaintenanceRecordMappings.ToCreateMaintenanceRecordResponse(record.Id, itemResults);
-                return ApiResponse<CreateMaintenanceRecordResponse>.CreatedResponse(response, "Tạo phiếu bảo dưỡng thành công");
+                var response = MaintenanceRecordMappings.ToCreateRecordResponse(record.Id, itemResults);
+                return ApiResponse<CreateRecordResponse>.CreatedResponse(response, "Tạo phiếu bảo dưỡng thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error creating maintenance record for vehicle {VehicleId}", vehicleId);
-                return ApiResponse<CreateMaintenanceRecordResponse>.FailureResponse("Lỗi khi tạo phiếu bảo dưỡng");
+                return ApiResponse<CreateRecordResponse>.FailureResponse("Lỗi khi tạo phiếu bảo dưỡng");
             }
         }
 
-        public async Task<ApiResponse<IReadOnlyList<MaintenanceRecordSummaryDto>>> GetMaintenanceHistoryAsync(Guid userId, Guid userVehicleId)
+        public async Task<ApiResponse<IReadOnlyList<RecordSummaryDto>>> GetMaintenanceHistoryAsync(Guid userId, Guid userVehicleId)
         {
             var vehicle = await _unitOfWork.UserVehicles.AsQueryable()
                 .FirstOrDefaultAsync(v => v.Id == userVehicleId && v.UserId == userId);
             if (vehicle == null)
-                return ApiResponse<IReadOnlyList<MaintenanceRecordSummaryDto>>.NotFoundResponse("Không tìm thấy xe");
+                return ApiResponse<IReadOnlyList<RecordSummaryDto>>.NotFoundResponse("Không tìm thấy xe");
 
             var records = await _unitOfWork.MaintenanceRecords.GetByUserVehicleIdWithItemsAsync(userVehicleId);
-            var list = records.Select(r => r.ToMaintenanceRecordSummaryDto()).ToList();
-            return ApiResponse<IReadOnlyList<MaintenanceRecordSummaryDto>>.SuccessResponse(list, "Lấy lịch sử bảo dưỡng thành công");
+            var list = records.Select(r => r.ToRecordSummaryDto()).ToList();
+            return ApiResponse<IReadOnlyList<RecordSummaryDto>>.SuccessResponse(list, "Lấy lịch sử bảo dưỡng thành công");
         }
 
-        public async Task<ApiResponse<MaintenanceRecordDetailDto>> GetMaintenanceRecordDetailAsync(Guid userId, Guid maintenanceRecordId)
+        public async Task<ApiResponse<RecordDetailDto>> GetMaintenanceRecordDetailAsync(Guid userId, Guid maintenanceRecordId)
         {
             var record = await _unitOfWork.MaintenanceRecords.GetWithItemsAsync(maintenanceRecordId);
             if (record == null)
-                return ApiResponse<MaintenanceRecordDetailDto>.NotFoundResponse("Không tìm thấy phiếu bảo dưỡng");
+                return ApiResponse<RecordDetailDto>.NotFoundResponse("Không tìm thấy phiếu bảo dưỡng");
 
             var vehicle = await _unitOfWork.UserVehicles.AsQueryable()
                 .FirstOrDefaultAsync(v => v.Id == record.UserVehicleId && v.UserId == userId);
             if (vehicle == null)
-                return ApiResponse<MaintenanceRecordDetailDto>.ForbiddenResponse("Bạn không có quyền xem phiếu bảo dưỡng này");
+                return ApiResponse<RecordDetailDto>.ForbiddenResponse("Bạn không có quyền xem phiếu bảo dưỡng này");
 
-            var detail = record.ToMaintenanceRecordDetailDto();
-            return ApiResponse<MaintenanceRecordDetailDto>.SuccessResponse(detail, "Lấy chi tiết phiếu bảo dưỡng thành công");
+            var detail = record.ToRecordDetailDto();
+            return ApiResponse<RecordDetailDto>.SuccessResponse(detail, "Lấy chi tiết phiếu bảo dưỡng thành công");
         }
     }
 }

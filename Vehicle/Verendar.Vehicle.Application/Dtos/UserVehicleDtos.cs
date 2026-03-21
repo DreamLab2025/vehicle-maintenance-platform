@@ -42,7 +42,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public bool NeedsOnboarding { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
-        public UserVehicleVariantResponse UserVehicleVariant { get; set; } = null!;
+        public UserVariantResponse UserVehicleVariant { get; set; } = null!;
     }
 
 
@@ -55,7 +55,7 @@ namespace Verendar.Vehicle.Application.Dtos
     }
 
 
-    public class UserVehiclePartSummary
+    public class PartSummary
     {
         public Guid Id { get; set; }
         public Guid PartCategoryId { get; set; }
@@ -66,7 +66,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public string? Description { get; set; }
     }
 
-    public class VehiclePartTrackingSummary
+    public class PartTrackingSummary
     {
         public Guid Id { get; set; }
         public Guid PartCategoryId { get; set; }
@@ -82,10 +82,10 @@ namespace Verendar.Vehicle.Application.Dtos
         public int? PredictedNextOdometer { get; set; }
         public DateOnly? PredictedNextDate { get; set; }
         public bool IsDeclared { get; set; }
-        public List<MaintenanceReminderSummary> Reminders { get; set; } = new();
+        public List<ReminderSummary> Reminders { get; set; } = new();
     }
 
-    public class MaintenanceReminderSummary
+    public class ReminderSummary
     {
         public Guid Id { get; set; }
         public string Level { get; set; } = null!;
@@ -101,7 +101,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public bool IsCurrent { get; set; }
     }
 
-    public class VehicleStreakResponse
+    public class StreakResponse
     {
         public Guid VehicleId { get; set; }
         public int CurrentStreak { get; set; }
@@ -115,7 +115,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public string? Message { get; set; }
     }
 
-    public class ReminderWithPartCategoryDto
+    public class ReminderDetailDto
     {
         public Guid Id { get; set; }
         public Guid VehiclePartTrackingId { get; set; }
@@ -130,10 +130,10 @@ namespace Verendar.Vehicle.Application.Dtos
         public bool IsDismissed { get; set; }
         public DateOnly? DismissedDate { get; set; }
         public bool IsCurrent { get; set; }
-        public PartCategoryInfoDto PartCategory { get; set; } = null!;
+        public CategoryInfoDto PartCategory { get; set; } = null!;
     }
 
-    public class PartCategoryInfoDto
+    public class CategoryInfoDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
@@ -146,12 +146,10 @@ namespace Verendar.Vehicle.Application.Dtos
 
     public class OdometerHistoryQueryRequest : PaginationRequest
     {
+        public Guid UserVehicleId { get; set; }
         public DateOnly? FromDate { get; set; }
         public DateOnly? ToDate { get; set; }
 
-        /// <summary>
-        /// Chuẩn hóa pagination params.
-        /// </summary>
         public override void Normalize()
         {
             base.Normalize();

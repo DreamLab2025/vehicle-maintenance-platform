@@ -2,9 +2,9 @@ namespace Verendar.Vehicle.Application.Mappings
 {
     public static class VariantMappings
     {
-        public static VehicleVariant ToEntity(this VehicleVariantRequest request)
+        public static Variant ToEntity(this VariantRequest request)
         {
-            return new VehicleVariant
+            return new Variant
             {
                 VehicleModelId = request.VehicleModelId,
                 Color = request.Color,
@@ -13,9 +13,9 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static VehicleVariantResponse ToResponse(this VehicleVariant entity)
+        public static VariantResponse ToResponse(this Variant entity)
         {
-            return new VehicleVariantResponse
+            return new VariantResponse
             {
                 Id = entity.Id,
                 VehicleModelId = entity.VehicleModelId,
@@ -27,9 +27,9 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static UserVehicleVariantResponse ToUserVehicleVariantResponse(this VehicleVariant entity)
+        public static UserVariantResponse ToUserVariantResponse(this Variant entity)
         {
-            return new UserVehicleVariantResponse
+            return new UserVariantResponse
             {
                 Id = entity.Id,
                 VehicleModelId = entity.VehicleModelId,
@@ -42,7 +42,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static void UpdateEntity(this VehicleVariant entity, VehicleVariantUpdateRequest request)
+        public static void UpdateEntity(this Variant entity, VariantUpdateRequest request)
         {
             entity.Color = request.Color;
             entity.ImageUrl = request.ImageUrl;

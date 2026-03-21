@@ -13,7 +13,7 @@ namespace Verendar.Vehicle.Apis
 
         public static RouteGroupBuilder MapMaintenanceRecordRoutes(this RouteGroupBuilder group)
         {
-            group.MapGet("/vehicles/{userVehicleId:guid}", GetMaintenanceHistory)
+            group.MapGet("/", GetMaintenanceHistory)
                 .WithName("GetMaintenanceHistory")
                 .WithOpenApi(operation =>
                 {
@@ -21,7 +21,7 @@ namespace Verendar.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<IReadOnlyList<MaintenanceRecordSummaryDto>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<IReadOnlyList<RecordSummaryDto>>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/{maintenanceRecordId:guid}", GetMaintenanceRecordDetail)
@@ -32,12 +32,12 @@ namespace Verendar.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<MaintenanceRecordDetailDto>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<MaintenanceRecordDetailDto>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<RecordDetailDto>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<RecordDetailDto>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/vehicles/{userVehicleId:guid}", CreateMaintenanceRecord)
-                .AddEndpointFilter(ValidationEndpointFilter.Validate<CreateMaintenanceRecordRequest>())
+            group.MapPost("/", CreateMaintenanceRecord)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<CreateRecordRequest>())
                 .WithName("CreateMaintenanceRecord")
                 .WithOpenApi(operation =>
                 {
@@ -45,8 +45,8 @@ namespace Verendar.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<CreateMaintenanceRecordResponse>>(StatusCodes.Status201Created)
-                .Produces<ApiResponse<CreateMaintenanceRecordResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<CreateRecordResponse>>(StatusCodes.Status201Created)
+                .Produces<ApiResponse<CreateRecordResponse>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
@@ -65,6 +65,7 @@ namespace Verendar.Vehicle.Apis
             return result.ToHttpResult();
         }
 
+
         private static async Task<IResult> GetMaintenanceRecordDetail(
             Guid maintenanceRecordId,
             ICurrentUserService currentUserService,
@@ -79,8 +80,7 @@ namespace Verendar.Vehicle.Apis
         }
 
         private static async Task<IResult> CreateMaintenanceRecord(
-            Guid userVehicleId,
-            CreateMaintenanceRecordRequest request,
+            CreateRecordRequest request,
             ICurrentUserService currentUserService,
             IMaintenanceRecordService maintenanceRecordService)
         {
@@ -88,7 +88,7 @@ namespace Verendar.Vehicle.Apis
             if (userId == Guid.Empty)
                 return Results.Unauthorized();
 
-            var result = await maintenanceRecordService.CreateMaintenanceRecordAsync(userId, userVehicleId, request);
+            var result = await maintenanceRecordService.CreateMaintenanceRecordAsync(userId, request.UserVehicleId, request);
             return result.ToHttpResult();
         }
     }

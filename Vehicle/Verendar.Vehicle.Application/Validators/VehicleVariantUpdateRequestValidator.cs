@@ -1,8 +1,8 @@
 namespace Verendar.Vehicle.Application.Validators
 {
-    public class VehicleVariantUpdateRequestValidator : AbstractValidator<VehicleVariantUpdateRequest>
+    public class VariantUpdateRequestValidator : AbstractValidator<VariantUpdateRequest>
     {
-        public VehicleVariantUpdateRequestValidator()
+        public VariantUpdateRequestValidator()
         {
             RuleFor(x => x.Color)
                 .NotEmpty()

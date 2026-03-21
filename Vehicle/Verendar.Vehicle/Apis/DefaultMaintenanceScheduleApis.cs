@@ -26,38 +26,17 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<List<PartCategoryResponse>>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapGet("/{vehicleModelId:guid}/part-categories/{partCategoryCode}/default-schedule", GetDefaultScheduleByPartCategory)
-                .WithName("GetDefaultMaintenanceScheduleByPartCategory")
-                .WithOpenApi(operation =>
-                {
-                    operation.Summary = "Lấy lịch bảo dưỡng cho MỘT linh kiện cụ thể";
-                    return operation;
-                })
-                .RequireAuthorization()
-                .Produces<ApiResponse<DefaultMaintenanceScheduleResponse>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<DefaultMaintenanceScheduleResponse>>(StatusCodes.Status404NotFound)
-                .Produces(StatusCodes.Status401Unauthorized);
-
             return group;
         }
 
         private static async Task<IResult> GetPartCategoriesByVehicleModel(
             Guid vehicleModelId,
-            IDefaultMaintenanceScheduleService service,
+            IDefaultScheduleService service,
             CancellationToken cancellationToken)
         {
             var result = await service.GetPartCategoriesByVehicleModelAsync(vehicleModelId, cancellationToken);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetDefaultScheduleByPartCategory(
-            Guid vehicleModelId,
-            string partCategoryCode,
-            IDefaultMaintenanceScheduleService service,
-            CancellationToken cancellationToken)
-        {
-            var result = await service.GetByVehicleModelAndPartCategoryAsync(vehicleModelId, partCategoryCode, cancellationToken);
-            return result.ToHttpResult();
-        }
     }
 }

@@ -2,9 +2,9 @@
 {
     public static class BrandMappings
     {
-        public static VehicleBrand ToEntity(this BrandRequest request)
+        public static Brand ToEntity(this BrandRequest request)
         {
-            return new VehicleBrand
+            return new Brand
             {
                 VehicleTypeId = request.VehicleTypeId,
                 Name = request.Name,
@@ -14,7 +14,7 @@
             };
         }
 
-        public static BrandResponse ToResponse(this VehicleBrand entity)
+        public static BrandResponse ToResponse(this Brand entity)
         {
             return new BrandResponse
             {
@@ -30,7 +30,7 @@
             };
         }
 
-        public static void UpdateEntity(this VehicleBrand entity, BrandRequest request)
+        public static void UpdateEntity(this Brand entity, BrandRequest request)
         {
             entity.VehicleTypeId = request.VehicleTypeId;
             entity.Name = request.Name;

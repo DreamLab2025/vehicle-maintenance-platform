@@ -18,6 +18,6 @@
 
         public EntityStatus Status { get; set; } = EntityStatus.Active;
 
-        public List<VehicleBrand> Brands { get; set; } = [];
+        public List<Brand> Brands { get; set; } = [];
     }
 }

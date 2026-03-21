@@ -34,7 +34,7 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public List<PartProduct> Products { get; set; } = [];
         public List<DefaultMaintenanceSchedule> DefaultSchedules { get; set; } = [];
-        public List<VehiclePartTracking> PartTrackings { get; set; } = [];
+        public List<PartTracking> PartTrackings { get; set; } = [];
         public List<MaintenanceRecordItem> MaintenanceItems { get; set; } = [];
     }
 }

@@ -68,25 +68,25 @@ namespace Verendar.Vehicle.Apis
             return group;
         }
 
-        private static async Task<IResult> DeleteVehicleType(Guid id, IVehicleTypeService typeService)
+        private static async Task<IResult> DeleteVehicleType(Guid id, ITypeService typeService)
         {
             var result = await typeService.DeleteTypeAsync(id);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateVehicleType(Guid id, TypeRequest request, IVehicleTypeService typeService)
+        private static async Task<IResult> UpdateVehicleType(Guid id, TypeRequest request, ITypeService typeService)
         {
             var result = await typeService.UpdateTypeAsync(id, request);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> CreateVehicleType(TypeRequest request, IVehicleTypeService typeService)
+        private static async Task<IResult> CreateVehicleType(TypeRequest request, ITypeService typeService)
         {
             var result = await typeService.CreateTypeAsync(request);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetAllTypes([AsParameters] PaginationRequest paginationRequest, IVehicleTypeService typeService)
+        private static async Task<IResult> GetAllTypes([AsParameters] PaginationRequest paginationRequest, ITypeService typeService)
         {
             var results = await typeService.GetAllTypesAsync(paginationRequest);
             return results.ToHttpResult();

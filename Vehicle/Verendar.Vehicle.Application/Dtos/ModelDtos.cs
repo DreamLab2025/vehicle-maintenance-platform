@@ -42,7 +42,7 @@ namespace Verendar.Vehicle.Application.Dtos
 
     public class ModelResponseWithVariants : ModelResponse
     {
-        public List<VehicleVariantResponse> Variants { get; set; } = new();
+        public List<VariantResponse> Variants { get; set; } = new();
     }
 
     public class ModelFilterRequest : PaginationRequest
