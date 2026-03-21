@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,7 +9,6 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
-using Serilog.Formatting.Compact;
 
 namespace Verendar.ServiceDefaults
 {
@@ -50,11 +50,15 @@ namespace Verendar.ServiceDefaults
         {
             builder.ConfigureSerilog();
 
-            builder.Logging.AddOpenTelemetry(logging =>
+            // Development: console only (Serilog). Non-Development: OTLP logs → Seq (see AddSeqLogsOnlyEndpoint).
+            if (!builder.Environment.IsDevelopment())
             {
-                logging.IncludeFormattedMessage = true;
-                logging.IncludeScopes = true;
-            });
+                builder.Logging.AddOpenTelemetry(logging =>
+                {
+                    logging.IncludeFormattedMessage = true;
+                    logging.IncludeScopes = true;
+                });
+            }
 
             builder.Services.AddOpenTelemetry()
                 .WithMetrics(metrics =>
@@ -65,32 +69,28 @@ namespace Verendar.ServiceDefaults
                 })
                 .WithTracing(tracing =>
                 {
-                    tracing.SetSampler(new HangfireFilterSampler())
+                    tracing.AddProcessor(new HangfireStatementTraceFilterProcessor())
                         .AddSource(builder.Environment.ApplicationName)
-                        .AddAspNetCoreInstrumentation(tracing =>
-                            tracing.Filter = context =>
-                                !context.Request.Path.StartsWithSegments(HealthEndpointPath)
-                                && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath)
-                        )
                         .AddHttpClientInstrumentation();
                 });
 
-            builder.AddSeqEndpoint("seq");
+            if (!builder.Environment.IsDevelopment())
+                builder.AddSeqLogsOnlyEndpoint("seq");
 
             return builder;
         }
 
         private static TBuilder ConfigureSerilog<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
-            // writeToProviders: true forwards log events to the OTel logging provider,
-            // which exports them to Seq via OTLP (configured by AddSeqEndpoint above).
+            var forwardToOpenTelemetry = !builder.Environment.IsDevelopment();
+
+            // writeToProviders: forwards Serilog to the OTel logging provider → Seq OTLP when not Development.
             builder.Services.AddSerilog((services, lc) => lc
                 .ReadFrom.Configuration(builder.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
-                .Enrich.WithMachineName()
-                .WriteTo.Console(new CompactJsonFormatter()),
-                writeToProviders: true);
+                .Enrich.WithMachineName(),
+                writeToProviders: forwardToOpenTelemetry);
 
             return builder;
         }
@@ -129,24 +129,15 @@ namespace Verendar.ServiceDefaults
         }
     }
 
-    internal sealed class HangfireFilterSampler : Sampler
+    internal sealed class HangfireStatementTraceFilterProcessor : BaseProcessor<Activity>
     {
-        public override SamplingResult ShouldSample(in SamplingParameters samplingParameters)
+        public override void OnEnd(Activity activity)
         {
-            if (samplingParameters.Tags != null)
+            var statement = activity.GetTagItem("db.statement") as string;
+            if (statement != null && statement.Contains("hangfire", StringComparison.OrdinalIgnoreCase))
             {
-                foreach (var tag in samplingParameters.Tags)
-                {
-                    if (tag.Key == "db.statement" &&
-                        tag.Value is string sql &&
-                        sql.Contains("hangfire", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return new SamplingResult(SamplingDecision.Drop);
-                    }
-                }
+                activity.ActivityTraceFlags &= ~ActivityTraceFlags.Recorded;
             }
-
-            return new SamplingResult(SamplingDecision.RecordAndSample);
         }
     }
 }

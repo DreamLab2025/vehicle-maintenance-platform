@@ -1,3 +1,4 @@
+using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Yarp;
 using Yarp.ReverseProxy.Configuration;
 
@@ -5,6 +6,16 @@ namespace Verendar.AppHost.Extensions
 {
     public static class ExternalServiceRegistrationExtensions
     {
+        /// <summary>
+        /// When <c>Development</c> (default AppHost launch profile), Seq container and references are omitted so local dev stays console-only for logs.
+        /// </summary>
+        private static bool IncludeSeqInAppHost()
+        {
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+                      ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+            return !string.Equals(env, "Development", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static IDistributedApplicationBuilder AddApplicationServices(this IDistributedApplicationBuilder builder)
         {
             var postgres = builder.AddPostgres("postgres")
@@ -26,9 +37,13 @@ namespace Verendar.AppHost.Extensions
             var redis = builder.AddRedis("redis-cache")
                 .WithImageTag("alpine");
 
-            var seq = builder.AddSeq("seq")
-                .WithDataVolume()
-                .ExcludeFromManifest();
+            IResourceBuilder<SeqResource>? seq = null;
+            if (IncludeSeqInAppHost())
+            {
+                seq = builder.AddSeq("seq")
+                    .WithDataVolume()
+                    .ExcludeFromManifest();
+            }
 
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
             var vehicleDb = postgres.AddDatabase("vehicle-db", "Vehicles");
@@ -39,44 +54,59 @@ namespace Verendar.AppHost.Extensions
             var identityService = builder.AddProject<Projects.Verendar_Identity>("Verendar-identity")
                 .WithReference(identityDb)
                 .WithReference(rabbitMq)
-                .WithReference(redis)
-                .WithReference(seq)
+                .WithReference(redis);
+            if (seq is not null)
+                identityService = identityService.WithReference(seq);
+            identityService = identityService
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq)
-                .WaitFor(redis)
-                .WaitFor(seq);
+                .WaitFor(redis);
+            if (seq is not null)
+                identityService = identityService.WaitFor(seq);
 
             var vehicleService = builder.AddProject<Projects.Verendar_Vehicle>("Verendar-vehicle")
                 .WithReference(vehicleDb)
-                .WithReference(rabbitMq)
-                .WithReference(seq)
+                .WithReference(rabbitMq);
+            if (seq is not null)
+                vehicleService = vehicleService.WithReference(seq);
+            vehicleService = vehicleService
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq)
-                .WaitFor(seq);
+                .WaitFor(rabbitMq);
+            if (seq is not null)
+                vehicleService = vehicleService.WaitFor(seq);
 
             var mediaService = builder.AddProject<Projects.Verendar_Media>("Verendar-media")
                 .WithReference(mediaDb)
-                .WithReference(rabbitMq)
-                .WithReference(seq)
+                .WithReference(rabbitMq);
+            if (seq is not null)
+                mediaService = mediaService.WithReference(seq);
+            mediaService = mediaService
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq)
-                .WaitFor(seq);
+                .WaitFor(rabbitMq);
+            if (seq is not null)
+                mediaService = mediaService.WaitFor(seq);
 
             var notificationService = builder.AddProject<Projects.Verendar_Notification>("Verendar-notification")
                 .WithReference(notificationDb)
-                .WithReference(rabbitMq)
-                .WithReference(seq)
+                .WithReference(rabbitMq);
+            if (seq is not null)
+                notificationService = notificationService.WithReference(seq);
+            notificationService = notificationService
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq)
-                .WaitFor(seq);
+                .WaitFor(rabbitMq);
+            if (seq is not null)
+                notificationService = notificationService.WaitFor(seq);
 
             var aiService = builder.AddProject<Projects.Verendar_Ai>("Verendar-ai")
                 .WithReference(aiDb)
-                .WithReference(rabbitMq)
-                .WithReference(seq)
+                .WithReference(rabbitMq);
+            if (seq is not null)
+                aiService = aiService.WithReference(seq);
+            aiService = aiService
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq)
-                .WaitFor(seq);
+                .WaitFor(rabbitMq);
+            if (seq is not null)
+                aiService = aiService.WaitFor(seq);
 
 
             var apiGateway = builder.AddYarp("api-gateway")
