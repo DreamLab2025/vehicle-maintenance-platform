@@ -364,6 +364,8 @@ FodyWeavers.xsd
 
 # dotenv environment variable files
 .env
+.env.dev
+.env.prod
 
 !vicobi.user/
 
