@@ -1,5 +1,7 @@
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(Code), IsUnique = true)]
+    [Index(nameof(DisplayOrder))]
     public class PartCategory : BaseEntity
     {
         [Required]
@@ -17,8 +19,6 @@ namespace Verendar.Vehicle.Domain.Entities
         public string? IconUrl { get; set; }
 
         public int DisplayOrder { get; set; }
-
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
 
         public bool RequiresOdometerTracking { get; set; } = true;
 

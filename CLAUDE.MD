@@ -39,7 +39,7 @@ Prerequisites: .NET 9 SDK, Docker.
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
 | `/api/v1/auth/**`, `/api/v1/users/**`, `/api/internal/**`                                                                                                                             | Identity     |
 | `/api/v1/ai/**`                                                                                                                                                                       | Ai           |
-| `/api/v1/user-vehicles/**`, `/api/v1/maintenance-records/**`, `/api/v1/vehicle-models/**`, `/api/v1/brands/**`, `/api/v1/parts/**`, `/api/v1/types/**`, `/api/v1/odometer-history/**` | Vehicle      |
+| `/api/v1/user-vehicles/**`, `/api/v1/maintenance-records/**`, `/api/v1/vehicle-models/**`, `/api/v1/models/**`, `/api/v1/variants/**`, `/api/v1/brands/**`, `/api/v1/part-categories/**`, `/api/v1/part-products/**`, `/api/v1/types/**`, `/api/v1/odometer-history/**` | Vehicle      |
 | `/api/v1/media-files/**`                                                                                                                                                              | Media        |
 | `/api/v1/notifications/**`, `/hubs/**`                                                                                                                                                | Notification |
 

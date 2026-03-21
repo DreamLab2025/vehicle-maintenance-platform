@@ -54,9 +54,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
                     b.Property<string>("SupportPhone")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
@@ -115,9 +112,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid>("PartCategoryId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -173,9 +167,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.Property<DateOnly>("ServiceDate")
                         .HasColumnType("date");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
 
                     b.Property<decimal>("TotalCost")
                         .HasColumnType("decimal(18,2)");
@@ -283,9 +274,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<DateOnly?>("DismissedDate")
                         .HasColumnType("date");
 
-                    b.Property<bool>("IsCurrent")
-                        .HasColumnType("boolean");
-
                     b.Property<bool>("IsDismissed")
                         .HasColumnType("boolean");
 
@@ -301,11 +289,17 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<decimal>("PercentageRemaining")
                         .HasColumnType("decimal(5,2)");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
                     b.Property<DateOnly?>("TargetDate")
                         .HasColumnType("date");
 
                     b.Property<int>("TargetOdometer")
                         .HasColumnType("integer");
+
+                    b.Property<Guid>("TrackingCycleId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -313,12 +307,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("VehiclePartTrackingId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("VehiclePartTrackingId", "Level")
+                    b.HasIndex("TrackingCycleId", "Level")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("MaintenanceReminders");
@@ -368,9 +359,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
                     b.Property<int?>("TransmissionType")
                         .HasColumnType("integer");
 
@@ -389,7 +377,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("\"DeletedAt\" IS NULL");
 
-                    b.HasIndex("VehicleBrandId", "Status")
+                    b.HasIndex("VehicleBrandId")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("VehicleModels");
@@ -498,9 +486,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<bool>("RequiresTimeTracking")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -513,7 +498,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("\"DeletedAt\" IS NULL");
 
-                    b.HasIndex("DisplayOrder", "Status")
+                    b.HasIndex("DisplayOrder")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("PartCategories");
@@ -566,9 +551,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<decimal?>("ReferencePrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -577,7 +559,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PartCategoryId", "Status")
+                    b.HasIndex("PartCategoryId")
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("PartProducts");
@@ -632,9 +614,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<int?>("PredictedNextOdometer")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -655,6 +634,55 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasFilter("\"DeletedAt\" IS NULL");
 
                     b.ToTable("VehiclePartTrackings");
+                });
+
+            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.TrackingCycle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PartTrackingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("StartOdometer")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly?>("TargetDate")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("TargetOdometer")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartTrackingId");
+
+                    b.ToTable("TrackingCycles");
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.UserVehicle", b =>
@@ -694,9 +722,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<DateOnly?>("PurchaseDate")
                         .HasColumnType("date");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -710,18 +735,15 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasMaxLength(17)
                         .HasColumnType("character varying(17)");
 
-                    b.Property<Guid>("VariantId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid>("VehicleVariantId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("VariantId");
-
-                    b.HasIndex("UserId", "Status")
+                    b.HasIndex("UserId")
                         .HasFilter("\"DeletedAt\" IS NULL");
+
+                    b.HasIndex("VehicleVariantId");
 
                     b.ToTable("UserVehicles");
                 });
@@ -811,9 +833,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -897,13 +916,13 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceReminder", b =>
                 {
-                    b.HasOne("Verendar.Vehicle.Domain.Entities.PartTracking", "PartTracking")
+                    b.HasOne("Verendar.Vehicle.Domain.Entities.TrackingCycle", "TrackingCycle")
                         .WithMany("Reminders")
-                        .HasForeignKey("VehiclePartTrackingId")
+                        .HasForeignKey("TrackingCycleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PartTracking");
+                    b.Navigation("TrackingCycle");
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.Model", b =>
@@ -964,11 +983,22 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Navigation("UserVehicle");
                 });
 
+            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.TrackingCycle", b =>
+                {
+                    b.HasOne("Verendar.Vehicle.Domain.Entities.PartTracking", "PartTracking")
+                        .WithMany("Cycles")
+                        .HasForeignKey("PartTrackingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PartTracking");
+                });
+
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.UserVehicle", b =>
                 {
                     b.HasOne("Verendar.Vehicle.Domain.Entities.Variant", "Variant")
                         .WithMany()
-                        .HasForeignKey("VariantId")
+                        .HasForeignKey("VehicleVariantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1022,6 +1052,11 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.PartTracking", b =>
+                {
+                    b.Navigation("Cycles");
+                });
+
+            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.TrackingCycle", b =>
                 {
                     b.Navigation("Reminders");
                 });

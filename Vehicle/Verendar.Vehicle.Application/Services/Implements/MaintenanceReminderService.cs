@@ -30,13 +30,14 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 if (vehicle == null)
                     return ApiResponse<List<ReminderDetailDto>>.NotFoundResponse("Không tìm thấy xe");
 
-                var reminders = (await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(userVehicleId))
-                    .Where(r => r.IsCurrent)
-                    .GroupBy(r => r.PartTracking?.PartCategoryId ?? Guid.Empty)
-                    .Where(g => g.Key != Guid.Empty)
-                    .Select(g => g.OrderByDescending(r => r.CreatedAt).First())
+                var activeCycles = await _unitOfWork.TrackingCycles.GetActiveCyclesByVehicleIdAsync(userVehicleId);
+
+                var dtos = activeCycles
+                    .Select(c => c.Reminders.FirstOrDefault(r => r.Status == ReminderStatus.Active))
+                    .Where(r => r != null)
+                    .Cast<MaintenanceReminder>()
+                    .Select(r => r.ToReminderDetailDto(vehicle.CurrentOdometer))
                     .ToList();
-                var dtos = reminders.Select(r => r.ToReminderDetailDto(vehicle.CurrentOdometer)).ToList();
 
                 return ApiResponse<List<ReminderDetailDto>>.SuccessResponse(
                     dtos,
@@ -61,30 +62,16 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     kmPerDay = vehicle.AverageKmPerDay.Value;
             }
 
-            var trackings = await _unitOfWork.PartTrackings.AsQueryable()
-                .Where(t => t.UserVehicleId == vehicleId && t.IsDeclared &&
-                    (t.PredictedNextOdometer != null || t.PredictedNextDate != null))
-                .ToListAsync();
+            var activeCycles = await _unitOfWork.TrackingCycles.GetActiveCyclesByVehicleIdAsync(vehicleId);
 
-            var trackingIds = trackings.Select(t => t.Id).ToList();
-
-            var allReminders = await _unitOfWork.MaintenanceReminders.AsQueryable()
-                .Where(r => trackingIds.Contains(r.VehiclePartTrackingId))
-                .ToListAsync();
-
-            var currentRemindersByTracking = allReminders
-                .Where(r => r.IsCurrent)
-                .ToDictionary(r => r.VehiclePartTrackingId);
-
-            var allRemindersByTracking = allReminders
-                .GroupBy(r => r.VehiclePartTrackingId)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            foreach (var tracking in trackings)
+            foreach (var cycle in activeCycles)
             {
+                var tracking = cycle.PartTracking;
+                if (!tracking.IsDeclared) continue;
+                if (tracking.PredictedNextOdometer == null && tracking.PredictedNextDate == null) continue;
+
                 var (percentageRemaining, targetDate) = ComputeReminderData(tracking, currentOdometer, today, kmPerDay);
-                if (percentageRemaining is null)
-                    continue;
+                if (percentageRemaining is null) continue;
 
                 var targetOdometer = tracking.PredictedNextOdometer ?? currentOdometer;
                 var level = GetLevelFromPercentage(percentageRemaining.Value);
@@ -92,55 +79,47 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 if (currentOdometer >= targetOdometer || (targetDate.HasValue && today >= targetDate.Value))
                     level = ReminderLevel.Critical;
 
-                currentRemindersByTracking.TryGetValue(tracking.Id, out var currentReminder);
+                var activeReminder = cycle.Reminders.FirstOrDefault(r => r.Status == ReminderStatus.Active);
 
-                var stateChanged = currentReminder != null && (
-                    currentReminder.Level != level ||
-                    currentReminder.TargetOdometer != targetOdometer ||
-                    currentReminder.TargetDate != targetDate);
-
-                if (currentReminder != null && stateChanged)
+                if (activeReminder == null)
                 {
-                    currentReminder.IsCurrent = false;
-
+                    // Lazy: tạo reminder đầu tiên cho cycle này
                     var reminder = new MaintenanceReminder
                     {
-                        VehiclePartTrackingId = tracking.Id,
+                        TrackingCycleId = cycle.Id,
                         CurrentOdometer = currentOdometer,
                         TargetOdometer = targetOdometer,
                         TargetDate = targetDate,
                         Level = level,
                         PercentageRemaining = percentageRemaining.Value,
-                        IsCurrent = true,
+                        Status = ReminderStatus.Active,
                     };
                     await _unitOfWork.MaintenanceReminders.AddAsync(reminder);
                 }
-                else if (currentReminder != null)
+                else if (activeReminder.Level != level ||
+                         activeReminder.TargetOdometer != targetOdometer ||
+                         activeReminder.TargetDate != targetDate)
                 {
-                    currentReminder.CurrentOdometer = currentOdometer;
-                    currentReminder.PercentageRemaining = percentageRemaining.Value;
+                    // Level thay đổi → Passed rồi tạo Active mới
+                    activeReminder.Status = ReminderStatus.Passed;
+
+                    var reminder = new MaintenanceReminder
+                    {
+                        TrackingCycleId = cycle.Id,
+                        CurrentOdometer = currentOdometer,
+                        TargetOdometer = targetOdometer,
+                        TargetDate = targetDate,
+                        Level = level,
+                        PercentageRemaining = percentageRemaining.Value,
+                        Status = ReminderStatus.Active,
+                    };
+                    await _unitOfWork.MaintenanceReminders.AddAsync(reminder);
                 }
                 else
                 {
-                    if (allRemindersByTracking.TryGetValue(tracking.Id, out var otherReminders))
-                    {
-                        foreach (var r in otherReminders)
-                        {
-                            r.IsCurrent = false;
-                        }
-                    }
-
-                    var reminder = new MaintenanceReminder
-                    {
-                        VehiclePartTrackingId = tracking.Id,
-                        CurrentOdometer = currentOdometer,
-                        TargetOdometer = targetOdometer,
-                        TargetDate = targetDate,
-                        Level = level,
-                        PercentageRemaining = percentageRemaining.Value,
-                        IsCurrent = true,
-                    };
-                    await _unitOfWork.MaintenanceReminders.AddAsync(reminder);
+                    // Cùng level → cập nhật vị trí
+                    activeReminder.CurrentOdometer = currentOdometer;
+                    activeReminder.PercentageRemaining = percentageRemaining.Value;
                 }
             }
 
@@ -160,7 +139,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
 
                 var byLevel = reminders
-                    .Where(r => r.PartTracking?.UserVehicle != null && r.PartTracking.PartCategory != null)
+                    .Where(r => r.TrackingCycle?.PartTracking?.UserVehicle != null && r.TrackingCycle.PartTracking.PartCategory != null)
                     .GroupBy(r => r.Level)
                     .OrderByDescending(g => g.Key);
 

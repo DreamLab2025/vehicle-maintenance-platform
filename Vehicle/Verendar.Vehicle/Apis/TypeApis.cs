@@ -36,7 +36,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/", CreateVehicleType)
+            group.MapPost("/", CreateType)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<TypeRequest>())
                 .WithName("CreateType")
                 .WithOpenApi(operation =>
@@ -50,7 +50,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPut("/{id:guid}", UpdateVehicleType)
+            group.MapPut("/{id:guid}", UpdateType)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<TypeRequest>())
                 .WithName("UpdateType")
                 .WithOpenApi(operation =>
@@ -65,7 +65,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapDelete("/{id:guid}", DeleteVehicleType)
+            group.MapDelete("/{id:guid}", DeleteType)
                 .WithName("DeleteType")
                 .WithOpenApi(operation =>
                 {
@@ -86,19 +86,19 @@ namespace Verendar.Vehicle.Apis
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> DeleteVehicleType(Guid id, ITypeService typeService)
+        private static async Task<IResult> DeleteType(Guid id, ITypeService typeService)
         {
             var result = await typeService.DeleteTypeAsync(id);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateVehicleType(Guid id, TypeRequest request, ITypeService typeService)
+        private static async Task<IResult> UpdateType(Guid id, TypeRequest request, ITypeService typeService)
         {
             var result = await typeService.UpdateTypeAsync(id, request);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> CreateVehicleType(TypeRequest request, ITypeService typeService)
+        private static async Task<IResult> CreateType(TypeRequest request, ITypeService typeService)
         {
             var result = await typeService.CreateTypeAsync(request);
             return result.ToHttpResult();

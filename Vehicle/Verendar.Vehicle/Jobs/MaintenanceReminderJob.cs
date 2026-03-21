@@ -32,8 +32,8 @@ namespace Verendar.Vehicle.Jobs
             }
 
             var byUser = remindersList
-                .Where(r => r.PartTracking?.UserVehicle != null && r.PartTracking.PartCategory != null)
-                .GroupBy(r => r.PartTracking!.UserVehicle!.UserId);
+                .Where(r => r.TrackingCycle?.PartTracking?.UserVehicle != null && r.TrackingCycle.PartTracking.PartCategory != null)
+                .GroupBy(r => r.TrackingCycle!.PartTracking!.UserVehicle!.UserId);
 
             logger.LogInformation("MaintenanceReminderJob: Publishing reminder events for {UserCount} users ({ReminderCount} {Level} reminders)",
                 byUser.Count(), remindersList.Count, DomainLevel.Critical);

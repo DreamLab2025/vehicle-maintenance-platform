@@ -1,4 +1,3 @@
-using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Application.Mappings
@@ -80,8 +79,30 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
+        public static TrackingCycleSummary ToSummary(this TrackingCycle cycle, int? vehicleCurrentOdometer = null)
+        {
+            return new TrackingCycleSummary
+            {
+                Id = cycle.Id,
+                Status = cycle.Status.ToString(),
+                StartOdometer = cycle.StartOdometer,
+                StartDate = cycle.StartDate,
+                TargetOdometer = cycle.TargetOdometer,
+                TargetDate = cycle.TargetDate,
+                Reminders = cycle.Reminders
+                    .OrderByDescending(r => r.CreatedAt)
+                    .Select(r => r.ToSummary(vehicleCurrentOdometer))
+                    .ToList()
+            };
+        }
+
         public static PartTrackingSummary ToSummary(this PartTracking entity, int? vehicleCurrentOdometer = null)
         {
+            var activeCycle = entity.Cycles?
+                .Where(c => c.Status == CycleStatus.Active)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefault();
+
             return new PartTrackingSummary
             {
                 Id = entity.Id,
@@ -98,7 +119,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 PredictedNextOdometer = entity.PredictedNextOdometer,
                 PredictedNextDate = entity.PredictedNextDate,
                 IsDeclared = entity.IsDeclared,
-                Reminders = entity.Reminders?.Where(r => r.IsCurrent).Select(r => r.ToSummary(vehicleCurrentOdometer)).ToList() ?? new()
+                ActiveCycle = activeCycle?.ToSummary(vehicleCurrentOdometer)
             };
         }
 
@@ -109,6 +130,7 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 Level = entity.Level.ToString(),
+                Status = entity.Status.ToString(),
                 CurrentOdometer = currentOdo,
                 TargetOdometer = entity.TargetOdometer,
                 RemainingKm = entity.TargetOdometer - currentOdo,
@@ -118,7 +140,6 @@ namespace Verendar.Vehicle.Application.Mappings
                 NotifiedDate = entity.NotifiedDate,
                 IsDismissed = entity.IsDismissed,
                 DismissedDate = entity.DismissedDate,
-                IsCurrent = entity.IsCurrent
             };
         }
 
@@ -133,18 +154,19 @@ namespace Verendar.Vehicle.Application.Mappings
         public static void UpdateOdometer(this UserVehicle entity, int newOdometer)
         {
             var oldOdometer = entity.CurrentOdometer;
-            entity.CurrentOdometer = newOdometer;
-            entity.LastOdometerUpdate = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-            // Calculate average km per day
-            if (entity.PurchaseDate.HasValue)
+            if (entity.LastOdometerUpdate.HasValue && newOdometer > oldOdometer)
             {
-                var daysSincePurchase = DateOnly.FromDateTime(DateTime.UtcNow).DayNumber - entity.PurchaseDate.Value.DayNumber;
-                if (daysSincePurchase > 0)
+                var daysSinceLastUpdate = today.DayNumber - entity.LastOdometerUpdate.Value.DayNumber;
+                if (daysSinceLastUpdate > 0)
                 {
-                    entity.AverageKmPerDay = newOdometer / daysSincePurchase;
+                    entity.AverageKmPerDay = (newOdometer - oldOdometer) / daysSinceLastUpdate;
                 }
             }
+
+            entity.CurrentOdometer = newOdometer;
+            entity.LastOdometerUpdate = today;
         }
 
         public static StreakResponse ToStreakResponse(this int streak, Guid userVehicleId)
@@ -173,7 +195,6 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 UserVehicleId = userVehicleId,
                 PartCategoryId = partCategoryId,
-                Status = EntityStatus.Active,
                 IsDeclared = false,
             };
         }
@@ -184,7 +205,6 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 UserVehicleId = userVehicleId,
                 PartCategoryId = partCategoryId,
-                Status = EntityStatus.Active,
                 IsDeclared = true,
                 LastReplacementOdometer = request.LastReplacementOdometer,
                 LastReplacementDate = request.LastReplacementDate,
@@ -233,8 +253,9 @@ namespace Verendar.Vehicle.Application.Mappings
             return new ReminderDetailDto
             {
                 Id = entity.Id,
-                VehiclePartTrackingId = entity.VehiclePartTrackingId,
+                TrackingCycleId = entity.TrackingCycleId,
                 Level = entity.Level.ToString(),
+                Status = entity.Status.ToString(),
                 CurrentOdometer = currentOdo,
                 TargetOdometer = entity.TargetOdometer,
                 RemainingKm = entity.TargetOdometer - currentOdo,
@@ -244,8 +265,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 NotifiedDate = entity.NotifiedDate,
                 IsDismissed = entity.IsDismissed,
                 DismissedDate = entity.DismissedDate,
-                IsCurrent = entity.IsCurrent,
-                PartCategory = entity.PartTracking?.PartCategory?.ToCategoryInfoDto() ?? new CategoryInfoDto()
+                PartCategory = entity.TrackingCycle?.PartTracking?.PartCategory?.ToCategoryInfoDto() ?? new CategoryInfoDto()
             };
         }
 
@@ -273,6 +293,49 @@ namespace Verendar.Vehicle.Application.Mappings
                 RecordedDate = entity.RecordedDate,
                 KmOnRecordedDate = entity.KmOnRecordedDate,
                 Source = entity.Source.ToString()
+            };
+        }
+
+        public static VehicleHealthScoreResponse ToHealthScoreResponse(this IEnumerable<PartTracking> trackings, Guid vehicleId)
+        {
+            var breakdown = trackings.Select(t => t.ToHealthItem()).ToList();
+
+            decimal? score = breakdown.Count == 0
+                ? null
+                : breakdown.Average(p => (decimal)p.HealthScore);
+
+            return new VehicleHealthScoreResponse
+            {
+                VehicleId = vehicleId,
+                Score = score,
+                TrackedPartCount = breakdown.Count,
+                Breakdown = breakdown
+            };
+        }
+
+        public static PartHealthItem ToHealthItem(this PartTracking tracking)
+        {
+            var activeCycle = tracking.Cycles
+                .Where(c => c.Status == CycleStatus.Active)
+                .OrderByDescending(c => c.CreatedAt)
+                .FirstOrDefault();
+
+            var activeReminder = activeCycle?.Reminders
+                .Where(r => r.Status == ReminderStatus.Active)
+                .OrderByDescending(r => r.CreatedAt)
+                .FirstOrDefault();
+
+            var score = (int)(activeReminder?.PercentageRemaining ?? 100);
+            var status = score >= 50 ? "Healthy" : score > 0 ? "Warning" : "Overdue";
+
+            return new PartHealthItem
+            {
+                PartTrackingId = tracking.Id,
+                PartCategoryCode = tracking.PartCategory?.Code ?? string.Empty,
+                PartCategoryName = tracking.PartCategory?.Name ?? string.Empty,
+                IconUrl = tracking.PartCategory?.IconUrl,
+                HealthScore = score,
+                Status = status
             };
         }
     }

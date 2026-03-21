@@ -2,21 +2,39 @@ Add an EF Core migration for the following change: $ARGUMENTS
 
 ## Steps
 
-1. Identify the `ResearchHubDbContext` in `src/ResearchHub.Infrastructure/Persistence/`
-2. Verify the entity/configuration change is already in place in Domain and Infrastructure
-3. Run the migration command from the solution root:
+1. Verify the entity/configuration change is already in place (Domain entity + Infrastructure EF config)
+2. Run the migration command from the **repo root**:
    ```bash
-   dotnet ef migrations add <MigrationName> --project src/ResearchHub.Infrastructure --startup-project src/ResearchHub.Api
+   dotnet ef migrations add <MigrationName> \
+     --project {Service}/Verendar.{Service}.Infrastructure \
+     --startup-project {Service}/Verendar.{Service}
    ```
-4. Review the generated migration file — confirm `Up()` and `Down()` are correct
-5. Check for any unintended table/column drops
+   Example for Vehicle service:
+   ```bash
+   dotnet ef migrations add AddTrackingCycleTable \
+     --project Vehicle/Verendar.Vehicle.Infrastructure \
+     --startup-project Vehicle/Verendar.Vehicle
+   ```
+3. Review the generated migration file — confirm `Up()` and `Down()` are correct
+4. Check for unintended table/column drops
+5. Verify partial indexes use `HasFilter("\"DeletedAt\" IS NULL")` for soft-deleted entities
+6. Verify global query filter `HasQueryFilter(e => e.DeletedAt == null)` is set in `OnModelCreating`
 
-Migration naming convention: `PascalCase`, descriptive of what changed (e.g., `AddProjectMembersTable`, `AddSeminarStatusColumn`)
+## Services
 
-Reference `docs/design/` for the expected table schemas:
-- `01-user-auth-tables.md` — User, Role, Permission, OTP
-- `02-academic-tables.md` — Department, Major, Course, ResearchQuestion
-- `03-project-seminar-tables.md` — Project, SeminarPlan, Members
-- `04-semester-file-tables.md` — Semester, FileAttachment
+| Service      | Infrastructure project                      | Host project                  |
+| ------------ | ------------------------------------------- | ----------------------------- |
+| Identity     | `Identity/Verendar.Identity.Infrastructure` | `Identity/Verendar.Identity`  |
+| Vehicle      | `Vehicle/Verendar.Vehicle.Infrastructure`   | `Vehicle/Verendar.Vehicle`    |
+| Media        | `Media/Verendar.Media.Infrastructure`       | `Media/Verendar.Media`        |
+| Notification | `Notification/Verendar.Notification.Infrastructure` | `Notification/Verendar.Notification` |
+| Ai           | `Ai/Verendar.Ai.Infrastructure`             | `Ai/Verendar.Ai`              |
+
+## Naming convention
+
+PascalCase, descriptive of the schema change:
+- `AddTrackingCycleTable`
+- `AddEmailVerifiedColumnToUsers`
+- `RemoveStatusFromPartCategory`
 
 Do not delete or modify existing migrations.

@@ -1,5 +1,6 @@
 ﻿namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(Code), IsUnique = true)]
     public class Brand : BaseEntity
     {
         [Required]
@@ -21,8 +22,6 @@
 
         [MaxLength(20)]
         public string? SupportPhone { get; set; }
-
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
 
         public VehicleType VehicleType { get; set; } = null!;
         public List<Model> VehicleModels { get; set; } = [];

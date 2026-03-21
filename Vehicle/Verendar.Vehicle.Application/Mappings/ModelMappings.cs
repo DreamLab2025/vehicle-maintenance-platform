@@ -96,7 +96,6 @@
             {
                 VehicleFuelType.Gasoline => "Xăng",
                 VehicleFuelType.Diesel => "Dầu Diesel",
-                VehicleFuelType.Hybrid => "Hybrid",
                 _ => "Không xác định"
             };
         }
@@ -108,8 +107,6 @@
                 VehicleTransmissionType.Manual => "Xe số",
                 VehicleTransmissionType.Automatic => "Tay ga",
                 VehicleTransmissionType.Sport => "Xe côn",
-                VehicleTransmissionType.ManualCar => "Số sàn",
-                VehicleTransmissionType.AutomaticCar => "Số tự động",
                 _ => "Không xác định"
             };
         }

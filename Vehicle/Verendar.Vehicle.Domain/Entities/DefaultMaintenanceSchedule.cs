@@ -1,5 +1,6 @@
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(VehicleModelId), nameof(PartCategoryId), IsUnique = true)]
     public class DefaultMaintenanceSchedule : BaseEntity
     {
         [Required]
@@ -13,8 +14,6 @@ namespace Verendar.Vehicle.Domain.Entities
         public int KmInterval { get; set; }
 
         public int MonthsInterval { get; set; }
-
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
 
         public Model VehicleModel { get; set; } = null!;
         public PartCategory PartCategory { get; set; } = null!;

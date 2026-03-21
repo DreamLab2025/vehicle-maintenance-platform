@@ -25,14 +25,6 @@ public static class VehicleDataSeeder
         return v == "1" || v == "TRUE" || v == "YES";
     }
 
-    private static EntityStatus Status(IReadOnlyDictionary<string, string> row, string key = "Status") =>
-        Int(row, key, 1) switch
-        {
-            2 => EntityStatus.Inactive,
-            3 => EntityStatus.Deleted,
-            _ => EntityStatus.Active
-        };
-
     private static TEntity BaseAudit<TEntity>(TEntity e) where TEntity : BaseEntity
     {
         e.CreatedAt = FixedDate;
@@ -50,7 +42,6 @@ public static class VehicleDataSeeder
             Code = Get(row, "Code"),
             Description = Get(row, "Description").NullIfEmpty(),
             ImageUrl = Get(row, "ImageUrl").NullIfEmpty(),
-            Status = Status(row)
         })).ToList();
     }
 
@@ -66,7 +57,6 @@ public static class VehicleDataSeeder
             LogoUrl = Get(row, "LogoUrl").NullIfEmpty(),
             Website = Get(row, "Website").NullIfEmpty(),
             SupportPhone = Get(row, "SupportPhone").NullIfEmpty(),
-            Status = Status(row)
         })).ToList();
     }
 
@@ -85,7 +75,6 @@ public static class VehicleDataSeeder
             EngineDisplacement = Int(row, "EngineDisplacement") is var d && d > 0 ? d : null,
             EngineCapacity = Dec(row, "EngineCapacity") > 0 ? Dec(row, "EngineCapacity") : null,
             Description = Get(row, "Description").NullIfEmpty(),
-            Status = Status(row)
         })).ToList();
     }
 
@@ -116,7 +105,6 @@ public static class VehicleDataSeeder
             Description = Get(row, "Description").NullIfEmpty(),
             IconUrl = Get(row, "IconUrl").NullIfEmpty(),
             DisplayOrder = Int(row, "DisplayOrder"),
-            Status = Status(row),
             RequiresOdometerTracking = Bool(row, "RequiresOdometerTracking"),
             RequiresTimeTracking = Bool(row, "RequiresTimeTracking"),
             AllowsMultipleInstances = Bool(row, "AllowsMultipleInstances"),
@@ -136,7 +124,6 @@ public static class VehicleDataSeeder
             InitialKm = Int(row, "InitialKm"),
             KmInterval = Int(row, "KmInterval"),
             MonthsInterval = Int(row, "MonthsInterval"),
-            Status = Status(row)
         })).ToList();
     }
 
@@ -156,7 +143,6 @@ public static class VehicleDataSeeder
                 ReferencePrice = Dec(row, "ReferencePrice") > 0 ? Dec(row, "ReferencePrice") : null,
                 RecommendedKmInterval = Int(row, "RecommendedKmInterval") > 0 ? Int(row, "RecommendedKmInterval") : null,
                 RecommendedMonthsInterval = Int(row, "RecommendedMonthsInterval") > 0 ? Int(row, "RecommendedMonthsInterval") : null,
-                Status = Status(row)
             }))
             .ToList();
     }

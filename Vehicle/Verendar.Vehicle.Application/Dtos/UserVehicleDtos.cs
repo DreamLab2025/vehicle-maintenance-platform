@@ -3,13 +3,9 @@ namespace Verendar.Vehicle.Application.Dtos
     public class UserVehicleRequest
     {
         public Guid VehicleVariantId { get; set; }
-
         public string LicensePlate { get; set; } = null!;
-
         public string? VinNumber { get; set; }
-
         public DateTime? PurchaseDate { get; set; }
-
         public int CurrentOdometer { get; set; }
     }
 
@@ -66,6 +62,17 @@ namespace Verendar.Vehicle.Application.Dtos
         public string? Description { get; set; }
     }
 
+    public class TrackingCycleSummary
+    {
+        public Guid Id { get; set; }
+        public string Status { get; set; } = null!;
+        public int StartOdometer { get; set; }
+        public DateOnly StartDate { get; set; }
+        public int? TargetOdometer { get; set; }
+        public DateOnly? TargetDate { get; set; }
+        public List<ReminderSummary> Reminders { get; set; } = new();
+    }
+
     public class PartTrackingSummary
     {
         public Guid Id { get; set; }
@@ -82,13 +89,14 @@ namespace Verendar.Vehicle.Application.Dtos
         public int? PredictedNextOdometer { get; set; }
         public DateOnly? PredictedNextDate { get; set; }
         public bool IsDeclared { get; set; }
-        public List<ReminderSummary> Reminders { get; set; } = new();
+        public TrackingCycleSummary? ActiveCycle { get; set; }
     }
 
     public class ReminderSummary
     {
         public Guid Id { get; set; }
         public string Level { get; set; } = null!;
+        public string Status { get; set; } = null!;
         public int CurrentOdometer { get; set; }
         public int TargetOdometer { get; set; }
         public int RemainingKm { get; set; }
@@ -98,7 +106,6 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateOnly? NotifiedDate { get; set; }
         public bool IsDismissed { get; set; }
         public DateOnly? DismissedDate { get; set; }
-        public bool IsCurrent { get; set; }
     }
 
     public class StreakResponse
@@ -118,8 +125,9 @@ namespace Verendar.Vehicle.Application.Dtos
     public class ReminderDetailDto
     {
         public Guid Id { get; set; }
-        public Guid VehiclePartTrackingId { get; set; }
+        public Guid TrackingCycleId { get; set; }
         public string Level { get; set; } = null!;
+        public string Status { get; set; } = null!;
         public int CurrentOdometer { get; set; }
         public int TargetOdometer { get; set; }
         public int RemainingKm { get; set; }
@@ -129,7 +137,6 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateOnly? NotifiedDate { get; set; }
         public bool IsDismissed { get; set; }
         public DateOnly? DismissedDate { get; set; }
-        public bool IsCurrent { get; set; }
         public CategoryInfoDto PartCategory { get; set; } = null!;
     }
 
@@ -164,5 +171,23 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateOnly RecordedDate { get; set; }
         public int? KmOnRecordedDate { get; set; }
         public string Source { get; set; } = null!;
+    }
+
+    public class VehicleHealthScoreResponse
+    {
+        public Guid VehicleId { get; set; }
+        public decimal? Score { get; set; }
+        public int TrackedPartCount { get; set; }
+        public List<PartHealthItem> Breakdown { get; set; } = [];
+    }
+
+    public class PartHealthItem
+    {
+        public Guid PartTrackingId { get; set; }
+        public string PartCategoryCode { get; set; } = null!;
+        public string PartCategoryName { get; set; } = null!;
+        public string? IconUrl { get; set; }
+        public int HealthScore { get; set; }
+        public string Status { get; set; } = null!;
     }
 }

@@ -26,7 +26,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<List<ModelSummary>>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/", CreateVehicleModel)
+            group.MapPost("/", CreateModel)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<ModelRequest>())
                 .WithName("CreateModel")
                 .WithOpenApi(operation =>
@@ -41,7 +41,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<ModelResponseWithVariants>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPut("/{id:guid}", UpdateVehicleModel)
+            group.MapPut("/{id:guid}", UpdateModel)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<ModelRequest>())
                 .WithName("UpdateModel")
                 .WithOpenApi(operation =>
@@ -56,7 +56,7 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<ModelResponse>>(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapDelete("/{id:guid}", DeleteVehicleModel)
+            group.MapDelete("/{id:guid}", DeleteModel)
                 .WithName("DeleteModel")
                 .WithOpenApi(operation =>
                 {
@@ -95,19 +95,19 @@ namespace Verendar.Vehicle.Apis
             return group;
         }
 
-        private static async Task<IResult> DeleteVehicleModel(Guid id, IModelService modelService)
+        private static async Task<IResult> DeleteModel(Guid id, IModelService modelService)
         {
             var result = await modelService.DeleteModelAsync(id);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> UpdateVehicleModel(Guid id, ModelRequest request, IModelService modelService)
+        private static async Task<IResult> UpdateModel(Guid id, ModelRequest request, IModelService modelService)
         {
             var result = await modelService.UpdateModelAsync(id, request);
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> CreateVehicleModel(ModelRequest request, IModelService modelService)
+        private static async Task<IResult> CreateModel(ModelRequest request, IModelService modelService)
         {
             var result = await modelService.CreateModelAsync(request);
             return result.ToHttpResult();

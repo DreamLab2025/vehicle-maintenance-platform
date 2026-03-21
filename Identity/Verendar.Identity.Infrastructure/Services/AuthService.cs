@@ -3,7 +3,6 @@ using MassTransit;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Verendar.Common.Caching;
-using Verendar.Common.Databases.Base;
 using Verendar.Common.Shared;
 using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Helpers;
@@ -47,7 +46,6 @@ namespace Verendar.Identity.Infrastructure.Services
                 var user = request.ToEntity(string.Empty);
 
                 user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
-                user.Status = EntityStatus.Inactive;
                 await _unitOfWork.Users.AddAsync(user);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -94,7 +92,7 @@ namespace Verendar.Identity.Infrastructure.Services
                     return ApiResponse<TokenResponse>.FailureResponse("Email hoặc mật khẩu không đúng");
                 }
 
-                if (user.Status != EntityStatus.Active)
+                if (!user.EmailVerified)
                 {
                     return ApiResponse<TokenResponse>.FailureResponse(
                         "Tài khoản chưa được kích hoạt, vui lòng xác thực OTP",
@@ -135,7 +133,7 @@ namespace Verendar.Identity.Infrastructure.Services
                     return ApiResponse<TokenResponse>.NotFoundResponse("Không tìm thấy người dùng");
                 }
 
-                if (user.Status != EntityStatus.Active)
+                if (!user.EmailVerified)
                 {
                     return ApiResponse<TokenResponse>.ForbiddenResponse("Tài khoản người dùng chưa được kích hoạt");
                 }
@@ -245,12 +243,11 @@ namespace Verendar.Identity.Infrastructure.Services
                     return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
                 }
 
-                if (user.Status == EntityStatus.Active)
+                if (user.EmailVerified)
                 {
                     return ApiResponse<bool>.SuccessResponse(true, "Tài khoản đã được kích hoạt trước đó.");
                 }
 
-                user.Status = EntityStatus.Active;
                 user.EmailVerified = true;
                 user.UpdatedAt = DateTime.UtcNow;
 
@@ -290,7 +287,7 @@ namespace Verendar.Identity.Infrastructure.Services
                     return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
                 }
 
-                if (user.Status == EntityStatus.Active)
+                if (user.EmailVerified)
                 {
                     _logger.LogInformation("OTP resend requested for already active user: {Email}", email);
                     return ApiResponse<bool>.SuccessResponse(true, "Tài khoản đã được kích hoạt trước đó.");

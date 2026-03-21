@@ -1,5 +1,6 @@
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(UserVehicleId), nameof(PartCategoryId), nameof(InstanceIdentifier), IsUnique = true)]
     public class PartTracking : BaseEntity
     {
         [Required]
@@ -27,15 +28,12 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public bool IsDeclared { get; set; } = false;
 
-
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
-
         public UserVehicle UserVehicle { get; set; } = null!;
 
         public PartCategory PartCategory { get; set; } = null!;
 
         public PartProduct? CurrentPartProduct { get; set; }
 
-        public List<MaintenanceReminder> Reminders { get; set; } = [];
+        public List<TrackingCycle> Cycles { get; set; } = [];
     }
 }

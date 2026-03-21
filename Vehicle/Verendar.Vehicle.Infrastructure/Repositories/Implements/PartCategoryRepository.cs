@@ -13,7 +13,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         public async Task<IEnumerable<PartCategory>> GetActiveOrderedAsync(CancellationToken cancellationToken = default)
         {
             return await _dbSet
-                .Where(x => x.Status == Common.Databases.Base.EntityStatus.Active)
                 .OrderBy(x => x.DisplayOrder)
                 .ToListAsync(cancellationToken);
         }

@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Verendar.Vehicle.Domain.Entities
 {
     public class MaintenanceRecordItem : BaseEntity
@@ -18,7 +16,6 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(50)]
         public string? InstanceIdentifier { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
 
         [MaxLength(500)]

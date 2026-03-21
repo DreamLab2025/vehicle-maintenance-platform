@@ -22,6 +22,7 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         private IUserVehicleRepository? _userVehicles;
         private IOdometerHistoryRepository? _odometerHistories;
         private IPartTrackingRepository? _partTrackings;
+        private ITrackingCycleRepository? _trackingCycles;
         private IMaintenanceReminderRepository? _maintenanceReminders;
 
         // Maintenance History
@@ -61,6 +62,9 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 
         public IPartTrackingRepository PartTrackings =>
             _partTrackings ??= new PartTrackingRepository(Context);
+
+        public ITrackingCycleRepository TrackingCycles =>
+            _trackingCycles ??= new TrackingCycleRepository(Context);
 
         public IMaintenanceReminderRepository MaintenanceReminders =>
             _maintenanceReminders ??= new MaintenanceReminderRepository(Context);

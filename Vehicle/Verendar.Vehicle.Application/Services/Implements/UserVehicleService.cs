@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
@@ -129,7 +128,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 vehicle.DeletedAt = deletedAt;
                 vehicle.DeletedBy = userId;
-                vehicle.Status = EntityStatus.Deleted;
 
                 await _unitOfWork.CommitTransactionAsync();
 
@@ -247,6 +245,30 @@ namespace Verendar.Vehicle.Application.Services.Implements
             {
                 _logger.LogError(ex, "Error updating user vehicle with ID: {VehicleId}", vehicleId);
                 return ApiResponse<UserVehicleResponse>.FailureResponse("Lỗi khi cập nhật xe");
+            }
+        }
+
+        public async Task<ApiResponse<VehicleHealthScoreResponse>> GetHealthScoreAsync(Guid userId, Guid vehicleId)
+        {
+            try
+            {
+                var vehicle = await _unitOfWork.UserVehicles
+                    .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId);
+
+                if (vehicle == null)
+                    return ApiResponse<VehicleHealthScoreResponse>.NotFoundResponse("Không tìm thấy xe");
+
+                var declaredTrackings = await _unitOfWork.PartTrackings
+                    .GetDeclaredByUserVehicleIdAsync(vehicleId);
+
+                return ApiResponse<VehicleHealthScoreResponse>.SuccessResponse(
+                    declaredTrackings.ToHealthScoreResponse(vehicleId),
+                    "Tính điểm sức khỏe xe thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error calculating health score for vehicle: {VehicleId}", vehicleId);
+                return ApiResponse<VehicleHealthScoreResponse>.FailureResponse("Lỗi khi tính điểm sức khỏe xe");
             }
         }
 

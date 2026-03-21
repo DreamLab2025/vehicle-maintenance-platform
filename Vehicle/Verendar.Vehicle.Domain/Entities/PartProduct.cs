@@ -1,7 +1,6 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(PartCategoryId))]
     public class PartProduct : BaseEntity
     {
         [Required]
@@ -20,14 +19,11 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(500)]
         public string? ImageUrl { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
         public decimal? ReferencePrice { get; set; }
 
         public int? RecommendedKmInterval { get; set; }
 
         public int? RecommendedMonthsInterval { get; set; }
-
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
 
         public PartCategory Category { get; set; } = null!;
 

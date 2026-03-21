@@ -1,4 +1,3 @@
-using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
 
@@ -26,7 +25,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 var schedules = await _unitOfWork.DefaultSchedules.GetByVehicleModelIdAsync(vehicleModelId, cancellationToken);
                 var categories = schedules
-                    .Where(s => s.Status == EntityStatus.Active && s.PartCategory != null && s.PartCategory.Status == EntityStatus.Active)
+                    .Where(s => s.PartCategory != null)
                     .Select(s => s.PartCategory!)
                     .GroupBy(c => c.Id)
                     .Select(g => g.First())

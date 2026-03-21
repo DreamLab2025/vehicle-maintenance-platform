@@ -25,8 +25,6 @@ namespace Verendar.Identity.Domain.Entities
 
         public List<UserRole> Roles { get; set; } = [];
 
-        public EntityStatus Status { get; set; }
-
         public DateTime? RefreshTokenExpiryTime { get; set; }
     }
 
