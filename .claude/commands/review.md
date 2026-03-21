@@ -15,7 +15,7 @@ Read all referenced files before commenting. Understand intent before criticizin
 - Are domain entities free of framework dependencies?
 
 **Authorization**
-- Is JWT role check correct? (User / GarageOwner / Mechanic / Admin)
+- Is JWT role check correct? (`UserRole.User` / `UserRole.Admin`)
 - Is resource ownership verified after role check?
 
 **API contract**
