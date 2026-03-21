@@ -62,6 +62,22 @@
             };
         }
 
+        public static ModelSummary ToModelSummary(this Model entity)
+        {
+            return new ModelSummary
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                BrandId = entity.VehicleBrandId,
+                BrandName = entity.Brand?.Name ?? string.Empty,
+                TypeId = entity.Brand?.VehicleTypeId ?? Guid.Empty,
+                TypeName = entity.Brand?.VehicleType?.Name ?? string.Empty,
+                ReleaseYear = entity.ManufactureYear,
+                FuelTypeName = entity.FuelType.HasValue ? GetFuelTypeName(entity.FuelType.Value) : string.Empty,
+                TransmissionTypeName = entity.TransmissionType.HasValue ? GetTransmissionTypeName(entity.TransmissionType.Value) : string.Empty
+            };
+        }
+
         public static void UpdateEntity(this Model entity, ModelRequest request)
         {
             entity.Name = request.Name;

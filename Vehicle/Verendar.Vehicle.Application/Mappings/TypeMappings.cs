@@ -25,6 +25,16 @@
             };
         }
 
+        public static TypeSummary ToSummary(this VehicleType entity)
+        {
+            return new TypeSummary
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                ImageUrl = entity.ImageUrl
+            };
+        }
+
         public static void UpdateEntity(this VehicleType entity, TypeRequest request)
         {
             entity.Name = request.Name;

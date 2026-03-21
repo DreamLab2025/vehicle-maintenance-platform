@@ -88,14 +88,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<ModelResponseWithVariants>>> GetAllModelsAsync(ModelFilterRequest filterRequest)
+        public async Task<ApiResponse<List<ModelSummary>>> GetAllModelsAsync(ModelFilterRequest filterRequest)
         {
             try
             {
                 filterRequest.Normalize();
                 var query = _unitOfWork.Models.AsQueryable()
                     .Include(m => m.Brand).ThenInclude(b => b.VehicleType)
-                    .Include(m => m.Variants)
                     .Where(m => m.DeletedAt == null);
 
                 // Apply filters by ID (more efficient than name search)
@@ -144,10 +143,10 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     .Take(filterRequest.PageSize)
                     .ToListAsync();
 
-                var modelResponses = items.Select(m => m.ToModelResponseWithVariants()).ToList();
+                var modelSummaries = items.Select(m => m.ToModelSummary()).ToList();
 
-                return ApiResponse<ModelResponseWithVariants>.SuccessPagedResponse(
-                    modelResponses,
+                return ApiResponse<List<ModelSummary>>.SuccessPagedResponse(
+                    modelSummaries,
                     totalCount,
                     filterRequest.PageNumber,
                     filterRequest.PageSize,
@@ -156,7 +155,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all vehicle models");
-                return ApiResponse<List<ModelResponseWithVariants>>.FailureResponse("Lỗi khi lấy danh sách mẫu xe");
+                return ApiResponse<List<ModelSummary>>.FailureResponse("Lỗi khi lấy danh sách mẫu xe");
             }
         }
 

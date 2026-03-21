@@ -21,7 +21,19 @@ namespace Verendar.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<TypeResponse>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<TypeSummary>>>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/{id:guid}", GetTypeById)
+                .WithName("GetTypeById")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy thông tin loại xe theo ID";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<TypeResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapPost("/", CreateVehicleType)
@@ -66,6 +78,12 @@ namespace Verendar.Vehicle.Apis
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
+        }
+
+        private static async Task<IResult> GetTypeById(Guid id, ITypeService typeService)
+        {
+            var result = await typeService.GetTypeByIdAsync(id);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> DeleteVehicleType(Guid id, ITypeService typeService)

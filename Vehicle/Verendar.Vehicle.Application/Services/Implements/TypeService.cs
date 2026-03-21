@@ -64,7 +64,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<TypeResponse>>> GetAllTypesAsync(PaginationRequest paginationRequest)
+        public async Task<ApiResponse<List<TypeSummary>>> GetAllTypesAsync(PaginationRequest paginationRequest)
         {
             try
             {
@@ -80,10 +80,10 @@ namespace Verendar.Vehicle.Application.Services.Implements
                         : null
                 );
 
-                var typeResponses = items.Select(t => t.ToResponse()).ToList();
+                var typeSummaries = items.Select(t => t.ToSummary()).ToList();
 
-                return ApiResponse<TypeResponse>.SuccessPagedResponse(
-                    typeResponses,
+                return ApiResponse<List<TypeSummary>>.SuccessPagedResponse(
+                    typeSummaries,
                     totalCount,
                     paginationRequest.PageNumber,
                     paginationRequest.PageSize,
@@ -92,7 +92,28 @@ namespace Verendar.Vehicle.Application.Services.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all vehicle types");
-                return ApiResponse<List<TypeResponse>>.FailureResponse("Lỗi khi lấy danh sách loại xe");
+                return ApiResponse<List<TypeSummary>>.FailureResponse("Lỗi khi lấy danh sách loại xe");
+            }
+        }
+
+        public async Task<ApiResponse<TypeResponse>> GetTypeByIdAsync(Guid id)
+        {
+            try
+            {
+                var vehicleType = await _unitOfWork.Types.GetByIdAsync(id);
+                if (vehicleType == null || vehicleType.DeletedAt != null)
+                {
+                    return ApiResponse<TypeResponse>.NotFoundResponse("Không tìm thấy loại xe");
+                }
+
+                return ApiResponse<TypeResponse>.SuccessResponse(
+                    vehicleType.ToResponse(),
+                    "Lấy thông tin loại xe thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting vehicle type with ID: {TypeId}", id);
+                return ApiResponse<TypeResponse>.FailureResponse("Lỗi khi lấy thông tin loại xe");
             }
         }
 

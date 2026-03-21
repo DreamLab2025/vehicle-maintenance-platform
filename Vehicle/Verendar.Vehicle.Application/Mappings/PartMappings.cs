@@ -40,6 +40,19 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
+        public static PartCategorySummary ToSummary(this PartCategory entity)
+        {
+            return new PartCategorySummary
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Code = entity.Code,
+                IconUrl = entity.IconUrl,
+                DisplayOrder = entity.DisplayOrder,
+                Status = entity.Status
+            };
+        }
+
         public static void UpdateEntity(this PartCategory entity, PartCategoryRequest request)
         {
             entity.Name = request.Name;
@@ -89,6 +102,21 @@ namespace Verendar.Vehicle.Application.Mappings
                 Status = entity.Status,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
+            };
+        }
+
+        public static PartProductSummary ToSummary(this PartProduct entity)
+        {
+            return new PartProductSummary
+            {
+                Id = entity.Id,
+                PartCategoryId = entity.PartCategoryId,
+                PartCategoryName = entity.Category?.Name ?? string.Empty,
+                Name = entity.Name,
+                Brand = entity.Brand,
+                ImageUrl = entity.ImageUrl,
+                ReferencePrice = entity.ReferencePrice,
+                Status = entity.Status
             };
         }
 

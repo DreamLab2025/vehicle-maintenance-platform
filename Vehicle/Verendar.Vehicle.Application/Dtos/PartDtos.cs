@@ -41,6 +41,16 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateTime? UpdatedAt { get; set; }
     }
 
+    public class PartCategorySummary
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string Code { get; set; } = null!;
+        public string? IconUrl { get; set; }
+        public int DisplayOrder { get; set; }
+        public EntityStatus Status { get; set; }
+    }
+
     public class PartProductRequest
     {
         public Guid PartCategoryId { get; set; }
@@ -58,6 +68,18 @@ namespace Verendar.Vehicle.Application.Dtos
         public int? RecommendedKmInterval { get; set; }
 
         public int? RecommendedMonthsInterval { get; set; }
+    }
+
+    public class PartProductSummary
+    {
+        public Guid Id { get; set; }
+        public Guid PartCategoryId { get; set; }
+        public string PartCategoryName { get; set; } = null!;
+        public string Name { get; set; } = null!;
+        public string? Brand { get; set; }
+        public string? ImageUrl { get; set; }
+        public decimal? ReferencePrice { get; set; }
+        public EntityStatus Status { get; set; }
     }
 
     public class PartProductResponse

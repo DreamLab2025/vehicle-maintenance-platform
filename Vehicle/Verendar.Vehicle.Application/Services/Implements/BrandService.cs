@@ -68,7 +68,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<BrandResponse>>> GetAllBrandsAsync(PaginationRequest paginationRequest)
+        public async Task<ApiResponse<List<BrandSummary>>> GetAllBrandsAsync(PaginationRequest paginationRequest)
         {
             try
             {
@@ -90,8 +90,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     .Take(paginationRequest.PageSize)
                     .ToListAsync();
 
-                return ApiResponse<List<BrandResponse>>.SuccessPagedResponse(
-                    items.Select(b => b.ToResponse()).ToList(),
+                return ApiResponse<List<BrandSummary>>.SuccessPagedResponse(
+                    items.Select(b => b.ToSummary()).ToList(),
                     totalCount,
                     paginationRequest.PageNumber,
                     paginationRequest.PageSize,
@@ -100,18 +100,18 @@ namespace Verendar.Vehicle.Application.Services.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting all brands");
-                return ApiResponse<List<BrandResponse>>.FailureResponse("Lỗi khi lấy danh sách thương hiệu");
+                return ApiResponse<List<BrandSummary>>.FailureResponse("Lỗi khi lấy danh sách thương hiệu");
             }
         }
 
-        public async Task<ApiResponse<List<BrandResponse>>> GetBrandsByTypeIdAsync(Guid typeId)
+        public async Task<ApiResponse<List<BrandSummary>>> GetBrandsByTypeIdAsync(Guid typeId)
         {
             try
             {
                 var type = await _unitOfWork.Types.GetByIdAsync(typeId);
                 if (type == null)
                 {
-                    return ApiResponse<List<BrandResponse>>.NotFoundResponse("Không tìm thấy loại xe");
+                    return ApiResponse<List<BrandSummary>>.NotFoundResponse("Không tìm thấy loại xe");
                 }
 
                 var brands = await _unitOfWork.Brands.AsQueryable()
@@ -119,14 +119,35 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     .Where(b => b.VehicleTypeId == typeId)
                     .ToListAsync();
 
-                return ApiResponse<List<BrandResponse>>.SuccessResponse(
-                    brands.Select(b => b.ToResponse()).ToList(),
+                return ApiResponse<List<BrandSummary>>.SuccessResponse(
+                    brands.Select(b => b.ToSummary()).ToList(),
                     $"Lấy danh sách {brands.Count} thương hiệu của loại xe '{type.Name}' thành công");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting brands by type ID: {TypeId}", typeId);
-                return ApiResponse<List<BrandResponse>>.FailureResponse("Lỗi khi lấy danh sách thương hiệu theo loại xe");
+                return ApiResponse<List<BrandSummary>>.FailureResponse("Lỗi khi lấy danh sách thương hiệu theo loại xe");
+            }
+        }
+
+        public async Task<ApiResponse<BrandResponse>> GetBrandByIdAsync(Guid id)
+        {
+            try
+            {
+                var brand = await _unitOfWork.Brands.GetByIdWithTypesAsync(id);
+                if (brand == null)
+                {
+                    return ApiResponse<BrandResponse>.NotFoundResponse("Không tìm thấy thương hiệu");
+                }
+
+                return ApiResponse<BrandResponse>.SuccessResponse(
+                    brand.ToResponse(),
+                    "Lấy thông tin thương hiệu thành công");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting brand with ID: {BrandId}", id);
+                return ApiResponse<BrandResponse>.FailureResponse("Lỗi khi lấy thông tin thương hiệu");
             }
         }
 

@@ -101,7 +101,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<PartProductResponse>>> GetProductsByCategoryAsync(Guid categoryId, PaginationRequest paginationRequest)
+        public async Task<ApiResponse<List<PartProductSummary>>> GetProductsByCategoryAsync(Guid categoryId, PaginationRequest paginationRequest)
         {
             try
             {
@@ -109,7 +109,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(categoryId);
                 if (category == null || category.DeletedAt != null)
                 {
-                    return ApiResponse<List<PartProductResponse>>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
+                    return ApiResponse<List<PartProductSummary>>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
                 }
 
                 var query = _unitOfWork.PartProducts.AsQueryable()
@@ -124,10 +124,10 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     .Take(paginationRequest.PageSize)
                     .ToListAsync();
 
-                var responses = products.Select(p => p.ToResponse()).ToList();
+                var summaries = products.Select(p => p.ToSummary()).ToList();
 
-                return ApiResponse<List<PartProductResponse>>.SuccessPagedResponse(
-                    responses,
+                return ApiResponse<List<PartProductSummary>>.SuccessPagedResponse(
+                    summaries,
                     totalCount,
                     paginationRequest.PageNumber,
                     paginationRequest.PageSize,
@@ -136,7 +136,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting products by category ID: {CategoryId}", categoryId);
-                return ApiResponse<List<PartProductResponse>>.FailureResponse("Lỗi khi lấy danh sách phụ tùng");
+                return ApiResponse<List<PartProductSummary>>.FailureResponse("Lỗi khi lấy danh sách phụ tùng");
             }
         }
 
