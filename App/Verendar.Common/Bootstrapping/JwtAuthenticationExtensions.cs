@@ -27,7 +27,7 @@ namespace Verendar.Common.Bootstrapping
             builder.Services.Configure<JwtBearerConfigurationOptions>(
                 builder.Configuration.GetSection(JwtBearerConfigurationOptions.SectionName));
 
-            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
             builder.Services.AddHttpContextAccessor();
 
             builder.Services.AddAuthentication(options =>

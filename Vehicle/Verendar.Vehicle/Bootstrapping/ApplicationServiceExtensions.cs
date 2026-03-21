@@ -3,6 +3,7 @@ using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Verendar.Common.Bootstrapping;
+using Verendar.Common.Http;
 using Verendar.ServiceDefaults;
 using Verendar.Vehicle.Application.Validators;
 using Verendar.Vehicle.Apis;
@@ -36,6 +37,8 @@ namespace Verendar.Vehicle.Bootstrapping
 
             builder.Services.AddHangfireServer();
 
+            builder.Services.AddScoped<ForwardAuthorizationHandler>();
+
             builder.Services.AddHttpClient<IIdentityServiceClient, IdentityServiceClient>(client =>
             {
                 var baseUrl = builder.Configuration["Identity:BaseUrl"]
@@ -43,7 +46,8 @@ namespace Verendar.Vehicle.Bootstrapping
                     ?? "https://localhost:8001";
                 client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
                 client.Timeout = TimeSpan.FromSeconds(10);
-            });
+            })
+            .AddHttpMessageHandler<ForwardAuthorizationHandler>();
 
             builder.Services.AddScoped<OdometerReminderJob>();
             builder.Services.AddScoped<MaintenanceReminderJob>();
