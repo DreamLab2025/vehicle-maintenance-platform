@@ -353,8 +353,11 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 if (request.CurrentOdometer != vehicle.CurrentOdometer)
                 {
-                    var odometerHistory = vehicleId.ToOdometerHistory(request.CurrentOdometer, vehicle.CurrentOdometer);
+                    var oldOdometer = vehicle.CurrentOdometer;
 
+                    await _unitOfWork.BeginTransactionAsync();
+
+                    var odometerHistory = vehicleId.ToOdometerHistory(request.CurrentOdometer, oldOdometer);
                     await _unitOfWork.OdometerHistories.AddAsync(odometerHistory);
 
                     vehicle.UpdateOdometer(request.CurrentOdometer);
@@ -362,10 +365,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                     await SyncMaintenanceRemindersAsync(vehicleId, request.CurrentOdometer, userId);
 
+                    await _unitOfWork.CommitTransactionAsync();
+
                     await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
 
                     _logger.LogInformation("Updated odometer for vehicle: {VehicleId} from {OldOdometer} to {NewOdometer} km",
-                        vehicleId, vehicle.CurrentOdometer, request.CurrentOdometer);
+                        vehicleId, oldOdometer, request.CurrentOdometer);
                 }
 
                 var updatedVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(vehicleId);

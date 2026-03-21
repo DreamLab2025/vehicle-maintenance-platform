@@ -122,9 +122,16 @@ namespace Verendar.Vehicle.Apis
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetCategoriesByVehicleDeclaredParts(Guid vehicleId, IPartCategoryService service)
+        private static async Task<IResult> GetCategoriesByVehicleDeclaredParts(
+            Guid vehicleId,
+            ICurrentUserService currentUserService,
+            IPartCategoryService service)
         {
-            var result = await service.GetCategoriesByVehicleDeclaredPartsAsync(vehicleId);
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+                return Results.Unauthorized();
+
+            var result = await service.GetCategoriesByVehicleDeclaredPartsAsync(userId, vehicleId);
             return result.ToHttpResult();
         }
 

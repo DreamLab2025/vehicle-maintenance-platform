@@ -96,7 +96,10 @@ namespace Verendar.Identity.Infrastructure.Services
 
                 if (user.Status != EntityStatus.Active)
                 {
-                    return ApiResponse<TokenResponse>.ForbiddenResponse("Tài khoản người dùng chưa được kích hoạt");
+                    return ApiResponse<TokenResponse>.FailureResponse(
+                        "Tài khoản chưa được kích hoạt, vui lòng xác thực OTP",
+                        403,
+                        new { requiresOtpVerification = true, email });
                 }
 
                 var tokenResponse = _tokenService.GenerateTokens(user.ToTokenClaims());

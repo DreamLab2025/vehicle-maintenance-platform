@@ -40,6 +40,25 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var trackingIdsToResetReminders = new List<Guid>();
                 var trackingIdsForResponse = new List<Guid>();
 
+                // Pre-load all part categories and products to avoid N+1 in the item loop
+                var requestedCodes = request.Items.Select(i => i.PartCategoryCode).Distinct().ToList();
+                var partCategoriesMap = (await _unitOfWork.PartCategories.AsQueryable()
+                    .Where(pc => requestedCodes.Contains(pc.Code))
+                    .ToListAsync())
+                    .ToDictionary(pc => pc.Code, StringComparer.OrdinalIgnoreCase);
+
+                var requestedProductIds = request.Items
+                    .Where(i => i.UpdatesTracking && i.PartProductId.HasValue)
+                    .Select(i => i.PartProductId!.Value)
+                    .Distinct()
+                    .ToList();
+                var partProductsMap = requestedProductIds.Count > 0
+                    ? (await _unitOfWork.PartProducts.AsQueryable()
+                        .Where(p => requestedProductIds.Contains(p.Id))
+                        .ToListAsync())
+                        .ToDictionary(p => p.Id)
+                    : new Dictionary<Guid, PartProduct>();
+
                 if (record.OdometerAtService >= vehicle.CurrentOdometer)
                 {
                     var previousOdo = vehicle.CurrentOdometer;
@@ -61,9 +80,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                 foreach (var itemInput in request.Items)
                 {
-                    var partCategory = await _unitOfWork.PartCategories.AsQueryable()
-                        .FirstOrDefaultAsync(pc => pc.Code == itemInput.PartCategoryCode);
-                    if (partCategory == null)
+                    if (!partCategoriesMap.TryGetValue(itemInput.PartCategoryCode, out var partCategory))
                         return ApiResponse<CreateMaintenanceRecordResponse>.NotFoundResponse(
                             $"Không tìm thấy linh kiện với mã '{itemInput.PartCategoryCode}'");
 
@@ -83,9 +100,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
                     if (useProductForTracking)
                     {
-                        var product = await _unitOfWork.PartProducts.AsQueryable()
-                            .FirstOrDefaultAsync(p => p.Id == itemInput.PartProductId!.Value && p.PartCategoryId == partCategory.Id);
-                        if (product == null)
+                        if (!partProductsMap.TryGetValue(itemInput.PartProductId!.Value, out var product)
+                            || product.PartCategoryId != partCategory.Id)
                             return ApiResponse<CreateMaintenanceRecordResponse>.NotFoundResponse(
                                 $"Phụ tùng không tồn tại hoặc không thuộc danh mục '{itemInput.PartCategoryCode}'");
 

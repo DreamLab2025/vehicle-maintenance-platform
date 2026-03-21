@@ -2,11 +2,13 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Verendar.Common.Jwt;
 
 namespace Verendar.Common.Http
 {
     public sealed class ForwardAuthorizationHandler(
         IHttpContextAccessor httpContextAccessor,
+        IServiceTokenProvider serviceTokenProvider,
         ILogger<ForwardAuthorizationHandler> logger) : DelegatingHandler
     {
         private const string AuthorizationHeaderName = "Authorization";
@@ -47,8 +49,10 @@ namespace Verendar.Common.Http
             var httpContext = httpContextAccessor.HttpContext;
             if (httpContext == null)
             {
-                logger.LogWarning(
-                    "ForwardAuthorizationHandler: HttpContext is null. Outgoing request to {RequestUri} will not include Authorization.",
+                var serviceToken = serviceTokenProvider.GenerateServiceToken();
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", serviceToken);
+                logger.LogDebug(
+                    "ForwardAuthorizationHandler: No HttpContext (background job). Using service token for {RequestUri}.",
                     request.RequestUri);
                 return;
             }

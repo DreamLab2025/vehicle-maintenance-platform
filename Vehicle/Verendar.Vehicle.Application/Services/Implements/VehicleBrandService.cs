@@ -19,7 +19,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
 
                 var vehicleType = await _unitOfWork.VehicleTypes.GetByIdAsync(request.VehicleTypeId);
-                if (vehicleType == null || vehicleType.DeletedAt != null)
+                if (vehicleType == null)
                 {
                     return ApiResponse<BrandResponse>.NotFoundResponse("Không tìm thấy loại xe");
                 }
@@ -49,7 +49,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 var brand = await _unitOfWork.VehicleBrands.GetByIdAsync(id);
-                if (brand == null || brand.DeletedAt != null)
+                if (brand == null)
                 {
                     return ApiResponse<string>.NotFoundResponse("Không tìm thấy thương hiệu");
                 }
@@ -73,9 +73,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 paginationRequest.Normalize();
-                var query = _unitOfWork.VehicleBrands.AsQueryable()
-                    .Include(b => b.VehicleType)
-                    .Where(b => b.DeletedAt == null);
+                IQueryable<VehicleBrand> query = _unitOfWork.VehicleBrands.AsQueryable()
+                    .Include(b => b.VehicleType);
 
                 var totalCount = await query.CountAsync();
 
@@ -110,14 +109,14 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 var type = await _unitOfWork.VehicleTypes.GetByIdAsync(typeId);
-                if (type == null || type.DeletedAt != null)
+                if (type == null)
                 {
                     return ApiResponse<List<BrandResponse>>.NotFoundResponse("Không tìm thấy loại xe");
                 }
 
                 var brands = await _unitOfWork.VehicleBrands.AsQueryable()
                     .Include(b => b.VehicleType)
-                    .Where(b => b.VehicleTypeId == typeId && b.DeletedAt == null)
+                    .Where(b => b.VehicleTypeId == typeId)
                     .ToListAsync();
 
                 return ApiResponse<List<BrandResponse>>.SuccessResponse(
@@ -136,7 +135,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 var brand = await _unitOfWork.VehicleBrands.GetByIdAsync(id);
-                if (brand == null || brand.DeletedAt != null)
+                if (brand == null)
                 {
                     return ApiResponse<BrandResponse>.NotFoundResponse("Không tìm thấy thương hiệu");
                 }
@@ -147,7 +146,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
 
                 var vehicleType = await _unitOfWork.VehicleTypes.GetByIdAsync(request.VehicleTypeId);
-                if (vehicleType == null || vehicleType.DeletedAt != null)
+                if (vehicleType == null)
                 {
                     return ApiResponse<BrandResponse>.NotFoundResponse("Không tìm thấy loại xe");
                 }

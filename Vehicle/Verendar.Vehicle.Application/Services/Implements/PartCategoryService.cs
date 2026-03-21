@@ -40,7 +40,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(id);
-                if (category == null || category.DeletedAt != null)
+                if (category == null)
                 {
                     return ApiResponse<PartCategoryResponse>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
                 }
@@ -73,7 +73,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(id);
-                if (category == null || category.DeletedAt != null)
+                if (category == null)
                 {
                     return ApiResponse<string>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
                 }
@@ -97,8 +97,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 paginationRequest.Normalize();
-                var query = _unitOfWork.PartCategories.AsQueryable()
-                    .Where(c => c.DeletedAt == null);
+                var query = _unitOfWork.PartCategories.AsQueryable();
 
                 var totalCount = await query.CountAsync();
 
@@ -132,7 +131,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             try
             {
                 var category = await _unitOfWork.PartCategories.GetByIdAsync(id);
-                if (category == null || category.DeletedAt != null)
+                if (category == null)
                 {
                     return ApiResponse<PartCategoryResponse>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
                 }
@@ -148,13 +147,17 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
         }
 
-        public async Task<ApiResponse<List<PartCategoryResponse>>> GetCategoriesByVehicleDeclaredPartsAsync(Guid userVehicleId)
+        public async Task<ApiResponse<List<PartCategoryResponse>>> GetCategoriesByVehicleDeclaredPartsAsync(Guid userId, Guid userVehicleId)
         {
             try
             {
+                var vehicle = await _unitOfWork.UserVehicles.FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
+                if (vehicle == null)
+                    return ApiResponse<List<PartCategoryResponse>>.NotFoundResponse("Không tìm thấy xe");
+
                 var trackings = await _unitOfWork.VehiclePartTrackings.GetDeclaredByUserVehicleIdAsync(userVehicleId);
                 var categories = trackings
-                    .Where(t => t.PartCategory != null && t.PartCategory.DeletedAt == null)
+                    .Where(t => t.PartCategory != null)
                     .Select(t => t.PartCategory!)
                     .GroupBy(c => c.Id)
                     .Select(g => g.First())
