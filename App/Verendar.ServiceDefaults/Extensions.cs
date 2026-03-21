@@ -9,7 +9,6 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
-using Serilog.Formatting.Compact;
 
 namespace Verendar.ServiceDefaults
 {
@@ -51,11 +50,15 @@ namespace Verendar.ServiceDefaults
         {
             builder.ConfigureSerilog();
 
-            builder.Logging.AddOpenTelemetry(logging =>
+            // Development: console only (Serilog). Non-Development: OTLP logs → Seq (see AddSeqLogsOnlyEndpoint).
+            if (!builder.Environment.IsDevelopment())
             {
-                logging.IncludeFormattedMessage = true;
-                logging.IncludeScopes = true;
-            });
+                builder.Logging.AddOpenTelemetry(logging =>
+                {
+                    logging.IncludeFormattedMessage = true;
+                    logging.IncludeScopes = true;
+                });
+            }
 
             builder.Services.AddOpenTelemetry()
                 .WithMetrics(metrics =>
@@ -71,22 +74,23 @@ namespace Verendar.ServiceDefaults
                         .AddHttpClientInstrumentation();
                 });
 
-            builder.AddSeqEndpoint("seq");
+            if (!builder.Environment.IsDevelopment())
+                builder.AddSeqLogsOnlyEndpoint("seq");
 
             return builder;
         }
 
         private static TBuilder ConfigureSerilog<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
-            // writeToProviders: true forwards log events to the OTel logging provider,
-            // which exports them to Seq via OTLP (configured by AddSeqEndpoint above).
+            var forwardToOpenTelemetry = !builder.Environment.IsDevelopment();
+
+            // writeToProviders: forwards Serilog to the OTel logging provider → Seq OTLP when not Development.
             builder.Services.AddSerilog((services, lc) => lc
                 .ReadFrom.Configuration(builder.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
-                .Enrich.WithMachineName()
-                .WriteTo.Console(new CompactJsonFormatter()),
-                writeToProviders: true);
+                .Enrich.WithMachineName(),
+                writeToProviders: forwardToOpenTelemetry);
 
             return builder;
         }
