@@ -22,11 +22,9 @@ namespace Verendar.Common.Middlewares
                 return;
             }
 
+            // HTTP request/response only; skip WebSocket upgrade (long-lived, not a typical API round-trip).
             if (context.WebSockets.IsWebSocketRequest)
             {
-                _logger.LogInformation(
-                    "WebSocket upgrade {Method} {Path} from {ClientIp}",
-                    context.Request.Method, path, GetClientIp(context));
                 await _next(context);
                 return;
             }

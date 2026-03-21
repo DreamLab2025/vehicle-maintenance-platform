@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,13 +66,8 @@ namespace Verendar.ServiceDefaults
                 })
                 .WithTracing(tracing =>
                 {
-                    tracing.SetSampler(new HangfireFilterSampler())
+                    tracing.AddProcessor(new HangfireStatementTraceFilterProcessor())
                         .AddSource(builder.Environment.ApplicationName)
-                        .AddAspNetCoreInstrumentation(tracing =>
-                            tracing.Filter = context =>
-                                !context.Request.Path.StartsWithSegments(HealthEndpointPath)
-                                && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath)
-                        )
                         .AddHttpClientInstrumentation();
                 });
 
@@ -129,24 +125,15 @@ namespace Verendar.ServiceDefaults
         }
     }
 
-    internal sealed class HangfireFilterSampler : Sampler
+    internal sealed class HangfireStatementTraceFilterProcessor : BaseProcessor<Activity>
     {
-        public override SamplingResult ShouldSample(in SamplingParameters samplingParameters)
+        public override void OnEnd(Activity activity)
         {
-            if (samplingParameters.Tags != null)
+            var statement = activity.GetTagItem("db.statement") as string;
+            if (statement != null && statement.Contains("hangfire", StringComparison.OrdinalIgnoreCase))
             {
-                foreach (var tag in samplingParameters.Tags)
-                {
-                    if (tag.Key == "db.statement" &&
-                        tag.Value is string sql &&
-                        sql.Contains("hangfire", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return new SamplingResult(SamplingDecision.Drop);
-                    }
-                }
+                activity.ActivityTraceFlags &= ~ActivityTraceFlags.Recorded;
             }
-
-            return new SamplingResult(SamplingDecision.RecordAndSample);
         }
     }
 }
