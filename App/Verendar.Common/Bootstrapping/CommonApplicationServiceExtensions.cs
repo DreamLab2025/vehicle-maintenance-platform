@@ -208,7 +208,10 @@ namespace Verendar.Common.Bootstrapping
             {
                 app.UseDefaultSwagger();
             }
-            
+
+            app.UseMiddleware<CorrelationIdMiddleware>();
+            app.UseMiddleware<HttpRequestLoggingMiddleware>();
+
             var corsPolicyName = app.Environment.IsDevelopment() ? "DevelopmentCors" : "ProductionCors";
             app.UseCors(corsPolicyName);
             app.UseMiddleware<GlobalExceptionsMiddleware>();

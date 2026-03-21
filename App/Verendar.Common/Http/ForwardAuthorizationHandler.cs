@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Verendar.Common.Jwt;
+using Verendar.Common.Shared;
 
 namespace Verendar.Common.Http
 {
@@ -21,6 +22,8 @@ namespace Verendar.Common.Http
                 "ForwardAuthorizationHandler: Processing request to {RequestUri}. Current Authorization header: {HasAuth}",
                 request.RequestUri,
                 request.Headers.Authorization != null ? "Present" : "Missing");
+
+            ForwardCorrelationId(request);
 
             if (request.Headers.Authorization == null)
             {
@@ -42,6 +45,19 @@ namespace Verendar.Common.Http
                 request.Headers.Authorization != null ? "Present" : "Missing");
 
             return response;
+        }
+
+        private void ForwardCorrelationId(HttpRequestMessage request)
+        {
+            var httpContext = httpContextAccessor.HttpContext;
+            if (httpContext is null) return;
+
+            if (httpContext.Items.TryGetValue(Const.CorrelationIdKey, out var correlationId)
+                && correlationId is string correlationIdValue
+                && !request.Headers.Contains(Const.CorrelationIdHeaderName))
+            {
+                request.Headers.TryAddWithoutValidation(Const.CorrelationIdHeaderName, correlationIdValue);
+            }
         }
 
         private async Task TryForwardAuthorizationAsync(HttpRequestMessage request)
