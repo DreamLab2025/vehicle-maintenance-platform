@@ -145,7 +145,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         private async Task<bool> BrandNameExistsAsync(string name, Guid? excludeId = null)
         {
             var existingBrand = await _unitOfWork.Brands
-                .FindOneAsync(b => b.Name == name && b.DeletedAt == null);
+                .FindOneAsync(b => b.Name == name);
 
             return existingBrand != null && (!excludeId.HasValue || existingBrand.Id != excludeId.Value);
         }

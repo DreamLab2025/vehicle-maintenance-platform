@@ -1,22 +1,59 @@
-# Build và push Docker images lên Docker Hub.
-# Secrets: DOCKER_USERNAME, DOCKER_PASSWORD. Caching: GitHub Actions cache (gha) cho layer Docker.
-
 name: Docker Build & Push
 
 on:
   push:
     branches: [main]
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 env:
   REGISTRY: docker.io
+  DOTNET_VERSION: '9.0.x'
 
 jobs:
-  build-and-push:
+  verify:
+    name: Build solution
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: dotnet build
+        run: dotnet build Verendar.sln -c Release
+
+  build-and-push:
+    name: Push ${{ matrix.image }}
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: verendar-identity-service
+            dockerfile: Identity/Verendar.Identity/Dockerfile
+            cache_scope: identity
+          - image: verendar-vehicle-service
+            dockerfile: Vehicle/Verendar.Vehicle/Dockerfile
+            cache_scope: vehicle
+          - image: verendar-media-service
+            dockerfile: Media/Verendar.Media/Dockerfile
+            cache_scope: media
+          - image: verendar-notification-service
+            dockerfile: Notification/Verendar.Notification/Dockerfile
+            cache_scope: notification
+          - image: verendar-ai-service
+            dockerfile: Ai/Verendar.Ai/Dockerfile
+            cache_scope: ai
 
     steps:
       - name: Checkout
@@ -28,10 +65,10 @@ jobs:
       - name: Set image tag
         id: tag
         run: |
-          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
           else
-            echo "tag=sha-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+            echo "tag=sha-${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Log in to Docker Hub
@@ -40,62 +77,14 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Identity
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: Identity/Verendar.Identity/Dockerfile
+          file: ${{ matrix.dockerfile }}
           push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.cache_scope }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cache_scope }}
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/verendar-identity-service:${{ steps.tag.outputs.tag }}
-            ${{ secrets.DOCKER_USERNAME }}/verendar-identity-service:latest
-
-      - name: Build and push Vehicle
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Vehicle/Verendar.Vehicle/Dockerfile
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/verendar-vehicle-service:${{ steps.tag.outputs.tag }}
-            ${{ secrets.DOCKER_USERNAME }}/verendar-vehicle-service:latest
-
-      - name: Build and push Media
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Media/Verendar.Media/Dockerfile
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/verendar-media-service:${{ steps.tag.outputs.tag }}
-            ${{ secrets.DOCKER_USERNAME }}/verendar-media-service:latest
-
-      - name: Build and push Notification
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Notification/Verendar.Notification/Dockerfile
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/verendar-notification-service:${{ steps.tag.outputs.tag }}
-            ${{ secrets.DOCKER_USERNAME }}/verendar-notification-service:latest
-
-      - name: Build and push Ai
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Ai/Verendar.Ai/Dockerfile
-          push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/verendar-ai-service:${{ steps.tag.outputs.tag }}
-            ${{ secrets.DOCKER_USERNAME }}/verendar-ai-service:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${{ steps.tag.outputs.tag }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:latest

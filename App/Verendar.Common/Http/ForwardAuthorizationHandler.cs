@@ -18,7 +18,7 @@ namespace Verendar.Common.Http
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
-            logger.LogInformation(
+            logger.LogDebug(
                 "ForwardAuthorizationHandler: Processing request to {RequestUri}. Current Authorization header: {HasAuth}",
                 request.RequestUri,
                 request.Headers.Authorization != null ? "Present" : "Missing");
@@ -31,14 +31,14 @@ namespace Verendar.Common.Http
             }
             else
             {
-                logger.LogInformation(
+                logger.LogDebug(
                     "ForwardAuthorizationHandler: Authorization header already present on request to {RequestUri}, skipping forward.",
                     request.RequestUri);
             }
 
             var response = await base.SendAsync(request, cancellationToken);
 
-            logger.LogInformation(
+            logger.LogDebug(
                 "ForwardAuthorizationHandler: Response from {RequestUri}: {StatusCode}. Authorization was: {HadAuth}",
                 request.RequestUri,
                 response.StatusCode,
@@ -73,7 +73,7 @@ namespace Verendar.Common.Http
                 return;
             }
 
-            logger.LogInformation(
+            logger.LogDebug(
                 "ForwardAuthorizationHandler: HttpContext found. Checking for Authorization header. Request path: {Path}, User authenticated: {IsAuthenticated}",
                 httpContext.Request.Path,
                 httpContext.User?.Identity?.IsAuthenticated ?? false);
@@ -83,7 +83,7 @@ namespace Verendar.Common.Http
             if (httpContext.Request.Headers.TryGetValue(AuthorizationHeaderName, out var authHeader))
             {
                 authValue = authHeader.ToString();
-                logger.LogInformation(
+                logger.LogDebug(
                     "ForwardAuthorizationHandler: Found Authorization header via TryGetValue. Length: {Length}",
                     authValue?.Length ?? 0);
             }
@@ -94,7 +94,7 @@ namespace Verendar.Common.Http
                 if (authenticateResult?.Succeeded == true && authenticateResult.Properties?.Items.TryGetValue(".Token.access_token", out var token) == true)
                 {
                     authValue = $"Bearer {token}";
-                    logger.LogInformation("ForwardAuthorizationHandler: Found token from authentication result");
+                    logger.LogDebug("ForwardAuthorizationHandler: Found token from authentication result");
                 }
             }
 
@@ -125,7 +125,7 @@ namespace Verendar.Common.Http
             }
 
             request.Headers.Authorization = new AuthenticationHeaderValue(parsed.Scheme, parsed.Parameter);
-            logger.LogInformation(
+            logger.LogDebug(
                 "ForwardAuthorizationHandler: Successfully forwarded Bearer token (scheme: {Scheme}, parameter length: {Length}) to {RequestUri}",
                 parsed.Scheme,
                 parsed.Parameter?.Length ?? 0,

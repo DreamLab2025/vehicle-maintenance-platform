@@ -85,7 +85,7 @@ namespace Verendar.ServiceDefaults
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .Enrich.WithMachineName(),
-                writeToProviders: true);
+                writeToProviders: false);
 
             return builder;
         }

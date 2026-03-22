@@ -7,7 +7,7 @@ namespace Verendar.Identity.Infrastructure.Data.Seeders
     public static class TestUserSeeder
     {
         private static readonly Guid TestUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-        private const string TestUserEmail = "hoalvpse181951@fpt.edu.vn";
+        private const string TestUserEmail = "testuser@localhost.dev";
         private const string TestUserPassword = "Test@123";
 
         public static async Task SeedAsync(UserDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)

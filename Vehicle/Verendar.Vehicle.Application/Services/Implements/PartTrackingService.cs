@@ -80,44 +80,45 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
             var existingTracking = await _unitOfWork.PartTrackings.GetFirstByUserVehicleAndPartCategoryAsync(vehicleId, partCategory.Id);
 
-            PartTracking tracking;
+            PartTracking tracking = null!;
+
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                if (existingTracking == null)
+                {
+                    tracking = vehicleId.ToPartTracking(partCategory.Id, request);
+                    await _unitOfWork.PartTrackings.AddAsync(tracking);
+                }
+                else
+                {
+                    existingTracking.ApplyTrackingConfig(request);
+                    await _unitOfWork.PartTrackings.UpdateAsync(existingTracking.Id, existingTracking);
+                    tracking = existingTracking;
+                }
+
+                var activeCycles = await _unitOfWork.TrackingCycles.GetActiveWithRemindersByPartTrackingIdAsync(tracking.Id);
+                var existingCycle = activeCycles.FirstOrDefault();
+
+                if (existingCycle != null)
+                {
+                    existingCycle.Status = CycleStatus.Completed;
+                    foreach (var r in existingCycle.Reminders)
+                        r.Status = ReminderStatus.Resolved;
+                }
+
+                await _unitOfWork.TrackingCycles.AddAsync(new TrackingCycle
+                {
+                    PartTrackingId = tracking.Id,
+                    StartOdometer = vehicle.CurrentOdometer,
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    TargetOdometer = request.PredictedNextOdometer,
+                    TargetDate = request.PredictedNextDate,
+                    Status = CycleStatus.Active,
+                });
+            });
 
             if (existingTracking == null)
-            {
-                tracking = vehicleId.ToPartTracking(partCategory.Id, request);
-                await _unitOfWork.PartTrackings.AddAsync(tracking);
-                await _unitOfWork.SaveChangesAsync();
                 tracking.PartCategory = partCategory;
-            }
-            else
-            {
-                existingTracking.ApplyTrackingConfig(request);
-                await _unitOfWork.PartTrackings.UpdateAsync(existingTracking.Id, existingTracking);
-                await _unitOfWork.SaveChangesAsync();
-                tracking = existingTracking;
-            }
-
-            var activeCycles = await _unitOfWork.TrackingCycles.GetActiveWithRemindersByPartTrackingIdAsync(tracking.Id);
-            var existingCycle = activeCycles.FirstOrDefault();
-
-            if (existingCycle != null)
-            {
-                existingCycle.Status = CycleStatus.Completed;
-                foreach (var r in existingCycle.Reminders)
-                    r.Status = ReminderStatus.Resolved;
-            }
-
-            var newCycle = new TrackingCycle
-            {
-                PartTrackingId = tracking.Id,
-                StartOdometer = vehicle.CurrentOdometer,
-                StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
-                TargetOdometer = request.PredictedNextOdometer,
-                TargetDate = request.PredictedNextDate,
-                Status = CycleStatus.Active,
-            };
-            await _unitOfWork.TrackingCycles.AddAsync(newCycle);
-            await _unitOfWork.SaveChangesAsync();
 
             await _maintenanceReminderService.SyncRemindersAsync(vehicleId, vehicle.CurrentOdometer, userId);
             await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);

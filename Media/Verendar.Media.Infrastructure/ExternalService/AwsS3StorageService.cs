@@ -1,5 +1,6 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net;
 using Verendar.Media.Application.IStorage;
@@ -7,10 +8,11 @@ using Verendar.Media.Infrastructure.Configuration;
 
 namespace Verendar.Media.Infrastructure.Storage
 {
-    public class AwsS3StorageService(IAmazonS3 s3Client, IOptions<S3Settings> s3Settings) : IStorageService
+    public class AwsS3StorageService(IAmazonS3 s3Client, IOptions<S3Settings> s3Settings, ILogger<AwsS3StorageService> logger) : IStorageService
     {
         private readonly IAmazonS3 _s3Client = s3Client;
         private readonly S3Settings _s3settings = s3Settings.Value;
+        private readonly ILogger<AwsS3StorageService> _logger = logger;
 
         public async Task DeleteFileAsync(string fileKey)
         {
@@ -25,6 +27,7 @@ namespace Verendar.Media.Infrastructure.Storage
             }
             catch (AmazonS3Exception ex)
             {
+                _logger.LogError(ex, "S3 error deleting file: {Message}", ex.Message);
                 throw;
             }
         }

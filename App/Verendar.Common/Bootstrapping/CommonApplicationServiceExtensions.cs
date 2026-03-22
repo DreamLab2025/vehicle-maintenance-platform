@@ -54,7 +54,9 @@ namespace Verendar.Common.Bootstrapping
             {
                 options.AddPolicy("Fixed", context =>
                     RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        partitionKey: context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                            ?? context.Connection.RemoteIpAddress?.ToString()
+                            ?? "unknown",
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
                             PermitLimit = 200,

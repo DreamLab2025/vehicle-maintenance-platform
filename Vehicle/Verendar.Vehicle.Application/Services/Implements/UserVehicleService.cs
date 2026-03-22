@@ -42,14 +42,16 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
 
             var userVehicle = request.ToEntity(userId);
-            await _unitOfWork.UserVehicles.AddAsync(userVehicle);
-            await _unitOfWork.SaveChangesAsync();
 
-            var initialOdometerHistory = userVehicle.Id.ToOdometerHistory(request.CurrentOdometer);
-            await _unitOfWork.OdometerHistories.AddAsync(initialOdometerHistory);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                await _unitOfWork.UserVehicles.AddAsync(userVehicle);
 
-            await _vehiclePartTrackingService.InitializeForVehicleAsync(userVehicle.Id, vehicleVariant.VehicleModelId);
+                var initialOdometerHistory = userVehicle.Id.ToOdometerHistory(request.CurrentOdometer);
+                await _unitOfWork.OdometerHistories.AddAsync(initialOdometerHistory);
+
+                await _vehiclePartTrackingService.InitializeForVehicleAsync(userVehicle.Id, vehicleVariant.VehicleModelId);
+            });
 
             var createdVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(userVehicle.Id);
 

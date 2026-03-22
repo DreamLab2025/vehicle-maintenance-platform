@@ -11,7 +11,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         public async Task<ApiResponse<TypeResponse>> CreateTypeAsync(TypeRequest request)
         {
             var existingType = await _unitOfWork.Types
-                .FindOneAsync(t => t.Name == request.Name && t.DeletedAt == null);
+                .FindOneAsync(t => t.Name == request.Name);
 
             if (existingType != null)
             {
@@ -32,9 +32,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             var vehicleType = await _unitOfWork.Types.GetByIdAsync(id);
 
-            if (vehicleType == null || vehicleType.DeletedAt != null)
+            if (vehicleType == null)
             {
-                _logger.LogWarning("DeleteType: not found or deleted {TypeId}", id);
+                _logger.LogWarning("DeleteType: not found {TypeId}", id);
                 return ApiResponse<string>.NotFoundResponse("Không tìm thấy loại xe");
             }
 
@@ -52,7 +52,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
             var (items, totalCount) = await _unitOfWork.Types.GetPagedAsync(
                 paginationRequest.PageNumber,
                 paginationRequest.PageSize,
-                filter: x => x.DeletedAt == null,
                 orderBy: paginationRequest.IsDescending.HasValue
                     ? (paginationRequest.IsDescending.Value
                         ? q => q.OrderByDescending(t => t.CreatedAt)
@@ -73,7 +72,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         public async Task<ApiResponse<TypeResponse>> GetTypeByIdAsync(Guid id)
         {
             var vehicleType = await _unitOfWork.Types.GetByIdAsync(id);
-            if (vehicleType == null || vehicleType.DeletedAt != null)
+            if (vehicleType == null)
             {
                 _logger.LogWarning("GetTypeById: not found {TypeId}", id);
                 return ApiResponse<TypeResponse>.NotFoundResponse("Không tìm thấy loại xe");
@@ -88,14 +87,14 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             var vehicleType = await _unitOfWork.Types.GetByIdAsync(id);
 
-            if (vehicleType == null || vehicleType.DeletedAt != null)
+            if (vehicleType == null)
             {
                 _logger.LogWarning("UpdateType: not found {TypeId}", id);
                 return ApiResponse<TypeResponse>.NotFoundResponse("Không tìm thấy loại xe");
             }
 
             var existingType = await _unitOfWork.Types
-                .FindOneAsync(t => t.Name == request.Name && t.Id != id && t.DeletedAt == null);
+                .FindOneAsync(t => t.Name == request.Name && t.Id != id);
 
             if (existingType != null)
             {

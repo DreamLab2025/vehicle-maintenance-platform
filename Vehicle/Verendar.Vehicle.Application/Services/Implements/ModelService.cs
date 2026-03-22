@@ -25,24 +25,26 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
 
             var model = request.ToEntity();
-            await _unitOfWork.Models.AddAsync(model);
-            await _unitOfWork.SaveChangesAsync();
 
-            if (request.Images != null && request.Images.Any())
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                foreach (var imageItem in request.Images)
+                await _unitOfWork.Models.AddAsync(model);
+
+                if (request.Images != null && request.Images.Any())
                 {
-                    var image = new Variant
+                    foreach (var imageItem in request.Images)
                     {
-                        VehicleModelId = model.Id,
-                        Color = imageItem.Color,
-                        HexCode = ColorCode.IsHex(imageItem.HexCode) ? imageItem.HexCode : "#000000",
-                        ImageUrl = imageItem.ImageUrl
-                    };
-                    await _unitOfWork.Variants.AddAsync(image);
+                        var image = new Variant
+                        {
+                            VehicleModelId = model.Id,
+                            Color = imageItem.Color,
+                            HexCode = ColorCode.IsHex(imageItem.HexCode) ? imageItem.HexCode : "#000000",
+                            ImageUrl = imageItem.ImageUrl
+                        };
+                        await _unitOfWork.Variants.AddAsync(image);
+                    }
                 }
-                await _unitOfWork.SaveChangesAsync();
-            }
+            });
 
             var createdModel = await GetModelWithDetailsAsync(model.Id);
 
@@ -55,7 +57,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             var model = await _unitOfWork.Models.GetByIdAsync(id);
 
-            if (model == null || model.DeletedAt != null)
+            if (model == null)
             {
                 _logger.LogWarning("DeleteModel: not found {ModelId}", id);
                 return ApiResponse<string>.NotFoundResponse("Không tìm thấy mẫu xe");
@@ -72,8 +74,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         public async Task<ApiResponse<List<ModelSummary>>> GetAllModelsAsync(ModelFilterRequest filterRequest)
         {
             filterRequest.Normalize();
-            var query = _unitOfWork.Models.AsQueryableWithBrandAndVehicleType()
-                .Where(m => m.DeletedAt == null);
+            var query = _unitOfWork.Models.AsQueryableWithBrandAndVehicleType();
 
             if (filterRequest.TypeId.HasValue)
             {
@@ -134,7 +135,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         {
             var model = await _unitOfWork.Models.GetByIdAsync(id);
 
-            if (model == null || model.DeletedAt != null)
+            if (model == null)
             {
                 _logger.LogWarning("UpdateModel: not found {ModelId}", id);
                 return ApiResponse<ModelResponse>.NotFoundResponse("Không tìm thấy mẫu xe");
@@ -167,7 +168,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         public async Task<ApiResponse<ModelResponseWithVariants>> GetModelByIdAsync(Guid id)
         {
             var model = await GetModelWithDetailsAsync(id);
-            if (model == null || model.DeletedAt != null)
+            if (model == null)
             {
                 _logger.LogWarning("GetModelById: not found {ModelId}", id);
                 return ApiResponse<ModelResponseWithVariants>.NotFoundResponse("Không tìm thấy mẫu xe");
@@ -180,13 +181,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
         private async Task<(bool IsValid, Brand? Brand, VehicleType? Type, string? ErrorMessage)> ValidateTypeBrandRelationshipAsync(Guid typeId, Guid brandId)
         {
             var brand = await _unitOfWork.Brands.GetByIdAsync(brandId);
-            if (brand == null || brand.DeletedAt != null)
+            if (brand == null)
             {
                 return (false, null, null, "Thương hiệu không tồn tại");
             }
 
             var type = await _unitOfWork.Types.GetByIdAsync(typeId);
-            if (type == null || type.DeletedAt != null)
+            if (type == null)
             {
                 return (false, null, null, "Loại xe không tồn tại");
             }
@@ -206,8 +207,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             var nameLower = name.Trim().ToLower();
             var existingModel = await _unitOfWork.Models
                 .FindOneAsync(m => m.Name.ToLower() == nameLower
-                    && m.VehicleBrandId == brandId
-                    && m.DeletedAt == null);
+                    && m.VehicleBrandId == brandId);
 
             return existingModel != null && (!excludeId.HasValue || existingModel.Id != excludeId.Value);
         }
