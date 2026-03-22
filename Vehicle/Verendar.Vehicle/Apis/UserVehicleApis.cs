@@ -22,7 +22,7 @@ namespace Verendar.Vehicle.Apis
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<List<UserVehicleResponse>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<List<UserVehicleSummaryDto>>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/{userVehicleId:guid}", GetUserVehicleById)

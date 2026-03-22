@@ -9,15 +9,14 @@ namespace Verendar.Vehicle.Application.Validators
                 .WithMessage("Vui lòng chọn phiên bản xe");
 
             RuleFor(x => x.LicensePlate)
-                .NotEmpty()
-                .WithMessage("Biển số xe không được để trống")
                 .MaximumLength(20)
-                .WithMessage("Biển số xe tối đa 20 ký tự");
+                .WithMessage("Biển số xe tối đa 20 ký tự")
+                .When(x => !string.IsNullOrWhiteSpace(x.LicensePlate));
 
-            RuleFor(x => x.VinNumber)
+            RuleFor(x => x.VIN)
                 .MaximumLength(17)
                 .WithMessage("Số VIN tối đa 17 ký tự")
-                .When(x => !string.IsNullOrEmpty(x.VinNumber));
+                .When(x => !string.IsNullOrEmpty(x.VIN));
 
             RuleFor(x => x.CurrentOdometer)
                 .GreaterThanOrEqualTo(0)

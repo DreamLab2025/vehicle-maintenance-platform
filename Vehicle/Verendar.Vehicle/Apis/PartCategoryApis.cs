@@ -26,8 +26,8 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<PartCategoryResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<PartCategoryResponse>>(StatusCodes.Status404NotFound);
 
-            group.MapGet("/{partCategoryCode}/reminders", GetRemindersByCategoryCode)
-                .WithName("GetRemindersByCategoryCode")
+            group.MapGet("/{partCategorySlug}/reminders", GetRemindersByCategorySlug)
+                .WithName("GetRemindersByCategorySlug")
                 .WithOpenApi(op => { op.Summary = "Lấy toàn bộ reminder theo part category code"; return op; })
                 .RequireAuthorization()
                 .Produces<ApiResponse<List<ReminderDetailDto>>>(StatusCodes.Status200OK)
@@ -88,8 +88,8 @@ namespace Verendar.Vehicle.Apis
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetRemindersByCategoryCode(
-            string partCategoryCode,
+        private static async Task<IResult> GetRemindersByCategorySlug(
+            string partCategorySlug,
             Guid userVehicleId,
             ICurrentUserService currentUserService,
             IPartCategoryService service)
@@ -98,7 +98,7 @@ namespace Verendar.Vehicle.Apis
             if (userId == Guid.Empty)
                 return Results.Unauthorized();
 
-            var result = await service.GetRemindersByCategoryCodeAsync(userId, userVehicleId, partCategoryCode);
+            var result = await service.GetRemindersByCategorySlugAsync(userId, userVehicleId, partCategorySlug);
             return result.ToHttpResult();
         }
 

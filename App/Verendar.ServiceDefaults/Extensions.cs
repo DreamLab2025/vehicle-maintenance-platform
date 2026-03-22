@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
@@ -9,6 +10,7 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Serilog;
+using Serilog.Events;
 
 namespace Verendar.ServiceDefaults
 {
@@ -50,15 +52,11 @@ namespace Verendar.ServiceDefaults
         {
             builder.ConfigureSerilog();
 
-            // Development: console only (Serilog). Non-Development: OTLP logs → Seq (see AddSeqLogsOnlyEndpoint).
-            if (!builder.Environment.IsDevelopment())
+            builder.Logging.AddOpenTelemetry(logging =>
             {
-                builder.Logging.AddOpenTelemetry(logging =>
-                {
-                    logging.IncludeFormattedMessage = true;
-                    logging.IncludeScopes = true;
-                });
-            }
+                logging.IncludeFormattedMessage = true;
+                logging.IncludeScopes = true;
+            });
 
             builder.Services.AddOpenTelemetry()
                 .WithMetrics(metrics =>
@@ -71,26 +69,23 @@ namespace Verendar.ServiceDefaults
                 {
                     tracing.AddProcessor(new HangfireStatementTraceFilterProcessor())
                         .AddSource(builder.Environment.ApplicationName)
+                        .AddAspNetCoreInstrumentation()
                         .AddHttpClientInstrumentation();
                 });
 
-            if (!builder.Environment.IsDevelopment())
-                builder.AddSeqLogsOnlyEndpoint("seq");
+            builder.AddSeqLogsOnlyEndpoint("seq");
 
             return builder;
         }
 
         private static TBuilder ConfigureSerilog<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
-            var forwardToOpenTelemetry = !builder.Environment.IsDevelopment();
-
-            // writeToProviders: forwards Serilog to the OTel logging provider → Seq OTLP when not Development.
             builder.Services.AddSerilog((services, lc) => lc
                 .ReadFrom.Configuration(builder.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .Enrich.WithMachineName(),
-                writeToProviders: forwardToOpenTelemetry);
+                writeToProviders: false);
 
             return builder;
         }

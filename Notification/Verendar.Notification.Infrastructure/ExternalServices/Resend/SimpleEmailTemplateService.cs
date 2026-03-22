@@ -32,7 +32,7 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
             TModel model,
             CancellationToken cancellationToken = default) where TModel : class
         {
-            return RenderTemplateAsync(templateKey, model, cancellationToken);
+            return RenderTemplateAsync(templateKey, (object?)model, cancellationToken);
         }
 
         public async Task<string> RenderTemplateAsync(
@@ -72,8 +72,16 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
 
         public Task<bool> TemplateExistsAsync(string templateKey, CancellationToken cancellationToken = default)
         {
-            var templatePath = GetTemplatePath(templateKey);
-            return Task.FromResult(File.Exists(templatePath));
+            var fileName = $"{templateKey}.html";
+            foreach (var dir in GetTemplateSearchDirectories())
+            {
+                if (File.Exists(Path.Combine(dir, fileName)))
+                {
+                    return Task.FromResult(true);
+                }
+            }
+
+            return Task.FromResult(false);
         }
 
         public void ClearCache()
@@ -95,12 +103,7 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
                 }
             }
 
-            var templatePath = GetTemplatePath(templateKey);
-
-            if (!File.Exists(templatePath))
-            {
-                throw new FileNotFoundException($"Email template not found: {templatePath}");
-            }
+            var templatePath = ResolveTemplatePath(templateKey);
 
             var content = await File.ReadAllTextAsync(templatePath);
 
@@ -245,38 +248,47 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
             return result;
         }
 
-        private string GetTemplatePath(string templateKey)
+        private string ResolveTemplatePath(string templateKey)
         {
             var fileName = $"{templateKey}.html";
-            var templateDirectory = GetTemplateDirectory();
-            var primaryPath = Path.Combine(templateDirectory, fileName);
-
-            if (File.Exists(primaryPath))
+            foreach (var dir in GetTemplateSearchDirectories())
             {
-                return primaryPath;
+                var path = Path.Combine(dir, fileName);
+                if (File.Exists(path))
+                {
+                    return path;
+                }
             }
 
-            var fallbackDirectory = GetFallbackTemplateDirectory();
-            return Path.Combine(fallbackDirectory, fileName);
+            var searched = string.Join(", ", GetTemplateSearchDirectories());
+            throw new FileNotFoundException($"Email template not found: {fileName}. Searched directories: {searched}");
         }
 
-        private string GetTemplateDirectory()
+        private IEnumerable<string> GetTemplateSearchDirectories()
         {
+            var assemblyDir = GetInfrastructureAssemblyDirectory();
+            if (!string.IsNullOrEmpty(assemblyDir))
+            {
+                var resendEmail = Path.Combine(assemblyDir, "ExternalServices", "Resend", "Templates", "Email");
+                if (Directory.Exists(resendEmail))
+                {
+                    yield return resendEmail;
+                }
+            }
+
             var basePath = _environment.ContentRootPath ?? AppDomain.CurrentDomain.BaseDirectory;
-            return Path.Combine(basePath, _options.TemplateBasePath);
+            yield return Path.Combine(basePath, _options.TemplateBasePath);
         }
 
-        private string GetFallbackTemplateDirectory()
+        private static string? GetInfrastructureAssemblyDirectory()
         {
-            var basePath = _environment.ContentRootPath ?? AppDomain.CurrentDomain.BaseDirectory;
-            return Path.GetFullPath(Path.Combine(
-                basePath,
-                "..",
-                "Verendar.Notification.Infrastructure",
-                "ExternalServices",
-                "Resend",
-                "Templates",
-                "Email"));
+            var location = typeof(SimpleEmailTemplateService).Assembly.Location;
+            if (!string.IsNullOrEmpty(location))
+            {
+                return Path.GetDirectoryName(location);
+            }
+
+            return AppContext.BaseDirectory;
         }
     }
 }

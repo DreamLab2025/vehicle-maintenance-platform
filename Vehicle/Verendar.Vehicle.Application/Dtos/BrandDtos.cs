@@ -13,6 +13,8 @@ namespace Verendar.Vehicle.Application.Dtos
 
         public string? LogoUrl { get; set; }
 
+        public Guid? LogoMediaFileId { get; set; }
+
         public string? Website { get; set; }
 
         public string? SupportPhone { get; set; }
@@ -24,7 +26,9 @@ namespace Verendar.Vehicle.Application.Dtos
         public Guid VehicleTypeId { get; set; }
         public string VehicleTypeName { get; set; } = null!;
         public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
         public string? LogoUrl { get; set; }
+        public Guid? LogoMediaFileId { get; set; }
         public string? Website { get; set; }
         public string? SupportPhone { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -37,6 +41,8 @@ namespace Verendar.Vehicle.Application.Dtos
         public Guid VehicleTypeId { get; set; }
         public string VehicleTypeName { get; set; } = null!;
         public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
         public string? LogoUrl { get; set; }
+        public Guid? LogoMediaFileId { get; set; }
     }
 }

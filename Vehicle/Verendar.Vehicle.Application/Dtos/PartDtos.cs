@@ -4,11 +4,11 @@ namespace Verendar.Vehicle.Application.Dtos
     {
         public string Name { get; set; } = null!;
 
-        public string Code { get; set; } = null!;
-
         public string? Description { get; set; }
 
         public string? IconUrl { get; set; }
+
+        public Guid? IconMediaFileId { get; set; }
 
         public int DisplayOrder { get; set; }
 
@@ -25,9 +25,10 @@ namespace Verendar.Vehicle.Application.Dtos
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
-        public string Code { get; set; } = null!;
+        public string Slug { get; set; } = null!;
         public string? Description { get; set; }
         public string? IconUrl { get; set; }
+        public Guid? IconMediaFileId { get; set; }
         public int DisplayOrder { get; set; }
         public bool RequiresOdometerTracking { get; set; }
         public bool RequiresTimeTracking { get; set; }
@@ -42,8 +43,9 @@ namespace Verendar.Vehicle.Application.Dtos
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
-        public string Code { get; set; } = null!;
+        public string Slug { get; set; } = null!;
         public string? IconUrl { get; set; }
+        public Guid? IconMediaFileId { get; set; }
         public int DisplayOrder { get; set; }
     }
 

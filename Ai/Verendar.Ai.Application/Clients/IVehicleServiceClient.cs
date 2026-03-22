@@ -1,4 +1,3 @@
-using Verendar.Ai.Application.Dtos.VehicleService;
 namespace Verendar.Ai.Application.Clients
 {
     public interface IVehicleServiceClient
@@ -9,7 +8,7 @@ namespace Verendar.Ai.Application.Clients
 
         Task<ApiResponse<VehicleServiceDefaultScheduleResponse>> GetDefaultScheduleAsync(
             Guid vehicleModelId,
-            string partCategoryCode,
+            string partCategorySlug,
             CancellationToken cancellationToken = default);
     }
 }

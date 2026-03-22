@@ -1,5 +1,4 @@
 using MassTransit;
-using Microsoft.EntityFrameworkCore;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Application.Clients;
@@ -22,32 +21,27 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
         public async Task<ApiResponse<List<ReminderDetailDto>>> GetRemindersAsync(Guid userId, Guid userVehicleId)
         {
-            try
+            var vehicle = await _unitOfWork.UserVehicles
+                .FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
+
+            if (vehicle == null)
             {
-                var vehicle = await _unitOfWork.UserVehicles
-                    .FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
-
-                if (vehicle == null)
-                    return ApiResponse<List<ReminderDetailDto>>.NotFoundResponse("Không tìm thấy xe");
-
-                var activeCycles = await _unitOfWork.TrackingCycles.GetActiveCyclesByVehicleIdAsync(userVehicleId);
-
-                var dtos = activeCycles
-                    .Select(c => c.Reminders.FirstOrDefault(r => r.Status == ReminderStatus.Active))
-                    .Where(r => r != null)
-                    .Cast<MaintenanceReminder>()
-                    .Select(r => r.ToReminderDetailDto(vehicle.CurrentOdometer))
-                    .ToList();
-
-                return ApiResponse<List<ReminderDetailDto>>.SuccessResponse(
-                    dtos,
-                    "Lấy danh sách nhắc bảo trì thành công");
+                _logger.LogWarning("GetReminders: vehicle not found {UserVehicleId} user {UserId}", userVehicleId, userId);
+                return ApiResponse<List<ReminderDetailDto>>.NotFoundResponse("Không tìm thấy xe");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting reminders for user vehicle {UserVehicleId}", userVehicleId);
-                return ApiResponse<List<ReminderDetailDto>>.FailureResponse("Lỗi khi lấy danh sách nhắc bảo trì");
-            }
+
+            var activeCycles = await _unitOfWork.TrackingCycles.GetActiveCyclesByVehicleIdAsync(userVehicleId);
+
+            var dtos = activeCycles
+                .Select(c => c.Reminders.FirstOrDefault(r => r.Status == ReminderStatus.Active))
+                .Where(r => r != null)
+                .Cast<MaintenanceReminder>()
+                .Select(r => r.ToReminderDetailDto(vehicle.CurrentOdometer))
+                .ToList();
+
+            return ApiResponse<List<ReminderDetailDto>>.SuccessResponse(
+                dtos,
+                "Lấy danh sách nhắc bảo trì thành công");
         }
 
         public async Task SyncRemindersAsync(Guid vehicleId, int currentOdometer, Guid userId)
@@ -133,10 +127,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 var reminders = (await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdWithDetailsAsync(vehicleId, cancellationToken)).ToList();
 
                 if (reminders.Count == 0)
-                {
-                    _logger.LogDebug("No reminders found for vehicle {VehicleId}", vehicleId);
                     return;
-                }
 
                 var byLevel = reminders
                     .Where(r => r.TrackingCycle?.PartTracking?.UserVehicle != null && r.TrackingCycle.PartTracking.PartCategory != null)
@@ -150,17 +141,11 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     var level = levelGroup.Key;
 
                     if (level != ReminderLevel.Critical)
-                    {
-                        _logger.LogDebug("Skipping level {Level} for vehicle {VehicleId} - will be handled by background job", level, vehicleId);
                         continue;
-                    }
 
                     var alreadyNotifiedToday = levelGroup.All(r => r.IsNotified && r.NotifiedDate == today);
                     if (alreadyNotifiedToday)
-                    {
-                        _logger.LogDebug("Critical reminders for vehicle {VehicleId} already notified today, skipping", vehicleId);
                         continue;
-                    }
 
                     try
                     {
@@ -189,9 +174,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
                             await _unitOfWork.MaintenanceReminders.UpdateAsync(reminder.Id, reminder);
                         }
                         await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-                        _logger.LogInformation("Published MaintenanceReminderEvent for user {UserId}, vehicle {VehicleId}, level {Level}, {Count} parts, marked as notified today",
-                            userId, vehicleId, level, items.Count);
                     }
                     catch (Exception ex)
                     {
@@ -210,17 +192,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var fromDate = today.AddMonths(-3);
 
-            var history = await _unitOfWork.OdometerHistories.AsQueryable()
-                .Where(h => h.UserVehicleId == vehicleId && h.RecordedDate >= fromDate)
-                .OrderBy(h => h.RecordedDate)
-                .Select(h => new { h.RecordedDate, h.OdometerValue })
-                .ToListAsync();
+            var history = await _unitOfWork.OdometerHistories.GetRecordedOnOrAfterOrderedAsync(vehicleId, fromDate);
 
             if (history.Count < 2)
                 return null;
 
-            var first = history.First();
-            var last = history.Last();
+            var first = history[0];
+            var last = history[^1];
             var totalKm = last.OdometerValue - first.OdometerValue;
             var totalDays = last.RecordedDate.DayNumber - first.RecordedDate.DayNumber;
 

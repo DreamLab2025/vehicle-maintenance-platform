@@ -1,3 +1,4 @@
+using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Yarp;
 using Yarp.ReverseProxy.Configuration;
@@ -6,44 +7,46 @@ namespace Verendar.AppHost.Extensions
 {
     public static class ExternalServiceRegistrationExtensions
     {
-        /// <summary>
-        /// When <c>Development</c> (default AppHost launch profile), Seq container and references are omitted so local dev stays console-only for logs.
-        /// </summary>
-        private static bool IncludeSeqInAppHost()
-        {
-            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-                      ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-            return !string.Equals(env, "Development", StringComparison.OrdinalIgnoreCase);
-        }
+        private const string PgAdminEnvVar = "VERENDAR_PGADMIN";
 
         public static IDistributedApplicationBuilder AddApplicationServices(this IDistributedApplicationBuilder builder)
         {
             var postgres = builder.AddPostgres("postgres")
                 .WithContainerName("PostgresDb")
-                .WithImageTag("17-alpine")
-                .WithDataVolume()
-                .WithPgAdmin(pgAdmin =>
+                .WithImage("postgres", "17.4-alpine")
+                .WithImagePullPolicy(ImagePullPolicy.Missing)
+                .WithLifetime(ContainerLifetime.Persistent)
+                .WithDataVolume();
+
+            if (string.Equals(Environment.GetEnvironmentVariable(PgAdminEnvVar), "1", StringComparison.OrdinalIgnoreCase))
+            {
+                postgres = postgres.WithPgAdmin(pgAdmin =>
                 {
                     pgAdmin.WithContainerName("PgAdmin")
-                           .WithHostPort(5050);
+                        .WithHostPort(5050)
+                        .WithLifetime(ContainerLifetime.Persistent);
                 });
+            }
 
             var rabbitMq = builder.AddRabbitMQ("rabbitmq")
                 .WithContainerName("Rabbitmq")
                 .WithImageTag("3-management-alpine")
+                .WithImagePullPolicy(ImagePullPolicy.Missing)
+                .WithLifetime(ContainerLifetime.Persistent)
                 .WithManagementPlugin(15672)
                 .WithDataVolume();
 
             var redis = builder.AddRedis("redis-cache")
-                .WithImageTag("alpine");
+                .WithImage("redis", "7.4-alpine")
+                .WithImagePullPolicy(ImagePullPolicy.Missing)
+                .WithLifetime(ContainerLifetime.Persistent);
 
-            IResourceBuilder<SeqResource>? seq = null;
-            if (IncludeSeqInAppHost())
-            {
-                seq = builder.AddSeq("seq")
-                    .WithDataVolume()
-                    .ExcludeFromManifest();
-            }
+            var seq = builder.AddSeq("seq")
+                .WithImage("datalust/seq", "2025.2")
+                .WithImagePullPolicy(ImagePullPolicy.Missing)
+                .WithLifetime(ContainerLifetime.Persistent)
+                .WithDataVolume()
+                .ExcludeFromManifest();
 
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
             var vehicleDb = postgres.AddDatabase("vehicle-db", "Vehicles");
@@ -55,63 +58,49 @@ namespace Verendar.AppHost.Extensions
                 .WithReference(identityDb)
                 .WithReference(rabbitMq)
                 .WithReference(redis);
-            if (seq is not null)
-                identityService = identityService.WithReference(seq);
             identityService = identityService
+                .WithReference(seq)
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq)
                 .WaitFor(redis);
-            if (seq is not null)
-                identityService = identityService.WaitFor(seq);
 
             var vehicleService = builder.AddProject<Projects.Verendar_Vehicle>("Verendar-vehicle")
                 .WithReference(vehicleDb)
                 .WithReference(rabbitMq);
-            if (seq is not null)
-                vehicleService = vehicleService.WithReference(seq);
             vehicleService = vehicleService
+                .WithReference(seq)
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
-            if (seq is not null)
-                vehicleService = vehicleService.WaitFor(seq);
 
             var mediaService = builder.AddProject<Projects.Verendar_Media>("Verendar-media")
                 .WithReference(mediaDb)
                 .WithReference(rabbitMq);
-            if (seq is not null)
-                mediaService = mediaService.WithReference(seq);
             mediaService = mediaService
+                .WithReference(seq)
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
-            if (seq is not null)
-                mediaService = mediaService.WaitFor(seq);
 
             var notificationService = builder.AddProject<Projects.Verendar_Notification>("Verendar-notification")
                 .WithReference(notificationDb)
                 .WithReference(rabbitMq);
-            if (seq is not null)
-                notificationService = notificationService.WithReference(seq);
             notificationService = notificationService
+                .WithReference(seq)
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
-            if (seq is not null)
-                notificationService = notificationService.WaitFor(seq);
 
             var aiService = builder.AddProject<Projects.Verendar_Ai>("Verendar-ai")
                 .WithReference(aiDb)
                 .WithReference(rabbitMq);
-            if (seq is not null)
-                aiService = aiService.WithReference(seq);
             aiService = aiService
+                .WithReference(seq)
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
-            if (seq is not null)
-                aiService = aiService.WaitFor(seq);
 
 
             var apiGateway = builder.AddYarp("api-gateway")
                 .WithContainerName("ApiGateway")
                 .WithHostPort(8080)
+                .WithLifetime(ContainerLifetime.Persistent)
                 .WithConfiguration(yarp =>
                 {
                     var identityCluster = yarp.AddProjectCluster(identityService);

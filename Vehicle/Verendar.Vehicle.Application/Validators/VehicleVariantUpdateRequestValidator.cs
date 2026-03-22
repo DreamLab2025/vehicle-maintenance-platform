@@ -21,6 +21,10 @@ namespace Verendar.Vehicle.Application.Validators
                 .WithMessage("URL hình ảnh không được để trống")
                 .MaximumLength(500)
                 .WithMessage("URL hình ảnh tối đa 500 ký tự");
+
+            RuleFor(x => x)
+                .Must(x => !x.ImageMediaFileId.HasValue || !string.IsNullOrWhiteSpace(x.ImageUrl))
+                .WithMessage("ImageUrl là bắt buộc khi gửi ImageMediaFileId");
         }
     }
 }

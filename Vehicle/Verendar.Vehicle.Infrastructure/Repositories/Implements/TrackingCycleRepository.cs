@@ -23,5 +23,13 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .OrderByDescending(c => c.CreatedAt)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<IReadOnlyList<TrackingCycle>> GetActiveWithRemindersByPartTrackingIdAsync(Guid partTrackingId, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Include(c => c.Reminders)
+                .Where(c => c.PartTrackingId == partTrackingId && c.Status == CycleStatus.Active)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

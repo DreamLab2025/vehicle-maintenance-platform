@@ -7,19 +7,24 @@ namespace Verendar.Identity.Infrastructure.Data.Seeders
     public static class TestUserSeeder
     {
         private static readonly Guid TestUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-        private const string TestUserEmail = "hoalvpse181951@fpt.edu.vn";
-        private const string TestUserPassword = "Test@123";
+        private const string TestUserEmail = "user@gmail.com";
+        private const string TestUserPassword = "12345@Abc";
 
         public static async Task SeedAsync(UserDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
         {
             var normalizedEmail = EmailHelper.Normalize(TestUserEmail);
-            var existing = await db.Users
+            var alreadySeeded = await db.Users
                 .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
+                .AnyAsync(
+                    u => u.Id == TestUserId || u.Email == normalizedEmail,
+                    cancellationToken);
 
-            if (existing != null)
+            if (alreadySeeded)
             {
-                logger?.LogDebug("Test user already exists: {Email}", normalizedEmail);
+                logger?.LogDebug(
+                    "Test user seed skipped: row already exists for Id {UserId} or email {Email}",
+                    TestUserId,
+                    normalizedEmail);
                 return;
             }
 

@@ -1,9 +1,17 @@
+using Microsoft.EntityFrameworkCore;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
     public class VariantRepository(VehicleDbContext context) : PostgresRepository<Variant>(context), IVariantRepository
     {
+        public async Task<Variant?> GetByIdWithVehicleModelAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Include(v => v.VehicleModel)
+                .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+        }
+
         public async Task<IEnumerable<Variant>> GetImagesByVehicleModelIdAsync(Guid vehicleModelId, CancellationToken cancellationToken = default)
         {
             return await _dbSet

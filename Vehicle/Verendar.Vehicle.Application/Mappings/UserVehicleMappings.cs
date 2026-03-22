@@ -11,11 +11,69 @@ namespace Verendar.Vehicle.Application.Mappings
                 UserId = userId,
                 VehicleVariantId = request.VehicleVariantId,
                 LicensePlate = request.LicensePlate,
-                VIN = request.VinNumber,
-                PurchaseDate = request.PurchaseDate.HasValue ? DateOnly.FromDateTime(request.PurchaseDate.Value) : null,
+                VIN = request.VIN,
+                PurchaseDate = request.PurchaseDate,
                 CurrentOdometer = request.CurrentOdometer,
                 LastOdometerUpdate = DateOnly.FromDateTime(DateTime.UtcNow),
                 AverageKmPerDay = null
+            };
+        }
+
+        public static UpdateOdometerResponse ToUpdateOdometerResponse(this UserVehicle entity)
+        {
+            return new UpdateOdometerResponse
+            {
+                UserVehicleId = entity.Id,
+                CurrentOdometer = entity.CurrentOdometer,
+                LastOdometerUpdate = entity.LastOdometerUpdate
+            };
+        }
+
+        public static UserVehicleSummaryDto ToSummaryDto(this UserVehicle entity)
+        {
+            var variant = entity.Variant;
+            var model = variant?.VehicleModel;
+            var brand = model?.Brand;
+            var type = brand?.VehicleType;
+
+            return new UserVehicleSummaryDto
+            {
+                Id = entity.Id,
+                UserId = entity.UserId,
+                LicensePlate = entity.LicensePlate,
+                VIN = entity.VIN,
+                PurchaseDate = entity.PurchaseDate,
+                CurrentOdometer = entity.CurrentOdometer,
+                LastOdometerUpdate = entity.LastOdometerUpdate,
+                AverageKmPerDay = entity.AverageKmPerDay,
+                CreatedAt = entity.CreatedAt,
+                UpdatedAt = entity.UpdatedAt,
+                Variant = new UserVehicleVariantSummaryDto
+                {
+                    Id = variant?.Id ?? Guid.Empty,
+                    Color = variant?.Color ?? string.Empty,
+                    HexCode = variant?.HexCode ?? string.Empty,
+                    ImageUrl = variant?.ImageUrl ?? string.Empty,
+                    ImageMediaFileId = variant?.ImageMediaFileId,
+                    Model = new VehicleModelRefSummaryDto
+                    {
+                        Id = model?.Id ?? Guid.Empty,
+                        Name = model?.Name ?? string.Empty,
+                        Slug = model?.Slug ?? string.Empty,
+                        Brand = new VehicleBrandRefSummaryDto
+                        {
+                            Id = brand?.Id ?? Guid.Empty,
+                            Name = brand?.Name ?? string.Empty,
+                            Slug = brand?.Slug ?? string.Empty,
+                            Type = new VehicleTypeRefSummaryDto
+                            {
+                                Id = type?.Id ?? brand?.VehicleTypeId ?? Guid.Empty,
+                                Name = type?.Name ?? string.Empty,
+                                Slug = type?.Slug ?? string.Empty
+                            }
+                        }
+                    }
+                }
             };
         }
 
@@ -27,12 +85,11 @@ namespace Verendar.Vehicle.Application.Mappings
                 UserId = entity.UserId,
                 UserVehicleVariant = entity.Variant!.ToUserVariantResponse(),
                 LicensePlate = entity.LicensePlate,
-                VinNumber = entity.VIN,
-                PurchaseDate = entity.PurchaseDate?.ToDateTime(TimeOnly.MinValue),
+                VIN = entity.VIN,
+                PurchaseDate = entity.PurchaseDate,
                 CurrentOdometer = entity.CurrentOdometer,
-                LastOdometerUpdateAt = entity.LastOdometerUpdate?.ToDateTime(TimeOnly.MinValue),
+                LastOdometerUpdate = entity.LastOdometerUpdate,
                 AverageKmPerDay = entity.AverageKmPerDay,
-                NeedsOnboarding = entity.NeedsOnboarding,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -50,12 +107,11 @@ namespace Verendar.Vehicle.Application.Mappings
                 UserId = entity.UserId,
                 UserVehicleVariant = entity.Variant!.ToUserVariantResponse(),
                 LicensePlate = entity.LicensePlate,
-                VinNumber = entity.VIN,
-                PurchaseDate = entity.PurchaseDate?.ToDateTime(TimeOnly.MinValue),
+                VIN = entity.VIN,
+                PurchaseDate = entity.PurchaseDate,
                 CurrentOdometer = entity.CurrentOdometer,
-                LastOdometerUpdateAt = entity.LastOdometerUpdate?.ToDateTime(TimeOnly.MinValue),
+                LastOdometerUpdate = entity.LastOdometerUpdate,
                 AverageKmPerDay = entity.AverageKmPerDay,
-                NeedsOnboarding = entity.NeedsOnboarding,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt,
                 TotalMaintenanceActivities = totalMaintenanceActivities,
@@ -72,7 +128,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 Id = entity.Id,
                 PartCategoryId = entity.PartCategoryId,
                 PartCategoryName = entity.PartCategory?.Name ?? string.Empty,
-                PartCategoryCode = entity.PartCategory?.Code ?? string.Empty,
+                PartCategorySlug = entity.PartCategory?.Slug ?? string.Empty,
                 IconUrl = entity.PartCategory?.IconUrl,
                 IsDeclared = entity.IsDeclared,
                 Description = entity.PartCategory?.Description
@@ -108,7 +164,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 Id = entity.Id,
                 PartCategoryId = entity.PartCategoryId,
                 PartCategoryName = entity.PartCategory?.Name ?? string.Empty,
-                PartCategoryCode = entity.PartCategory?.Code ?? string.Empty,
+                PartCategorySlug = entity.PartCategory?.Slug ?? string.Empty,
                 InstanceIdentifier = entity.InstanceIdentifier,
                 CurrentPartProductId = entity.CurrentPartProductId,
                 CurrentPartProductName = entity.CurrentPartProduct?.Name,
@@ -147,8 +203,8 @@ namespace Verendar.Vehicle.Application.Mappings
         {
             entity.VehicleVariantId = request.VehicleVariantId;
             entity.LicensePlate = request.LicensePlate;
-            entity.VIN = request.VinNumber;
-            entity.PurchaseDate = request.PurchaseDate.HasValue ? DateOnly.FromDateTime(request.PurchaseDate.Value) : null;
+            entity.VIN = request.VIN;
+            entity.PurchaseDate = request.PurchaseDate;
         }
 
         public static void UpdateOdometer(this UserVehicle entity, int newOdometer)
@@ -275,9 +331,10 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 Name = entity.Name,
-                Code = entity.Code,
+                Slug = entity.Slug,
                 Description = entity.Description,
                 IconUrl = entity.IconUrl,
+                IconMediaFileId = entity.IconMediaFileId,
                 IdentificationSigns = entity.IdentificationSigns,
                 ConsequencesIfNotHandled = entity.ConsequencesIfNotHandled
             };
@@ -331,7 +388,7 @@ namespace Verendar.Vehicle.Application.Mappings
             return new PartHealthItem
             {
                 PartTrackingId = tracking.Id,
-                PartCategoryCode = tracking.PartCategory?.Code ?? string.Empty,
+                PartCategorySlug = tracking.PartCategory?.Slug ?? string.Empty,
                 PartCategoryName = tracking.PartCategory?.Name ?? string.Empty,
                 IconUrl = tracking.PartCategory?.IconUrl,
                 HealthScore = score,

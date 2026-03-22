@@ -14,36 +14,58 @@ namespace Verendar.Vehicle.Application.Services.Implements
             Guid vehicleModelId,
             CancellationToken cancellationToken = default)
         {
-            try
+            var vehicleModel = await _unitOfWork.Models.GetByIdAsync(vehicleModelId);
+            if (vehicleModel == null)
             {
-                var vehicleModel = await _unitOfWork.Models.GetByIdAsync(vehicleModelId);
-                if (vehicleModel == null)
-                {
-                    _logger.LogWarning("Vehicle model not found: {VehicleModelId}", vehicleModelId);
-                    return ApiResponse<List<PartCategoryResponse>>.NotFoundResponse("Không tìm thấy mẫu xe");
-                }
-
-                var schedules = await _unitOfWork.DefaultSchedules.GetByVehicleModelIdAsync(vehicleModelId, cancellationToken);
-                var categories = schedules
-                    .Where(s => s.PartCategory != null)
-                    .Select(s => s.PartCategory!)
-                    .GroupBy(c => c.Id)
-                    .Select(g => g.First())
-                    .OrderBy(c => c.DisplayOrder)
-                    .ThenBy(c => c.CreatedAt)
-                    .Select(c => c.ToResponse())
-                    .ToList();
-
-                return ApiResponse<List<PartCategoryResponse>>.SuccessResponse(
-                    categories,
-                    "Lấy danh mục linh kiện áp dụng cho mẫu xe thành công");
+                _logger.LogWarning("GetPartCategoriesByVehicleModel: model not found {VehicleModelId}", vehicleModelId);
+                return ApiResponse<List<PartCategoryResponse>>.NotFoundResponse("Không tìm thấy mẫu xe");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting part categories for vehicle model {VehicleModelId}", vehicleModelId);
-                return ApiResponse<List<PartCategoryResponse>>.FailureResponse("Có lỗi xảy ra khi lấy danh mục linh kiện theo mẫu xe");
-            }
+
+            var schedules = await _unitOfWork.DefaultSchedules.GetByVehicleModelIdAsync(vehicleModelId, cancellationToken);
+            var categories = schedules
+                .Where(s => s.PartCategory != null)
+                .Select(s => s.PartCategory!)
+                .GroupBy(c => c.Id)
+                .Select(g => g.First())
+                .OrderBy(c => c.DisplayOrder)
+                .ThenBy(c => c.CreatedAt)
+                .Select(c => c.ToResponse())
+                .ToList();
+
+            return ApiResponse<List<PartCategoryResponse>>.SuccessResponse(
+                categories,
+                "Lấy danh mục linh kiện áp dụng cho mẫu xe thành công");
         }
 
+        public async Task<ApiResponse<DefaultScheduleResponse>> GetDefaultScheduleByModelAndPartCategorySlugAsync(
+            Guid vehicleModelId,
+            string partCategorySlug,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(partCategorySlug))
+            {
+                _logger.LogWarning("GetDefaultScheduleByModelAndPartCategorySlug: empty slug model {VehicleModelId}", vehicleModelId);
+                return ApiResponse<DefaultScheduleResponse>.FailureResponse("Slug danh mục phụ tùng không hợp lệ");
+            }
+
+            var schedule = await _unitOfWork.DefaultSchedules.GetByVehicleModelIdAndPartCategorySlugAsync(
+                vehicleModelId,
+                partCategorySlug,
+                cancellationToken);
+
+            if (schedule == null)
+            {
+                _logger.LogWarning(
+                    "GetDefaultScheduleByModelAndPartCategorySlug: not found model {VehicleModelId} slug {PartCategorySlug}",
+                    vehicleModelId,
+                    partCategorySlug);
+                return ApiResponse<DefaultScheduleResponse>.NotFoundResponse(
+                    "Không tìm thấy lịch bảo dưỡng mặc định cho mẫu xe và danh mục này");
+            }
+
+            return ApiResponse<DefaultScheduleResponse>.SuccessResponse(
+                schedule.ToResponse(),
+                "Lấy lịch bảo dưỡng mặc định thành công");
+        }
     }
 }

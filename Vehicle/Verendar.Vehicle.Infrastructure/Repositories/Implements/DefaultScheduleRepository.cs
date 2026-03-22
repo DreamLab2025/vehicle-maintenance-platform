@@ -12,5 +12,19 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .ToListAsync(cancellationToken);
         }
 
+        public async Task<DefaultMaintenanceSchedule?> GetByVehicleModelIdAndPartCategorySlugAsync(
+            Guid vehicleModelId,
+            string partCategorySlug,
+            CancellationToken cancellationToken = default)
+        {
+            var slug = partCategorySlug.Trim();
+            return await _dbSet
+                .Include(x => x.PartCategory)
+                .FirstOrDefaultAsync(
+                    x => x.VehicleModelId == vehicleModelId
+                        && x.PartCategory != null
+                        && x.PartCategory.Slug.ToLower() == slug.ToLower(),
+                    cancellationToken);
+        }
     }
 }

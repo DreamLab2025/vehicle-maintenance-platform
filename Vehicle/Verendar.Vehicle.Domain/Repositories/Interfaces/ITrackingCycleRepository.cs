@@ -6,5 +6,6 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
     {
         Task<IEnumerable<TrackingCycle>> GetActiveCyclesByVehicleIdAsync(Guid userVehicleId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<TrackingCycle>> GetByPartTrackingIdAsync(Guid partTrackingId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<TrackingCycle>> GetActiveWithRemindersByPartTrackingIdAsync(Guid partTrackingId, CancellationToken cancellationToken = default);
     }
 }

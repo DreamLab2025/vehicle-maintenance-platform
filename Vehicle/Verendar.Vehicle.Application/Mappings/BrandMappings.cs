@@ -1,4 +1,4 @@
-﻿namespace Verendar.Vehicle.Application.Mappings
+namespace Verendar.Vehicle.Application.Mappings
 {
     public static class BrandMappings
     {
@@ -9,6 +9,7 @@
                 VehicleTypeId = request.VehicleTypeId,
                 Name = request.Name,
                 LogoUrl = request.LogoUrl,
+                LogoMediaFileId = request.LogoMediaFileId,
                 Website = request.Website,
                 SupportPhone = request.SupportPhone
             };
@@ -22,7 +23,9 @@
                 VehicleTypeId = entity.VehicleTypeId,
                 VehicleTypeName = entity.VehicleType?.Name ?? string.Empty,
                 Name = entity.Name,
+                Slug = entity.Slug,
                 LogoUrl = entity.LogoUrl,
+                LogoMediaFileId = entity.LogoMediaFileId,
                 Website = entity.Website,
                 SupportPhone = entity.SupportPhone,
                 CreatedAt = entity.CreatedAt,
@@ -38,7 +41,9 @@
                 VehicleTypeId = entity.VehicleTypeId,
                 VehicleTypeName = entity.VehicleType?.Name ?? string.Empty,
                 Name = entity.Name,
-                LogoUrl = entity.LogoUrl
+                Slug = entity.Slug,
+                LogoUrl = entity.LogoUrl,
+                LogoMediaFileId = entity.LogoMediaFileId
             };
         }
 
@@ -47,6 +52,7 @@
             entity.VehicleTypeId = request.VehicleTypeId;
             entity.Name = request.Name;
             entity.LogoUrl = request.LogoUrl;
+            entity.LogoMediaFileId = request.LogoMediaFileId;
             entity.Website = request.Website;
             entity.SupportPhone = request.SupportPhone;
         }

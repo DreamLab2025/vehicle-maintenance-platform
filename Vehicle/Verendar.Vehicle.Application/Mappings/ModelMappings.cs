@@ -1,4 +1,4 @@
-﻿namespace Verendar.Vehicle.Application.Mappings
+namespace Verendar.Vehicle.Application.Mappings
 {
     public static class ModelMappings
     {
@@ -7,13 +7,14 @@
             return new Model
             {
                 Name = request.Name,
-                Code = request.Code ?? string.Empty,
+                Slug = string.Empty,
                 VehicleBrandId = request.BrandId,
-                ManufactureYear = request.ReleaseYear,
+                ManufactureYear = request.ManufactureYear,
                 FuelType = request.FuelType,
                 TransmissionType = request.TransmissionType,
                 EngineDisplacement = request.EngineDisplacement,
-                EngineCapacity = request.EngineCapacity
+                EngineCapacity = request.EngineCapacity,
+                Description = request.Description
             };
         }
 
@@ -23,17 +24,19 @@
             {
                 Id = entity.Id,
                 Name = entity.Name,
+                Slug = entity.Slug,
                 BrandId = entity.VehicleBrandId,
                 BrandName = entity.Brand?.Name ?? string.Empty,
                 TypeId = entity.Brand?.VehicleTypeId ?? Guid.Empty,
                 TypeName = entity.Brand?.VehicleType?.Name ?? string.Empty,
-                ReleaseYear = entity.ManufactureYear,
+                ManufactureYear = entity.ManufactureYear,
                 FuelType = entity.FuelType,
                 FuelTypeName = entity.FuelType.HasValue ? GetFuelTypeName(entity.FuelType.Value) : string.Empty,
                 TransmissionType = entity.TransmissionType,
                 TransmissionTypeName = entity.TransmissionType.HasValue ? GetTransmissionTypeName(entity.TransmissionType.Value) : string.Empty,
                 EngineDisplacementDisplay = entity.EngineDisplacement.HasValue ? $"{entity.EngineDisplacement} cc" : null,
                 EngineCapacity = entity.EngineCapacity,
+                Description = entity.Description,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -45,11 +48,12 @@
             {
                 Id = entity.Id,
                 Name = entity.Name,
+                Slug = entity.Slug,
                 BrandId = entity.VehicleBrandId,
                 BrandName = entity.Brand?.Name ?? string.Empty,
                 TypeId = entity.Brand?.VehicleTypeId ?? Guid.Empty,
                 TypeName = entity.Brand?.VehicleType?.Name ?? string.Empty,
-                ReleaseYear = entity.ManufactureYear,
+                ManufactureYear = entity.ManufactureYear,
                 FuelType = entity.FuelType,
                 FuelTypeName = entity.FuelType.HasValue ? GetFuelTypeName(entity.FuelType.Value) : string.Empty,
                 TransmissionType = entity.TransmissionType,
@@ -57,6 +61,7 @@
                 Variants = entity.Variants?.Select(mi => mi.ToResponse()).ToList() ?? [],
                 EngineDisplacementDisplay = entity.EngineDisplacement.HasValue ? $"{entity.EngineDisplacement} cc" : null,
                 EngineCapacity = entity.EngineCapacity,
+                Description = entity.Description,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -68,26 +73,28 @@
             {
                 Id = entity.Id,
                 Name = entity.Name,
+                Slug = entity.Slug,
                 BrandId = entity.VehicleBrandId,
                 BrandName = entity.Brand?.Name ?? string.Empty,
                 TypeId = entity.Brand?.VehicleTypeId ?? Guid.Empty,
                 TypeName = entity.Brand?.VehicleType?.Name ?? string.Empty,
-                ReleaseYear = entity.ManufactureYear,
+                ManufactureYear = entity.ManufactureYear,
                 FuelTypeName = entity.FuelType.HasValue ? GetFuelTypeName(entity.FuelType.Value) : string.Empty,
-                TransmissionTypeName = entity.TransmissionType.HasValue ? GetTransmissionTypeName(entity.TransmissionType.Value) : string.Empty
+                TransmissionTypeName = entity.TransmissionType.HasValue ? GetTransmissionTypeName(entity.TransmissionType.Value) : string.Empty,
+                Description = entity.Description
             };
         }
 
         public static void UpdateEntity(this Model entity, ModelRequest request)
         {
             entity.Name = request.Name;
-            entity.Code = request.Code ?? string.Empty;
             entity.VehicleBrandId = request.BrandId;
-            entity.ManufactureYear = request.ReleaseYear;
+            entity.ManufactureYear = request.ManufactureYear;
             entity.FuelType = request.FuelType;
             entity.TransmissionType = request.TransmissionType;
             entity.EngineDisplacement = request.EngineDisplacement;
             entity.EngineCapacity = request.EngineCapacity;
+            entity.Description = request.Description;
         }
 
         private static string GetFuelTypeName(VehicleFuelType fuelType)

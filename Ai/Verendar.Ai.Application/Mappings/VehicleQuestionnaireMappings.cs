@@ -1,5 +1,4 @@
 using System.Globalization;
-using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 
 namespace Verendar.Ai.Application.Mappings
 {
@@ -35,7 +34,7 @@ namespace Verendar.Ai.Application.Mappings
         {
             return new PartTrackingRecommendation
             {
-                PartCategoryCode = source.PartCategoryCode,
+                PartCategorySlug = source.PartCategorySlug,
 
                 LastReplacementOdometer = source.LastServiceOdometer,
                 LastReplacementDate = ParseDateOnly(source.LastServiceDate),

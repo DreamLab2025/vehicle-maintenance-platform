@@ -10,147 +10,110 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
         public async Task<ApiResponse<TypeResponse>> CreateTypeAsync(TypeRequest request)
         {
-            try
+            var existingType = await _unitOfWork.Types
+                .FindOneAsync(t => t.Name == request.Name);
+
+            if (existingType != null)
             {
-                var existingType = await _unitOfWork.Types
-                    .FindOneAsync(t => t.Name == request.Name && t.DeletedAt == null);
-
-                if (existingType != null)
-                {
-                    return ApiResponse<TypeResponse>.ConflictResponse("Loại xe đã tồn tại");
-                }
-
-                var vehicleType = request.ToEntity();
-                await _unitOfWork.Types.AddAsync(vehicleType);
-                await _unitOfWork.SaveChangesAsync();
-
-                _logger.LogInformation("Created vehicle type with ID: {TypeId}", vehicleType.Id);
-
-                return ApiResponse<TypeResponse>.CreatedResponse(
-                    vehicleType.ToResponse(),
-                    "Tạo loại xe thành công");
+                _logger.LogWarning("CreateType: duplicate name {TypeName}", request.Name);
+                return ApiResponse<TypeResponse>.ConflictResponse("Loại xe đã tồn tại");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating vehicle type");
-                return ApiResponse<TypeResponse>.FailureResponse("Lỗi khi tạo loại xe");
-            }
+
+            var vehicleType = request.ToEntity();
+            vehicleType.Slug = await SlugUtils.EnsureUniqueAsync(
+                SlugUtils.ToSlug(request.Name, 50),
+                async s => (await _unitOfWork.Types.FindOneAsync(t => t.Slug == s)) != null,
+                maxLength: 50);
+
+            await _unitOfWork.Types.AddAsync(vehicleType);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ApiResponse<TypeResponse>.CreatedResponse(
+                vehicleType.ToResponse(),
+                "Tạo loại xe thành công");
         }
 
         public async Task<ApiResponse<string>> DeleteTypeAsync(Guid id)
         {
-            try
+            var vehicleType = await _unitOfWork.Types.GetByIdAsync(id);
+
+            if (vehicleType == null)
             {
-                var vehicleType = await _unitOfWork.Types.GetByIdAsync(id);
-
-                if (vehicleType == null || vehicleType.DeletedAt != null)
-                {
-                    return ApiResponse<string>.NotFoundResponse("Không tìm thấy loại xe");
-                }
-
-                await _unitOfWork.Types.DeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
-
-                _logger.LogInformation("Deleted vehicle type with ID: {TypeId}", id);
-
-                return ApiResponse<string>.SuccessResponse(
-                    "Deleted",
-                    "Xóa loại xe thành công");
+                _logger.LogWarning("DeleteType: not found {TypeId}", id);
+                return ApiResponse<string>.NotFoundResponse("Không tìm thấy loại xe");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting vehicle type with ID: {TypeId}", id);
-                return ApiResponse<string>.FailureResponse("Lỗi khi xóa loại xe");
-            }
+
+            await _unitOfWork.Types.DeleteAsync(id);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ApiResponse<string>.SuccessResponse(
+                "Deleted",
+                "Xóa loại xe thành công");
         }
 
         public async Task<ApiResponse<List<TypeSummary>>> GetAllTypesAsync(PaginationRequest paginationRequest)
         {
-            try
-            {
-                paginationRequest.Normalize();
-                var (items, totalCount) = await _unitOfWork.Types.GetPagedAsync(
-                    paginationRequest.PageNumber,
-                    paginationRequest.PageSize,
-                    filter: x => x.DeletedAt == null,
-                    orderBy: paginationRequest.IsDescending.HasValue
-                        ? (paginationRequest.IsDescending.Value
-                            ? q => q.OrderByDescending(t => t.CreatedAt)
-                            : q => q.OrderBy(t => t.CreatedAt))
-                        : null
-                );
+            paginationRequest.Normalize();
+            var (items, totalCount) = await _unitOfWork.Types.GetPagedAsync(
+                paginationRequest.PageNumber,
+                paginationRequest.PageSize,
+                orderBy: paginationRequest.IsDescending.HasValue
+                    ? (paginationRequest.IsDescending.Value
+                        ? q => q.OrderByDescending(t => t.CreatedAt)
+                        : q => q.OrderBy(t => t.CreatedAt))
+                    : null
+            );
 
-                var typeSummaries = items.Select(t => t.ToSummary()).ToList();
+            var typeSummaries = items.Select(t => t.ToSummary()).ToList();
 
-                return ApiResponse<List<TypeSummary>>.SuccessPagedResponse(
-                    typeSummaries,
-                    totalCount,
-                    paginationRequest.PageNumber,
-                    paginationRequest.PageSize,
-                    "Lấy danh sách loại xe thành công");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting all vehicle types");
-                return ApiResponse<List<TypeSummary>>.FailureResponse("Lỗi khi lấy danh sách loại xe");
-            }
+            return ApiResponse<List<TypeSummary>>.SuccessPagedResponse(
+                typeSummaries,
+                totalCount,
+                paginationRequest.PageNumber,
+                paginationRequest.PageSize,
+                "Lấy danh sách loại xe thành công");
         }
 
         public async Task<ApiResponse<TypeResponse>> GetTypeByIdAsync(Guid id)
         {
-            try
+            var vehicleType = await _unitOfWork.Types.GetByIdAsync(id);
+            if (vehicleType == null)
             {
-                var vehicleType = await _unitOfWork.Types.GetByIdAsync(id);
-                if (vehicleType == null || vehicleType.DeletedAt != null)
-                {
-                    return ApiResponse<TypeResponse>.NotFoundResponse("Không tìm thấy loại xe");
-                }
+                _logger.LogWarning("GetTypeById: not found {TypeId}", id);
+                return ApiResponse<TypeResponse>.NotFoundResponse("Không tìm thấy loại xe");
+            }
 
-                return ApiResponse<TypeResponse>.SuccessResponse(
-                    vehicleType.ToResponse(),
-                    "Lấy thông tin loại xe thành công");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting vehicle type with ID: {TypeId}", id);
-                return ApiResponse<TypeResponse>.FailureResponse("Lỗi khi lấy thông tin loại xe");
-            }
+            return ApiResponse<TypeResponse>.SuccessResponse(
+                vehicleType.ToResponse(),
+                "Lấy thông tin loại xe thành công");
         }
 
         public async Task<ApiResponse<TypeResponse>> UpdateTypeAsync(Guid id, TypeRequest request)
         {
-            try
+            var vehicleType = await _unitOfWork.Types.GetByIdAsync(id);
+
+            if (vehicleType == null)
             {
-                var vehicleType = await _unitOfWork.Types.GetByIdAsync(id);
-
-                if (vehicleType == null || vehicleType.DeletedAt != null)
-                {
-                    return ApiResponse<TypeResponse>.NotFoundResponse("Không tìm thấy loại xe");
-                }
-
-                var existingType = await _unitOfWork.Types
-                    .FindOneAsync(t => t.Name == request.Name && t.Id != id && t.DeletedAt == null);
-
-                if (existingType != null)
-                {
-                    return ApiResponse<TypeResponse>.ConflictResponse("Tên loại xe đã tồn tại");
-                }
-
-                vehicleType.UpdateEntity(request);
-                await _unitOfWork.Types.UpdateAsync(id, vehicleType);
-                await _unitOfWork.SaveChangesAsync();
-
-                _logger.LogInformation("Updated vehicle type with ID: {TypeId}", id);
-
-                return ApiResponse<TypeResponse>.SuccessResponse(
-                    vehicleType.ToResponse(),
-                    "Cập nhật loại xe thành công");
+                _logger.LogWarning("UpdateType: not found {TypeId}", id);
+                return ApiResponse<TypeResponse>.NotFoundResponse("Không tìm thấy loại xe");
             }
-            catch (Exception ex)
+
+            var existingType = await _unitOfWork.Types
+                .FindOneAsync(t => t.Name == request.Name && t.Id != id);
+
+            if (existingType != null)
             {
-                _logger.LogError(ex, "Error updating vehicle type with ID: {TypeId}", id);
-                return ApiResponse<TypeResponse>.FailureResponse("Lỗi khi cập nhật loại xe");
+                _logger.LogWarning("UpdateType: name conflict {TypeName} for {TypeId}", request.Name, id);
+                return ApiResponse<TypeResponse>.ConflictResponse("Tên loại xe đã tồn tại");
             }
+
+            vehicleType.UpdateEntity(request);
+            await _unitOfWork.Types.UpdateAsync(id, vehicleType);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ApiResponse<TypeResponse>.SuccessResponse(
+                vehicleType.ToResponse(),
+                "Cập nhật loại xe thành công");
         }
     }
 }

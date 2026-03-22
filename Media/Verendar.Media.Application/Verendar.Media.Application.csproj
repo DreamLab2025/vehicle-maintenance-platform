@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
+    <ProjectReference Include="..\..\Vehicle\Verendar.Vehicle.Contracts\Verendar.Vehicle.Contracts.csproj" />
     <ProjectReference Include="..\Verendar.Media.Domain\Verendar.Media.Domain.csproj" />
   </ItemGroup>
 

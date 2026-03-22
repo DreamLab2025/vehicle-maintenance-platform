@@ -39,7 +39,7 @@ public static class VehicleDataSeeder
         {
             Id = G(row, "Id"),
             Name = Get(row, "Name"),
-            Code = Get(row, "Code"),
+            Slug = Get(row, "Slug"),
             Description = Get(row, "Description").NullIfEmpty(),
             ImageUrl = Get(row, "ImageUrl").NullIfEmpty(),
         })).ToList();
@@ -53,7 +53,7 @@ public static class VehicleDataSeeder
             Id = G(row, "Id"),
             VehicleTypeId = G(row, "VehicleTypeId"),
             Name = Get(row, "Name"),
-            Code = Get(row, "Code"),
+            Slug = Get(row, "Slug"),
             LogoUrl = Get(row, "LogoUrl").NullIfEmpty(),
             Website = Get(row, "Website").NullIfEmpty(),
             SupportPhone = Get(row, "SupportPhone").NullIfEmpty(),
@@ -68,7 +68,7 @@ public static class VehicleDataSeeder
             Id = G(row, "Id"),
             VehicleBrandId = G(row, "VehicleBrandId"),
             Name = Get(row, "Name"),
-            Code = Get(row, "Code"),
+            Slug = Get(row, "Slug"),
             ManufactureYear = Int(row, "ManufactureYear") is var y && y > 0 ? y : null,
             FuelType = Int(row, "FuelType") is var f && f > 0 ? (VehicleFuelType?)f : null,
             TransmissionType = Int(row, "TransmissionType") is var t && t > 0 ? (VehicleTransmissionType?)t : null,
@@ -101,7 +101,7 @@ public static class VehicleDataSeeder
         {
             Id = G(row, "Id"),
             Name = Get(row, "Name"),
-            Code = Get(row, "Code"),
+            Slug = Get(row, "Slug"),
             Description = Get(row, "Description").NullIfEmpty(),
             IconUrl = Get(row, "IconUrl").NullIfEmpty(),
             DisplayOrder = Int(row, "DisplayOrder"),

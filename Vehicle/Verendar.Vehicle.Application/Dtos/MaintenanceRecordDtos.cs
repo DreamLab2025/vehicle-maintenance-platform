@@ -2,7 +2,7 @@ namespace Verendar.Vehicle.Application.Dtos
 {
     public class RecordItemInput
     {
-        public string PartCategoryCode { get; set; } = string.Empty;
+        public string PartCategorySlug { get; set; } = string.Empty;
         public Guid? PartProductId { get; set; }
         public string? CustomPartName { get; set; }
         public int? CustomKmInterval { get; set; }
@@ -28,7 +28,7 @@ namespace Verendar.Vehicle.Application.Dtos
     public class RecordItemResult
     {
         public Guid MaintenanceRecordItemId { get; set; }
-        public string PartCategoryCode { get; set; } = null!;
+        public string PartCategorySlug { get; set; } = null!;
         public PartTrackingSummary Tracking { get; set; } = null!;
     }
 
@@ -42,12 +42,15 @@ namespace Verendar.Vehicle.Application.Dtos
     public class RecordItemDto
     {
         public Guid Id { get; set; }
-        public string PartName { get; set; } = string.Empty;
-        public string PartCategoryCode { get; set; } = null!;
+        public Guid PartCategoryId { get; set; }
+        public string PartCategorySlug { get; set; } = null!;
         public Guid? PartProductId { get; set; }
+        public string? PartProductName { get; set; }
+        public string? CustomPartName { get; set; }
         public string? InstanceIdentifier { get; set; }
         public decimal Price { get; set; }
         public string? Notes { get; set; }
+        public bool UpdatesTracking { get; set; }
     }
 
     public class RecordSummaryDto

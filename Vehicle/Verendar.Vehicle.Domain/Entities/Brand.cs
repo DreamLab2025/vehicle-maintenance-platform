@@ -1,6 +1,6 @@
-﻿namespace Verendar.Vehicle.Domain.Entities
+namespace Verendar.Vehicle.Domain.Entities
 {
-    [Index(nameof(Code), IsUnique = true)]
+    [Index(nameof(Slug), IsUnique = true)]
     public class Brand : BaseEntity
     {
         [Required]
@@ -12,10 +12,12 @@
 
         [Required]
         [MaxLength(50)]
-        public string Code { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
 
         [MaxLength(500)]
         public string? LogoUrl { get; set; }
+
+        public Guid? LogoMediaFileId { get; set; }
 
         [MaxLength(255)]
         public string? Website { get; set; }

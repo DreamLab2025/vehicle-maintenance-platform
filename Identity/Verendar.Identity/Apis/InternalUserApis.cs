@@ -1,3 +1,5 @@
+using Verendar.Common.Shared;
+
 namespace Verendar.Identity.Apis
 {
     public static class InternalUserApis
@@ -6,7 +8,7 @@ namespace Verendar.Identity.Apis
         {
             var group = builder.MapGroup("/api/internal/users")
                 .WithTags("Internal User Api")
-                .RequireAuthorization();
+                .RequireAuthorization(policy => policy.RequireRole("Service"));
 
             group.MapGet("/{id:guid}/email", GetUserEmailById)
                 .WithName("GetUserEmailById")
@@ -31,7 +33,7 @@ namespace Verendar.Identity.Apis
             if (string.IsNullOrWhiteSpace(email))
                 return Results.NotFound();
 
-            return Results.Ok(new UserEmailResponse(email));
+            return Results.Ok(ApiResponse<UserEmailResponse>.SuccessResponse(new UserEmailResponse(email)));
         }
     }
 

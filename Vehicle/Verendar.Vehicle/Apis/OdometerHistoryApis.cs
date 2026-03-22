@@ -1,4 +1,4 @@
-﻿namespace Verendar.Vehicle.Apis
+namespace Verendar.Vehicle.Apis
 {
     public static class OdometerHistoryApis
     {
@@ -23,9 +23,9 @@
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status400BadRequest)
-                .Produces<ApiResponse<UserVehicleResponse>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<UpdateOdometerResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<UpdateOdometerResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<UpdateOdometerResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/", GetOdometerHistory)

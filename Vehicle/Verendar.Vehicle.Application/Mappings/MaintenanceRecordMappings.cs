@@ -88,13 +88,13 @@ namespace Verendar.Vehicle.Application.Mappings
 
         public static RecordItemResult ToRecordItemResult(
             Guid maintenanceRecordItemId,
-            string partCategoryCode,
+            string partCategorySlug,
             PartTrackingSummary tracking)
         {
             return new RecordItemResult
             {
                 MaintenanceRecordItemId = maintenanceRecordItemId,
-                PartCategoryCode = partCategoryCode,
+                PartCategorySlug = partCategorySlug,
                 Tracking = tracking,
             };
         }
@@ -113,16 +113,18 @@ namespace Verendar.Vehicle.Application.Mappings
 
         public static RecordItemDto ToRecordItemDto(this MaintenanceRecordItem item)
         {
-            var partName = item.PartProduct?.Name ?? item.CustomPartName ?? item.PartCategory?.Code ?? string.Empty;
             return new RecordItemDto
             {
                 Id = item.Id,
-                PartName = partName,
-                PartCategoryCode = item.PartCategory?.Code ?? string.Empty,
+                PartCategoryId = item.PartCategoryId,
+                PartCategorySlug = item.PartCategory?.Slug ?? string.Empty,
                 PartProductId = item.PartProductId,
+                PartProductName = item.PartProduct?.Name,
+                CustomPartName = item.CustomPartName,
                 InstanceIdentifier = item.InstanceIdentifier,
                 Price = item.Price,
                 Notes = item.Notes,
+                UpdatesTracking = item.UpdatesTracking,
             };
         }
 

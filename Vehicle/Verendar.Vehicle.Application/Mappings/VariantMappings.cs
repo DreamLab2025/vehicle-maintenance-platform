@@ -9,7 +9,8 @@ namespace Verendar.Vehicle.Application.Mappings
                 VehicleModelId = request.VehicleModelId,
                 Color = request.Color,
                 HexCode = ColorCode.IsHex(request.HexCode) ? request.HexCode : "#000000",
-                ImageUrl = request.ImageUrl
+                ImageUrl = request.ImageUrl,
+                ImageMediaFileId = request.ImageMediaFileId
             };
         }
 
@@ -22,6 +23,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 Color = entity.Color,
                 HexCode = entity.HexCode,
                 ImageUrl = entity.ImageUrl,
+                ImageMediaFileId = entity.ImageMediaFileId,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -36,6 +38,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 Color = entity.Color,
                 HexCode = entity.HexCode,
                 ImageUrl = entity.ImageUrl,
+                ImageMediaFileId = entity.ImageMediaFileId,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt,
                 Model = entity.VehicleModel?.ToModelResponse() ?? new ModelResponse()
@@ -46,6 +49,7 @@ namespace Verendar.Vehicle.Application.Mappings
         {
             entity.Color = request.Color;
             entity.ImageUrl = request.ImageUrl;
+            entity.ImageMediaFileId = request.ImageMediaFileId;
             entity.HexCode = ColorCode.IsHex(request.HexCode) ? request.HexCode : "#000000";
         }
     }

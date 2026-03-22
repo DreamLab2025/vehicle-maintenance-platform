@@ -60,7 +60,6 @@ public static class MaintenanceReminderTestDataSeeder
             CurrentOdometer = SeedCurrentOdometer,
             LastOdometerUpdate = staleDate,
             AverageKmPerDay = 50,
-            NeedsOnboarding = false,
             CreatedAt = DateTime.UtcNow,
             CreatedBy = TestUserId
         };

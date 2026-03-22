@@ -33,5 +33,15 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                     .ThenInclude(x => x.PartProduct)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
+
+        public async Task<(int TotalCount, DateOnly? LastServiceDate)> GetActivitySummaryByUserVehicleIdAsync(Guid userVehicleId, CancellationToken cancellationToken = default)
+        {
+            var query = _dbSet.Where(r => r.UserVehicleId == userVehicleId);
+            var count = await query.CountAsync(cancellationToken);
+            if (count == 0)
+                return (0, null);
+            var last = await query.MaxAsync(r => r.ServiceDate, cancellationToken);
+            return (count, last);
+        }
     }
 }

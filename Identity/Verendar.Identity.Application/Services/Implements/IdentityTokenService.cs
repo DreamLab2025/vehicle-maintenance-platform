@@ -8,23 +8,23 @@ using Verendar.Common.Jwt;
 using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Services.Interfaces;
 
-namespace Verendar.Identity.Infrastructure.Services
+namespace Verendar.Identity.Application.Services.Implements
 {
-    public class IdentityTokenService : IIdentityTokenService
+    public class IdentityTokenService(IOptions<JwtBearerConfigurationOptions> jwtOptionsAccessor) : IIdentityTokenService
     {
-        private readonly JwtBearerConfigurationOptions _jwtOptions;
-        private readonly SymmetricSecurityKey _signingKey;
+        private readonly JwtBearerConfigurationOptions _jwtOptions = jwtOptionsAccessor.Value;
+        private readonly SymmetricSecurityKey _signingKey = CreateSigningKey(jwtOptionsAccessor.Value);
 
-        public IdentityTokenService(IOptions<JwtBearerConfigurationOptions> jwtOptions)
+        private static SymmetricSecurityKey CreateSigningKey(JwtBearerConfigurationOptions options)
         {
-            _jwtOptions = jwtOptions.Value ?? throw new ArgumentNullException(nameof(jwtOptions));
+            if (string.IsNullOrWhiteSpace(options.SecretKey))
+                throw new InvalidOperationException("JWT SecretKey cannot be null or empty.");
 
-            if (string.IsNullOrWhiteSpace(_jwtOptions.SecretKey))
-            {
-                throw new InvalidOperationException("JWT SecretKey cannot be null or empty");
-            }
+            var keyBytes = Encoding.UTF8.GetBytes(options.SecretKey);
+            if (keyBytes.Length < 32)
+                throw new InvalidOperationException("JWT SecretKey must be at least 32 UTF-8 bytes for HMAC-SHA256.");
 
-            _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
+            return new SymmetricSecurityKey(keyBytes);
         }
 
         public TokenResponse GenerateTokens(TokenClaims tokenClaims)

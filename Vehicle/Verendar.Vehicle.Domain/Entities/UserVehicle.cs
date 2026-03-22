@@ -1,4 +1,4 @@
-﻿namespace Verendar.Vehicle.Domain.Entities
+namespace Verendar.Vehicle.Domain.Entities
 {
     [Index(nameof(UserId))]
     public class UserVehicle : BaseEntity
@@ -22,8 +22,6 @@
         public DateOnly? LastOdometerUpdate { get; set; }
 
         public int? AverageKmPerDay { get; set; }
-
-        public bool NeedsOnboarding { get; set; } = true;
 
         public Variant Variant { get; set; } = null!;
 

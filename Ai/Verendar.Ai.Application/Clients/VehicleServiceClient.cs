@@ -1,5 +1,5 @@
-using Verendar.Ai.Application.Dtos.VehicleService;
 using Verendar.Common.Http;
+
 namespace Verendar.Ai.Application.Clients
 {
     public class VehicleServiceClient(HttpClient httpClient, ILogger<VehicleServiceClient> logger)
@@ -17,11 +17,11 @@ namespace Verendar.Ai.Application.Clients
 
         public Task<ApiResponse<VehicleServiceDefaultScheduleResponse>> GetDefaultScheduleAsync(
             Guid vehicleModelId,
-            string partCategoryCode,
+            string partCategorySlug,
             CancellationToken cancellationToken = default) =>
             GetAsync<VehicleServiceDefaultScheduleResponse>(
-                $"/api/internal/vehicles/models/{vehicleModelId}/part-categories/{partCategoryCode}/default-schedule",
-                $"default schedule for model {vehicleModelId}, part {partCategoryCode}",
+                $"/api/internal/vehicles/models/{vehicleModelId}/part-categories/{partCategorySlug}/default-schedule",
+                $"default schedule for model {vehicleModelId}, part {partCategorySlug}",
                 cancellationToken);
     }
 }
