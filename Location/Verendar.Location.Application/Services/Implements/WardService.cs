@@ -3,6 +3,7 @@ namespace Verendar.Location.Application.Services.Implements;
 using Verendar.Common.Caching;
 using Verendar.Location.Application.Mappings;
 using Verendar.Location.Application.Services.Interfaces;
+using Verendar.Location.Application.Shared.Const;
 using Verendar.Location.Domain.Repositories.Interfaces;
 
 public class WardService(ILogger<WardService> logger, IUnitOfWork unitOfWork, ICacheService cacheService) : IWardService
@@ -11,7 +12,7 @@ public class WardService(ILogger<WardService> logger, IUnitOfWork unitOfWork, IC
     {
         try
         {
-            var cacheKey = $"location:wards:{code}";
+            var cacheKey = CacheKeys.WardByCode(code);
             var cached = await cacheService.GetAsync<WardResponse>(cacheKey);
             if (cached != null)
                 return ApiResponse<WardResponse>.SuccessResponse(cached, "Lấy thông tin phường/xã thành công");
@@ -21,7 +22,7 @@ public class WardService(ILogger<WardService> logger, IUnitOfWork unitOfWork, IC
                 return ApiResponse<WardResponse>.NotFoundResponse("Phường/xã không tồn tại");
 
             var response = ward.ToResponse();
-            await cacheService.SetAsync(cacheKey, response, TimeSpan.FromHours(24));
+            await cacheService.SetAsync(cacheKey, response, CacheKeys.DefaultCacheDuration);
             return ApiResponse<WardResponse>.SuccessResponse(response, "Lấy thông tin phường/xã thành công");
         }
         catch (Exception ex)

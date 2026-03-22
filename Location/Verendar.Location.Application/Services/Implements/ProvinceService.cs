@@ -3,6 +3,7 @@ namespace Verendar.Location.Application.Services.Implements;
 using Verendar.Common.Caching;
 using Verendar.Location.Application.Mappings;
 using Verendar.Location.Application.Services.Interfaces;
+using Verendar.Location.Application.Shared.Const;
 using Verendar.Location.Domain.Repositories.Interfaces;
 
 public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOfWork, ICacheService cacheService) : IProvinceService
@@ -11,15 +12,14 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
     {
         try
         {
-            const string cacheKey = "location:provinces:all";
-            var cached = await cacheService.GetAsync<List<ProvinceResponse>>(cacheKey);
+            var cached = await cacheService.GetAsync<List<ProvinceResponse>>(CacheKeys.ProvincesAll);
             if (cached != null)
                 return ApiResponse<List<ProvinceResponse>>.SuccessResponse(cached, "Lấy danh sách tỉnh thành công");
 
             var provinces = await unitOfWork.Provinces.GetAllAsync();
             var response = provinces.Select(p => p.ToResponse()).ToList();
 
-            await cacheService.SetAsync(cacheKey, response, TimeSpan.FromHours(24));
+            await cacheService.SetAsync(CacheKeys.ProvincesAll, response, CacheKeys.DefaultCacheDuration);
             return ApiResponse<List<ProvinceResponse>>.SuccessResponse(response, "Lấy danh sách tỉnh thành công");
         }
         catch (Exception ex)
@@ -33,7 +33,7 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
     {
         try
         {
-            var cacheKey = $"location:provinces:{code}";
+            var cacheKey = CacheKeys.ProvinceByCode(code);
             var cached = await cacheService.GetAsync<ProvinceResponse>(cacheKey);
             if (cached != null)
                 return ApiResponse<ProvinceResponse>.SuccessResponse(cached, "Lấy thông tin tỉnh thành công");
@@ -43,7 +43,7 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
                 return ApiResponse<ProvinceResponse>.NotFoundResponse("Tỉnh không tồn tại");
 
             var response = province.ToResponse();
-            await cacheService.SetAsync(cacheKey, response, TimeSpan.FromHours(24));
+            await cacheService.SetAsync(cacheKey, response, CacheKeys.DefaultCacheDuration);
             return ApiResponse<ProvinceResponse>.SuccessResponse(response, "Lấy thông tin tỉnh thành công");
         }
         catch (Exception ex)
@@ -57,7 +57,7 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
     {
         try
         {
-            var cacheKey = $"location:provinces:{provinceCode}:wards";
+            var cacheKey = CacheKeys.WardsOfProvince(provinceCode);
             var cached = await cacheService.GetAsync<List<WardResponse>>(cacheKey);
             if (cached != null)
                 return ApiResponse<List<WardResponse>>.SuccessResponse(cached, "Lấy danh sách phường/xã thành công");
@@ -65,7 +65,7 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
             var wards = await unitOfWork.Wards.GetByProvinceCodeAsync(provinceCode);
             var response = wards.Select(w => w.ToResponse()).ToList();
 
-            await cacheService.SetAsync(cacheKey, response, TimeSpan.FromHours(24));
+            await cacheService.SetAsync(cacheKey, response, CacheKeys.DefaultCacheDuration);
             return ApiResponse<List<WardResponse>>.SuccessResponse(response, "Lấy danh sách phường/xã thành công");
         }
         catch (Exception ex)

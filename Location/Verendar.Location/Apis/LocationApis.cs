@@ -21,28 +21,46 @@ public static class LocationApis
     {
         group.MapGet("/provinces", GetAllProvinces)
             .WithName("GetAllProvinces")
+            .WithOpenApi()
+            .WithDescription("Lấy danh sách tất cả tỉnh/thành phố")
+            .WithSummary("Danh sách tỉnh/thành phố")
             .Produces<ApiResponse<List<ProvinceResponse>>>(200);
 
         group.MapGet("/provinces/{code}", GetProvinceByCode)
             .WithName("GetProvinceByCode")
+            .WithOpenApi()
+            .WithDescription("Lấy thông tin chi tiết của một tỉnh/thành phố theo mã")
+            .WithSummary("Chi tiết tỉnh/thành phố")
             .Produces<ApiResponse<ProvinceResponse>>(200)
             .Produces<ApiResponse<ProvinceResponse>>(404);
 
         group.MapGet("/provinces/{code}/wards", GetWardsByProvince)
             .WithName("GetWardsByProvince")
+            .WithOpenApi()
+            .WithDescription("Lấy danh sách tất cả phường/xã thuộc một tỉnh/thành phố")
+            .WithSummary("Danh sách phường/xã theo tỉnh")
             .Produces<ApiResponse<List<WardResponse>>>(200);
 
         group.MapGet("/wards/{code}", GetWardByCode)
             .WithName("GetWardByCode")
+            .WithOpenApi()
+            .WithDescription("Lấy thông tin chi tiết của một phường/xã theo mã")
+            .WithSummary("Chi tiết phường/xã")
             .Produces<ApiResponse<WardResponse>>(200)
             .Produces<ApiResponse<WardResponse>>(404);
 
         group.MapGet("/administrative-units", GetAdministrativeUnits)
             .WithName("GetAdministrativeUnits")
+            .WithOpenApi()
+            .WithDescription("Lấy danh sách các loại đơn vị hành chính (Tỉnh, Quận, Huyện, v.v.)")
+            .WithSummary("Danh sách loại đơn vị hành chính")
             .Produces<ApiResponse<List<AdministrativeUnitResponse>>>(200);
 
         group.MapGet("/administrative-regions", GetAdministrativeRegions)
             .WithName("GetAdministrativeRegions")
+            .WithOpenApi()
+            .WithDescription("Lấy danh sách các vùng miền hành chính (Miền Bắc, Miền Trung, Miền Nam, v.v.)")
+            .WithSummary("Danh sách vùng miền hành chính")
             .Produces<ApiResponse<List<AdministrativeRegionResponse>>>(200);
 
         return group;
