@@ -3,7 +3,7 @@ namespace Verendar.Ai.Application.Dtos.VehicleService
     public class VehicleServiceUserVehicleResponse
     {
         public int CurrentOdometer { get; set; }
-        public DateTime? PurchaseDate { get; set; }
+        public DateOnly? PurchaseDate { get; set; }
         public VehicleServiceVariantResponse UserVehicleVariant { get; set; } = null!;
     }
 

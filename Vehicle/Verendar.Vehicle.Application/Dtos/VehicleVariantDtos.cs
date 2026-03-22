@@ -1,4 +1,4 @@
-﻿    namespace Verendar.Vehicle.Application.Dtos
+namespace Verendar.Vehicle.Application.Dtos
 {
     public class VariantRequest
     {
@@ -6,6 +6,7 @@
         public string Color { get; set; } = null!;
         public string HexCode { get; set; } = null!;
         public string ImageUrl { get; set; } = null!;
+        public Guid? ImageMediaFileId { get; set; }
     }
 
     public class VariantResponse
@@ -15,6 +16,7 @@
         public string Color { get; set; } = null!;
         public string HexCode { get; set; } = null!;
         public string ImageUrl { get; set; } = null!;
+        public Guid? ImageMediaFileId { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
@@ -29,5 +31,6 @@
         public string Color { get; set; } = null!;
         public string HexCode { get; set; } = null!;
         public string ImageUrl { get; set; } = null!;
+        public Guid? ImageMediaFileId { get; set; }
     }
 }

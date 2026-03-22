@@ -1,6 +1,6 @@
 namespace Verendar.Vehicle.Domain.Entities
 {
-    [Index(nameof(Code), IsUnique = true)]
+    [Index(nameof(Slug), IsUnique = true)]
     [Index(nameof(DisplayOrder))]
     public class PartCategory : BaseEntity
     {
@@ -10,13 +10,15 @@ namespace Verendar.Vehicle.Domain.Entities
 
         [Required]
         [MaxLength(50)]
-        public string Code { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
 
         [MaxLength(500)]
         public string? Description { get; set; }
 
         [MaxLength(255)]
         public string? IconUrl { get; set; }
+
+        public Guid? IconMediaFileId { get; set; }
 
         public int DisplayOrder { get; set; }
 

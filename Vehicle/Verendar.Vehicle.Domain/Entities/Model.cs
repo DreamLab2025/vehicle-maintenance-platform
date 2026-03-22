@@ -1,8 +1,8 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
 namespace Verendar.Vehicle.Domain.Entities
 {
-    [Index(nameof(Code), IsUnique = true)]
+    [Index(nameof(Slug), IsUnique = true)]
     [Index(nameof(VehicleBrandId))]
     public class Model : BaseEntity
     {
@@ -15,7 +15,7 @@ namespace Verendar.Vehicle.Domain.Entities
 
         [Required]
         [MaxLength(100)]
-        public string Code { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
 
         public int? ManufactureYear { get; set; }
 

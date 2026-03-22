@@ -9,7 +9,7 @@ namespace Verendar.Ai.Application.Prompts
       {
         var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
-        var scheduleBlock = $"ITEM: {{ \"Code\": \"{schedule.PartCategoryCode}\", \"Initial_Km\": {schedule.InitialKm}, \"Interval_Km\": {schedule.KmInterval}, \"Interval_Month\": {schedule.MonthsInterval} }}";
+        var scheduleBlock = $"ITEM: {{ \"Slug\": \"{schedule.PartCategorySlug}\", \"Initial_Km\": {schedule.InitialKm}, \"Interval_Km\": {schedule.KmInterval}, \"Interval_Month\": {schedule.MonthsInterval} }}";
 
         var answerBlock = (answers != null && answers.Any())
             ? string.Join("\n", answers.Where(a => !string.IsNullOrWhiteSpace(a.Value))
@@ -63,7 +63,7 @@ Cách làm (tổng quát, áp dụng mọi trường hợp):
 Kiểm tra trước khi trả về: predictedNextOdometer >= C (nếu không thì tính lại; giá trị < C là sai).
 
 Output (JSON only, no markdown):
-{{""recommendations"":[{{""partCategoryCode"":""{schedule.PartCategoryCode}"",""lastServiceOdometer"":number|null,""lastServiceDate"":""yyyy-MM-dd""|null,""predictedNextOdometer"":number,""predictedNextDate"":""yyyy-MM-dd"",""confidenceScore"":0.4-1.0,""reasoning"":""string"",""needsImmediateAttention"":bool}}],""warnings"":[""string""]}}";
+{{""recommendations"":[{{""partCategorySlug"":""{schedule.PartCategorySlug}"",""lastServiceOdometer"":number|null,""lastServiceDate"":""yyyy-MM-dd""|null,""predictedNextOdometer"":number,""predictedNextDate"":""yyyy-MM-dd"",""confidenceScore"":0.4-1.0,""reasoning"":""string"",""needsImmediateAttention"":bool}}],""warnings"":[""string""]}}";
       }
     }
 }

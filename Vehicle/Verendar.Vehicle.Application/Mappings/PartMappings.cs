@@ -7,9 +7,10 @@ namespace Verendar.Vehicle.Application.Mappings
             return new PartCategory
             {
                 Name = request.Name,
-                Code = request.Code,
+                Slug = string.Empty,
                 Description = request.Description,
                 IconUrl = request.IconUrl,
+                IconMediaFileId = request.IconMediaFileId,
                 DisplayOrder = request.DisplayOrder,
                 RequiresOdometerTracking = request.RequiresOdometerTracking,
                 RequiresTimeTracking = request.RequiresTimeTracking,
@@ -25,9 +26,10 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 Name = entity.Name,
-                Code = entity.Code,
+                Slug = entity.Slug,
                 Description = entity.Description,
                 IconUrl = entity.IconUrl,
+                IconMediaFileId = entity.IconMediaFileId,
                 DisplayOrder = entity.DisplayOrder,
                 RequiresOdometerTracking = entity.RequiresOdometerTracking,
                 RequiresTimeTracking = entity.RequiresTimeTracking,
@@ -45,8 +47,9 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 Name = entity.Name,
-                Code = entity.Code,
+                Slug = entity.Slug,
                 IconUrl = entity.IconUrl,
+                IconMediaFileId = entity.IconMediaFileId,
                 DisplayOrder = entity.DisplayOrder,
             };
         }
@@ -54,9 +57,9 @@ namespace Verendar.Vehicle.Application.Mappings
         public static void UpdateEntity(this PartCategory entity, PartCategoryRequest request)
         {
             entity.Name = request.Name;
-            entity.Code = request.Code;
             entity.Description = request.Description;
             entity.IconUrl = request.IconUrl;
+            entity.IconMediaFileId = request.IconMediaFileId;
             entity.DisplayOrder = request.DisplayOrder;
             entity.RequiresOdometerTracking = request.RequiresOdometerTracking;
             entity.RequiresTimeTracking = request.RequiresTimeTracking;

@@ -1,4 +1,4 @@
-﻿namespace Verendar.Vehicle.Application.Mappings
+namespace Verendar.Vehicle.Application.Mappings
 {
     public static class TypeMappings
     {
@@ -18,8 +18,9 @@
             {
                 Id = entity.Id,
                 Name = entity.Name,
+                Slug = entity.Slug,
                 Description = entity.Description,
-                ImageUrl = entity.ImageUrl ?? string.Empty,
+                ImageUrl = entity.ImageUrl,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
@@ -31,6 +32,7 @@
             {
                 Id = entity.Id,
                 Name = entity.Name,
+                Slug = entity.Slug,
                 ImageUrl = entity.ImageUrl
             };
         }

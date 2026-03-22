@@ -37,5 +37,35 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 "Lấy danh mục linh kiện áp dụng cho mẫu xe thành công");
         }
 
+        public async Task<ApiResponse<DefaultScheduleResponse>> GetDefaultScheduleByModelAndPartCategorySlugAsync(
+            Guid vehicleModelId,
+            string partCategorySlug,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(partCategorySlug))
+            {
+                _logger.LogWarning("GetDefaultScheduleByModelAndPartCategorySlug: empty slug model {VehicleModelId}", vehicleModelId);
+                return ApiResponse<DefaultScheduleResponse>.FailureResponse("Slug danh mục phụ tùng không hợp lệ");
+            }
+
+            var schedule = await _unitOfWork.DefaultSchedules.GetByVehicleModelIdAndPartCategorySlugAsync(
+                vehicleModelId,
+                partCategorySlug,
+                cancellationToken);
+
+            if (schedule == null)
+            {
+                _logger.LogWarning(
+                    "GetDefaultScheduleByModelAndPartCategorySlug: not found model {VehicleModelId} slug {PartCategorySlug}",
+                    vehicleModelId,
+                    partCategorySlug);
+                return ApiResponse<DefaultScheduleResponse>.NotFoundResponse(
+                    "Không tìm thấy lịch bảo dưỡng mặc định cho mẫu xe và danh mục này");
+            }
+
+            return ApiResponse<DefaultScheduleResponse>.SuccessResponse(
+                schedule.ToResponse(),
+                "Lấy lịch bảo dưỡng mặc định thành công");
+        }
     }
 }

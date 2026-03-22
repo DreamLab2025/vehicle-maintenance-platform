@@ -39,9 +39,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
             var trackingIdsToResetReminders = new List<Guid>();
             var trackingIdsForResponse = new List<Guid>();
 
-            var requestedCodes = request.Items.Select(i => i.PartCategoryCode).Distinct().ToList();
-            var partCategoriesMap = (await _unitOfWork.PartCategories.GetByCodesAsync(requestedCodes))
-                .ToDictionary(pc => pc.Code, StringComparer.OrdinalIgnoreCase);
+            var requestedSlugs = request.Items.Select(i => i.PartCategorySlug).Distinct().ToList();
+            var partCategoriesMap = (await _unitOfWork.PartCategories.GetBySlugsAsync(requestedSlugs))
+                .ToDictionary(pc => pc.Slug, StringComparer.OrdinalIgnoreCase);
 
             var requestedProductIds = request.Items
                 .Where(i => i.UpdatesTracking && i.PartProductId.HasValue)
@@ -73,11 +73,11 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
             foreach (var itemInput in request.Items)
             {
-                if (!partCategoriesMap.TryGetValue(itemInput.PartCategoryCode, out var partCategory))
+                if (!partCategoriesMap.TryGetValue(itemInput.PartCategorySlug, out var partCategory))
                 {
-                    _logger.LogWarning("CreateMaintenanceRecord: part category code not found {PartCategoryCode} vehicle {VehicleId}", itemInput.PartCategoryCode, vehicleId);
+                    _logger.LogWarning("CreateMaintenanceRecord: part category slug not found {PartCategorySlug} vehicle {VehicleId}", itemInput.PartCategorySlug, vehicleId);
                     return ApiResponse<CreateRecordResponse>.NotFoundResponse(
-                        $"Không tìm thấy linh kiện với mã '{itemInput.PartCategoryCode}'");
+                        $"Không tìm thấy linh kiện với slug '{itemInput.PartCategorySlug}'");
                 }
 
                 var existingTracking = await _unitOfWork.PartTrackings.GetByUserVehicleAndPartCategoryAsync(
@@ -97,9 +97,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     if (!partProductsMap.TryGetValue(itemInput.PartProductId!.Value, out var product)
                         || product.PartCategoryId != partCategory.Id)
                     {
-                        _logger.LogWarning("CreateMaintenanceRecord: part product invalid {PartProductId} category {PartCategoryCode} vehicle {VehicleId}", itemInput.PartProductId, itemInput.PartCategoryCode, vehicleId);
+                        _logger.LogWarning("CreateMaintenanceRecord: part product invalid {PartProductId} category {PartCategorySlug} vehicle {VehicleId}", itemInput.PartProductId, itemInput.PartCategorySlug, vehicleId);
                         return ApiResponse<CreateRecordResponse>.NotFoundResponse(
-                            $"Phụ tùng không tồn tại hoặc không thuộc danh mục '{itemInput.PartCategoryCode}'");
+                            $"Phụ tùng không tồn tại hoặc không thuộc danh mục '{itemInput.PartCategorySlug}'");
                     }
 
                     customKm = product.RecommendedKmInterval;
@@ -176,7 +176,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
 
                 var trackingSummary = tracking.ToSummary(vehicle.CurrentOdometer);
-                itemResults.Add(MaintenanceRecordMappings.ToRecordItemResult(item.Id, itemInput.PartCategoryCode, trackingSummary));
+                itemResults.Add(MaintenanceRecordMappings.ToRecordItemResult(item.Id, itemInput.PartCategorySlug, trackingSummary));
             }
 
             await _unitOfWork.SaveChangesAsync();

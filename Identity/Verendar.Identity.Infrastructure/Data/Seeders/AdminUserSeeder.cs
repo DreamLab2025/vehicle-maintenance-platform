@@ -13,13 +13,18 @@ namespace Verendar.Identity.Infrastructure.Data.Seeders
         public static async Task SeedAsync(UserDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
         {
             var normalizedEmail = EmailHelper.Normalize(AdminEmail);
-            var existing = await db.Users
+            var alreadySeeded = await db.Users
                 .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
+                .AnyAsync(
+                    u => u.Id == AdminUserId || u.Email == normalizedEmail,
+                    cancellationToken);
 
-            if (existing != null)
+            if (alreadySeeded)
             {
-                logger?.LogDebug("Admin user already exists: {Email}", normalizedEmail);
+                logger?.LogDebug(
+                    "Admin seed skipped: row already exists for Id {UserId} or email {Email}",
+                    AdminUserId,
+                    normalizedEmail);
                 return;
             }
 

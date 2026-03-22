@@ -12,7 +12,7 @@ namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire
 
     public class PartTrackingRecommendation
     {
-        public string PartCategoryCode { get; set; } = string.Empty;
+        public string PartCategorySlug { get; set; } = string.Empty;
 
         public int? LastReplacementOdometer { get; set; }
 

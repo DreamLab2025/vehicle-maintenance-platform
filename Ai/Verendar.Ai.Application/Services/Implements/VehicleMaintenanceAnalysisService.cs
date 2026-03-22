@@ -40,24 +40,24 @@ namespace Verendar.Ai.Application.Services.Implements
             {
                 scheduleResponse = await _vehicleServiceClient.GetDefaultScheduleAsync(
                     request.VehicleModelId,
-                    request.PartCategoryCode,
+                    request.PartCategorySlug,
                     cancellationToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Vehicle service GetDefaultSchedule failed for model {VehicleModelId} part {PartCategoryCode}", request.VehicleModelId, request.PartCategoryCode);
+                _logger.LogError(ex, "Vehicle service GetDefaultSchedule failed for model {VehicleModelId} part {PartCategorySlug}", request.VehicleModelId, request.PartCategorySlug);
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse("Không thể lấy lịch bảo dưỡng chuẩn từ Vehicle Service");
             }
 
             if (!scheduleResponse.IsSuccess || scheduleResponse.Data == null)
             {
-                _logger.LogWarning("AnalyzeQuestionnaire: default schedule failure model {VehicleModelId} part {PartCategoryCode}: {Message}", request.VehicleModelId, request.PartCategoryCode, scheduleResponse.Message);
+                _logger.LogWarning("AnalyzeQuestionnaire: default schedule failure model {VehicleModelId} part {PartCategorySlug}: {Message}", request.VehicleModelId, request.PartCategorySlug, scheduleResponse.Message);
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
                     scheduleResponse.Message ?? "Không thể lấy lịch bảo dưỡng chuẩn từ Vehicle Service");
             }
 
             var schedule = scheduleResponse.Data;
-            var defaultSchedule = schedule.ToDefaultScheduleDto(request.PartCategoryCode);
+            var defaultSchedule = schedule.ToDefaultScheduleDto(request.PartCategorySlug);
 
             var prompt = PromptGenerator.CreateVehicleMaintenancePrompt(vehicleInfo, defaultSchedule, request.Answers);
 
@@ -112,7 +112,7 @@ namespace Verendar.Ai.Application.Services.Implements
                 _logger.LogWarning(
                     "AI returned {Count} recommendations, expected 1. Requested part: {PartCode}",
                     analysisResult.Recommendations.Count,
-                    defaultSchedule.PartCategoryCode);
+                    defaultSchedule.PartCategorySlug);
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(
                     $"AI trả về {analysisResult.Recommendations.Count} khuyến nghị thay vì 1. Vui lòng thử lại.");
             }

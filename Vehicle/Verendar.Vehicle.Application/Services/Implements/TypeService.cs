@@ -20,6 +20,11 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
 
             var vehicleType = request.ToEntity();
+            vehicleType.Slug = await SlugUtils.EnsureUniqueAsync(
+                SlugUtils.ToSlug(request.Name, 50),
+                async s => (await _unitOfWork.Types.FindOneAsync(t => t.Slug == s)) != null,
+                maxLength: 50);
+
             await _unitOfWork.Types.AddAsync(vehicleType);
             await _unitOfWork.SaveChangesAsync();
 

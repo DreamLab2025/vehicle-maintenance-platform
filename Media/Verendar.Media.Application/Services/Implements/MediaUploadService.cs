@@ -112,6 +112,50 @@ namespace Verendar.Media.Application.Services.Implements
             return ApiResponse<bool>.SuccessResponse(true, "Xóa file thành công");
         }
 
+        public async Task ReleaseSupersededCatalogMediaAsync(
+            Guid supersededMediaFileId,
+            FileType expectedFileType,
+            CancellationToken cancellationToken = default)
+        {
+            var mediaFile = await _unitOfWork.MediaFileRepository.GetByIdAsync(supersededMediaFileId);
+            if (mediaFile == null)
+            {
+                _logger.LogInformation(
+                    "ReleaseSupersededCatalogMedia: media file {MediaFileId} not found (already removed or never existed)",
+                    supersededMediaFileId);
+                return;
+            }
+
+            if (mediaFile.FileType != expectedFileType)
+            {
+                _logger.LogWarning(
+                    "ReleaseSupersededCatalogMedia: skip {MediaFileId} — FileType is {Actual}, expected {Expected}",
+                    supersededMediaFileId, mediaFile.FileType, expectedFileType);
+                return;
+            }
+
+            var fileKey = mediaFile.FilePath;
+            if (!string.IsNullOrWhiteSpace(fileKey))
+            {
+                try
+                {
+                    await _storageService.DeleteFileAsync(fileKey);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "S3 delete failed for superseded catalog media key {Key}", fileKey);
+                    throw;
+                }
+            }
+
+            mediaFile.DeletedAt = DateTime.UtcNow;
+            mediaFile.FilePath = string.Empty;
+            mediaFile.Status = FileStatus.Deleted;
+
+            await _unitOfWork.MediaFileRepository.UpdateAsync(mediaFile.Id, mediaFile);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
         public async Task<ApiResponse<InitUploadResponse>> InitiateUploadAsync(InitUploadRequest request, Guid userId)
         {
             if (!_uploadConfig.IsContentTypeAllowed(request.ContentType))

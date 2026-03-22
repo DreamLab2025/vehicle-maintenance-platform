@@ -16,5 +16,7 @@ namespace Verendar.Vehicle.Domain.Entities
 
         [MaxLength(500)]
         public string ImageUrl { get; set; } = null!;
+
+        public Guid? ImageMediaFileId { get; set; }
     }
 }

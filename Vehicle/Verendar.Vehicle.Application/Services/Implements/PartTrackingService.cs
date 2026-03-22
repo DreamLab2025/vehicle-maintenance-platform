@@ -69,13 +69,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<PartTrackingSummary>.NotFoundResponse("Không tìm thấy xe");
             }
 
-            var partCategory = await _unitOfWork.PartCategories.GetByCodeAsync(request.PartCategoryCode);
+            var partCategory = await _unitOfWork.PartCategories.GetBySlugAsync(request.PartCategorySlug);
 
             if (partCategory == null)
             {
-                _logger.LogWarning("ApplyTrackingConfig: part category code not found {PartCategoryCode} vehicle {VehicleId}", request.PartCategoryCode, vehicleId);
+                _logger.LogWarning("ApplyTrackingConfig: part category slug not found {PartCategorySlug} vehicle {VehicleId}", request.PartCategorySlug, vehicleId);
                 return ApiResponse<PartTrackingSummary>.NotFoundResponse(
-                    $"Không tìm thấy linh kiện với mã '{request.PartCategoryCode}'");
+                    $"Không tìm thấy linh kiện với slug '{request.PartCategorySlug}'");
             }
 
             var existingTracking = await _unitOfWork.PartTrackings.GetFirstByUserVehicleAndPartCategoryAsync(vehicleId, partCategory.Id);

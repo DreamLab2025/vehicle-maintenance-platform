@@ -25,6 +25,10 @@ namespace Verendar.Vehicle.Application.Services.Implements
             }
 
             var model = request.ToEntity();
+            model.Slug = await SlugUtils.EnsureUniqueAsync(
+                SlugUtils.ToSlug(request.Name, 100),
+                async s => (await _unitOfWork.Models.FindOneAsync(m => m.Slug == s)) != null,
+                maxLength: 100);
 
             await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
@@ -102,9 +106,9 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 query = query.Where(m => m.EngineDisplacement == filterRequest.EngineDisplacement.Value);
             }
 
-            if (filterRequest.ReleaseYear.HasValue)
+            if (filterRequest.ManufactureYear.HasValue)
             {
-                query = query.Where(m => m.ManufactureYear == filterRequest.ReleaseYear.Value);
+                query = query.Where(m => m.ManufactureYear == filterRequest.ManufactureYear.Value);
             }
 
             var totalCount = await query.CountAsync();

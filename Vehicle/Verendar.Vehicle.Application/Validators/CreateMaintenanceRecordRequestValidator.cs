@@ -14,11 +14,11 @@ namespace Verendar.Vehicle.Application.Validators
 
             RuleForEach(x => x.Items).ChildRules(item =>
             {
-                item.RuleFor(x => x.PartCategoryCode)
+                item.RuleFor(x => x.PartCategorySlug)
                     .NotEmpty()
-                    .WithMessage("Mã linh kiện không được để trống")
+                    .WithMessage("Slug linh kiện không được để trống")
                     .MaximumLength(50)
-                    .WithMessage("Mã linh kiện tối đa 50 ký tự");
+                    .WithMessage("Slug linh kiện tối đa 50 ký tự");
                 item.RuleFor(x => x.Price)
                     .GreaterThanOrEqualTo(0)
                     .When(x => x.Price.HasValue)

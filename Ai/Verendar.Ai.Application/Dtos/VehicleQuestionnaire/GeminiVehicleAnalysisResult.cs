@@ -13,8 +13,8 @@ namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire
 
     public class GeminiPartRecommendation
     {
-        [JsonPropertyName("partCategoryCode")]
-        public string PartCategoryCode { get; set; } = string.Empty;
+        [JsonPropertyName("partCategorySlug")]
+        public string PartCategorySlug { get; set; } = string.Empty;
 
         [JsonPropertyName("lastServiceOdometer")]
         public int? LastServiceOdometer { get; set; }

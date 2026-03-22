@@ -1,6 +1,6 @@
-﻿namespace Verendar.Vehicle.Domain.Entities
+namespace Verendar.Vehicle.Domain.Entities
 {
-    [Index(nameof(Code), IsUnique = true)]
+    [Index(nameof(Slug), IsUnique = true)]
     public class VehicleType : BaseEntity
     {
         [Required]
@@ -9,7 +9,7 @@
 
         [Required]
         [MaxLength(50)]
-        public string Code { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
 
         [MaxLength(500)]
         public string? Description { get; set; }

@@ -1,23 +1,28 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
+using Verendar.Vehicle.Contracts.Events;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
-    public class PartCategoryService(ILogger<PartCategoryService> logger, IUnitOfWork unitOfWork) : IPartCategoryService
+    public class PartCategoryService(
+        ILogger<PartCategoryService> logger,
+        IUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint) : IPartCategoryService
     {
         private readonly ILogger<PartCategoryService> _logger = logger;
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
         public async Task<ApiResponse<PartCategoryResponse>> CreateCategoryAsync(PartCategoryRequest request)
         {
-            if (await _unitOfWork.PartCategories.GetByCodeAsync(request.Code) != null)
-            {
-                _logger.LogWarning("CreateCategory: code exists {Code}", request.Code);
-                return ApiResponse<PartCategoryResponse>.ConflictResponse("Mã danh mục phụ tùng đã tồn tại");
-            }
-
             var category = request.ToEntity();
+            category.Slug = await SlugUtils.EnsureUniqueAsync(
+                SlugUtils.ToSlug(request.Name, 50),
+                async s => (await _unitOfWork.PartCategories.GetBySlugAsync(s)) != null,
+                maxLength: 50);
+
             await _unitOfWork.PartCategories.AddAsync(category);
             await _unitOfWork.SaveChangesAsync();
 
@@ -35,16 +40,16 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<PartCategoryResponse>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
             }
 
-            var existingByCode = await _unitOfWork.PartCategories.GetByCodeAsync(request.Code);
-            if (existingByCode != null && existingByCode.Id != id)
-            {
-                _logger.LogWarning("UpdateCategory: code conflict {Code} for {CategoryId}", request.Code, id);
-                return ApiResponse<PartCategoryResponse>.ConflictResponse("Mã danh mục phụ tùng đã tồn tại");
-            }
+            var previousIconMediaFileId = category.IconMediaFileId;
 
             category.UpdateEntity(request);
             await _unitOfWork.PartCategories.UpdateAsync(id, category);
             await _unitOfWork.SaveChangesAsync();
+
+            if (previousIconMediaFileId.HasValue && previousIconMediaFileId != request.IconMediaFileId)
+            {
+                await TryPublishPartCategoryIconSupersededAsync(id, previousIconMediaFileId);
+            }
 
             return ApiResponse<PartCategoryResponse>.SuccessResponse(
                 category.ToResponse(),
@@ -60,8 +65,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<string>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
             }
 
+            var supersededIconMediaFileId = category.IconMediaFileId;
+
             await _unitOfWork.PartCategories.DeleteAsync(id);
             await _unitOfWork.SaveChangesAsync();
+
+            await TryPublishPartCategoryIconSupersededAsync(id, supersededIconMediaFileId);
 
             return ApiResponse<string>.SuccessResponse("Đã xóa", "Xóa danh mục phụ tùng thành công");
         }
@@ -131,25 +140,25 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 "Lấy danh mục phụ tùng đã khai báo thành công");
         }
 
-        public async Task<ApiResponse<List<ReminderDetailDto>>> GetRemindersByCategoryCodeAsync(Guid userId, Guid userVehicleId, string partCategoryCode)
+        public async Task<ApiResponse<List<ReminderDetailDto>>> GetRemindersByCategorySlugAsync(Guid userId, Guid userVehicleId, string partCategorySlug)
         {
             var vehicle = await _unitOfWork.UserVehicles
                 .FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);
 
             if (vehicle == null)
             {
-                _logger.LogWarning("GetRemindersByCategoryCode: vehicle not found {UserVehicleId} user {UserId}", userVehicleId, userId);
+                _logger.LogWarning("GetRemindersByCategorySlug: vehicle not found {UserVehicleId} user {UserId}", userVehicleId, userId);
                 return ApiResponse<List<ReminderDetailDto>>.NotFoundResponse("Không tìm thấy xe");
             }
 
-            if (string.IsNullOrWhiteSpace(partCategoryCode))
+            if (string.IsNullOrWhiteSpace(partCategorySlug))
             {
-                _logger.LogWarning("GetRemindersByCategoryCode: empty code vehicle {UserVehicleId}", userVehicleId);
-                return ApiResponse<List<ReminderDetailDto>>.FailureResponse("Part category code không hợp lệ");
+                _logger.LogWarning("GetRemindersByCategorySlug: empty slug vehicle {UserVehicleId}", userVehicleId);
+                return ApiResponse<List<ReminderDetailDto>>.FailureResponse("Slug danh mục phụ tùng không hợp lệ");
             }
 
             var reminders = (await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(userVehicleId))
-                .Where(r => string.Equals(r.TrackingCycle?.PartTracking?.PartCategory?.Code, partCategoryCode.Trim(), StringComparison.OrdinalIgnoreCase))
+                .Where(r => string.Equals(r.TrackingCycle?.PartTracking?.PartCategory?.Slug, partCategorySlug.Trim(), StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(r => r.CreatedAt)
                 .ToList();
             var dtos = reminders.Select(r => r.ToReminderDetailDto(vehicle.CurrentOdometer)).ToList();
@@ -157,6 +166,29 @@ namespace Verendar.Vehicle.Application.Services.Implements
             return ApiResponse<List<ReminderDetailDto>>.SuccessResponse(
                 dtos,
                 "Lấy lịch sử nhắc bảo trì theo danh mục thành công");
+        }
+
+        private async Task TryPublishPartCategoryIconSupersededAsync(Guid partCategoryId, Guid? supersededMediaFileId)
+        {
+            if (!supersededMediaFileId.HasValue || supersededMediaFileId.Value == Guid.Empty)
+            {
+                return;
+            }
+
+            try
+            {
+                await _publishEndpoint.Publish(new PartCategoryIconMediaSupersededEvent
+                {
+                    PartCategoryId = partCategoryId,
+                    SupersededMediaFileId = supersededMediaFileId.Value
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to publish PartCategoryIconMediaSuperseded for category {CategoryId}, media {MediaFileId}",
+                    partCategoryId, supersededMediaFileId);
+            }
         }
     }
 }

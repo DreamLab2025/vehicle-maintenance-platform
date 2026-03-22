@@ -10,19 +10,19 @@ namespace Verendar.Ai.Application.Mappings
                 Brand = vehicle.UserVehicleVariant.Model.BrandName,
                 Model = vehicle.UserVehicleVariant.Model.Name,
                 CurrentOdometer = vehicle.CurrentOdometer,
-                PurchaseDate = vehicle.PurchaseDate ?? DateTime.UtcNow
+                PurchaseDate = vehicle.PurchaseDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.UtcNow
             };
         }
 
 
         public static DefaultScheduleDto ToDefaultScheduleDto(
             this VehicleServiceDefaultScheduleResponse schedule,
-            string partCategoryCode)
+            string partCategorySlug)
         {
             return new DefaultScheduleDto
             {
-                PartCategoryCode = partCategoryCode,
-                PartCategoryName = partCategoryCode, // Will be filled from mapping if needed
+                PartCategorySlug = partCategorySlug,
+                PartCategoryName = partCategorySlug, // Will be filled from mapping if needed
                 InitialKm = schedule.InitialKm,
                 KmInterval = schedule.KmInterval,
                 MonthsInterval = schedule.MonthsInterval,

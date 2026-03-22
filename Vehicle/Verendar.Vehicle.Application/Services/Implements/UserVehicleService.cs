@@ -223,34 +223,5 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 "Tính điểm sức khỏe xe thành công");
         }
 
-        public async Task<ApiResponse<UserVehicleResponse>> CompleteOnboardingAsync(Guid userId, Guid vehicleId)
-        {
-            var vehicle = await _unitOfWork.UserVehicles
-                .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId);
-
-            if (vehicle == null)
-            {
-                _logger.LogWarning("CompleteOnboarding: vehicle not found {VehicleId} user {UserId}", vehicleId, userId);
-                return ApiResponse<UserVehicleResponse>.NotFoundResponse("Không tìm thấy xe");
-            }
-
-            if (!vehicle.NeedsOnboarding)
-            {
-                _logger.LogWarning("CompleteOnboarding: already completed {VehicleId}", vehicleId);
-                return ApiResponse<UserVehicleResponse>.SuccessResponse(
-                    (await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(vehicleId))!.ToResponse(),
-                    "Onboarding đã hoàn thành trước đó");
-            }
-
-            vehicle.NeedsOnboarding = false;
-            await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
-            await _unitOfWork.SaveChangesAsync();
-
-            var updatedVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(vehicleId);
-
-            return ApiResponse<UserVehicleResponse>.SuccessResponse(
-                updatedVehicle!.ToResponse(),
-                "Hoàn thành onboarding thành công");
-        }
     }
 }

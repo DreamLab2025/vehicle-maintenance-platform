@@ -10,11 +10,6 @@ namespace Verendar.Vehicle.Application.Validators
                 .MaximumLength(200)
                 .WithMessage("Tên mẫu xe tối đa 200 ký tự");
 
-            RuleFor(x => x.Code)
-                .MaximumLength(50)
-                .When(x => !string.IsNullOrEmpty(x.Code))
-                .WithMessage("Mã mẫu xe tối đa 50 ký tự");
-
             RuleFor(x => x.BrandId)
                 .NotEmpty()
                 .WithMessage("Vui lòng chọn thương hiệu");
@@ -23,9 +18,9 @@ namespace Verendar.Vehicle.Application.Validators
                 .NotEmpty()
                 .WithMessage("Vui lòng chọn loại xe");
 
-            RuleFor(x => x.ReleaseYear)
+            RuleFor(x => x.ManufactureYear)
                 .InclusiveBetween(1900, 2100)
-                .When(x => x.ReleaseYear.HasValue)
+                .When(x => x.ManufactureYear.HasValue)
                 .WithMessage("Năm sản xuất phải từ 1900 đến 2100");
 
             RuleFor(x => x.EngineDisplacement)
@@ -37,6 +32,11 @@ namespace Verendar.Vehicle.Application.Validators
                 .GreaterThan(0)
                 .When(x => x.EngineCapacity.HasValue)
                 .WithMessage("Dung tích động cơ (lít) phải lớn hơn 0");
+
+            RuleFor(x => x.Description)
+                .MaximumLength(1000)
+                .When(x => !string.IsNullOrWhiteSpace(x.Description))
+                .WithMessage("Mô tả tối đa 1000 ký tự");
 
             RuleForEach(x => x.Images).ChildRules(img =>
             {

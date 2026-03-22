@@ -1,13 +1,19 @@
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
+using Verendar.Vehicle.Contracts.Events;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
-    public class BrandService(ILogger<BrandService> logger, IUnitOfWork unitOfWork) : IBrandService
+    public class BrandService(
+        ILogger<BrandService> logger,
+        IUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint) : IBrandService
     {
         private readonly ILogger<BrandService> _logger = logger;
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
         public async Task<ApiResponse<BrandResponse>> CreateBrandAsync(BrandRequest request)
         {
@@ -26,6 +32,11 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
             var brand = request.ToEntity();
             brand.VehicleTypeId = request.VehicleTypeId;
+            brand.Slug = await SlugUtils.EnsureUniqueAsync(
+                SlugUtils.ToSlug(request.Name, 50),
+                async s => (await _unitOfWork.Brands.FindOneAsync(b => b.Slug == s)) != null,
+                maxLength: 50);
+
             await _unitOfWork.Brands.AddAsync(brand);
             await _unitOfWork.SaveChangesAsync();
 
@@ -44,8 +55,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<string>.NotFoundResponse("Không tìm thấy thương hiệu");
             }
 
+            var supersededLogoMediaFileId = brand.LogoMediaFileId;
+
             await _unitOfWork.Brands.DeleteAsync(id);
             await _unitOfWork.SaveChangesAsync();
+
+            await TryPublishBrandLogoSupersededAsync(id, supersededLogoMediaFileId);
 
             return ApiResponse<string>.SuccessResponse("Deleted", "Xóa thương hiệu thành công");
         }
@@ -131,15 +146,45 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<BrandResponse>.NotFoundResponse("Không tìm thấy loại xe");
             }
 
+            var previousLogoMediaFileId = brand.LogoMediaFileId;
+
             brand.UpdateEntity(request);
             brand.VehicleTypeId = request.VehicleTypeId;
             await _unitOfWork.Brands.UpdateAsync(id, brand);
             await _unitOfWork.SaveChangesAsync();
 
+            if (previousLogoMediaFileId.HasValue && previousLogoMediaFileId != request.LogoMediaFileId)
+            {
+                await TryPublishBrandLogoSupersededAsync(id, previousLogoMediaFileId);
+            }
+
             var updatedBrand = await _unitOfWork.Brands.GetByIdWithTypesAsync(id);
             return ApiResponse<BrandResponse>.SuccessResponse(
                 updatedBrand!.ToResponse(),
                 "Cập nhật thương hiệu thành công");
+        }
+
+        private async Task TryPublishBrandLogoSupersededAsync(Guid brandId, Guid? supersededMediaFileId)
+        {
+            if (!supersededMediaFileId.HasValue || supersededMediaFileId.Value == Guid.Empty)
+            {
+                return;
+            }
+
+            try
+            {
+                await _publishEndpoint.Publish(new BrandLogoMediaSupersededEvent
+                {
+                    BrandId = brandId,
+                    SupersededMediaFileId = supersededMediaFileId.Value
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to publish BrandLogoMediaSuperseded for brand {BrandId}, media {MediaFileId}",
+                    brandId, supersededMediaFileId);
+            }
         }
 
         private async Task<bool> BrandNameExistsAsync(string name, Guid? excludeId = null)

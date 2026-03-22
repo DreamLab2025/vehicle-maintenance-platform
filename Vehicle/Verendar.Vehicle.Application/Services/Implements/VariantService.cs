@@ -1,12 +1,18 @@
+using MassTransit;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
+using Verendar.Vehicle.Contracts.Events;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
-    public class VariantService(ILogger<VariantService> logger, IUnitOfWork unitOfWork) : IVariantService
+    public class VariantService(
+        ILogger<VariantService> logger,
+        IUnitOfWork unitOfWork,
+        IPublishEndpoint publishEndpoint) : IVariantService
     {
         private readonly ILogger<VariantService> _logger = logger;
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
         public async Task<ApiResponse<List<VariantResponse>>> GetImagesByModelIdAsync(Guid vehicleModelId)
         {
@@ -69,9 +75,16 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 }
             }
 
+            var previousImageMediaFileId = image.ImageMediaFileId;
+
             image.UpdateEntity(request);
             await _unitOfWork.Variants.UpdateAsync(image.Id, image);
             await _unitOfWork.SaveChangesAsync();
+
+            if (previousImageMediaFileId.HasValue && previousImageMediaFileId != request.ImageMediaFileId)
+            {
+                await TryPublishVariantImageSupersededAsync(id, previousImageMediaFileId);
+            }
 
             return ApiResponse<VariantResponse>.SuccessResponse(
                 image.ToResponse(),
@@ -87,10 +100,37 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<string>.NotFoundResponse("Không tìm thấy hình ảnh");
             }
 
+            var supersededImageMediaFileId = image.ImageMediaFileId;
+
             await _unitOfWork.Variants.DeleteAsync(id);
             await _unitOfWork.SaveChangesAsync();
 
+            await TryPublishVariantImageSupersededAsync(id, supersededImageMediaFileId);
+
             return ApiResponse<string>.SuccessResponse("Xóa hình ảnh xe thành công");
+        }
+
+        private async Task TryPublishVariantImageSupersededAsync(Guid variantId, Guid? supersededMediaFileId)
+        {
+            if (!supersededMediaFileId.HasValue || supersededMediaFileId.Value == Guid.Empty)
+            {
+                return;
+            }
+
+            try
+            {
+                await _publishEndpoint.Publish(new VariantImageMediaSupersededEvent
+                {
+                    VariantId = variantId,
+                    SupersededMediaFileId = supersededMediaFileId.Value
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "Failed to publish VariantImageMediaSuperseded for variant {VariantId}, media {MediaFileId}",
+                    variantId, supersededMediaFileId);
+            }
         }
     }
 }

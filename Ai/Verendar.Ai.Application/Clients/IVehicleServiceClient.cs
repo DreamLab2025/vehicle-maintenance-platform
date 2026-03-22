@@ -8,7 +8,7 @@ namespace Verendar.Ai.Application.Clients
 
         Task<ApiResponse<VehicleServiceDefaultScheduleResponse>> GetDefaultScheduleAsync(
             Guid vehicleModelId,
-            string partCategoryCode,
+            string partCategorySlug,
             CancellationToken cancellationToken = default);
     }
 }
