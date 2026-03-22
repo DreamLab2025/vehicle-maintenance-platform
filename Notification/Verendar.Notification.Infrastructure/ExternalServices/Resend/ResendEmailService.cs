@@ -24,25 +24,23 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
             _logger = logger;
             _options = options.Value;
             _templateService = templateService;
-        
+
             // Validate configuration
             if (string.IsNullOrWhiteSpace(_options.FromEmail))
             {
                 throw new InvalidOperationException("Resend FromEmail is not configured. Please set it in appsettings.json");
             }
-        
+
             if (string.IsNullOrWhiteSpace(_options.ApiKey))
             {
                 throw new InvalidOperationException("Resend ApiKey is not configured. Please set it in appsettings.json");
             }
-        
+
             // Log configuration on startup
-            _logger.LogInformation("Resend Email Service initialized. FromEmail: {FromEmail}, ApiKey: {ApiKeyPrefix}...", 
-                _options.FromEmail, 
+            _logger.LogInformation("Resend Email Service initialized. FromEmail: {FromEmail}, ApiKey: {ApiKeyPrefix}...",
+                _options.FromEmail,
                 _options.ApiKey.Length > 10 ? _options.ApiKey.Substring(0, 10) + "..." : "***");
-        
-            // HttpClient is already configured via AddHttpClient in DI
-            // Just set the base address and auth header
+
             _httpClient = httpClient;
             _httpClient.BaseAddress = new Uri("https://api.resend.com");
             _httpClient.Timeout = TimeSpan.FromSeconds(_options.Timeout);
@@ -60,9 +58,9 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
         {
             try
             {
-                _logger.LogInformation("Sending templated email to {To}, Template: {TemplateKey}, Subject: {Subject}", 
+                _logger.LogInformation("Sending templated email to {To}, Template: {TemplateKey}, Subject: {Subject}",
                     to, templateKey, subject);
-            
+
                 var htmlContent = await _templateService.RenderTemplateAsync(templateKey, model, cancellationToken);
                 return await SendEmailInternalAsync(to, subject, htmlContent, from, replyTo, cancellationToken);
             }
@@ -84,9 +82,9 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
         {
             try
             {
-                _logger.LogInformation("Sending templated email to {To}, Template: {TemplateKey}, Subject: {Subject}", 
+                _logger.LogInformation("Sending templated email to {To}, Template: {TemplateKey}, Subject: {Subject}",
                     to, templateKey, subject);
-            
+
                 var htmlContent = await _templateService.RenderTemplateAsync(templateKey, model, cancellationToken);
                 return await SendEmailInternalAsync(to, subject, htmlContent, from, replyTo, cancellationToken);
             }
@@ -107,13 +105,11 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
         {
             try
             {
-                // Use only the email address (without FromName) to avoid unverified domain issues
-                // Resend requires the exact verified domain format
                 var fromEmail = from ?? _options.FromEmail;
-            
+
                 // Log the from email being used for debugging
                 _logger.LogInformation("Sending email from: {FromEmail}, to: {To}", fromEmail, to);
-            
+
                 var replyToValue = replyTo ?? _options.ReplyTo;
                 var requestBody = new Dictionary<string, object>
                 {
@@ -128,13 +124,13 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
                     requestBody["reply_to"] = replyToValue;
                 }
 
-                _logger.LogDebug("Resend API Request: From={FromEmail}, To={To}, Subject={Subject}", 
+                _logger.LogDebug("Resend API Request: From={FromEmail}, To={To}, Subject={Subject}",
                     fromEmail, to, subject);
 
                 var response = await _httpClient.PostAsJsonAsync("/emails", requestBody, cancellationToken);
                 var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            
-                _logger.LogDebug("Resend API Response: Status={StatusCode}, Content={Content}", 
+
+                _logger.LogDebug("Resend API Response: Status={StatusCode}, Content={Content}",
                     response.StatusCode, responseContent);
 
                 if (response.IsSuccessStatusCode)
