@@ -1,16 +1,15 @@
-using Microsoft.Extensions.Logging;
 using Verendar.Common.Shared;
 using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Mappings;
 using Verendar.Identity.Application.Services.Interfaces;
 using Verendar.Identity.Domain.Repositories.Interfaces;
 
-namespace Verendar.Identity.Infrastructure.Services
+namespace Verendar.Identity.Application.Services.Implements
 {
-    public class UserService(ILogger<UserService> logger, IUnitOfWork unitOfWork) : IUserService
+    public class UserService(IUnitOfWork unitOfWork, ILogger<UserService> logger) : IUserService
     {
-        private readonly ILogger<UserService> _logger = logger;
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly ILogger<UserService> _logger = logger;
 
         public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(PaginationRequest paginationRequest)
         {
@@ -35,20 +34,14 @@ namespace Verendar.Identity.Infrastructure.Services
 
         public async Task<ApiResponse<UserDto>> GetUserByIdAsync(Guid userId)
         {
-            try
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null)
             {
-                var user = await _unitOfWork.Users.GetByIdAsync(userId);
-                if (user == null)
-                {
-                    return ApiResponse<UserDto>.NotFoundResponse("Người dùng không tồn tại.");
-                }
-                return ApiResponse<UserDto>.SuccessResponse(user.ToDto(), "Lấy thông tin người dùng thành công.");
+                _logger.LogWarning("GetUserById: user not found {UserId}", userId);
+                return ApiResponse<UserDto>.NotFoundResponse("Người dùng không tồn tại.");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while retrieving user by ID: {UserId}", userId);
-                return ApiResponse<UserDto>.FailureResponse("Đã xảy ra lỗi trong quá trình tìm kiếm.");
-            }
+
+            return ApiResponse<UserDto>.SuccessResponse(user.ToDto(), "Lấy thông tin người dùng thành công.");
         }
     }
 }

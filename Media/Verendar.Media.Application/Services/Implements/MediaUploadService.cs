@@ -20,126 +20,136 @@ namespace Verendar.Media.Application.Services.Implements
 
         public async Task<ApiResponse<string>> ConfirmUploadFileAsync(Guid id, Guid userId)
         {
+            var mediaFile = await _unitOfWork.MediaFileRepository.GetByIdAsync(id);
+            if (mediaFile == null)
+            {
+                _logger.LogWarning("Media file with ID {FileId} not found for confirmation", id);
+                return ApiResponse<string>.FailureResponse("File không tồn tại");
+            }
+            if (mediaFile.UserId != userId)
+            {
+                _logger.LogWarning("User {UserId} attempted to confirm upload for file {FileId} they do not own", userId, id);
+                return ApiResponse<string>.FailureResponse("Bạn không có quyền xác nhận file này");
+            }
+
+            bool existsOnStorage;
             try
             {
-                var mediaFile = await _unitOfWork.MediaFileRepository.GetByIdAsync(id);
-                if (mediaFile == null)
-                {
-                    _logger.LogWarning("Media file with ID {FileId} not found for confirmation", id);
-                    return ApiResponse<string>.FailureResponse("File không tồn tại");
-                }
-                if (mediaFile.UserId != userId)
-                {
-                    _logger.LogWarning("User {UserId} attempted to confirm upload for file {FileId} they do not own", userId, id);
-                    return ApiResponse<string>.FailureResponse("Bạn không có quyền xác nhận file này");
-                }
-
-                var existsOnStorage = await _storageService.ExistsAsync(mediaFile.FilePath);
-                if (!existsOnStorage)
-                {
-                    _logger.LogWarning("File {FileId} (key: {FileKey}) chưa tồn tại trên S3", id, mediaFile.FilePath);
-                    return ApiResponse<string>.FailureResponse("File chưa được upload lên storage. Vui lòng upload file lên Presigned URL trước khi xác nhận.");
-                }
-
-                mediaFile.Status = FileStatus.Uploaded;
-                await _unitOfWork.MediaFileRepository.UpdateAsync(id, mediaFile);
-                await _unitOfWork.SaveChangesAsync();
-
-                string finalUrl = _storageService.GetFilePath(mediaFile.FilePath);
-
-                _logger.LogInformation("Upload confirmed for file {FileId} by user {UserId}", id, userId);
-                return ApiResponse<string>.SuccessResponse(finalUrl, "Xác nhận upload thành công");
+                existsOnStorage = await _storageService.ExistsAsync(mediaFile.FilePath);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error confirming upload for file {FileId}", id);
+                _logger.LogError(ex, "Storage ExistsAsync failed for file {FileId} key {FileKey}", id, mediaFile.FilePath);
                 return ApiResponse<string>.FailureResponse("Lỗi khi xác nhận upload");
             }
+
+            if (!existsOnStorage)
+            {
+                _logger.LogWarning("File {FileId} (key: {FileKey}) chưa tồn tại trên S3", id, mediaFile.FilePath);
+                return ApiResponse<string>.FailureResponse("File chưa được upload lên storage. Vui lòng upload file lên Presigned URL trước khi xác nhận.");
+            }
+
+            mediaFile.Status = FileStatus.Uploaded;
+            await _unitOfWork.MediaFileRepository.UpdateAsync(id, mediaFile);
+            await _unitOfWork.SaveChangesAsync();
+
+            string finalUrl;
+            try
+            {
+                finalUrl = _storageService.GetFilePath(mediaFile.FilePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Storage GetFilePath failed for file {FileId}", id);
+                return ApiResponse<string>.FailureResponse("Lỗi khi xác nhận upload");
+            }
+
+            return ApiResponse<string>.SuccessResponse(finalUrl, "Xác nhận upload thành công");
         }
 
         public async Task<ApiResponse<bool>> DeleteFileByUrlAsync(string url)
         {
+            string fileKey;
             try
             {
-                var fileKey = _storageService.ExtractKeyFromUrl(url);
-                if (string.IsNullOrEmpty(fileKey))
-                {
-                    _logger.LogWarning("Invalid file url provided for deletion: {Url}", url);
-                    return ApiResponse<bool>.FailureResponse("Đường dẫn file không hợp lệ");
-                }
-
-                var mediaFile = await _unitOfWork.MediaFileRepository.FindOneAsync(m => m.FilePath == fileKey);
-                if (mediaFile == null)
-                {
-                    _logger.LogWarning("Media file with key {Key} not found for deletion", fileKey);
-                    return ApiResponse<bool>.FailureResponse("File không tồn tại");
-                }
-
-                try
-                {
-                    await _storageService.DeleteFileAsync(fileKey);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Lỗi khi xóa trên S3 (nhưng vẫn tiếp tục xóa DB): {Key}", fileKey);
-                }
-
-                if (mediaFile != null)
-                {
-                    mediaFile.DeletedAt = DateTime.UtcNow;
-                    mediaFile.FilePath = string.Empty;
-                    mediaFile.Status = FileStatus.Deleted;
-
-                    await _unitOfWork.MediaFileRepository.UpdateAsync(mediaFile.Id, mediaFile);
-                    await _unitOfWork.SaveChangesAsync();
-                }
-
-                return ApiResponse<bool>.SuccessResponse(true, "Xóa file thành công");
+                fileKey = _storageService.ExtractKeyFromUrl(url);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting file by url: {Url}", url);
+                _logger.LogError(ex, "ExtractKeyFromUrl failed for {Url}", url);
                 return ApiResponse<bool>.FailureResponse("Lỗi hệ thống khi xóa file");
             }
+
+            if (string.IsNullOrEmpty(fileKey))
+            {
+                _logger.LogWarning("Invalid file url provided for deletion: {Url}", url);
+                return ApiResponse<bool>.FailureResponse("Đường dẫn file không hợp lệ");
+            }
+
+            var mediaFile = await _unitOfWork.MediaFileRepository.FindOneAsync(m => m.FilePath == fileKey);
+            if (mediaFile == null)
+            {
+                _logger.LogWarning("Media file with key {Key} not found for deletion", fileKey);
+                return ApiResponse<bool>.FailureResponse("File không tồn tại");
+            }
+
+            try
+            {
+                await _storageService.DeleteFileAsync(fileKey);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Lỗi khi xóa trên S3 (nhưng vẫn tiếp tục xóa DB): {Key}", fileKey);
+            }
+
+            mediaFile.DeletedAt = DateTime.UtcNow;
+            mediaFile.FilePath = string.Empty;
+            mediaFile.Status = FileStatus.Deleted;
+
+            await _unitOfWork.MediaFileRepository.UpdateAsync(mediaFile.Id, mediaFile);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ApiResponse<bool>.SuccessResponse(true, "Xóa file thành công");
         }
 
         public async Task<ApiResponse<InitUploadResponse>> InitiateUploadAsync(InitUploadRequest request, Guid userId)
         {
+            if (!_uploadConfig.IsContentTypeAllowed(request.ContentType))
+            {
+                _logger.LogWarning("InitiateUpload: content type not allowed {ContentType}", request.ContentType);
+                return ApiResponse<InitUploadResponse>.FailureResponse(
+                    $"Content type '{request.ContentType}' không được phép. Các loại cho phép: {string.Join(", ", _uploadConfig.AllowedContentTypes)}");
+            }
+
+            var maxFileSize = _uploadConfig.GetMaxFileSize(request.ContentType);
+            if (request.Size > maxFileSize)
+            {
+                var maxSizeMB = maxFileSize / (1024.0 * 1024.0);
+                _logger.LogWarning("InitiateUpload: size exceeds limit {Size} for {ContentType}", request.Size, request.ContentType);
+                return ApiResponse<InitUploadResponse>.FailureResponse(
+                    $"Kích thước file vượt quá giới hạn {maxSizeMB:F2} MB cho loại '{request.ContentType}'");
+            }
+
+            string fileKey = GenerateFilePath(request.FileType, userId, request.FileName);
+            string presignedUrl;
             try
             {
-                if (!_uploadConfig.IsContentTypeAllowed(request.ContentType))
-                {
-                    return ApiResponse<InitUploadResponse>.FailureResponse(
-                        $"Content type '{request.ContentType}' không được phép. Các loại cho phép: {string.Join(", ", _uploadConfig.AllowedContentTypes)}");
-                }
-
-                var maxFileSize = _uploadConfig.GetMaxFileSize(request.ContentType);
-                if (request.Size > maxFileSize)
-                {
-                    var maxSizeMB = maxFileSize / (1024.0 * 1024.0);
-                    return ApiResponse<InitUploadResponse>.FailureResponse(
-                        $"Kích thước file vượt quá giới hạn {maxSizeMB:F2} MB cho loại '{request.ContentType}'");
-                }
-
-                string fileKey = GenerateFilePath(request.FileType, userId, request.FileName);
-                var presignedUrl = await _storageService.GeneratePresignedUrlAsync(fileKey, request.ContentType);
-                var mediaFile = request.ToEntity(userId, fileKey, request.FileType);
-
-                await _unitOfWork.MediaFileRepository.AddAsync(mediaFile);
-                await _unitOfWork.SaveChangesAsync();
-
-                _logger.LogInformation("Initiated upload for file {FileName} (Type: {FileType}) with ID: {FileId}",
-                    request.FileName, request.FileType, mediaFile.Id);
-
-                return ApiResponse<InitUploadResponse>.SuccessResponse(
-                    mediaFile.ToInitUploadResponse(presignedUrl),
-                    "Khởi tạo upload thành công");
+                presignedUrl = await _storageService.GeneratePresignedUrlAsync(fileKey, request.ContentType);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error initiating upload for file {FileName}", request.FileName);
+                _logger.LogError(ex, "GeneratePresignedUrlAsync failed for {FileName}", request.FileName);
                 return ApiResponse<InitUploadResponse>.FailureResponse("Lỗi khi khởi tạo upload");
             }
+
+            var mediaFile = request.ToEntity(userId, fileKey, request.FileType);
+
+            await _unitOfWork.MediaFileRepository.AddAsync(mediaFile);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ApiResponse<InitUploadResponse>.SuccessResponse(
+                mediaFile.ToInitUploadResponse(presignedUrl),
+                "Khởi tạo upload thành công");
         }
 
         private string GenerateFilePath(FileType fileType, Guid userId, string fileName)

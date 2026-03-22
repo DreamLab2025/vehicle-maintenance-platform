@@ -13,5 +13,7 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
             DateOnly? toDate,
             bool isDescending = true,
             CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<OdometerHistory>> GetAllByUserVehicleIdAsync(Guid userVehicleId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<OdometerHistory>> GetRecordedOnOrAfterOrderedAsync(Guid userVehicleId, DateOnly fromDate, CancellationToken cancellationToken = default);
     }
 }

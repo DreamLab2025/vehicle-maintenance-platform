@@ -1,5 +1,3 @@
-using Verendar.Ai.Domain.Enums;
-
 namespace Verendar.Ai.Application.Dtos.Ai
 {
     public class GenerativeAiResponse

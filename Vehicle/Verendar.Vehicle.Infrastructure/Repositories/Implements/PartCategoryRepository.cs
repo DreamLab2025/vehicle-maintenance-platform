@@ -16,5 +16,15 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .OrderBy(x => x.DisplayOrder)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<IReadOnlyList<PartCategory>> GetByCodesAsync(IReadOnlyCollection<string> codes, CancellationToken cancellationToken = default)
+        {
+            if (codes.Count == 0)
+                return [];
+
+            return await _dbSet
+                .Where(pc => codes.Contains(pc.Code))
+                .ToListAsync(cancellationToken);
+        }
     }
 }

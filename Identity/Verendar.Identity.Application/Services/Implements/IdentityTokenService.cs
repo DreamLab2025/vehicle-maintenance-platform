@@ -8,24 +8,12 @@ using Verendar.Common.Jwt;
 using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Services.Interfaces;
 
-namespace Verendar.Identity.Infrastructure.Services
+namespace Verendar.Identity.Application.Services.Implements
 {
     public class IdentityTokenService : IIdentityTokenService
     {
         private readonly JwtBearerConfigurationOptions _jwtOptions;
         private readonly SymmetricSecurityKey _signingKey;
-
-        public IdentityTokenService(IOptions<JwtBearerConfigurationOptions> jwtOptions)
-        {
-            _jwtOptions = jwtOptions.Value ?? throw new ArgumentNullException(nameof(jwtOptions));
-
-            if (string.IsNullOrWhiteSpace(_jwtOptions.SecretKey))
-            {
-                throw new InvalidOperationException("JWT SecretKey cannot be null or empty");
-            }
-
-            _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
-        }
 
         public TokenResponse GenerateTokens(TokenClaims tokenClaims)
         {

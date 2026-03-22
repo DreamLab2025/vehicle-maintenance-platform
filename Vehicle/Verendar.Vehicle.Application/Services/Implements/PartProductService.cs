@@ -11,157 +11,110 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
         public async Task<ApiResponse<PartProductResponse>> CreateProductAsync(PartProductRequest request)
         {
-            try
+            var category = await _unitOfWork.PartCategories.GetByIdAsync(request.PartCategoryId);
+            if (category == null || category.DeletedAt != null)
             {
-                var category = await _unitOfWork.PartCategories.GetByIdAsync(request.PartCategoryId);
-                if (category == null || category.DeletedAt != null)
-                {
-                    return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
-                }
-
-                var product = request.ToEntity();
-                await _unitOfWork.PartProducts.AddAsync(product);
-                await _unitOfWork.SaveChangesAsync();
-
-                var createdProduct = await _unitOfWork.PartProducts.AsQueryable()
-                    .Include(p => p.Category)
-                    .FirstOrDefaultAsync(p => p.Id == product.Id);
-
-                _logger.LogInformation("Created part product {ProductName} (ID: {ProductId})", product.Name, product.Id);
-
-                return ApiResponse<PartProductResponse>.CreatedResponse(
-                    createdProduct!.ToResponse(),
-                    "Tạo phụ tùng thành công");
+                _logger.LogWarning("CreateProduct: category not found {PartCategoryId}", request.PartCategoryId);
+                return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating part product {ProductName}", request.Name);
-                return ApiResponse<PartProductResponse>.FailureResponse("Lỗi khi tạo phụ tùng");
-            }
+
+            var product = request.ToEntity();
+            await _unitOfWork.PartProducts.AddAsync(product);
+            await _unitOfWork.SaveChangesAsync();
+
+            var createdProduct = await _unitOfWork.PartProducts.GetByIdWithCategoryAsync(product.Id);
+
+            return ApiResponse<PartProductResponse>.CreatedResponse(
+                createdProduct!.ToResponse(),
+                "Tạo phụ tùng thành công");
         }
 
         public async Task<ApiResponse<PartProductResponse>> UpdateProductAsync(Guid id, PartProductRequest request)
         {
-            try
+            var product = await _unitOfWork.PartProducts.GetByIdAsync(id);
+            if (product == null || product.DeletedAt != null)
             {
-                var product = await _unitOfWork.PartProducts.GetByIdAsync(id);
-                if (product == null || product.DeletedAt != null)
-                {
-                    return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy phụ tùng");
-                }
-
-                var category = await _unitOfWork.PartCategories.GetByIdAsync(request.PartCategoryId);
-                if (category == null || category.DeletedAt != null)
-                {
-                    return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
-                }
-
-                product.UpdateEntity(request);
-                await _unitOfWork.PartProducts.UpdateAsync(id, product);
-                await _unitOfWork.SaveChangesAsync();
-
-                var updatedProduct = await _unitOfWork.PartProducts.AsQueryable()
-                    .Include(p => p.Category)
-                    .FirstOrDefaultAsync(p => p.Id == id);
-
-                _logger.LogInformation("Updated part product {ProductName} (ID: {ProductId})", product.Name, id);
-
-                return ApiResponse<PartProductResponse>.SuccessResponse(
-                    updatedProduct!.ToResponse(),
-                    "Cập nhật phụ tùng thành công");
+                _logger.LogWarning("UpdateProduct: not found {ProductId}", id);
+                return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy phụ tùng");
             }
-            catch (Exception ex)
+
+            var category = await _unitOfWork.PartCategories.GetByIdAsync(request.PartCategoryId);
+            if (category == null || category.DeletedAt != null)
             {
-                _logger.LogError(ex, "Error updating part product with ID: {ProductId}", id);
-                return ApiResponse<PartProductResponse>.FailureResponse("Lỗi khi cập nhật phụ tùng");
+                _logger.LogWarning("UpdateProduct: category not found {PartCategoryId}", request.PartCategoryId);
+                return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
             }
+
+            product.UpdateEntity(request);
+            await _unitOfWork.PartProducts.UpdateAsync(id, product);
+            await _unitOfWork.SaveChangesAsync();
+
+            var updatedProduct = await _unitOfWork.PartProducts.GetByIdWithCategoryAsync(id);
+
+            return ApiResponse<PartProductResponse>.SuccessResponse(
+                updatedProduct!.ToResponse(),
+                "Cập nhật phụ tùng thành công");
         }
 
         public async Task<ApiResponse<string>> DeleteProductAsync(Guid id)
         {
-            try
+            var product = await _unitOfWork.PartProducts.GetByIdAsync(id);
+            if (product == null || product.DeletedAt != null)
             {
-                var product = await _unitOfWork.PartProducts.GetByIdAsync(id);
-                if (product == null || product.DeletedAt != null)
-                {
-                    return ApiResponse<string>.NotFoundResponse("Không tìm thấy phụ tùng");
-                }
-
-                await _unitOfWork.PartProducts.DeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
-
-                _logger.LogInformation("Deleted part product {ProductName} (ID: {ProductId})", product.Name, id);
-
-                return ApiResponse<string>.SuccessResponse("Đã xóa", "Xóa phụ tùng thành công");
+                _logger.LogWarning("DeleteProduct: not found {ProductId}", id);
+                return ApiResponse<string>.NotFoundResponse("Không tìm thấy phụ tùng");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting part product with ID: {ProductId}", id);
-                return ApiResponse<string>.FailureResponse("Lỗi khi xóa phụ tùng");
-            }
+
+            await _unitOfWork.PartProducts.DeleteAsync(id);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ApiResponse<string>.SuccessResponse("Đã xóa", "Xóa phụ tùng thành công");
         }
 
         public async Task<ApiResponse<List<PartProductSummary>>> GetProductsByCategoryAsync(Guid categoryId, PaginationRequest paginationRequest)
         {
-            try
+            paginationRequest.Normalize();
+            var category = await _unitOfWork.PartCategories.GetByIdAsync(categoryId);
+            if (category == null || category.DeletedAt != null)
             {
-                paginationRequest.Normalize();
-                var category = await _unitOfWork.PartCategories.GetByIdAsync(categoryId);
-                if (category == null || category.DeletedAt != null)
-                {
-                    return ApiResponse<List<PartProductSummary>>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
-                }
-
-                var query = _unitOfWork.PartProducts.AsQueryable()
-                    .Include(p => p.Category)
-                    .Where(p => p.PartCategoryId == categoryId && p.DeletedAt == null)
-                    .OrderBy(p => p.Name);
-
-                var totalCount = await query.CountAsync();
-
-                var products = await query
-                    .Skip((paginationRequest.PageNumber - 1) * paginationRequest.PageSize)
-                    .Take(paginationRequest.PageSize)
-                    .ToListAsync();
-
-                var summaries = products.Select(p => p.ToSummary()).ToList();
-
-                return ApiResponse<List<PartProductSummary>>.SuccessPagedResponse(
-                    summaries,
-                    totalCount,
-                    paginationRequest.PageNumber,
-                    paginationRequest.PageSize,
-                    "Lấy danh sách phụ tùng thành công");
+                _logger.LogWarning("GetProductsByCategory: category not found {CategoryId}", categoryId);
+                return ApiResponse<List<PartProductSummary>>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting products by category ID: {CategoryId}", categoryId);
-                return ApiResponse<List<PartProductSummary>>.FailureResponse("Lỗi khi lấy danh sách phụ tùng");
-            }
+
+            var query = _unitOfWork.PartProducts.AsQueryableWithCategory()
+                .Where(p => p.PartCategoryId == categoryId && p.DeletedAt == null)
+                .OrderBy(p => p.Name);
+
+            var totalCount = await query.CountAsync();
+
+            var products = await query
+                .Skip((paginationRequest.PageNumber - 1) * paginationRequest.PageSize)
+                .Take(paginationRequest.PageSize)
+                .ToListAsync();
+
+            var summaries = products.Select(p => p.ToSummary()).ToList();
+
+            return ApiResponse<List<PartProductSummary>>.SuccessPagedResponse(
+                summaries,
+                totalCount,
+                paginationRequest.PageNumber,
+                paginationRequest.PageSize,
+                "Lấy danh sách phụ tùng thành công");
         }
 
         public async Task<ApiResponse<PartProductResponse>> GetProductByIdAsync(Guid id)
         {
-            try
-            {
-                var product = await _unitOfWork.PartProducts.AsQueryable()
-                    .Include(p => p.Category)
-                    .FirstOrDefaultAsync(p => p.Id == id && p.DeletedAt == null);
+            var product = await _unitOfWork.PartProducts.GetByIdWithCategoryAsync(id);
 
-                if (product == null)
-                {
-                    return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy phụ tùng");
-                }
-
-                return ApiResponse<PartProductResponse>.SuccessResponse(
-                    product.ToResponse(),
-                    "Lấy thông tin phụ tùng thành công");
-            }
-            catch (Exception ex)
+            if (product == null)
             {
-                _logger.LogError(ex, "Error getting part product with ID: {ProductId}", id);
-                return ApiResponse<PartProductResponse>.FailureResponse("Lỗi khi lấy thông tin phụ tùng");
+                _logger.LogWarning("GetProductById: not found {ProductId}", id);
+                return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy phụ tùng");
             }
+
+            return ApiResponse<PartProductResponse>.SuccessResponse(
+                product.ToResponse(),
+                "Lấy thông tin phụ tùng thành công");
         }
     }
 }

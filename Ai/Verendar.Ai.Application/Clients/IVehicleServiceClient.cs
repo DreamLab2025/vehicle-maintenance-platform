@@ -1,4 +1,3 @@
-using Verendar.Ai.Application.Dtos.VehicleService;
 namespace Verendar.Ai.Application.Clients
 {
     public interface IVehicleServiceClient

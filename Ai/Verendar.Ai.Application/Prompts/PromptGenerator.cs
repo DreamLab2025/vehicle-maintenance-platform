@@ -1,5 +1,3 @@
-using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
-
 namespace Verendar.Ai.Application.Prompts
 {
     public static class PromptGenerator

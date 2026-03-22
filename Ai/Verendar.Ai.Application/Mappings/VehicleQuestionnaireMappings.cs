@@ -1,5 +1,4 @@
 using System.Globalization;
-using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 
 namespace Verendar.Ai.Application.Mappings
 {

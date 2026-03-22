@@ -1,5 +1,5 @@
-using Verendar.Ai.Application.Dtos.VehicleService;
 using Verendar.Common.Http;
+
 namespace Verendar.Ai.Application.Clients
 {
     public class VehicleServiceClient(HttpClient httpClient, ILogger<VehicleServiceClient> logger)

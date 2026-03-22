@@ -1,5 +1,13 @@
+global using System.Text.Json;
 global using Microsoft.Extensions.Logging;
 global using Verendar.Common.Shared;
-global using Verendar.Ai.Domain.Entities;
-global using Verendar.Ai.Domain.Repositories.Interfaces;
+global using Verendar.Ai.Application.Clients;
 global using Verendar.Ai.Application.Dtos.Ai;
+global using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
+global using Verendar.Ai.Application.Dtos.VehicleService;
+global using Verendar.Ai.Application.Mappings;
+global using Verendar.Ai.Application.Prompts;
+global using Verendar.Ai.Application.Services.Interfaces;
+global using Verendar.Ai.Domain.Entities;
+global using Verendar.Ai.Domain.Enums;
+global using Verendar.Ai.Domain.Repositories.Interfaces;

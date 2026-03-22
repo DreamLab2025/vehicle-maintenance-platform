@@ -1,4 +1,3 @@
-using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 namespace Verendar.Ai.Application.Services.Interfaces
 {
     public interface IVehicleMaintenanceAnalysisService
