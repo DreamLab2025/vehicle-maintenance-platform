@@ -33,8 +33,12 @@ internal static class SeqLogsOnlyExtensions
 
         configureSettings?.Invoke(settings);
 
-        if (!string.IsNullOrEmpty(settings.ServerUrl))
-            settings.Logs.Endpoint = new Uri($"{settings.ServerUrl}/ingest/otlp/v1/logs");
+        if (string.IsNullOrEmpty(settings.ServerUrl))
+        {
+            return;
+        }
+
+        settings.Logs.Endpoint = new Uri($"{settings.ServerUrl}/ingest/otlp/v1/logs");
 
         if (!string.IsNullOrEmpty(settings.ApiKey))
         {
@@ -52,12 +56,6 @@ internal static class SeqLogsOnlyExtensions
 
         if (!settings.DisableHealthChecks)
         {
-            if (settings.ServerUrl is null)
-            {
-                throw new InvalidOperationException(
-                    "Unable to add a Seq health check because the 'ServerUrl' setting is missing.");
-            }
-
             var seqBase = settings.ServerUrl;
             builder.Services.AddHealthChecks().AddAsyncCheck("Seq", async (ct) =>
             {

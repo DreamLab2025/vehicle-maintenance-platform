@@ -69,6 +69,7 @@ namespace Verendar.ServiceDefaults
                 {
                     tracing.AddProcessor(new HangfireStatementTraceFilterProcessor())
                         .AddSource(builder.Environment.ApplicationName)
+                        .AddAspNetCoreInstrumentation()
                         .AddHttpClientInstrumentation();
                 });
 
@@ -79,13 +80,12 @@ namespace Verendar.ServiceDefaults
 
         private static TBuilder ConfigureSerilog<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
-            var forwardToOpenTelemetry = !builder.Environment.IsDevelopment();
             builder.Services.AddSerilog((services, lc) => lc
                 .ReadFrom.Configuration(builder.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .Enrich.WithMachineName(),
-                writeToProviders: forwardToOpenTelemetry);
+                writeToProviders: true);
 
             return builder;
         }

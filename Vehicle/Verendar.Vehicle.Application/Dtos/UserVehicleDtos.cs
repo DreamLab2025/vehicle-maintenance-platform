@@ -14,6 +14,13 @@ namespace Verendar.Vehicle.Application.Dtos
         public int CurrentOdometer { get; set; }
     }
 
+    public class UpdateOdometerResponse
+    {
+        public Guid UserVehicleId { get; set; }
+        public int CurrentOdometer { get; set; }
+        public DateTime? LastOdometerUpdateAt { get; set; }
+    }
+
     public class ApplyTrackingConfigRequest
     {
         public string PartCategoryCode { get; set; } = string.Empty;
@@ -39,6 +46,50 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public UserVariantResponse UserVehicleVariant { get; set; } = null!;
+    }
+
+    public class VehicleTypeRefSummaryDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+    }
+
+    public class VehicleBrandRefSummaryDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public VehicleTypeRefSummaryDto Type { get; set; } = null!;
+    }
+
+    public class VehicleModelRefSummaryDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public VehicleBrandRefSummaryDto Brand { get; set; } = null!;
+    }
+
+    public class UserVehicleVariantSummaryDto
+    {
+        public Guid Id { get; set; }
+        public string Color { get; set; } = null!;
+        public string ImageUrl { get; set; } = null!;
+        public VehicleModelRefSummaryDto Model { get; set; } = null!;
+    }
+
+    public class UserVehicleSummaryDto
+    {
+        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
+        public string? LicensePlate { get; set; }
+        public string? VinNumber { get; set; }
+        public DateTime? PurchaseDate { get; set; }
+        public int CurrentOdometer { get; set; }
+        public DateTime? LastOdometerUpdateAt { get; set; }
+        public int? AverageKmPerDay { get; set; }
+        public bool NeedsOnboarding { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public UserVehicleVariantSummaryDto Variant { get; set; } = null!;
     }
 
 

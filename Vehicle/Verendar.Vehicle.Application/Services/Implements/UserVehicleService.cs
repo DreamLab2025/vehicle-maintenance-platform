@@ -69,48 +69,47 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<string>.NotFoundResponse("Không tìm thấy xe");
             }
 
-            await _unitOfWork.BeginTransactionAsync();
-
-            var deletedAt = DateTime.UtcNow;
-
-            var reminders = await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(vehicleId);
-            foreach (var r in reminders)
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                r.DeletedAt = deletedAt;
-                r.DeletedBy = userId;
-            }
+                var deletedAt = DateTime.UtcNow;
 
-            var trackings = await _unitOfWork.PartTrackings.GetByUserVehicleIdAsync(vehicleId);
-            foreach (var t in trackings)
-            {
-                t.DeletedAt = deletedAt;
-                t.DeletedBy = userId;
-            }
-
-            var odometerHistories = await _unitOfWork.OdometerHistories.GetAllByUserVehicleIdAsync(vehicleId);
-            foreach (var h in odometerHistories)
-            {
-                h.DeletedAt = deletedAt;
-                h.DeletedBy = userId;
-            }
-
-            var records = await _unitOfWork.MaintenanceRecords.GetByUserVehicleIdAsync(vehicleId);
-            foreach (var record in records)
-            {
-                var items = await _unitOfWork.MaintenanceRecordItems.GetByMaintenanceRecordIdAsync(record.Id);
-                foreach (var item in items)
+                var reminders = await _unitOfWork.MaintenanceReminders.GetByUserVehicleIdAsync(vehicleId);
+                foreach (var r in reminders)
                 {
-                    item.DeletedAt = deletedAt;
-                    item.DeletedBy = userId;
+                    r.DeletedAt = deletedAt;
+                    r.DeletedBy = userId;
                 }
-                record.DeletedAt = deletedAt;
-                record.DeletedBy = userId;
-            }
 
-            vehicle.DeletedAt = deletedAt;
-            vehicle.DeletedBy = userId;
+                var trackings = await _unitOfWork.PartTrackings.GetByUserVehicleIdAsync(vehicleId);
+                foreach (var t in trackings)
+                {
+                    t.DeletedAt = deletedAt;
+                    t.DeletedBy = userId;
+                }
 
-            await _unitOfWork.CommitTransactionAsync();
+                var odometerHistories = await _unitOfWork.OdometerHistories.GetAllByUserVehicleIdAsync(vehicleId);
+                foreach (var h in odometerHistories)
+                {
+                    h.DeletedAt = deletedAt;
+                    h.DeletedBy = userId;
+                }
+
+                var records = await _unitOfWork.MaintenanceRecords.GetByUserVehicleIdAsync(vehicleId);
+                foreach (var record in records)
+                {
+                    var items = await _unitOfWork.MaintenanceRecordItems.GetByMaintenanceRecordIdAsync(record.Id);
+                    foreach (var item in items)
+                    {
+                        item.DeletedAt = deletedAt;
+                        item.DeletedBy = userId;
+                    }
+                    record.DeletedAt = deletedAt;
+                    record.DeletedBy = userId;
+                }
+
+                vehicle.DeletedAt = deletedAt;
+                vehicle.DeletedBy = userId;
+            });
 
             return ApiResponse<string>.SuccessResponse("Deleted", "Xóa xe thành công");
         }
@@ -136,10 +135,10 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 "Lấy thông tin xe thành công");
         }
 
-        public async Task<ApiResponse<List<UserVehicleResponse>>> GetUserVehiclesAsync(Guid userId, PaginationRequest paginationRequest)
+        public async Task<ApiResponse<List<UserVehicleSummaryDto>>> GetUserVehiclesAsync(Guid userId, PaginationRequest paginationRequest)
         {
             paginationRequest.Normalize();
-            var query = _unitOfWork.UserVehicles.GetQueryWithFullDetails()
+            var query = _unitOfWork.UserVehicles.GetQueryWithoutPartTrackings()
                 .Where(v => v.UserId == userId);
 
             var totalCount = await query.CountAsync();
@@ -156,8 +155,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 .Take(paginationRequest.PageSize)
                 .ToListAsync();
 
-            return ApiResponse<UserVehicleResponse>.SuccessPagedResponse(
-                items.Select(v => v.ToResponse()).ToList(),
+            return ApiResponse<UserVehicleSummaryDto>.SuccessPagedResponse(
+                items.Select(v => v.ToSummaryDto()).ToList(),
                 totalCount,
                 paginationRequest.PageNumber,
                 paginationRequest.PageSize,

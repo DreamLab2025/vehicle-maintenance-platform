@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json.Serialization;
@@ -44,6 +45,8 @@ namespace Verendar.ServiceDefaults
 
                 options.UseInlineDefinitionsForEnums();
 
+                options.DocumentFilter<ApiErrorEnvelopeDocumentFilter>();
+
                 var xmlFilename = $"{Assembly.GetEntryAssembly()?.GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
                 if (File.Exists(xmlPath))
@@ -72,6 +75,104 @@ namespace Verendar.ServiceDefaults
 
             app.MapGet("/", () => Results.Redirect("/swagger/index.html")).ExcludeFromDescription();
             return app;
+        }
+    }
+
+    public sealed class ApiErrorEnvelopeDocumentFilter : IDocumentFilter
+    {
+        public const string SchemaId = "ApiErrorEnvelope";
+
+        private static readonly HashSet<string> KnownErrorCodes = new(StringComparer.Ordinal)
+        {
+            "default", "400", "401", "403", "404", "405", "409", "415", "422", "429", "500", "502", "503"
+        };
+
+        public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
+        {
+            swaggerDoc.Components ??= new OpenApiComponents();
+            swaggerDoc.Components.Schemas ??= new Dictionary<string, OpenApiSchema>(StringComparer.Ordinal);
+            if (!swaggerDoc.Components.Schemas.ContainsKey(SchemaId))
+            {
+                swaggerDoc.Components.Schemas[SchemaId] = new OpenApiSchema
+                {
+                    Type = "object",
+                    Description = "Unsuccessful API envelope. Runtime uses the same JSON shape as success, but <c>data</c> is always null for these status codes.",
+                    Properties = new Dictionary<string, OpenApiSchema>(StringComparer.Ordinal)
+                    {
+                        ["isSuccess"] = new OpenApiSchema { Type = "boolean", Example = new OpenApiBoolean(false) },
+                        ["statusCode"] = new OpenApiSchema { Type = "integer", Format = "int32" },
+                        ["message"] = new OpenApiSchema { Type = "string" },
+                        ["data"] = new OpenApiSchema
+                        {
+                            Nullable = true,
+                            Description = "Always null when isSuccess is false."
+                        },
+                        ["metadata"] = new OpenApiSchema
+                        {
+                            Nullable = true,
+                            Description = "Optional; only some errors include metadata."
+                        }
+                    }
+                };
+            }
+
+            if (swaggerDoc.Paths == null) return;
+
+            foreach (var pathItem in swaggerDoc.Paths.Values)
+            {
+                foreach (var operation in pathItem.Operations.Values)
+                {
+                    if (operation.Responses == null) continue;
+                    foreach (var (code, response) in operation.Responses)
+                    {
+                        if (!IsErrorStatusCode(code)) continue;
+                        if (response.Content == null) continue;
+                        foreach (var media in response.Content.Values)
+                        {
+                            if (media.Schema == null) continue;
+                            if (!LooksLikeApiResponseEnvelope(media.Schema, swaggerDoc)) continue;
+                            media.Schema = new OpenApiSchema
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.Schema,
+                                    Id = SchemaId
+                                }
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        private static bool IsErrorStatusCode(string code)
+        {
+            if (KnownErrorCodes.Contains(code)) return true;
+            return int.TryParse(code, out var n) && n >= 400;
+        }
+
+        private static bool LooksLikeApiResponseEnvelope(OpenApiSchema schema, OpenApiDocument doc)
+        {
+            var resolved = ResolveSchema(schema, doc);
+            if (resolved?.Properties == null) return false;
+            return HasProp(resolved.Properties, "isSuccess")
+                && HasProp(resolved.Properties, "statusCode")
+                && HasProp(resolved.Properties, "message")
+                && HasProp(resolved.Properties, "data");
+        }
+
+        private static bool HasProp(IDictionary<string, OpenApiSchema> properties, string name) =>
+            properties.Keys.Any(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase));
+
+        private static OpenApiSchema? ResolveSchema(OpenApiSchema schema, OpenApiDocument doc)
+        {
+            if (schema.Reference != null && doc.Components?.Schemas != null &&
+                doc.Components.Schemas.TryGetValue(schema.Reference.Id, out var target))
+            {
+                return target;
+            }
+
+            return schema.Reference == null ? schema : null;
         }
     }
 

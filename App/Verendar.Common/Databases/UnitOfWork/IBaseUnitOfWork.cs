@@ -6,5 +6,6 @@ namespace Verendar.Common.Databases.UnitOfWork
         Task BeginTransactionAsync();
         Task CommitTransactionAsync();
         Task RollbackTransactionAsync();
+        Task ExecuteInTransactionAsync(Func<Task> operation, CancellationToken cancellationToken = default);
     }
 }

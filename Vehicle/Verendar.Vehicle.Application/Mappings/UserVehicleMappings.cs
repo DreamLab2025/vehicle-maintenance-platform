@@ -19,6 +19,60 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
+        public static UpdateOdometerResponse ToUpdateOdometerResponse(this UserVehicle entity)
+        {
+            return new UpdateOdometerResponse
+            {
+                UserVehicleId = entity.Id,
+                CurrentOdometer = entity.CurrentOdometer,
+                LastOdometerUpdateAt = entity.LastOdometerUpdate?.ToDateTime(TimeOnly.MinValue)
+            };
+        }
+
+        public static UserVehicleSummaryDto ToSummaryDto(this UserVehicle entity)
+        {
+            var variant = entity.Variant;
+            var model = variant?.VehicleModel;
+            var brand = model?.Brand;
+            var type = brand?.VehicleType;
+
+            return new UserVehicleSummaryDto
+            {
+                Id = entity.Id,
+                UserId = entity.UserId,
+                LicensePlate = entity.LicensePlate,
+                VinNumber = entity.VIN,
+                PurchaseDate = entity.PurchaseDate?.ToDateTime(TimeOnly.MinValue),
+                CurrentOdometer = entity.CurrentOdometer,
+                LastOdometerUpdateAt = entity.LastOdometerUpdate?.ToDateTime(TimeOnly.MinValue),
+                AverageKmPerDay = entity.AverageKmPerDay,
+                NeedsOnboarding = entity.NeedsOnboarding,
+                CreatedAt = entity.CreatedAt,
+                UpdatedAt = entity.UpdatedAt,
+                Variant = new UserVehicleVariantSummaryDto
+                {
+                    Id = variant?.Id ?? Guid.Empty,
+                    Color = variant?.Color ?? string.Empty,
+                    ImageUrl = variant?.ImageUrl ?? string.Empty,
+                    Model = new VehicleModelRefSummaryDto
+                    {
+                        Id = model?.Id ?? Guid.Empty,
+                        Name = model?.Name ?? string.Empty,
+                        Brand = new VehicleBrandRefSummaryDto
+                        {
+                            Id = brand?.Id ?? Guid.Empty,
+                            Name = brand?.Name ?? string.Empty,
+                            Type = new VehicleTypeRefSummaryDto
+                            {
+                                Id = type?.Id ?? brand?.VehicleTypeId ?? Guid.Empty,
+                                Name = type?.Name ?? string.Empty
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
         public static UserVehicleResponse ToResponse(this UserVehicle entity)
         {
             return new UserVehicleResponse

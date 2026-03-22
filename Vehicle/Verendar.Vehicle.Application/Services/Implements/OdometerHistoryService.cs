@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
 
@@ -13,7 +12,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IMaintenanceReminderService _maintenanceReminderService = maintenanceReminderService;
 
-        public async Task<ApiResponse<UserVehicleResponse>> UpdateOdometerAsync(Guid userId, Guid vehicleId, UpdateOdometerRequest request)
+        public async Task<ApiResponse<UpdateOdometerResponse>> UpdateOdometerAsync(Guid userId, Guid vehicleId, UpdateOdometerRequest request)
         {
             var vehicle = await _unitOfWork.UserVehicles
                 .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId);
@@ -21,36 +20,33 @@ namespace Verendar.Vehicle.Application.Services.Implements
             if (vehicle == null)
             {
                 _logger.LogWarning("UpdateOdometer: vehicle not found {VehicleId} user {UserId}", vehicleId, userId);
-                return ApiResponse<UserVehicleResponse>.NotFoundResponse("Không tìm thấy xe");
+                return ApiResponse<UpdateOdometerResponse>.NotFoundResponse("Không tìm thấy xe");
             }
 
             if (request.CurrentOdometer < vehicle.CurrentOdometer)
             {
                 _logger.LogWarning("UpdateOdometer: invalid odometer {NewOdo} < current {CurrentOdo} vehicle {VehicleId}", request.CurrentOdometer, vehicle.CurrentOdometer, vehicleId);
-                return ApiResponse<UserVehicleResponse>.FailureResponse("Số km mới phải lớn hơn hoặc bằng số km hiện tại");
+                return ApiResponse<UpdateOdometerResponse>.FailureResponse("Số km mới phải lớn hơn hoặc bằng số km hiện tại");
             }
 
             if (request.CurrentOdometer != vehicle.CurrentOdometer)
             {
-                await _unitOfWork.BeginTransactionAsync();
+                await _unitOfWork.ExecuteInTransactionAsync(async () =>
+                {
+                    var odometerHistory = vehicleId.ToOdometerHistory(request.CurrentOdometer, vehicle.CurrentOdometer);
+                    await _unitOfWork.OdometerHistories.AddAsync(odometerHistory);
 
-                var odometerHistory = vehicleId.ToOdometerHistory(request.CurrentOdometer, vehicle.CurrentOdometer);
-                await _unitOfWork.OdometerHistories.AddAsync(odometerHistory);
+                    vehicle.UpdateOdometer(request.CurrentOdometer);
+                    await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
 
-                vehicle.UpdateOdometer(request.CurrentOdometer);
-                await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
-
-                await _maintenanceReminderService.SyncRemindersAsync(vehicleId, request.CurrentOdometer, userId);
-
-                await _unitOfWork.CommitTransactionAsync();
+                    await _maintenanceReminderService.SyncRemindersAsync(vehicleId, request.CurrentOdometer, userId);
+                });
 
                 await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
             }
 
-            var updatedVehicle = await _unitOfWork.UserVehicles.GetByIdWithFullDetailsAsync(vehicleId);
-
-            return ApiResponse<UserVehicleResponse>.SuccessResponse(
-                updatedVehicle!.ToResponse(),
+            return ApiResponse<UpdateOdometerResponse>.SuccessResponse(
+                vehicle.ToUpdateOdometerResponse(),
                 "Cập nhật số km thành công");
         }
 
