@@ -24,6 +24,7 @@ codebase.
 | Mapping extensions, service patterns, SOLID practices | `references/code-quality.md` |
 | Redis caching strategy, N+1 prevention, query hygiene | `references/performance.md` |
 | Unit tests: xUnit + Moq + FluentAssertions | `references/testing.md` |
+| HTTP clients (IHttpClientFactory, BaseServiceClient, Polly) and RabbitMQ/MassTransit (events, consumers, publish) | `references/communication.md` |
 
 ## Quick Decision Guide
 
@@ -32,6 +33,7 @@ codebase.
 - **Writing a service or mapping?** → read `code-quality.md`
 - **Caching or query optimization?** → read `performance.md`
 - **Writing tests?** → read `testing.md`
+- **Calling another service (HTTP) or publishing/consuming events (RabbitMQ)?** → read `communication.md`
 
 ## Core Invariants (never violate)
 

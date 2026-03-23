@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
     <ProjectReference Include="..\..\App\Verendar.ServiceDefaults\Verendar.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Verendar.Garage.Contracts\Verendar.Garage.Contracts.csproj" />
     <ProjectReference Include="..\Verendar.Garage.Application\Verendar.Garage.Application.csproj" />
     <ProjectReference Include="..\Verendar.Garage.Infrastructure\Verendar.Garage.Infrastructure.csproj" />
   </ItemGroup>

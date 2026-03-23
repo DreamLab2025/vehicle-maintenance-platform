@@ -1,6 +1,7 @@
+using Verendar.Ai.Application.Clients;
 using Verendar.Common.Http;
 
-namespace Verendar.Ai.Application.Clients
+namespace Verendar.Ai.Infrastructure.Clients
 {
     public class VehicleServiceClient(HttpClient httpClient, ILogger<VehicleServiceClient> logger)
         : BaseServiceClient<VehicleServiceClient>(httpClient, logger), IVehicleServiceClient

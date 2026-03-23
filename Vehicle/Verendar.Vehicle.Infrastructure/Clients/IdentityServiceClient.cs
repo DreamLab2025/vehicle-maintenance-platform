@@ -1,6 +1,7 @@
 using Verendar.Common.Http;
+using Verendar.Vehicle.Application.Clients;
 
-namespace Verendar.Vehicle.Application.Clients
+namespace Verendar.Vehicle.Infrastructure.Clients
 {
     public class IdentityServiceClient(HttpClient httpClient, ILogger<IdentityServiceClient> logger)
         : BaseServiceClient<IdentityServiceClient>(httpClient, logger), IIdentityServiceClient
