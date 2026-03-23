@@ -2,12 +2,14 @@ namespace Verendar.Garage.Domain.Entities;
 
 [Index(nameof(GarageBranchId))]
 [Index(nameof(UserId))]
-public class Mechanic : BaseEntity
+public class GarageMember : BaseEntity
 {
     public Guid GarageBranchId { get; set; }
 
-    /// <summary>FK → Identity User (role: Mechanic).</summary>
+    /// <summary>FK → Identity User.</summary>
     public Guid UserId { get; set; }
+
+    public MemberRole Role { get; set; }
 
     [Required, MaxLength(200)]
     public string DisplayName { get; set; } = string.Empty;
@@ -15,7 +17,7 @@ public class Mechanic : BaseEntity
     [MaxLength(500)]
     public string? AvatarUrl { get; set; }
 
-    public MechanicStatus Status { get; set; } = MechanicStatus.Active;
+    public MemberStatus Status { get; set; } = MemberStatus.Active;
 
     // Navigation
     public GarageBranch GarageBranch { get; set; } = null!;

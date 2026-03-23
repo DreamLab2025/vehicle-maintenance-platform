@@ -36,7 +36,7 @@ public class Booking : BaseEntity
 
     public GarageBranch GarageBranch { get; set; } = null!;
     public GarageProduct GarageProduct { get; set; } = null!;
-    public Mechanic? Mechanic { get; set; }
+    public GarageMember? Mechanic { get; set; }
     public List<BookingStatusHistory> StatusHistory { get; set; } = [];
     public GarageReview? Review { get; set; }
 }

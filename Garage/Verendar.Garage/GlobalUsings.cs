@@ -8,3 +8,4 @@ global using Verendar.Garage.Domain.Repositories.Interfaces;
 global using Verendar.Garage.Infrastructure.Data;
 global using Verendar.Garage.Infrastructure.Repositories.Implements;
 global using Verendar.ServiceDefaults;
+global using Verendar.Garage.Application.Dtos.Clients;

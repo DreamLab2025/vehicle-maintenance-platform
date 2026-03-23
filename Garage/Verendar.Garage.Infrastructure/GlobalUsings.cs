@@ -4,5 +4,6 @@ global using Verendar.Common.Databases.Base;
 global using Verendar.Common.Databases.Implements;
 global using Verendar.Common.Databases.UnitOfWork;
 global using Verendar.Garage.Domain.Entities;
+global using Verendar.Garage.Domain.Enums;
 global using Verendar.Garage.Domain.Repositories.Interfaces;
 global using Verendar.Garage.Infrastructure.Data;

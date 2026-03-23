@@ -1,6 +1,6 @@
 namespace Verendar.Garage.Domain.Enums;
 
-public enum MechanicStatus
+public enum MemberStatus
 {
     Active = 0,
     Inactive = 1

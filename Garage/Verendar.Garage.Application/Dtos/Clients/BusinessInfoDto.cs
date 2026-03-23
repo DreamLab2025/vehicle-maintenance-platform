@@ -1,4 +1,4 @@
-namespace Verendar.Garage.Application.Dtos;
+namespace Verendar.Garage.Application.Dtos.Clients;
 
 public sealed record BusinessInfoDto(
     string TaxCode,

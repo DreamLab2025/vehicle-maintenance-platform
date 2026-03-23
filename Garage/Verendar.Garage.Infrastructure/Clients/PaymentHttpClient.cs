@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 using Verendar.Garage.Application.Clients;
+using Verendar.Garage.Application.Dtos.Clients;
 using Verendar.Garage.Domain.ValueObjects;
 
 namespace Verendar.Garage.Infrastructure.Clients;

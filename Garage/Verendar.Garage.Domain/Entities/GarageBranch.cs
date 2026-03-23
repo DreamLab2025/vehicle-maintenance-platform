@@ -35,6 +35,6 @@ public class GarageBranch : BaseEntity
     // Navigation
     public Garage Garage { get; set; } = null!;
     public List<GarageProduct> Products { get; set; } = [];
-    public List<Mechanic> Mechanics { get; set; } = [];
+    public List<GarageMember> Members { get; set; } = [];
     public List<GarageReview> Reviews { get; set; } = [];
 }

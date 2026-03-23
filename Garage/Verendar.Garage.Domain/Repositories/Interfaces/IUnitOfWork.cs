@@ -7,7 +7,7 @@ public interface IUnitOfWork : IBaseUnitOfWork
     IGarageRepository Garages { get; }
     IGarageBranchRepository GarageBranches { get; }
     IGarageProductRepository GarageProducts { get; }
-    IMechanicRepository Mechanics { get; }
+    IGarageMemberRepository Members { get; }
     IBookingRepository Bookings { get; }
     IReviewRepository Reviews { get; }
 }

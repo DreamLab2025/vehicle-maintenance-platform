@@ -8,7 +8,7 @@ public class UnitOfWork(GarageDbContext context)
     private IGarageRepository? _garages;
     private IGarageBranchRepository? _garageBranches;
     private IGarageProductRepository? _garageProducts;
-    private IMechanicRepository? _mechanics;
+    private IGarageMemberRepository? _members;
     private IBookingRepository? _bookings;
     private IReviewRepository? _reviews;
 
@@ -21,8 +21,8 @@ public class UnitOfWork(GarageDbContext context)
     public IGarageProductRepository GarageProducts =>
         _garageProducts ??= new GarageProductRepository(Context);
 
-    public IMechanicRepository Mechanics =>
-        _mechanics ??= new MechanicRepository(Context);
+    public IGarageMemberRepository Members =>
+        _members ??= new GarageMemberRepository(Context);
 
     public IBookingRepository Bookings =>
         _bookings ??= new BookingRepository(Context);

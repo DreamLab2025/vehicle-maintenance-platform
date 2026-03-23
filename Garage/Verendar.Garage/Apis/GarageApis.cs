@@ -1,6 +1,7 @@
 using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Dtos;
 
+
 namespace Verendar.Garage.Apis;
 
 public static class GarageApis

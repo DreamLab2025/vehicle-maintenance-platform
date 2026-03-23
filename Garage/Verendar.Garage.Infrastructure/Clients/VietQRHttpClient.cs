@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Verendar.Garage.Application.Clients;
-using Verendar.Garage.Application.Dtos;
+using Verendar.Garage.Application.Dtos.Clients;
 
 namespace Verendar.Garage.Infrastructure.Clients;
 
