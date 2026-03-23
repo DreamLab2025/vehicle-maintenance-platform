@@ -1,5 +1,3 @@
-using Verendar.Identity.Application.Helpers;
-
 namespace Verendar.Identity.Application.Mappings
 {
     public static class UserMappings

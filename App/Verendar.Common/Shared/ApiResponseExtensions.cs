@@ -4,10 +4,6 @@ namespace Verendar.Common.Shared
 {
     public static class ApiResponseExtensions
     {
-        /// <summary>
-        /// Converts an ApiResponse to the correct IResult based on its StatusCode.
-        /// Eliminates the repeated "IsSuccess ? Results.Ok : Results.BadRequest" pattern in handlers.
-        /// </summary>
         public static IResult ToHttpResult<T>(this ApiResponse<T> response) => response.StatusCode switch
         {
             200 => Results.Ok(response),

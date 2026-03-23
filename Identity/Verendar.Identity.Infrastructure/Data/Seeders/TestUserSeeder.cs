@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
-using Verendar.Identity.Application.Helpers;
+using Verendar.Identity.Application.Shared.Helpers;
 
 namespace Verendar.Identity.Infrastructure.Data.Seeders
 {

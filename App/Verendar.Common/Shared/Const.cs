@@ -16,6 +16,8 @@ namespace Verendar.Common.Shared
 
         public const string AiDatabase = "ai-db";
 
+        public const string LocationDatabase = "location-db";
+
         public const string CorrelationIdHeaderName = "X-Correlation-ID";
 
         public const string CorrelationIdKey = "CorrelationId";
