@@ -16,7 +16,13 @@ tasks:
     cmds:
       - dotnet run --project App/Verendar.AppHost
 
-    # task app:clean
+  app:build:
+    desc: Build all services and infrastructure
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - dotnet build Verendar.sln
+
+  # task app:clean
   app:clean:
     desc: Remove Aspire containers and volumes
     dir: "{{.TASKFILE_DIR}}"
