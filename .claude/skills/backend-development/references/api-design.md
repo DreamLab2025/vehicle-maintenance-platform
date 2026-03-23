@@ -1,5 +1,60 @@
 # API Design Reference
 
+## Do / Don't
+
+### Endpoint structure
+```csharp
+// DO — two static methods, private handlers
+public static class BrandApis
+{
+    public static IEndpointRouteBuilder MapBrandApi(this IEndpointRouteBuilder builder) { ... }
+    public static RouteGroupBuilder MapBrandRoutes(this RouteGroupBuilder group) { ... }
+    private static async Task<IResult> GetBrandById(...) => (await service.GetBrandByIdAsync(id)).ToHttpResult();
+}
+
+// DON'T — controllers
+[ApiController]
+[Route("api/v1/brands")]
+public class BrandController : ControllerBase { ... }   // ❌ no controllers ever
+```
+
+### Response envelope
+```csharp
+// DO
+return ApiResponse<BrandResponse>.CreatedResponse(data, "Tạo thương hiệu thành công");
+
+// DON'T
+return Results.Ok(new { success = true, data = brand });   // ❌ skip the envelope
+return Results.Created("/api/v1/brands/" + id, brand);     // ❌ bypass ToHttpResult()
+```
+
+### Validation
+```csharp
+// DO — endpoint filter; validator in Application layer
+group.MapPost("/", CreateBrand)
+    .AddEndpointFilter(ValidationEndpointFilter.Validate<BrandRequest>());
+
+// DON'T — manual validation inside the handler
+private static async Task<IResult> CreateBrand(BrandRequest req, IBrandService svc)
+{
+    if (string.IsNullOrEmpty(req.Name)) return Results.BadRequest(...); // ❌
+    ...
+}
+```
+
+### Internal endpoints
+```csharp
+// DO — return domain shape directly, no ApiResponse<T>
+group.MapGet("/users/{id}", GetUserInternal);
+private static async Task<IResult> GetUserInternal(Guid id, IUserService svc)
+    => Results.Ok(await svc.GetInternalUserAsync(id));  // plain object
+
+// DON'T — wrap internal responses in ApiResponse<T>
+return ApiResponse<InternalUserDto>.SuccessResponse(...);  // ❌ internal endpoints skip the envelope
+```
+
+---
+
 ## Endpoint Structure
 
 Two methods per resource: one creates the group, one registers routes. See `BrandApis.cs`.

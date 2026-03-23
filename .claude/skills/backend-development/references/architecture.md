@@ -1,5 +1,67 @@
 # Architecture Reference
 
+## Do / Don't
+
+### Layer placement
+```csharp
+// DO — Application layer: only IUnitOfWork + ApiResponse<T>
+public class BrandService(IUnitOfWork unitOfWork) : IBrandService
+{
+    public async Task<ApiResponse<BrandResponse>> CreateBrandAsync(BrandRequest req) { ... }
+}
+
+// DON'T — Application referencing EF Core or IResult
+using Microsoft.EntityFrameworkCore;   // ❌ no EF in Application
+public async Task<IResult> CreateBrandAsync(...)  // ❌ IResult belongs in the Host
+```
+
+### Entity design
+```csharp
+// DO — inherit BaseEntity, data annotations only, navigation = null!
+public class Brand : BaseEntity
+{
+    [Required, MaxLength(100)] public string Name { get; set; } = string.Empty;
+    public VehicleType VehicleType { get; set; } = null!;
+}
+
+// DON'T — duplicate audit fields or omit ISoftDeleteEntity
+public class Brand
+{
+    public Guid Id { get; set; }            // ❌ already in BaseEntity
+    public DateTime CreatedAt { get; set; } // ❌ already in BaseEntity
+    public bool IsDeleted { get; set; }     // ❌ use DeletedAt via BaseEntity
+}
+```
+
+### Repository interface
+```csharp
+// DO — extend IGenericRepository<T>, add only entity-specific queries
+public interface IBrandRepository : IGenericRepository<Brand>
+{
+    Task<Brand?> GetByIdWithTypesAsync(Guid id);
+}
+
+// DON'T — redeclare methods already in IGenericRepository
+public interface IBrandRepository
+{
+    Task<Brand?> GetByIdAsync(Guid id);   // ❌ already in IGenericRepository
+    Task AddAsync(Brand brand);            // ❌ already in IGenericRepository
+}
+```
+
+### Soft delete
+```csharp
+// DO
+await _unitOfWork.Brands.DeleteAsync(id);  // sets DeletedAt = UtcNow
+
+// DON'T
+_context.Brands.Remove(brand);             // ❌ hard delete
+brand.IsDeleted = true;                    // ❌ wrong field
+```
+
+---
+
+
 ## Project Structure
 
 ```

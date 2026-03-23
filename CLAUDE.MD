@@ -15,6 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Media        | File upload, storage, asset serving                        |
 | Notification | Email/SMS, SignalR hubs, event-driven                      |
 | Ai           | Gemini analysis, onboarding questionnaire                  |
+| Garage       | Garage accounts, branches, products, bookings, mechanics   |
+| Payment      | VNPay integration, payment lifecycle, webhook handling     |
 | Location     | Vietnamese administrative regions, provinces, wards lookup |
 
 Each service: 4 projects — `Verendar.{Service}` (Host), `.Application`, `.Domain`, `.Infrastructure`.
@@ -51,11 +53,13 @@ Prerequisites: .NET 9 SDK, Docker.
 
 | Service      | Routes                                                                                                                                                                   |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Identity     | `/api/v1/auth/**` · `/api/v1/users/**` · `/api/internal/**`                                                                                                             |
+| Identity     | `/api/v1/auth/**` · `/api/v1/users/**` · `/api/v1/subscriptions/**` · `/api/internal/**`                                                                               |
 | Ai           | `/api/v1/ai/**`                                                                                                                                                          |
 | Vehicle      | `/api/v1/brands/**` · `/api/v1/types/**` · `/api/v1/models/**` · `/api/v1/variants/**` · `/api/v1/vehicle-models/**` · `/api/v1/user-vehicles/**` · `/api/v1/maintenance-records/**` · `/api/v1/odometer-history/**` · `/api/v1/part-categories/**` · `/api/v1/part-products/**` |
 | Media        | `/api/v1/media-files/**`                                                                                                                                                 |
 | Notification | `/api/v1/notifications/**` · `/hubs/**`                                                                                                                                 |
+| Garage       | `/api/v1/garages/**` · `/api/v1/bookings/**` · `/api/v1/mechanics/**`                                                                                                   |
+| Payment      | `/api/v1/payments/**`                                                                                                                                                    |
 | Location     | `/api/v1/locations/**`                                                                                                                                                   |
 
 ## Non-Negotiable Patterns
@@ -80,6 +84,7 @@ Prerequisites: .NET 9 SDK, Docker.
 - **AI health check** (`GET /api/v1/ai/health`) returns raw `HealthCheckResponse`, not `ApiResponse<T>`.
 - **Location service** does not use `PaginationRequest` for its list endpoints — data is static reference data with Redis caching (24h TTL). Unbounded lists are acceptable here.
 - **Internal endpoints** (`/api/internal/...`) skip `ApiResponse<T>` and return domain-specific shapes for service-to-service calls (e.g., `LocationValidationResult`).
+- **Payment service** owns `IPaymentGateway` / `VNPayGateway` — Garage and Identity call Payment via `IPaymentClient` (HTTP) and consume `PaymentSucceededEvent` / `PaymentRefundedEvent` via MassTransit. Never implement VNPay directly in Garage or Identity.
 
 ## AI-Assisted Onboarding Flow
 
