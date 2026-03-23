@@ -1,4 +1,6 @@
 using Verendar.Garage.Application.Clients;
+using Verendar.Garage.Application.Services.Implements;
+using Verendar.Garage.Application.Services.Interfaces;
 using Verendar.Garage.Infrastructure.Clients;
 
 namespace Verendar.Garage.Bootstrapping;
@@ -14,6 +16,7 @@ public static class ApplicationServiceExtensions
         builder.AddPostgresDatabase<GarageDbContext>(Const.GarageDatabase);
 
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+        builder.Services.AddScoped<IGarageService, GarageService>();
 
         builder.Services.AddHttpClient<IPaymentClient, PaymentHttpClient>(client =>
         {

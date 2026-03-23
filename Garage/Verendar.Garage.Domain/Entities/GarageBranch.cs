@@ -3,12 +3,16 @@ using Verendar.Garage.Domain.ValueObjects;
 namespace Verendar.Garage.Domain.Entities;
 
 [Index(nameof(GarageId))]
+[Index(nameof(Slug), IsUnique = true)]
 public class GarageBranch : BaseEntity
 {
     public Guid GarageId { get; set; }
 
     [Required, MaxLength(200)]
     public string Name { get; set; } = string.Empty;
+
+    [Required, MaxLength(120)]
+    public string Slug { get; set; } = string.Empty;
 
     [MaxLength(1000)]
     public string? Description { get; set; }

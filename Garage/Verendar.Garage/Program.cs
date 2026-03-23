@@ -8,6 +8,6 @@ await app.MigrateDbContextAsync<GarageDbContext>();
 
 app.UseApplicationServices();
 
-app.MapGarageApis();
+app.MapGarageApi();
 
 await app.RunAsync();

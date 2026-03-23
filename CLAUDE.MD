@@ -26,9 +26,10 @@ Special: `Verendar.Identity.Contracts` and `Verendar.Vehicle.Contracts` hold sha
 ## Commands
 
 ```bash
-task app:run   # run all services + infra via Aspire
-task app:build # build all services and infrastructure
-task app:clean # remove Aspire containers and volumes
+task run   # run all services + infra via Aspire
+task build # build all services and infrastructure
+task clean # clean all services and infrastructure
+task clear # remove Aspire containers and volumes
 
 # EF Core migration
 task migrate:add NAME={MIGRATION_NAME} PROJECT={PROJECT} STARTUP={STARTUP}
@@ -40,8 +41,9 @@ task docker:dev:down    # stop dev stack (keeps volumes)
 task docker:dev:down:v  # stop dev stack and delete volumes
 
 # Tests
-dotnet test Location/Verendar.Location.Tests
-dotnet test Location/Verendar.Location.Tests --filter "FullyQualifiedName~ProvinceService"
+task test PROJECT=Location/Verendar.Location.Tests
+task test:all # run all tests
+task test:coverage PROJECT=Location/Verendar.Location.Tests
 
 # Other
 task pull br={branch}  # pull from remote
@@ -51,31 +53,31 @@ Prerequisites: .NET 9 SDK, Docker.
 
 ## Gateway Routing (port 8080)
 
-| Service      | Routes                                                                                                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Identity     | `/api/v1/auth/**` · `/api/v1/users/**` · `/api/v1/subscriptions/**` · `/api/internal/**`                                                                               |
-| Ai           | `/api/v1/ai/**`                                                                                                                                                          |
+| Service      | Routes                                                                                                                                                                                                                                                                           |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Identity     | `/api/v1/auth/**` · `/api/v1/users/**` · `/api/v1/subscriptions/**` · `/api/internal/**`                                                                                                                                                                                         |
+| Ai           | `/api/v1/ai/**`                                                                                                                                                                                                                                                                  |
 | Vehicle      | `/api/v1/brands/**` · `/api/v1/types/**` · `/api/v1/models/**` · `/api/v1/variants/**` · `/api/v1/vehicle-models/**` · `/api/v1/user-vehicles/**` · `/api/v1/maintenance-records/**` · `/api/v1/odometer-history/**` · `/api/v1/part-categories/**` · `/api/v1/part-products/**` |
-| Media        | `/api/v1/media-files/**`                                                                                                                                                 |
-| Notification | `/api/v1/notifications/**` · `/hubs/**`                                                                                                                                 |
-| Garage       | `/api/v1/garages/**` · `/api/v1/bookings/**` · `/api/v1/mechanics/**`                                                                                                   |
-| Payment      | `/api/v1/payments/**`                                                                                                                                                    |
-| Location     | `/api/v1/locations/**`                                                                                                                                                   |
+| Media        | `/api/v1/media-files/**`                                                                                                                                                                                                                                                         |
+| Notification | `/api/v1/notifications/**` · `/hubs/**`                                                                                                                                                                                                                                          |
+| Garage       | `/api/v1/garages/**` · `/api/v1/bookings/**` · `/api/v1/mechanics/**`                                                                                                                                                                                                            |
+| Payment      | `/api/v1/payments/**`                                                                                                                                                                                                                                                            |
+| Location     | `/api/v1/locations/**`                                                                                                                                                                                                                                                           |
 
 ## Non-Negotiable Patterns
 
-| Rule           | Detail                                                                 |
-| -------------- | ---------------------------------------------------------------------- |
-| No Controllers | Minimal API: `MapGroup` → `MapXxxRoutes()` → private handlers          |
-| No AutoMapper  | Static extensions: `ToEntity()`, `ToResponse()`, `UpdateFromRequest()` |
-| No MediatR     | Services call `IUnitOfWork` repositories directly                      |
-| Response       | `ApiResponse<T>` on all endpoints; FluentValidation/500s → RFC 7807    |
-| Validation     | Structural rules in `AbstractValidator<T>`, business rules in service  |
-| Soft delete    | `DeletedAt = DateTime.UtcNow` — never `DbContext.Remove()`             |
+| Rule           | Detail                                                                                                   |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| No Controllers | Minimal API: `MapGroup` → `MapXxxRoutes()` → private handlers                                            |
+| No AutoMapper  | Static extensions: `ToEntity()`, `ToResponse()`, `UpdateFromRequest()`                                   |
+| No MediatR     | Services call `IUnitOfWork` repositories directly                                                        |
+| Response       | `ApiResponse<T>` on all endpoints; FluentValidation/500s → RFC 7807                                      |
+| Validation     | Structural rules in `AbstractValidator<T>`, business rules in service                                    |
+| Soft delete    | `DeletedAt = DateTime.UtcNow` — never `DbContext.Remove()`                                               |
 | Lists          | `PaginationRequest` + `GetPagedAsync` — never unbounded (read-only reference data may return full lists) |
-| Secrets        | User Secrets only — never `appsettings.json`                           |
-| Constructor    | Primary constructor + private readonly fields (project convention)     |
-| Async          | `async/await` throughout — never `.Result` or `.Wait()`                |
+| Secrets        | User Secrets only — never `appsettings.json`                                                             |
+| Constructor    | Primary constructor + private readonly fields (project convention)                                       |
+| Async          | `async/await` throughout — never `.Result` or `.Wait()`                                                  |
 
 ## Key Exceptions
 
@@ -103,6 +105,7 @@ The **Location service** is the reference implementation for unit tests (`Locati
 Use xUnit + Moq + FluentAssertions. See `.claude/skills/backend-development/references/testing.md` for full patterns.
 
 Key conventions:
+
 - Test naming: `MethodName_WhenCondition_ExpectedBehavior`
 - `XxxUnitOfWorkMock` helper wires up `Mock<IUnitOfWork>` + individual `Mock<IXxxRepository>(MockBehavior.Strict)`
 - `Mock<ICacheService>(MockBehavior.Strict)` — must declare all cache interactions explicitly

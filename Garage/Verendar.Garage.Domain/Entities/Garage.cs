@@ -1,6 +1,7 @@
 namespace Verendar.Garage.Domain.Entities;
 
 [Index(nameof(OwnerId))]
+[Index(nameof(Slug), IsUnique = true)]
 public class Garage : BaseEntity
 {
     public Guid OwnerId { get; set; }
@@ -10,6 +11,9 @@ public class Garage : BaseEntity
 
     [MaxLength(100)]
     public string? ShortName { get; set; }
+
+    [Required, MaxLength(110)]
+    public string Slug { get; set; } = string.Empty;
 
     [MaxLength(20)]
     public string? TaxCode { get; set; }

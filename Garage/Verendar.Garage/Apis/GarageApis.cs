@@ -1,24 +1,47 @@
-using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Dtos;
-
+using Verendar.Garage.Application.Services.Interfaces;
 
 namespace Verendar.Garage.Apis;
 
 public static class GarageApis
 {
-    public static IEndpointRouteBuilder MapGarageApis(this IEndpointRouteBuilder app)
+    public static IEndpointRouteBuilder MapGarageApi(this IEndpointRouteBuilder builder)
     {
-        app.MapGroup("/api/v1/garages")
+        builder.MapGroup("/api/v1/garages")
             .MapGarageRoutes()
-            .WithTags("Garage");
+            .WithTags("Garage Api")
+            .RequireRateLimiting("Fixed");
 
-        return app;
+        return builder;
     }
 
-    private static RouteGroupBuilder MapGarageRoutes(this RouteGroupBuilder group)
+    public static RouteGroupBuilder MapGarageRoutes(this RouteGroupBuilder group)
     {
         group.MapGet("/business-lookup/{taxCode}", LookupBusiness)
-            .WithSummary("Tra cứu thông tin doanh nghiệp theo MST để điền form tự động");
+            .WithName("LookupBusiness")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Tra cứu thông tin doanh nghiệp theo MST để điền form tự động";
+                return operation;
+            })
+            .RequireAuthorization()
+            .Produces<ApiResponse<BusinessInfoDto>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<BusinessInfoDto>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("/", CreateGarage)
+            .AddEndpointFilter(ValidationEndpointFilter.Validate<GarageRequest>())
+            .WithName("CreateGarage")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Đăng ký garage mới (mỗi tài khoản chỉ được một garage)";
+                return operation;
+            })
+            .RequireAuthorization()
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status201Created)
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status409Conflict)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         return group;
     }
@@ -28,16 +51,24 @@ public static class GarageApis
         IVietQRClient vietQRClient,
         CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(taxCode) || taxCode.Length > 20)
-            return Results.UnprocessableEntity(
-                ApiResponse<object>.FailureResponse("MST không hợp lệ (tối đa 20 ký tự)."));
-
         var info = await vietQRClient.LookupBusinessAsync(taxCode.Trim(), ct);
 
         if (info is null)
-            return Results.NotFound(
-                ApiResponse<object>.NotFoundResponse($"Không tìm thấy doanh nghiệp với MST '{taxCode}'."));
+            return ApiResponse<BusinessInfoDto>.NotFoundResponse($"Không tìm thấy doanh nghiệp với MST '{taxCode}'.").ToHttpResult();
 
-        return Results.Ok(ApiResponse<BusinessInfoDto>.SuccessResponse(info));
+        return ApiResponse<BusinessInfoDto>.SuccessResponse(info).ToHttpResult();
+    }
+
+    private static async Task<IResult> CreateGarage(
+        GarageRequest request,
+        ICurrentUserService currentUserService,
+        IGarageService garageService)
+    {
+        var userId = currentUserService.UserId;
+        if (userId == Guid.Empty)
+            return Results.Unauthorized();
+
+        var result = await garageService.CreateGarageAsync(userId, request);
+        return result.ToHttpResult();
     }
 }
