@@ -1,21 +1,31 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
-using Verendar.Garage.Application.Clients;
+using Microsoft.Extensions.Options;
 using Verendar.Garage.Application.Dtos.Clients;
+using Verendar.Garage.Application.ExternalServices;
+using Verendar.Garage.Infrastructure.Configuration;
 
-namespace Verendar.Garage.Infrastructure.Clients;
+namespace Verendar.Garage.Infrastructure.ExternalServices;
 
-public class VietQRHttpClient(HttpClient httpClient, ILogger<VietQRHttpClient> logger) : IVietQRClient
+public class VietQRBusinessLookupService(
+    IOptions<VietQRSettings> options,
+    IHttpClientFactory httpClientFactory,
+    ILogger<VietQRBusinessLookupService> logger) : IBusinessLookupService
 {
-    private readonly HttpClient _httpClient = httpClient;
-    private readonly ILogger<VietQRHttpClient> _logger = logger;
+    private readonly VietQRSettings _settings = options.Value;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly ILogger<VietQRBusinessLookupService> _logger = logger;
 
     public async Task<BusinessInfoDto?> LookupBusinessAsync(string taxCode, CancellationToken ct = default)
     {
         try
         {
-            var response = await _httpClient.GetAsync($"/v2/business/{taxCode}", ct);
+            var client = _httpClientFactory.CreateClient();
+            client.BaseAddress = new Uri(_settings.BaseUrl);
+            client.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json");
+
+            var response = await client.GetAsync($"/v2/business/{taxCode}", ct);
 
             if (!response.IsSuccessStatusCode)
             {

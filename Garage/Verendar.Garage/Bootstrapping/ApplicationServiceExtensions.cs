@@ -1,7 +1,11 @@
 using Verendar.Garage.Application.Clients;
+using Verendar.Garage.Application.ExternalServices;
 using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Application.Services.Interfaces;
 using Verendar.Garage.Infrastructure.Clients;
+using Verendar.Garage.Infrastructure.Configuration;
+using Verendar.Garage.Infrastructure.ExternalServices;
+using Verendar.Garage.Infrastructure.ExternalServices.Geocoding;
 
 namespace Verendar.Garage.Bootstrapping;
 
@@ -17,6 +21,7 @@ public static class ApplicationServiceExtensions
 
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
         builder.Services.AddScoped<IGarageService, GarageService>();
+        builder.Services.AddScoped<IGarageBranchService, GarageBranchService>();
 
         builder.Services.AddHttpClient<IPaymentClient, PaymentHttpClient>(client =>
         {
@@ -25,11 +30,20 @@ public static class ApplicationServiceExtensions
                 client.BaseAddress = new Uri(baseAddress);
         });
 
-        builder.Services.AddHttpClient<IVietQRClient, VietQRHttpClient>(client =>
-        {
-            client.BaseAddress = new Uri("https://api.vietqr.io");
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-        });
+        builder.Services.AddHttpClient();
+
+        builder.Services.Configure<VietQRSettings>(
+            builder.Configuration.GetSection(VietQRSettings.SectionName));
+        builder.Services.Configure<GeocodingSettings>(
+            builder.Configuration.GetSection(GeocodingSettings.SectionName));
+
+        builder.Services.AddScoped<IBusinessLookupService, VietQRBusinessLookupService>();
+
+        var geocodingApiKey = builder.Configuration.GetSection(GeocodingSettings.SectionName)["ApiKey"];
+        if (!string.IsNullOrWhiteSpace(geocodingApiKey))
+            builder.Services.AddScoped<IGeocodingService, GoogleMapsGeocodingService>();
+        else
+            builder.Services.AddScoped<IGeocodingService, NominatimGeocodingService>();
 
         return builder;
     }

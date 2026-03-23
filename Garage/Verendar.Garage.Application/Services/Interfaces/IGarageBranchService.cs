@@ -1,0 +1,12 @@
+using Verendar.Garage.Application.Dtos;
+
+namespace Verendar.Garage.Application.Services.Interfaces;
+
+public interface IGarageBranchService
+{
+    Task<ApiResponse<GarageBranchResponse>> CreateBranchAsync(
+        Guid garageId,
+        Guid requestingUserId,
+        GarageBranchRequest request,
+        CancellationToken ct = default);
+}
