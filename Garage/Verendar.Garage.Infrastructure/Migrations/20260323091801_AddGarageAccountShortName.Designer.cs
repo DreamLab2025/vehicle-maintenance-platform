@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Verendar.Garage.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Verendar.Garage.Infrastructure.Data;
 namespace Verendar.Garage.Infrastructure.Migrations
 {
     [DbContext(typeof(GarageDbContext))]
-    partial class GarageDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260323091801_AddGarageAccountShortName")]
+    partial class AddGarageAccountShortName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -147,7 +150,7 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.ToTable("BookingStatusHistories");
                 });
 
-            modelBuilder.Entity("Verendar.Garage.Domain.Entities.Garage", b =>
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageAccount", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -198,7 +201,7 @@ namespace Verendar.Garage.Infrastructure.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Garages");
+                    b.ToTable("GarageAccounts");
                 });
 
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageBranch", b =>
@@ -227,7 +230,7 @@ namespace Verendar.Garage.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid>("GarageId")
+                    b.Property<Guid>("GarageAccountId")
                         .HasColumnType("uuid");
 
                     b.Property<double>("Latitude")
@@ -264,7 +267,7 @@ namespace Verendar.Garage.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GarageId");
+                    b.HasIndex("GarageAccountId");
 
                     b.ToTable("GarageBranches");
                 });
@@ -502,9 +505,9 @@ namespace Verendar.Garage.Infrastructure.Migrations
 
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageBranch", b =>
                 {
-                    b.HasOne("Verendar.Garage.Domain.Entities.Garage", "Garage")
+                    b.HasOne("Verendar.Garage.Domain.Entities.GarageAccount", "GarageAccount")
                         .WithMany("Branches")
-                        .HasForeignKey("GarageId")
+                        .HasForeignKey("GarageAccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -539,7 +542,7 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.Navigation("Address")
                         .IsRequired();
 
-                    b.Navigation("Garage");
+                    b.Navigation("GarageAccount");
                 });
 
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageProduct", b =>
@@ -615,7 +618,7 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.Navigation("StatusHistory");
                 });
 
-            modelBuilder.Entity("Verendar.Garage.Domain.Entities.Garage", b =>
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageAccount", b =>
                 {
                     b.Navigation("Branches");
                 });

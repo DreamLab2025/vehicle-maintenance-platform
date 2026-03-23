@@ -1,11 +1,12 @@
 using Verendar.Common.Jwt;
+using GarageEntity = global::Verendar.Garage.Domain.Entities.Garage;
 
 namespace Verendar.Garage.Infrastructure.Data;
 
 public class GarageDbContext(DbContextOptions<GarageDbContext> options, ICurrentUserService? currentUserService = null)
     : BaseDbContext(options, currentUserService)
 {
-    public DbSet<GarageAccount> GarageAccounts { get; set; } = null!;
+    public DbSet<GarageEntity> Garages { get; set; } = null!;
     public DbSet<GarageBranch> GarageBranches { get; set; } = null!;
     public DbSet<GarageProduct> GarageProducts { get; set; } = null!;
     public DbSet<Mechanic> Mechanics { get; set; } = null!;

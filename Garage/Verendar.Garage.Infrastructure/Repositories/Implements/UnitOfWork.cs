@@ -5,15 +5,15 @@ namespace Verendar.Garage.Infrastructure.Repositories.Implements;
 public class UnitOfWork(GarageDbContext context)
     : BaseUnitOfWork<GarageDbContext>(context), IUnitOfWork
 {
-    private IGarageAccountRepository? _garageAccounts;
+    private IGarageRepository? _garages;
     private IGarageBranchRepository? _garageBranches;
     private IGarageProductRepository? _garageProducts;
     private IMechanicRepository? _mechanics;
     private IBookingRepository? _bookings;
     private IReviewRepository? _reviews;
 
-    public IGarageAccountRepository GarageAccounts =>
-        _garageAccounts ??= new GarageAccountRepository(Context);
+    public IGarageRepository Garages =>
+        _garages ??= new GarageRepository(Context);
 
     public IGarageBranchRepository GarageBranches =>
         _garageBranches ??= new GarageBranchRepository(Context);

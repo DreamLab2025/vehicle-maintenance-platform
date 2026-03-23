@@ -4,7 +4,7 @@ namespace Verendar.Garage.Domain.Repositories.Interfaces;
 
 public interface IUnitOfWork : IBaseUnitOfWork
 {
-    IGarageAccountRepository GarageAccounts { get; }
+    IGarageRepository Garages { get; }
     IGarageBranchRepository GarageBranches { get; }
     IGarageProductRepository GarageProducts { get; }
     IMechanicRepository Mechanics { get; }

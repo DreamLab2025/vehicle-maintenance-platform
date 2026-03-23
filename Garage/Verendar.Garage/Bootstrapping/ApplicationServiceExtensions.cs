@@ -22,6 +22,12 @@ public static class ApplicationServiceExtensions
                 client.BaseAddress = new Uri(baseAddress);
         });
 
+        builder.Services.AddHttpClient<IVietQRClient, VietQRHttpClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.vietqr.io");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
+
         return builder;
     }
 
