@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+tasks:
+  #task ls
+  ls:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  #task server
+  server:
+    desc: Run all services and infrastructure via Aspire AppHost
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - dotnet run --project App/Verendar.AppHost
+
+  #task migrate:add NAME=AddFoo PROJECT=Vehicle/Verendar.Vehicle.Infrastructure STARTUP=Vehicle/Verendar.Vehicle
+  migrate:add:
+    desc: Create a new EF migration (requires NAME, PROJECT, STARTUP)
+    dir: "{{.TASKFILE_DIR}}"
+    requires:
+      vars: [NAME, PROJECT, STARTUP]
+    cmds:
+      - dotnet ef migrations add {{.NAME}} --project {{.PROJECT}} --startup-project {{.STARTUP}}
+
+  #task migrate:remove PROJECT=Vehicle/Verendar.Vehicle.Infrastructure STARTUP=Vehicle/Verendar.Vehicle
+  migrate:remove:
+    desc: Remove the last EF migration (requires PROJECT, STARTUP)
+    dir: "{{.TASKFILE_DIR}}"
+    requires:
+      vars: [PROJECT, STARTUP]
+    cmds:
+      - dotnet ef migrations remove --project {{.PROJECT}} --startup-project {{.STARTUP}}
+
+  #task docker:dev:up
+  docker:dev:up:
+    desc: Start dev stack
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - docker compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev up -d
+
+  #task docker:dev:down
+  docker:dev:down:
+    desc: Stop dev stack
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - docker compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev down
+
+  #task pull br=main
+  pull:
+    desc: Pull the latest changes from the remote repository
+    dir: "{{.TASKFILE_DIR}}"
+    requires:
+      vars: [br]
+    cmds:
+      - git pull origin {{.br}}

@@ -1,4 +1,5 @@
-# docker-compose -f docker-compose.dev.yml --env-file .env.dev up -d
+# From repo root:
+#   docker compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev up -d
 
 x-common-environment: &common-environment
   ASPNETCORE_ENVIRONMENT: Development
