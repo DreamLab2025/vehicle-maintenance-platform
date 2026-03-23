@@ -1,4 +1,5 @@
 using Verendar.Garage.Application.Dtos;
+using Verendar.Garage.Application.ExternalServices;
 using Verendar.Garage.Application.Services.Interfaces;
 
 namespace Verendar.Garage.Apis;
@@ -48,10 +49,10 @@ public static class GarageApis
 
     private static async Task<IResult> LookupBusiness(
         string taxCode,
-        IVietQRClient vietQRClient,
+        IBusinessLookupService businessLookupService,
         CancellationToken ct)
     {
-        var info = await vietQRClient.LookupBusinessAsync(taxCode.Trim(), ct);
+        var info = await businessLookupService.LookupBusinessAsync(taxCode.Trim(), ct);
 
         if (info is null)
             return ApiResponse<BusinessInfoDto>.NotFoundResponse($"Không tìm thấy doanh nghiệp với MST '{taxCode}'.").ToHttpResult();

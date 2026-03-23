@@ -6,7 +6,6 @@ public class GarageMember : BaseEntity
 {
     public Guid GarageBranchId { get; set; }
 
-    /// <summary>FK → Identity User.</summary>
     public Guid UserId { get; set; }
 
     public MemberRole Role { get; set; }

@@ -9,5 +9,6 @@ await app.MigrateDbContextAsync<GarageDbContext>();
 app.UseApplicationServices();
 
 app.MapGarageApi();
+app.MapGarageBranchApi();
 
 await app.RunAsync();
