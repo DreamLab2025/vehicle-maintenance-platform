@@ -18,6 +18,8 @@ namespace Verendar.Common.Shared
 
         public const string LocationDatabase = "location-db";
 
+        public const string GarageDatabase = "garage-db";
+
         public const string CorrelationIdHeaderName = "X-Correlation-ID";
 
         public const string CorrelationIdKey = "CorrelationId";
@@ -26,6 +28,8 @@ namespace Verendar.Common.Shared
     public enum RoleType
     {
         Admin,
-        User
+        User,
+        GarageOwner,
+        Mechanic
     }
 }

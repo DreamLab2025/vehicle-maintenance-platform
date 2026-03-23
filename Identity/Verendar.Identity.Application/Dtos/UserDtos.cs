@@ -11,4 +11,12 @@ namespace Verendar.Identity.Application.Dtos
         public List<string> Roles { get; set; } = new List<string>();
         public DateTime CreatedAt { get; set; }
     }
+
+    public record CreateMechanicRequest(
+        string FullName,
+        string Email,
+        string? PhoneNumber
+    );
+
+    public record CreateMechanicResponse(Guid UserId);
 }

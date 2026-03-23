@@ -4,5 +4,6 @@ namespace Verendar.Identity.Application.Services.Interfaces
     {
         Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(PaginationRequest paginationRequest);
         Task<ApiResponse<UserDto>> GetUserByIdAsync(Guid userId);
+        Task<ApiResponse<CreateMechanicResponse>> CreateMechanicAsync(CreateMechanicRequest request);
     }
 }
