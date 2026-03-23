@@ -14,6 +14,12 @@ namespace Verendar.Vehicle.Application.Dtos
         public int CurrentOdometer { get; set; }
     }
 
+    public class FromScanOdometerRequest
+    {
+        public Guid MediaFileId { get; set; }
+        public int ConfirmedOdometer { get; set; }
+    }
+
     public class UpdateOdometerResponse
     {
         public Guid UserVehicleId { get; set; }

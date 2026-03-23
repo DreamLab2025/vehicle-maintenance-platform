@@ -72,6 +72,7 @@ namespace Verendar.Media.Bootstrapping
             app.UseHttpsRedirection();
 
             app.MapMediaFileApi();
+            app.MapInternalMediaApi();
 
             return app;
         }

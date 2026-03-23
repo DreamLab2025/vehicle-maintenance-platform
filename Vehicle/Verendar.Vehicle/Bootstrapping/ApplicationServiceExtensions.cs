@@ -8,6 +8,7 @@ using Verendar.ServiceDefaults;
 using Verendar.Vehicle.Application.Validators;
 using Verendar.Vehicle.Apis;
 using Verendar.Vehicle.Application.Services.Implements;
+using Verendar.Vehicle.Infrastructure.Services;
 using Verendar.Vehicle.Infrastructure.Clients;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 using Verendar.Vehicle.Infrastructure.Data;
@@ -68,6 +69,7 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IPartCategoryService, PartCategoryService>();
             builder.Services.AddScoped<IPartProductService, PartProductService>();
             builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
+            builder.Services.AddScoped<IMaintenanceExportService, MaintenanceExportService>();
 
             // FluentValidation
             builder.Services.AddValidatorsFromAssemblyContaining<UserVehicleRequestValidator>();

@@ -9,5 +9,6 @@ namespace Verendar.Ai.Domain.Enums
         GenerateAudio = 3,
         GenerateVideo = 4,
         GenerateCode = 5,
+        ReadOdometerFromImage = 6,
     }
 }

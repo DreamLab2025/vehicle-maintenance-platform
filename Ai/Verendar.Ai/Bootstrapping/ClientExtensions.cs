@@ -20,6 +20,15 @@ namespace Verendar.Ai.Bootstrapping
             .AddHttpMessageHandler<ForwardAuthorizationHandler>()
             .AddPolicyHandler(GetResiliencePolicy());
 
+            builder.Services.AddHttpClient<IMediaServiceClient, MediaServiceClient>(client =>
+            {
+                var baseUrl = builder.Configuration["MediaService:BaseUrl"]
+                    ?? builder.Configuration["Services:Media:BaseUrl"];
+                client.BaseAddress = new Uri(baseUrl);
+                client.Timeout = TimeSpan.FromSeconds(30);
+            })
+            .AddPolicyHandler(GetResiliencePolicy());
+
             return builder;
         }
 
