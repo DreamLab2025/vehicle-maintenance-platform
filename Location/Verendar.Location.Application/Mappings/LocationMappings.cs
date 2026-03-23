@@ -9,7 +9,9 @@ public static class LocationMappings
             Code = entity.Code,
             Name = entity.Name,
             AdministrativeRegionId = entity.AdministrativeRegionId,
-            AdministrativeRegionName = entity.AdministrativeRegion?.Name ?? string.Empty
+            AdministrativeRegionName = entity.AdministrativeRegion?.Name ?? string.Empty,
+            AdministrativeUnitId = entity.AdministrativeUnitId,
+            AdministrativeUnitName = entity.AdministrativeUnit?.Name ?? string.Empty
         };
     }
 

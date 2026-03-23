@@ -4,18 +4,14 @@ public static class CacheKeys
 {
     private const string LocationPrefix = "location";
 
-    // Provinces
-    public const string ProvincesAll = $"{LocationPrefix}:provinces:all";
-    public static string ProvinceByCode(string code) => $"{LocationPrefix}:provinces:{code}";
-    public static string WardsOfProvince(string provinceCode) => $"{LocationPrefix}:provinces:{provinceCode}:wards";
+    /// <summary>Increment when cached JSON shape changes so stale Redis entries are not deserialized.</summary>
+    private const string SchemaVersion = "v2";
 
-    // Wards
-    public static string WardByCode(string code) => $"{LocationPrefix}:wards:{code}";
-
-    // Administrative Units & Regions
+    public const string ProvincesAll = $"{LocationPrefix}:provinces:{SchemaVersion}";
+    public static string ProvinceByCode(string code) => $"{LocationPrefix}:provinces:{code}:{SchemaVersion}";
+    public static string WardsOfProvince(string provinceCode) => $"{LocationPrefix}:provinces:{provinceCode}:wards:{SchemaVersion}";
+    public static string WardByCode(string code) => $"{LocationPrefix}:wards:{code}:{SchemaVersion}";
     public const string AdministrativeUnitsAll = $"{LocationPrefix}:administrative-units";
     public const string AdministrativeRegionsAll = $"{LocationPrefix}:administrative-regions";
-
-    // Cache Duration
     public static readonly TimeSpan DefaultCacheDuration = TimeSpan.FromHours(24);
 }

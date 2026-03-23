@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Verendar.Common.Caching;
 using Verendar.Common.Shared;
 using Verendar.Identity.Application.Dtos;
-using Verendar.Identity.Application.Helpers;
 using Verendar.Identity.Application.Mappings;
 using Verendar.Identity.Application.Services.Interfaces;
 using Verendar.Identity.Domain.Repositories.Interfaces;
@@ -49,14 +48,14 @@ namespace Verendar.Identity.Application.Services.Implements
             await _unitOfWork.SaveChangesAsync();
 
             var otpCode = GetOtpCode();
-            await _cacheService.SetAsync($"otp_register:{email}", otpCode, TimeSpan.FromMinutes(5));
+            await _cacheService.SetAsync(CacheKeys.OtpRegister(email), otpCode, CacheKeys.OtpTtl);
 
             await _publishEndpoint.Publish(new OtpRequestedEvent
             {
                 UserId = user.Id,
                 TargetValue = user.Email,
                 Otp = otpCode,
-                ExpiryTime = DateTime.UtcNow.AddMinutes(5),
+                ExpiryTime = DateTime.UtcNow.Add(CacheKeys.OtpTtl),
                 Type = OtpType.Email
             });
 
@@ -186,7 +185,7 @@ namespace Verendar.Identity.Application.Services.Implements
         public async Task<ApiResponse<bool>> VerifyRegisterOtpAsync(VerifyOtpRequest request)
         {
             var email = EmailHelper.Normalize(request.Email);
-            var cacheKey = $"otp_register:{email}";
+            var cacheKey = CacheKeys.OtpRegister(email);
             var storedOtp = await _cacheService.GetAsync<string>(cacheKey);
 
             if (string.IsNullOrEmpty(storedOtp))
@@ -252,8 +251,8 @@ namespace Verendar.Identity.Application.Services.Implements
                 return ApiResponse<bool>.SuccessResponse(true, "Tài khoản đã được kích hoạt trước đó.");
             }
 
-            var lockKey = $"otp_resend_lock:{email}";
-            var lockAcquired = await _cacheService.SetIfNotExistsAsync(lockKey, true, TimeSpan.FromSeconds(60));
+            var lockKey = CacheKeys.OtpResendLock(email);
+            var lockAcquired = await _cacheService.SetIfNotExistsAsync(lockKey, true, CacheKeys.OtpActionLockTtl);
             if (!lockAcquired)
             {
                 _logger.LogWarning("Resend OTP: rate limited {Email}", email);
@@ -261,14 +260,14 @@ namespace Verendar.Identity.Application.Services.Implements
             }
 
             var otpCode = GetOtpCode();
-            await _cacheService.SetAsync($"otp_register:{email}", otpCode, TimeSpan.FromMinutes(5));
+            await _cacheService.SetAsync(CacheKeys.OtpRegister(email), otpCode, CacheKeys.OtpTtl);
 
             await _publishEndpoint.Publish(new OtpRequestedEvent
             {
                 UserId = user.Id,
                 TargetValue = user.Email,
                 Otp = otpCode,
-                ExpiryTime = DateTime.UtcNow.AddMinutes(5),
+                ExpiryTime = DateTime.UtcNow.Add(CacheKeys.OtpTtl),
                 Type = OtpType.Email
             });
 
@@ -278,8 +277,8 @@ namespace Verendar.Identity.Application.Services.Implements
         public async Task<ApiResponse<bool>> ForgotPasswordAsync(ForgotPasswordRequest request)
         {
             var email = EmailHelper.Normalize(request.Email);
-            var lockKey = $"otp_forgot_lock:{email}";
-            var lockAcquired = await _cacheService.SetIfNotExistsAsync(lockKey, true, TimeSpan.FromSeconds(60));
+            var lockKey = CacheKeys.OtpForgotLock(email);
+            var lockAcquired = await _cacheService.SetIfNotExistsAsync(lockKey, true, CacheKeys.OtpActionLockTtl);
             if (!lockAcquired)
             {
                 _logger.LogWarning("Forgot password: rate limited {Email}", email);
@@ -294,14 +293,14 @@ namespace Verendar.Identity.Application.Services.Implements
             }
 
             var otpCode = GetOtpCode();
-            await _cacheService.SetAsync($"otp_forgot:{email}", otpCode, TimeSpan.FromMinutes(5));
+            await _cacheService.SetAsync(CacheKeys.OtpForgot(email), otpCode, CacheKeys.OtpTtl);
 
             await _publishEndpoint.Publish(new OtpRequestedEvent
             {
                 UserId = user.Id,
                 TargetValue = user.Email,
                 Otp = otpCode,
-                ExpiryTime = DateTime.UtcNow.AddMinutes(5),
+                ExpiryTime = DateTime.UtcNow.Add(CacheKeys.OtpTtl),
                 Type = OtpType.Email
             });
 
@@ -311,7 +310,7 @@ namespace Verendar.Identity.Application.Services.Implements
         public async Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordRequest request)
         {
             var email = EmailHelper.Normalize(request.Email);
-            var cacheKey = $"otp_forgot:{email}";
+            var cacheKey = CacheKeys.OtpForgot(email);
             var storedOtp = await _cacheService.GetAsync<string>(cacheKey);
 
             if (string.IsNullOrEmpty(storedOtp) || storedOtp != request.OtpCode)

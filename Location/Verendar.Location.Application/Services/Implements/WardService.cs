@@ -19,7 +19,10 @@ public class WardService(ILogger<WardService> logger, IUnitOfWork unitOfWork, IC
 
             var ward = await unitOfWork.Wards.GetByCodeAsync(code);
             if (ward == null)
+            {
+                logger.LogWarning("GetWardByCode: not found {Code}", code);
                 return ApiResponse<WardResponse>.NotFoundResponse("Phường/xã không tồn tại");
+            }
 
             var response = ward.ToResponse();
             await cacheService.SetAsync(cacheKey, response, CacheKeys.DefaultCacheDuration);
@@ -27,7 +30,7 @@ public class WardService(ILogger<WardService> logger, IUnitOfWork unitOfWork, IC
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting ward by code: {Code}", code);
+            logger.LogError(ex, "GetWardByCode: failed for {Code}", code);
             return ApiResponse<WardResponse>.FailureResponse("Lỗi khi lấy thông tin phường/xã");
         }
     }

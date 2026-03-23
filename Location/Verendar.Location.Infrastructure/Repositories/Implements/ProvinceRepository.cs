@@ -11,6 +11,7 @@ public class ProvinceRepository(LocationDbContext context) : IProvinceRepository
     {
         return await _context.Provinces
             .Include(p => p.AdministrativeRegion)
+            .Include(p => p.AdministrativeUnit)
             .FirstOrDefaultAsync(p => p.Code == code);
     }
 
@@ -18,6 +19,7 @@ public class ProvinceRepository(LocationDbContext context) : IProvinceRepository
     {
         return await _context.Provinces
             .Include(p => p.AdministrativeRegion)
+            .Include(p => p.AdministrativeUnit)
             .ToListAsync();
     }
 
@@ -25,6 +27,7 @@ public class ProvinceRepository(LocationDbContext context) : IProvinceRepository
     {
         return await _context.Provinces
             .Include(p => p.AdministrativeRegion)
+            .Include(p => p.AdministrativeUnit)
             .Where(p => p.AdministrativeRegionId == regionId)
             .ToListAsync();
     }

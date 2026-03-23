@@ -24,7 +24,7 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting all provinces");
+            logger.LogError(ex, "GetAllProvinces: failed");
             return ApiResponse<List<ProvinceResponse>>.FailureResponse("Lỗi khi lấy danh sách tỉnh");
         }
     }
@@ -40,7 +40,10 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
 
             var province = await unitOfWork.Provinces.GetByCodeAsync(code);
             if (province == null)
+            {
+                logger.LogWarning("GetProvinceByCode: not found {Code}", code);
                 return ApiResponse<ProvinceResponse>.NotFoundResponse("Tỉnh không tồn tại");
+            }
 
             var response = province.ToResponse();
             await cacheService.SetAsync(cacheKey, response, CacheKeys.DefaultCacheDuration);
@@ -48,7 +51,7 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting province by code: {Code}", code);
+            logger.LogError(ex, "GetProvinceByCode: failed for {Code}", code);
             return ApiResponse<ProvinceResponse>.FailureResponse("Lỗi khi lấy thông tin tỉnh");
         }
     }
@@ -57,12 +60,19 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
     {
         try
         {
-            var cacheKey = CacheKeys.WardsOfProvince(provinceCode);
+            var province = await unitOfWork.Provinces.GetByCodeAsync(provinceCode);
+            if (province == null)
+            {
+                logger.LogWarning("GetWardsByProvince: province not found {ProvinceCode}", provinceCode);
+                return ApiResponse<List<WardResponse>>.NotFoundResponse("Tỉnh không tồn tại");
+            }
+
+            var cacheKey = CacheKeys.WardsOfProvince(province.Code);
             var cached = await cacheService.GetAsync<List<WardResponse>>(cacheKey);
             if (cached != null)
                 return ApiResponse<List<WardResponse>>.SuccessResponse(cached, "Lấy danh sách phường/xã thành công");
 
-            var wards = await unitOfWork.Wards.GetByProvinceCodeAsync(provinceCode);
+            var wards = await unitOfWork.Wards.GetByProvinceCodeAsync(province.Code);
             var response = wards.Select(w => w.ToResponse()).ToList();
 
             await cacheService.SetAsync(cacheKey, response, CacheKeys.DefaultCacheDuration);
@@ -70,7 +80,7 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting wards for province: {ProvinceCode}", provinceCode);
+            logger.LogError(ex, "GetWardsByProvince: failed for {ProvinceCode}", provinceCode);
             return ApiResponse<List<WardResponse>>.FailureResponse("Lỗi khi lấy danh sách phường/xã");
         }
     }

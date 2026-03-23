@@ -24,7 +24,7 @@ public class AdministrativeRegionService(ILogger<AdministrativeRegionService> lo
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting administrative regions");
+            logger.LogError(ex, "GetAdministrativeRegions: failed");
             return ApiResponse<List<AdministrativeRegionResponse>>.FailureResponse("Lỗi khi lấy danh sách vùng miền");
         }
     }

@@ -5,7 +5,9 @@ public class ProvinceResponse
     public string Code { get; set; } = null!;
     public string Name { get; set; } = null!;
     public int AdministrativeRegionId { get; set; }
-    public string? AdministrativeRegionName { get; set; }
+    public string AdministrativeRegionName { get; set; } = string.Empty;
+    public int AdministrativeUnitId { get; set; }
+    public string AdministrativeUnitName { get; set; } = string.Empty;
 }
 
 public class WardResponse
@@ -13,9 +15,9 @@ public class WardResponse
     public string Code { get; set; } = null!;
     public string Name { get; set; } = null!;
     public string ProvinceCode { get; set; } = null!;
-    public string? ProvinceName { get; set; }
+    public string ProvinceName { get; set; } = string.Empty;
     public int AdministrativeUnitId { get; set; }
-    public string? AdministrativeUnitName { get; set; }
+    public string AdministrativeUnitName { get; set; } = string.Empty;
 }
 
 public class AdministrativeUnitResponse

@@ -24,7 +24,7 @@ public class AdministrativeUnitService(ILogger<AdministrativeUnitService> logger
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting administrative units");
+            logger.LogError(ex, "GetAdministrativeUnits: failed");
             return ApiResponse<List<AdministrativeUnitResponse>>.FailureResponse("Lỗi khi lấy danh sách loại đơn vị");
         }
     }

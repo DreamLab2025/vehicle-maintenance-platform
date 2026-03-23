@@ -18,8 +18,14 @@ public class ProvinceConfiguration : IEntityTypeConfiguration<Province>
             .HasForeignKey(e => e.AdministrativeRegionId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(e => e.AdministrativeUnit)
+            .WithMany()
+            .HasForeignKey(e => e.AdministrativeUnitId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // Indexes for performance
         builder.HasIndex(e => e.AdministrativeRegionId);
+        builder.HasIndex(e => e.AdministrativeUnitId);
         builder.HasIndex(e => e.Name);
     }
 }

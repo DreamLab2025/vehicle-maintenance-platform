@@ -1,9 +1,3 @@
-using Verendar.Location.Bootstrapping;
-using Verendar.Location.Infrastructure.Data;
-using Verendar.Location.Infrastructure.Data.Seeders;
-using Verendar.ServiceDefaults;
-using Verendar.DatabaseMigrationHelpers;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddApplicationServices();

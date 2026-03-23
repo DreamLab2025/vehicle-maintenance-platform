@@ -78,9 +78,6 @@ public static class SlugUtils
         throw new InvalidOperationException("Could not allocate a unique slug after many attempts.");
     }
 
-    /// <summary>
-    /// Async variant of <see cref="EnsureUnique"/> for database checks.
-    /// </summary>
     public static async Task<string> EnsureUniqueAsync(
         string? baseSlug,
         Func<string, Task<bool>> isTakenAsync,

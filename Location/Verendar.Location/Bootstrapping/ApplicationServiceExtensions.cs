@@ -1,34 +1,19 @@
 namespace Verendar.Location.Bootstrapping;
 
-using Verendar.Location.Application.Services.Implements;
-using Verendar.Location.Application.Services.Interfaces;
-using Verendar.Location.Apis;
-using Verendar.Location.Infrastructure.Data;
-using Verendar.Location.Infrastructure.Repositories.Implements;
-using Verendar.Location.Domain.Repositories.Interfaces;
-using Verendar.Common.Bootstrapping;
-using Verendar.ServiceDefaults;
-
 public static class ApplicationServiceExtensions
 {
     public static IHostApplicationBuilder AddApplicationServices(this IHostApplicationBuilder builder)
     {
         builder.AddServiceDefaults();
 
-        const string locationDb = "location-db";
-        builder.AddPostgresDatabase<LocationDbContext>(locationDb);
+        builder.AddCommonService();
 
-        var serviceName = "location-service";
-        builder.AddServiceRedis(serviceName);
+        builder.AddPostgresDatabase<LocationDbContext>(Const.LocationDatabase);
 
-        // Swagger
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
+        builder.AddServiceRedis(nameof(Location), connectionName: Const.Redis);
 
-        // UnitOfWork
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        // Services
         builder.Services.AddScoped<IProvinceService, ProvinceService>();
         builder.Services.AddScoped<IWardService, WardService>();
         builder.Services.AddScoped<IAdministrativeUnitService, AdministrativeUnitService>();
@@ -41,10 +26,11 @@ public static class ApplicationServiceExtensions
     {
         app.MapDefaultEndpoints();
 
+        app.UseCommonService();
+
         if (app.Environment.IsDevelopment())
         {
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            app.MapOpenApi();
         }
 
         app.UseHttpsRedirection();

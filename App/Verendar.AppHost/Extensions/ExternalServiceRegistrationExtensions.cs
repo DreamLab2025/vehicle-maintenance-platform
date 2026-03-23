@@ -100,8 +100,10 @@ namespace Verendar.AppHost.Extensions
             var locationService = builder.AddProject<Projects.Verendar_Location>("Verendar-location")
                 .WithReference(locationDb)
                 .WithReference(redis)
+                .WithReference(rabbitMq)
                 .WaitFor(postgres)
-                .WaitFor(redis);
+                .WaitFor(redis)
+                .WaitFor(rabbitMq);
 
 
             var apiGateway = builder.AddYarp("api-gateway")

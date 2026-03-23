@@ -18,7 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Verendar.Location.Application\Verendar.Location.Application.csproj" />
     <ProjectReference Include="..\Verendar.Location.Domain\Verendar.Location.Domain.csproj" />
   </ItemGroup>
 

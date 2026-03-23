@@ -39,7 +39,8 @@ public static class LocationApis
             .WithOpenApi()
             .WithDescription("Lấy danh sách tất cả phường/xã thuộc một tỉnh/thành phố")
             .WithSummary("Danh sách phường/xã theo tỉnh")
-            .Produces<ApiResponse<List<WardResponse>>>(200);
+            .Produces<ApiResponse<List<WardResponse>>>(200)
+            .Produces<ApiResponse<List<WardResponse>>>(404);
 
         group.MapGet("/wards/{code}", GetWardByCode)
             .WithName("GetWardByCode")
@@ -52,7 +53,7 @@ public static class LocationApis
         group.MapGet("/administrative-units", GetAdministrativeUnits)
             .WithName("GetAdministrativeUnits")
             .WithOpenApi()
-            .WithDescription("Lấy danh sách các loại đơn vị hành chính (Tỉnh, Quận, Huyện, v.v.)")
+            .WithDescription("Lấy danh sách nhãn loại đơn vị hành chính.")
             .WithSummary("Danh sách loại đơn vị hành chính")
             .Produces<ApiResponse<List<AdministrativeUnitResponse>>>(200);
 
