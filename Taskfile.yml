@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+tasks:
+  ls:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  server:
+    desc: Run all services and infrastructure via Aspire AppHost
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - dotnet run --project App/Verendar.AppHost
+
+  migrate:add:
+    desc: Create a new EF migration (requires NAME, PROJECT, STARTUP)
+    dir: "{{.TASKFILE_DIR}}"
+    requires:
+      vars: [NAME, PROJECT, STARTUP]
+    cmds:
+      - dotnet ef migrations add {{.NAME}} --project {{.PROJECT}} --startup-project {{.STARTUP}}
+
+  migrate:remove:
+    desc: Remove the last EF migration (requires PROJECT, STARTUP)
+    dir: "{{.TASKFILE_DIR}}"
+    requires:
+      vars: [PROJECT, STARTUP]
+    cmds:
+      - dotnet ef migrations remove --project {{.PROJECT}} --startup-project {{.STARTUP}}
+
+  docker:dev:up:
+    desc: Start dev stack
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - docker compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev up -d
+
+  docker:dev:down:
+    desc: Stop dev stack
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - docker compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev down
