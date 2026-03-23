@@ -9,12 +9,22 @@ tasks:
     cmds:
       - task --list
 
-  #task server
-  server:
+  #task app:run
+  app:run:
     desc: Run all services and infrastructure via Aspire AppHost
     dir: "{{.TASKFILE_DIR}}"
     cmds:
       - dotnet run --project App/Verendar.AppHost
+
+    # task app:clean
+  app:clean:
+    desc: Remove Aspire containers and volumes
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}/docker/aspire-clean.ps1"
+        platforms: [windows]
+      - cmd: sh "{{.TASKFILE_DIR}}/docker/aspire-clean.sh"
+        platforms: [linux, darwin]
 
   #task migrate:add NAME=AddFoo PROJECT=Vehicle/Verendar.Vehicle.Infrastructure STARTUP=Vehicle/Verendar.Vehicle
   migrate:add:
@@ -54,16 +64,6 @@ tasks:
     dir: "{{.TASKFILE_DIR}}"
     cmds:
       - docker compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev down -v
-
-  # task app:clean
-  app:clean:
-    desc: Remove Aspire containers + all Aspire-related volumes
-    dir: "{{.TASKFILE_DIR}}"
-    cmds:
-      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}/docker/aspire-clean.ps1"
-        platforms: [windows]
-      - cmd: sh "{{.TASKFILE_DIR}}/docker/aspire-clean.sh"
-        platforms: [linux, darwin]
 
   #task pull br=main
   pull:

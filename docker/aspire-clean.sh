@@ -1,7 +1,3 @@
-#!/bin/sh
-# Stops/removes Aspire dev containers and all related Docker volumes (named + anonymous on those containers).
-# Stop the AppHost process (Ctrl+C) first so containers are not recreated.
-
 for c in \
   verendar-aspire-postgres verendar-aspire-rabbitmq verendar-aspire-redis \
   verendar-aspire-seq verendar-aspire-gateway verendar-aspire-pgadmin \
@@ -27,4 +23,4 @@ while [ "$i" -lt 3 ]; do
   sleep 0.4
 done
 
-echo 'Aspire Docker cleanup finished (containers + volumes). If something remains, stop AppHost and run again.'
+echo 'App cleanup finished. If something remains, stop AppHost and run again.'
