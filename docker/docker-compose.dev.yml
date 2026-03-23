@@ -20,18 +20,18 @@ x-common-environment: &common-environment
 
 x-identity-service-environment: &identity-service-environment
   ConnectionStrings__identity-db: Host=postgres;Port=5432;Database=${IDENTITY_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
 
 x-vehicle-service-environment: &vehicle-service-environment
   ConnectionStrings__vehicle-db: Host=postgres;Port=5432;Database=${VEHICLE_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
   Identity__BaseUrl: ${IDENTITY_SERVICE_BASE_URL:-http://identity-service:8080}
 
 x-media-service-environment: &media-service-environment
   ConnectionStrings__media-db: Host=postgres;Port=5432;Database=${MEDIA_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
   S3Settings__BucketName: ${MEDIA_S3_BUCKET_NAME}
   S3Settings__Region: ${MEDIA_S3_REGION:-ap-southeast-1}
@@ -41,7 +41,7 @@ x-media-service-environment: &media-service-environment
 
 x-notification-service-environment: &notification-service-environment
   ConnectionStrings__notification-db: Host=postgres;Port=5432;Database=${NOTIFICATION_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
   Resend__ApiKey: ${RESEND_API_KEY}
   Resend__FromEmail: ${RESEND_FROM_EMAIL}
@@ -56,7 +56,7 @@ x-notification-service-environment: &notification-service-environment
 
 x-ai-service-environment: &ai-service-environment
   ConnectionStrings__ai-db: Host=postgres;Port=5432;Database=${AI_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
-  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
   AiProvider: ${AI_PROVIDER:-Gemini}
   Gemini__ApiKey: ${GEMINI_API_KEY}

@@ -12,7 +12,7 @@ namespace Verendar.AppHost.Extensions
         public static IDistributedApplicationBuilder AddApplicationServices(this IDistributedApplicationBuilder builder)
         {
             var postgres = builder.AddPostgres("postgres")
-                .WithContainerName("PostgresDb")
+                .WithContainerName("verendar-aspire-postgres")
                 .WithImage("postgres", "17.4-alpine")
                 .WithImagePullPolicy(ImagePullPolicy.Missing)
                 .WithLifetime(ContainerLifetime.Persistent)
@@ -22,30 +22,32 @@ namespace Verendar.AppHost.Extensions
             {
                 postgres = postgres.WithPgAdmin(pgAdmin =>
                 {
-                    pgAdmin.WithContainerName("PgAdmin")
+                    pgAdmin.WithContainerName("verendar-aspire-pgadmin")
                         .WithHostPort(5050)
                         .WithLifetime(ContainerLifetime.Persistent);
                 });
             }
 
             var rabbitMq = builder.AddRabbitMQ("rabbitmq")
-                .WithContainerName("Rabbitmq")
+                .WithContainerName("verendar-aspire-rabbitmq")
                 .WithImageTag("3-management-alpine")
                 .WithImagePullPolicy(ImagePullPolicy.Missing)
                 .WithLifetime(ContainerLifetime.Persistent)
                 .WithManagementPlugin(15672)
                 .WithDataVolume();
 
-            var redis = builder.AddRedis("redis-cache")
+            var redis = builder.AddRedis("redis")
                 .WithImage("redis", "7.4-alpine")
                 .WithImagePullPolicy(ImagePullPolicy.Missing)
-                .WithLifetime(ContainerLifetime.Persistent);
+                .WithLifetime(ContainerLifetime.Persistent)
+                .WithContainerName("verendar-aspire-redis");
 
             var seq = builder.AddSeq("seq")
                 .WithImage("datalust/seq", "2025.2")
                 .WithImagePullPolicy(ImagePullPolicy.Missing)
                 .WithLifetime(ContainerLifetime.Persistent)
                 .WithDataVolume()
+                .WithContainerName("verendar-aspire-seq")
                 .ExcludeFromManifest();
 
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
@@ -55,7 +57,7 @@ namespace Verendar.AppHost.Extensions
             var aiDb = postgres.AddDatabase("ai-db", "Ais");
             var locationDb = postgres.AddDatabase("location-db", "Locations");
 
-            var identityService = builder.AddProject<Projects.Verendar_Identity>("Verendar-identity")
+            var identityService = builder.AddProject<Projects.Verendar_Identity>("identity-service")
                 .WithReference(identityDb)
                 .WithReference(rabbitMq)
                 .WithReference(redis);
@@ -65,7 +67,7 @@ namespace Verendar.AppHost.Extensions
                 .WaitFor(rabbitMq)
                 .WaitFor(redis);
 
-            var vehicleService = builder.AddProject<Projects.Verendar_Vehicle>("Verendar-vehicle")
+            var vehicleService = builder.AddProject<Projects.Verendar_Vehicle>("vehicle-service")
                 .WithReference(vehicleDb)
                 .WithReference(rabbitMq);
             vehicleService = vehicleService
@@ -73,7 +75,7 @@ namespace Verendar.AppHost.Extensions
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
 
-            var mediaService = builder.AddProject<Projects.Verendar_Media>("Verendar-media")
+            var mediaService = builder.AddProject<Projects.Verendar_Media>("media-service")
                 .WithReference(mediaDb)
                 .WithReference(rabbitMq);
             mediaService = mediaService
@@ -81,7 +83,7 @@ namespace Verendar.AppHost.Extensions
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
 
-            var notificationService = builder.AddProject<Projects.Verendar_Notification>("Verendar-notification")
+            var notificationService = builder.AddProject<Projects.Verendar_Notification>("notification-service")
                 .WithReference(notificationDb)
                 .WithReference(rabbitMq);
             notificationService = notificationService
@@ -89,7 +91,7 @@ namespace Verendar.AppHost.Extensions
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
 
-            var aiService = builder.AddProject<Projects.Verendar_Ai>("Verendar-ai")
+            var aiService = builder.AddProject<Projects.Verendar_Ai>("ai-service")
                 .WithReference(aiDb)
                 .WithReference(rabbitMq);
             aiService = aiService
@@ -97,7 +99,7 @@ namespace Verendar.AppHost.Extensions
                 .WaitFor(postgres)
                 .WaitFor(rabbitMq);
 
-            var locationService = builder.AddProject<Projects.Verendar_Location>("Verendar-location")
+            var locationService = builder.AddProject<Projects.Verendar_Location>("location-service")
                 .WithReference(locationDb)
                 .WithReference(redis)
                 .WithReference(rabbitMq)
@@ -107,7 +109,7 @@ namespace Verendar.AppHost.Extensions
 
 
             var apiGateway = builder.AddYarp("api-gateway")
-                .WithContainerName("ApiGateway")
+                .WithContainerName("verendar-aspire-gateway")
                 .WithHostPort(8080)
                 .WithLifetime(ContainerLifetime.Persistent)
                 .WithConfiguration(yarp =>

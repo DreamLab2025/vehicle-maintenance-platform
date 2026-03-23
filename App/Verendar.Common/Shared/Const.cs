@@ -4,7 +4,7 @@ namespace Verendar.Common.Shared
     {
         public const string RabbitMQ = "rabbitmq";
 
-        public const string Redis = "redis-cache";
+        public const string Redis = "redis";
 
         public const string IdentityDatabase = "identity-db";
 
