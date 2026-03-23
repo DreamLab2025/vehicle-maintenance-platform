@@ -1,6 +1,7 @@
 using Polly;
 using Polly.Extensions.Http;
 using Verendar.Ai.Application.Clients;
+using Verendar.Ai.Infrastructure.Clients;
 using Verendar.Common.Http;
 
 namespace Verendar.Ai.Bootstrapping

@@ -1,3 +1,4 @@
+using Verendar.Common.EndpointFilters;
 using Verendar.Common.Shared;
 
 namespace Verendar.Identity.Apis
@@ -20,6 +21,18 @@ namespace Verendar.Identity.Apis
                 .Produces<UserEmailResponse>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status404NotFound);
 
+            group.MapPost("/mechanic", CreateMechanic)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<CreateMechanicRequest>())
+                .WithName("CreateMechanicUser")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Tạo tài khoản mechanic (internal — Garage service)";
+                    return operation;
+                })
+                .Produces<CreateMechanicResponse>(StatusCodes.Status201Created)
+                .Produces(StatusCodes.Status409Conflict)
+                .Produces(StatusCodes.Status400BadRequest);
+
             return builder;
         }
 
@@ -34,6 +47,19 @@ namespace Verendar.Identity.Apis
                 return Results.NotFound();
 
             return Results.Ok(ApiResponse<UserEmailResponse>.SuccessResponse(new UserEmailResponse(email)));
+        }
+
+        private static async Task<IResult> CreateMechanic(CreateMechanicRequest request, IUserService userService)
+        {
+            var result = await userService.CreateMechanicAsync(request);
+            if (!result.IsSuccess)
+            {
+                return result.StatusCode == 409
+                    ? Results.Conflict(new { error = result.Message })
+                    : Results.Problem(result.Message, statusCode: 500);
+            }
+
+            return Results.Json(result.Data, statusCode: 201);
         }
     }
 

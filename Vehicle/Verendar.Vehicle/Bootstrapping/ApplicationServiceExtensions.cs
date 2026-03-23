@@ -8,7 +8,7 @@ using Verendar.ServiceDefaults;
 using Verendar.Vehicle.Application.Validators;
 using Verendar.Vehicle.Apis;
 using Verendar.Vehicle.Application.Services.Implements;
-using Verendar.Vehicle.Application.Clients;
+using Verendar.Vehicle.Infrastructure.Clients;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 using Verendar.Vehicle.Infrastructure.Data;
 using Verendar.Vehicle.Infrastructure.Repositories.Implements;

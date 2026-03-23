@@ -31,6 +31,8 @@ namespace Verendar.Identity.Domain.Entities
     public enum UserRole
     {
         User = 1,
-        Admin = 2
+        Admin = 2,
+        GarageOwner = 3,
+        Mechanic = 4
     }
 }
