@@ -12,6 +12,14 @@ internal static class GarageServiceResponseAssert
         response.Metadata.Should().BeNull();
     }
 
+    public static void AssertSuccessEnvelope<T>(ApiResponse<T> response, string expectedMessage)
+    {
+        response.IsSuccess.Should().BeTrue();
+        response.StatusCode.Should().Be(200);
+        response.Message.Should().Be(expectedMessage);
+        response.Data.Should().NotBeNull();
+    }
+
     public static void AssertFailureEnvelope<T>(ApiResponse<T> response, int expectedStatusCode, string expectedMessage)
     {
         response.IsSuccess.Should().BeFalse();

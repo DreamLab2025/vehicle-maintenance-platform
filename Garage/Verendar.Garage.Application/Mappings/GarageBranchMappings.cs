@@ -36,6 +36,27 @@ public static class GarageBranchMappings
         };
     }
 
+    public static GarageBranchSummaryResponse ToSummaryResponse(this GarageBranch entity)
+    {
+        return new GarageBranchSummaryResponse
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            Slug = entity.Slug,
+            Address = new AddressDto
+            {
+                ProvinceCode = entity.Address.ProvinceCode,
+                WardCode = entity.Address.WardCode,
+                HouseNumber = entity.Address.HouseNumber,
+                StreetDetail = entity.Address.StreetDetail
+            },
+            PhoneNumber = entity.PhoneNumber,
+            Latitude = entity.Latitude,
+            Longitude = entity.Longitude,
+            Status = entity.Status
+        };
+    }
+
     public static GarageBranchResponse ToResponse(this GarageBranch entity)
     {
         return new GarageBranchResponse

@@ -29,3 +29,21 @@ public class GarageResponse
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }
+
+public class GarageBranchSummaryResponse
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = null!;
+    public string Slug { get; set; } = null!;
+    public AddressDto Address { get; set; } = null!;
+    public string? PhoneNumber { get; set; }
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
+    public BranchStatus Status { get; set; }
+}
+
+public class GarageDetailResponse : GarageResponse
+{
+    public int BranchCount { get; set; }
+    public List<GarageBranchSummaryResponse> Branches { get; set; } = [];
+}

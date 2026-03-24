@@ -32,6 +32,28 @@ public class GarageService(
             "Lấy danh sách garage thành công");
     }
 
+    public async Task<ApiResponse<GarageDetailResponse>> GetMyGarageAsync(Guid ownerId, CancellationToken ct = default)
+    {
+        var garage = await _unitOfWork.Garages.GetWithBranchesAsync(g => g.OwnerId == ownerId, ct);
+
+        if (garage is null)
+            return ApiResponse<GarageDetailResponse>.NotFoundResponse("Bạn chưa đăng ký garage.");
+
+        return ApiResponse<GarageDetailResponse>.SuccessResponse(
+            garage.ToDetailResponse(), "Lấy thông tin garage thành công");
+    }
+
+    public async Task<ApiResponse<GarageDetailResponse>> GetGarageByIdAsync(Guid garageId, CancellationToken ct = default)
+    {
+        var garage = await _unitOfWork.Garages.GetWithBranchesAsync(g => g.Id == garageId, ct);
+
+        if (garage is null)
+            return ApiResponse<GarageDetailResponse>.NotFoundResponse($"Không tìm thấy garage.");
+
+        return ApiResponse<GarageDetailResponse>.SuccessResponse(
+            garage.ToDetailResponse(), "Lấy thông tin garage thành công");
+    }
+
     public async Task<ApiResponse<GarageResponse>> CreateGarageAsync(Guid ownerId, GarageRequest request)
     {
         var existing = await _unitOfWork.Garages.FindOneAsync(g => g.OwnerId == ownerId);

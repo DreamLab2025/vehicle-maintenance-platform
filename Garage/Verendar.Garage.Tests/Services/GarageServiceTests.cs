@@ -6,6 +6,7 @@ using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Domain.Entities;
 using Verendar.Garage.Domain.Enums;
+using Verendar.Garage.Domain.ValueObjects;
 using GarageEntity = Verendar.Garage.Domain.Entities.Garage;
 
 namespace Verendar.Garage.Tests.Services;
@@ -139,5 +140,106 @@ public class GarageServiceTests
         meta.TotalPages.Should().Be(0);
         meta.HasNextPage.Should().BeFalse();
         meta.HasPreviousPage.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetMyGarageAsync_WhenOwnerHasGarage_Returns200WithBranches()
+    {
+        var ownerId = Guid.NewGuid();
+        var garage = new GarageEntity
+        {
+            Id = Guid.NewGuid(),
+            OwnerId = ownerId,
+            BusinessName = "My Garage",
+            Slug = "my-garage",
+            Branches =
+            [
+                new GarageBranch { Id = Guid.NewGuid(), Name = "Branch A", Slug = "branch-a", Address = new Address { ProvinceCode = "79", WardCode = "00001", StreetDetail = "Street A" } },
+                new GarageBranch { Id = Guid.NewGuid(), Name = "Branch B", Slug = "branch-b", Address = new Address { ProvinceCode = "79", WardCode = "00002", StreetDetail = "Street B" } }
+            ]
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.Garages.Setup(r => r.GetWithBranchesAsync(
+                It.IsAny<Expression<Func<GarageEntity, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<GarageEntity, bool>> expr, CancellationToken _) =>
+                expr.Compile()(garage) ? garage : null);
+
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+
+        var result = await sut.GetMyGarageAsync(ownerId);
+
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Lấy thông tin garage thành công");
+        result.Data!.BusinessName.Should().Be("My Garage");
+        result.Data.BranchCount.Should().Be(2);
+        result.Data.Branches.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task GetMyGarageAsync_WhenOwnerHasNoGarage_Returns404()
+    {
+        var m = new GarageUnitOfWorkMock();
+        m.Garages.Setup(r => r.GetWithBranchesAsync(
+                It.IsAny<Expression<Func<GarageEntity, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GarageEntity?)null);
+
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+
+        var result = await sut.GetMyGarageAsync(Guid.NewGuid());
+
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, "Bạn chưa đăng ký garage.");
+    }
+
+    [Fact]
+    public async Task GetGarageByIdAsync_WhenGarageExists_Returns200WithBranches()
+    {
+        var garageId = Guid.NewGuid();
+        var garage = new GarageEntity
+        {
+            Id = garageId,
+            OwnerId = Guid.NewGuid(),
+            BusinessName = "Target Garage",
+            Slug = "target-garage",
+            Branches =
+            [
+                new GarageBranch { Id = Guid.NewGuid(), Name = "Main Branch", Slug = "main-branch", Address = new Address { ProvinceCode = "79", WardCode = "00001", StreetDetail = "Main Street" } }
+            ]
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.Garages.Setup(r => r.GetWithBranchesAsync(
+                It.IsAny<Expression<Func<GarageEntity, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Expression<Func<GarageEntity, bool>> expr, CancellationToken _) =>
+                expr.Compile()(garage) ? garage : null);
+
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+
+        var result = await sut.GetGarageByIdAsync(garageId);
+
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Lấy thông tin garage thành công");
+        result.Data!.Id.Should().Be(garageId);
+        result.Data.BusinessName.Should().Be("Target Garage");
+        result.Data.BranchCount.Should().Be(1);
+        result.Data.Branches.Should().HaveCount(1);
+        result.Data.Branches[0].Name.Should().Be("Main Branch");
+    }
+
+    [Fact]
+    public async Task GetGarageByIdAsync_WhenGarageNotFound_Returns404()
+    {
+        var m = new GarageUnitOfWorkMock();
+        m.Garages.Setup(r => r.GetWithBranchesAsync(
+                It.IsAny<Expression<Func<GarageEntity, bool>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GarageEntity?)null);
+
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+
+        var result = await sut.GetGarageByIdAsync(Guid.NewGuid());
+
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, "Không tìm thấy garage.");
     }
 }

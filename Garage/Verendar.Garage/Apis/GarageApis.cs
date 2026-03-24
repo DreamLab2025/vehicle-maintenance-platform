@@ -29,6 +29,28 @@ public static class GarageApis
             .Produces<ApiResponse<List<GarageResponse>>>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status401Unauthorized);
 
+        group.MapGet("/me", GetMyGarage)
+            .WithName("GetMyGarage")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Xem thông tin garage của tôi kèm danh sách chi nhánh";
+                return operation;
+            })
+            .RequireAuthorization()
+            .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/{id:guid}", GetGarageById)
+            .WithName("GetGarageById")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Xem chi tiết garage và danh sách chi nhánh";
+                return operation;
+            })
+            .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status404NotFound);
+
         group.MapGet("/business-lookup/{taxCode}", LookupBusiness)
             .WithName("LookupBusiness")
             .WithOpenApi(operation =>
@@ -63,6 +85,28 @@ public static class GarageApis
         IGarageService garageService)
     {
         var result = await garageService.GetGaragesAsync(request);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> GetMyGarage(
+        ICurrentUserService currentUserService,
+        IGarageService garageService,
+        CancellationToken ct)
+    {
+        var userId = currentUserService.UserId;
+        if (userId == Guid.Empty)
+            return Results.Unauthorized();
+
+        var result = await garageService.GetMyGarageAsync(userId, ct);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> GetGarageById(
+        Guid id,
+        IGarageService garageService,
+        CancellationToken ct)
+    {
+        var result = await garageService.GetGarageByIdAsync(id, ct);
         return result.ToHttpResult();
     }
 
