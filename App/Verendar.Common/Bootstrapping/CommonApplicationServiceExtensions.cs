@@ -192,10 +192,10 @@ namespace Verendar.Common.Bootstrapping
                 });
             });
 
-            // Configure JSON serialization for Minimal APIs to use string enums
             builder.Services.Configure<JsonOptions>(options =>
             {
                 options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                options.SerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
             });
 
             builder.AddJwtAuthentication();

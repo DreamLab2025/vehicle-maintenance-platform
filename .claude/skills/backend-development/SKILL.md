@@ -17,15 +17,15 @@ To apply standards, patterns, and conventions for the Verendar microservices bac
 
 ## References
 
-| Situation                                | When to load           | File                         |
-| ---------------------------------------- | ---------------------- | ---------------------------- |
-| New endpoint or API module               | API design, routes     | `references/api-design.md`   |
-| Where code lives, layer structure        | Architecture decisions | `references/architecture.md` |
-| SOLID, patterns, clean code, refactoring | Code quality           | `references/code-quality.md` |
-| Slow queries, N+1, caching, pagination   | Performance            | `references/performance.md`  |
-| Unit tests, coverage                     | Testing                | `references/testing.md`      |
-| Aspire orchestration, service registration, startup, database wiring | Aspire/infra | `references/aspire.md` |
-| Inter-service HTTP clients, MassTransit events, consumers | Service communication | `references/communication.md` |
+| Situation                                                            | When to load           | File                          |
+| -------------------------------------------------------------------- | ---------------------- | ----------------------------- |
+| New endpoint or API module                                           | API design, routes     | `references/api-design.md`    |
+| Where code lives, layer structure                                    | Architecture decisions | `references/architecture.md`  |
+| SOLID, patterns, clean code, refactoring                             | Code quality           | `references/code-quality.md`  |
+| Slow queries, N+1, caching, pagination                               | Performance            | `references/performance.md`   |
+| Unit tests, coverage                                                 | Testing                | `references/testing.md`       |
+| Aspire orchestration, service registration, startup, database wiring | Aspire/infra           | `references/aspire.md`        |
+| Inter-service HTTP clients, MassTransit events, consumers            | Service communication  | `references/communication.md` |
 
 ---
 
@@ -37,7 +37,8 @@ TASK?
 ├─ New feature / endpoint
 │  ├─ Where does it live?          → references/architecture.md
 │  ├─ How to structure the API?    → references/api-design.md
-│  └─ Service + validation code?   → references/code-quality.md
+│  ├─ Service + validation code?   → references/code-quality.md
+│  └─ Write tests for the service  → references/testing.md
 │
 ├─ Code review / quality check
 │  ├─ Architecture violations?     → references/architecture.md
@@ -113,6 +114,7 @@ Services: `Identity`, `Vehicle`, `Media`, `Notification`, `Ai`, `Garage`, `Payme
 5. **Always soft delete** — set `DeletedAt = DateTime.UtcNow`, never call `DbContext.Remove()`
 6. **Always paginate lists** — `PaginationRequest` + `GetPagedAsync` (exception: Location uses unbounded lists — static reference data with Redis 24h TTL)
 7. **Primary constructor** — `public class FooService(ILogger<FooService> logger, IUnitOfWork uow)` + `private readonly` fields
+8. **Tests required** — every new API endpoint must have unit tests covering its service logic. When modifying existing logic, verify and update the relevant tests. When changing structure (entity fields, response shape, layer boundaries), update the test file to match. See `references/testing.md`.
 
 ---
 
