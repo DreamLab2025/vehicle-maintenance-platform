@@ -18,6 +18,7 @@ public static class GarageBranchMappings
             {
                 ProvinceCode = request.Address.ProvinceCode,
                 WardCode = request.Address.WardCode,
+                HouseNumber = request.Address.HouseNumber,
                 StreetDetail = request.Address.StreetDetail
             },
             WorkingHours = new WorkingHours
@@ -49,6 +50,7 @@ public static class GarageBranchMappings
             {
                 ProvinceCode = entity.Address.ProvinceCode,
                 WardCode = entity.Address.WardCode,
+                HouseNumber = entity.Address.HouseNumber,
                 StreetDetail = entity.Address.StreetDetail
             },
             Latitude = entity.Latitude,

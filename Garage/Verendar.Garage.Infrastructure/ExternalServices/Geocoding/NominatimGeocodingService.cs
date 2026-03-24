@@ -27,7 +27,7 @@ public class NominatimGeocodingService(
 
             var query = Uri.EscapeDataString(address);
             var results = await client.GetFromJsonAsync<NominatimResult[]>(
-                $"/search?q={query}&format=json&limit=1", ct);
+                $"/search?q={query}&format=jsonv2&limit=1", ct);
 
             if (results is null || results.Length == 0)
             {

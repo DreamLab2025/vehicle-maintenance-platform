@@ -42,7 +42,9 @@ public class GarageBranchService(
             cancellationToken: ct);
 
         // Geocode address — soft failure (branch still saved with 0,0 if geocoding fails)
-        var geocodeQuery = $"{request.Address.StreetDetail}, Việt Nam";
+        var geocodeQuery = string.IsNullOrWhiteSpace(request.Address.HouseNumber)
+            ? $"{request.Address.StreetDetail}, Việt Nam"
+            : $"{request.Address.HouseNumber} {request.Address.StreetDetail}, Việt Nam";
         var coords = await _geocodingService.GeocodeAsync(geocodeQuery, ct);
         if (coords.HasValue)
         {
