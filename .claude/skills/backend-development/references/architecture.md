@@ -1,198 +1,200 @@
-# Architecture Reference
+# Architecture Reference — Verendar Microservices (.NET Clean Architecture)
 
-## Do / Don't
+To apply Clean Architecture within a Verendar service: 4 projects, strict layer boundaries, single direction of dependency.
 
-### Layer placement
-```csharp
-// DO — Application layer: only IUnitOfWork + ApiResponse<T>
-public class BrandService(IUnitOfWork unitOfWork) : IBrandService
-{
-    public async Task<ApiResponse<BrandResponse>> CreateBrandAsync(BrandRequest req) { ... }
-}
+**Project naming:** `Verendar.{Service}`, `Verendar.{Service}.Application`, `Verendar.{Service}.Domain`, `Verendar.{Service}.Infrastructure`.
 
-// DON'T — Application referencing EF Core or IResult
-using Microsoft.EntityFrameworkCore;   // ❌ no EF in Application
-public async Task<IResult> CreateBrandAsync(...)  // ❌ IResult belongs in the Host
+---
+
+## Layer Map & Dependency Rule
+
+```
+Verendar.{Service}              ← HTTP in/out, routing, auth, middleware, DI wiring
+  └─ depends on → Application, Infrastructure (composition root)
+
+Verendar.{Service}.Application  ← Business logic, use cases, DTOs, validators, mappings, constants
+  └─ depends on → Domain
+
+Verendar.{Service}.Infrastructure ← EF Core, DbContext, repository implementations, external services
+  └─ depends on → Application, Domain
+
+Verendar.{Service}.Domain       ← Entities, repository interfaces, enums — no external dependencies
 ```
 
-### Entity design
+**The rule:** dependencies flow inward only. Infrastructure implements Domain repository interfaces. Application calls Domain interfaces. Host calls Application interfaces and wires Infrastructure in the composition root. Nothing points outward.
+
+---
+
+## Layer Responsibilities
+
+### Domain — What exists
+
+- Entities (inherit `BaseEntity` — provides `Id`, `CreatedAt`, `UpdatedAt`, `DeletedAt`, audit fields)
+- Repository interfaces (`IGenericRepository<T>`, `IUnitOfWork`, `IXxxRepository`)
+- Enums, value objects
+- No EF Core, no DTOs, no business logic, no external references
+
 ```csharp
-// DO — inherit BaseEntity, data annotations only, navigation = null!
-public class Brand : BaseEntity
+// ✅ Inherit BaseEntity — never redeclare Id, CreatedAt, etc.
+public class GarageBranch : BaseEntity
 {
-    [Required, MaxLength(100)] public string Name { get; set; } = string.Empty;
-    public VehicleType VehicleType { get; set; } = null!;
-}
-
-// DON'T — duplicate audit fields or omit ISoftDeleteEntity
-public class Brand
-{
-    public Guid Id { get; set; }            // ❌ already in BaseEntity
-    public DateTime CreatedAt { get; set; } // ❌ already in BaseEntity
-    public bool IsDeleted { get; set; }     // ❌ use DeletedAt via BaseEntity
-}
-```
-
-### Repository interface
-```csharp
-// DO — extend IGenericRepository<T>, add only entity-specific queries
-public interface IBrandRepository : IGenericRepository<Brand>
-{
-    Task<Brand?> GetByIdWithTypesAsync(Guid id);
-}
-
-// DON'T — redeclare methods already in IGenericRepository
-public interface IBrandRepository
-{
-    Task<Brand?> GetByIdAsync(Guid id);   // ❌ already in IGenericRepository
-    Task AddAsync(Brand brand);            // ❌ already in IGenericRepository
+    public Guid GarageId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public Address Address { get; set; } = null!;      // value object
+    public Garage Garage { get; set; } = null!;        // navigation
 }
 ```
 
-### Soft delete
-```csharp
-// DO
-await _unitOfWork.Brands.DeleteAsync(id);  // sets DeletedAt = UtcNow
+### Application — What to do
 
-// DON'T
-_context.Brands.Remove(brand);             // ❌ hard delete
-brand.IsDeleted = true;                    // ❌ wrong field
+- Services: primary constructor + `ILogger<T>` + `IUnitOfWork` (± `ICacheService`, external clients)
+- Return `ApiResponse<T>` from every service method
+- DTOs: request/response shapes
+- Validators: FluentValidation structural rules
+- Mappings: static extension methods (`ToEntity()`, `ToResponse()`)
+- Constants: cache keys, app messages
+
+**Service pattern:**
+
+```csharp
+public class GarageService(
+    ILogger<GarageService> logger,
+    IUnitOfWork unitOfWork) : IGarageService
+{
+    private readonly ILogger<GarageService> _logger = logger;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+
+    public async Task<ApiResponse<GarageResponse>> CreateGarageAsync(
+        Guid ownerId, GarageRequest request, CancellationToken ct = default)
+    {
+        var existing = await _unitOfWork.Garages.FindOneAsync(g => g.OwnerId == ownerId);
+        if (existing != null)
+            return ApiResponse<GarageResponse>.ConflictResponse("Tài khoản đã có garage đăng ký");
+
+        var garage = request.ToEntity(ownerId);
+        await _unitOfWork.Garages.AddAsync(garage);
+        await _unitOfWork.SaveChangesAsync(ct);
+
+        return ApiResponse<GarageResponse>.CreatedResponse(garage.ToResponse(), "Đăng ký garage thành công");
+    }
+}
+```
+
+### Infrastructure — How to persist/communicate
+
+- EF Core `{Service}DbContext` (inherits `BaseDbContext`) + EF configurations + migrations
+- Repository implementations (inherit `PostgresRepository<T>`)
+- `UnitOfWork` implementation (lazy-initialized repo properties)
+- External services, HTTP clients, MassTransit consumers
+
+**Exception — Identity:** service implementations live in `Infrastructure/Services/` because they depend on `PasswordHasher<User>` and `IPublishEndpoint`.
+
+### Host (Verendar.{Service}) — How to expose
+
+- Endpoint classes: `{Module}Apis.cs` in `Apis/` — one class per module
+- Pattern: `MapXxxApi` → `MapXxxRoutes` → private static handlers
+- `Program.cs`: wire everything together (calls Add\* extensions from each layer)
+- Hangfire dashboard and test user seeding are guarded by `IsDevelopment()`
+
+---
+
+## What Goes Where — Quick Reference
+
+| Thing                      | Layer          | Location                                              |
+| -------------------------- | -------------- | ----------------------------------------------------- |
+| Entity class               | Domain         | `Entities/{Name}.cs`                                  |
+| Enum                       | Domain         | `Enums/{Name}.cs`                                     |
+| Repository interface       | Domain         | `Repositories/Interfaces/I{Name}Repository.cs`        |
+| IUnitOfWork                | Domain         | `Repositories/Interfaces/IUnitOfWork.cs`              |
+| Service interface          | Application    | `Services/Interfaces/I{Name}Service.cs`               |
+| Service implementation     | Application    | `Services/Implements/{Name}Service.cs`                |
+| Request/Response DTO       | Application    | `Dtos/{Name}Request.cs`, `Dtos/{Name}Response.cs`     |
+| FluentValidation validator | Application    | `Validators/{Name}Validator.cs`                       |
+| Mapping extensions         | Application    | `Mappings/{Name}MappingExtensions.cs`                 |
+| Cache key constants        | Application    | `Shared/Const/CacheKeys.cs` (or similar)              |
+| EF configuration           | Infrastructure | `Data/Configurations/{Name}Configuration.cs`          |
+| Repository implementation  | Infrastructure | `Repositories/Implements/{Name}Repository.cs`         |
+| UnitOfWork implementation  | Infrastructure | `Repositories/Implements/UnitOfWork.cs`               |
+| DbContext                  | Infrastructure | `Data/{Service}DbContext.cs` (e.g. `GarageDbContext`) |
+| Endpoint class             | Host           | `Apis/{Module}Apis.cs`                                |
+| DI registration            | each layer     | `DependencyInjection/ServiceCollectionExtensions.cs`  |
+
+---
+
+## IUnitOfWork Pattern
+
+```csharp
+// Domain/Repositories/Interfaces/IUnitOfWork.cs
+public interface IUnitOfWork : IBaseUnitOfWork
+{
+    IGarageRepository Garages { get; }
+    IGarageBranchRepository GarageBranches { get; }
+    IGarageProductRepository GarageProducts { get; }
+    IGarageMemberRepository Members { get; }
+}
+
+// Infrastructure/Repositories/Implements/UnitOfWork.cs
+public class UnitOfWork(GarageDbContext context)
+    : BaseUnitOfWork<GarageDbContext>(context), IUnitOfWork
+{
+    private IGarageRepository? _garages;
+    public IGarageRepository Garages => _garages ??= new GarageRepository(Context);
+    // ... other repos
+}
 ```
 
 ---
 
+## Boundary Rules
 
-## Project Structure
+**Domain must NOT contain:** DTOs, EF attributes (except `[Index]`), HTTP types, references to Application or Infrastructure.
+
+**Application must NOT contain:** DbContext, EF queries, HttpContext, endpoint registration, Infrastructure references.
+
+**Infrastructure must NOT contain:** Business rules, DTOs, endpoint logic.
+
+**Host must NOT contain:** Business logic, direct DbContext usage, complex data transformations.
+
+---
+
+## Checklist: Adding a New Feature
 
 ```
-Vehicle/
-├── Verendar.Vehicle/              # Host — DI wiring, endpoint mapping
-│   ├── Bootstrapping/ApplicationServiceExtensions.cs
-│   └── Apis/BrandApis.cs, TypeApis.cs, ...
-├── Verendar.Vehicle.Application/  # Services, DTOs, Mappings, Validators
-│   ├── Dtos/BrandDtos.cs
-│   ├── Mappings/BrandMappings.cs
-│   ├── Services/Interfaces/IBrandService.cs
-│   └── Services/Implements/BrandService.cs
-├── Verendar.Vehicle.Domain/       # Entities, Repository interfaces, IUnitOfWork
-│   ├── Entities/Brand.cs
-│   └── Repositories/Interfaces/IBrandRepository.cs, IUnitOfWork.cs
-└── Verendar.Vehicle.Infrastructure/ # EF Core, repo impls, UnitOfWork
-    ├── Data/VehicleDbContext.cs
-    └── Repositories/Implements/BrandRepository.cs, UnitOfWork.cs
+Domain
+[ ] Entity in Domain/Entities/{Name}.cs (inherits BaseEntity)
+[ ] Repository interface in Domain/Repositories/Interfaces/I{Name}Repository.cs
+[ ] IUnitOfWork extended with new repo property
+[ ] Enums in Domain/Enums/ if needed
+
+Application
+[ ] Service interface in Services/Interfaces/I{Name}Service.cs
+[ ] Service implementation in Services/Implements/{Name}Service.cs
+[ ] DTOs in Dtos/
+[ ] Mapping extensions in Mappings/
+[ ] Validator in Validators/
+[ ] Service registered in DependencyInjection/ServiceCollectionExtensions.cs (Scoped)
+
+Infrastructure
+[ ] EF configuration in Data/Configurations/
+[ ] Repository implementation in Repositories/Implements/{Name}Repository.cs
+[ ] DbSet added to {Service}DbContext
+[ ] UnitOfWork updated with new repo property + lazy field
+[ ] Migration: task migrate:add NAME=AddFoo PROJECT={Service}/Verendar.{Service}.Infrastructure STARTUP={Service}/Verendar.{Service}
+
+Host
+[ ] Endpoint class in Apis/{Module}Apis.cs
+[ ] Route group registered in Program.cs (app.Map{Module}Api())
 ```
 
-- Application: no EF Core, no `IResult` — only `IUnitOfWork` and `ApiResponse<T>`
-- Domain: no EF Core runtime dependencies (data annotations are fine)
-- Infrastructure: extends `PostgresRepository<T>` and `BaseUnitOfWork<TContext>` from `Verendar.Common`
+---
 
-## IUnitOfWork
+## Migration Rules
 
-```csharp
-// Domain — interface
-public interface IUnitOfWork : IBaseUnitOfWork
-{
-    IBrandRepository  Brands  { get; }
-    ITypeRepository   Types   { get; }
-    IModelRepository  Models  { get; }
-    IUserVehicleRepository UserVehicles { get; }
-    // ...
-}
+**Use the task command — never create manually:**
 
-// Infrastructure — lazy init
-public class UnitOfWork(VehicleDbContext context)
-    : BaseUnitOfWork<VehicleDbContext>(context), IUnitOfWork
-{
-    private IBrandRepository? _brands;
-    public IBrandRepository Brands => _brands ??= new BrandRepository(Context);
-    // ...
-}
+```bash
+task migrate:add NAME=InitialCreate PROJECT=Garage/Verendar.Garage.Infrastructure STARTUP=Garage/Verendar.Garage
+task migrate:remove PROJECT=Garage/Verendar.Garage.Infrastructure STARTUP=Garage/Verendar.Garage
 ```
 
-## Bootstrapping
-
-```csharp
-public static IHostApplicationBuilder AddApplicationServices(this IHostApplicationBuilder builder)
-{
-    builder.AddServiceDefaults();
-    builder.AddCommonService();
-    builder.AddPostgresDatabase<VehicleDbContext>(Const.VehicleDatabase);
-
-    builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-    builder.Services.AddScoped<IBrandService, BrandService>();
-    // ...
-    builder.Services.AddValidatorsFromAssemblyContaining<BrandRequestValidator>();
-    return builder;
-}
-
-public static WebApplication UseApplicationServices(this WebApplication app)
-{
-    app.MapDefaultEndpoints();
-    app.UseCommonService();
-
-    if (app.Environment.IsDevelopment()) app.MapOpenApi();
-    app.UseHttpsRedirection();
-
-    app.MapBrandApi();
-    app.MapTypeApi();
-    // ...
-    return app;
-}
-```
-
-## Verendar.Common Base Classes
-
-These are inherited/injected — don't reimplement them.
-
-| Class / Interface | Package | What it gives you |
-|---|---|---|
-| `BaseEntity` | `Verendar.Common` | `Id` (Guid v7), `CreatedAt/By`, `UpdatedAt/By`, `DeletedAt/By` |
-| `BaseDbContext` | `Verendar.Common` | Auto-fills audit fields on save; global `DeletedAt == null` filter |
-| `IGenericRepository<T>` | `Verendar.Common` | `GetByIdAsync`, `GetAllAsync`, `FindOneAsync`, `AddAsync`, `UpdateAsync`, `DeleteAsync`, `CountAsync`, `AsQueryable`, `GetPagedAsync` |
-| `PostgresRepository<T>` | `Verendar.Common` | Implements `IGenericRepository<T>`; `DeleteAsync` soft-deletes if entity is `ISoftDeleteEntity` |
-| `IBaseUnitOfWork` | `Verendar.Common` | `SaveChangesAsync`, `BeginTransactionAsync`, `CommitTransactionAsync`, `ExecuteInTransactionAsync` |
-| `BaseUnitOfWork<TContext>` | `Verendar.Common` | Implements `IBaseUnitOfWork` with EF execution strategy |
-| `ICacheService` | `Verendar.Common.Caching` | `GetAsync`, `SetAsync`, `SetIfNotExistsAsync`, `RemoveAsync` — keys auto-prefixed with service name |
-| `AddCommonService()` | `Verendar.Common.Bootstrapping` | CORS, rate limiting, MassTransit/RabbitMQ, JWT auth, Swagger |
-| `AddPostgresDatabase<T>()` | `Verendar.Common.Bootstrapping` | Aspire Postgres + EF Core + migrations assembly |
-| `UseCommonService()` | `Verendar.Common.Bootstrapping` | Correlation ID, request logging, exception middleware, auth/authz, rate limiter |
-
-Repo implementations extend `PostgresRepository<T>` and add only entity-specific queries:
-
-```csharp
-public class BrandRepository(VehicleDbContext context)
-    : PostgresRepository<Brand>(context), IBrandRepository
-{
-    public IQueryable<Brand> AsQueryableWithVehicleType() =>
-        _dbSet.Include(b => b.VehicleType);
-}
-```
-
-## Entity Convention
-
-Entities inherit `BaseEntity` (full audit + soft-delete fields — see table above).
-
-```csharp
-[Index(nameof(Slug), IsUnique = true)]
-public class Brand : BaseEntity
-{
-    [Required, MaxLength(100)] public string Name { get; set; } = string.Empty;
-    [Required, MaxLength(50)]  public string Slug { get; set; } = string.Empty;
-    public Guid VehicleTypeId { get; set; }
-
-    // Navigation
-    public VehicleType   VehicleType   { get; set; } = null!;
-    public List<Model>   VehicleModels { get; set; } = [];
-}
-```
-
-## New Service Checklist
-
-- [ ] 4 projects: Host, Application, Domain, Infrastructure
-- [ ] `ApplicationServiceExtensions` with `Add` + `Use` methods
-- [ ] `IUnitOfWork` in Domain, `UnitOfWork` in Infrastructure
-- [ ] `AddPostgresDatabase<TContext>()` with correct Aspire resource name
-- [ ] Services registered, validators scanned
-- [ ] Routes wired in `UseApplicationServices`
-- [ ] AppHost: add service + DB dependency + gateway route
-- [ ] `.sln` updated
+**Add migration immediately after changing the entity** — before any other entity changes. Commit the 3 generated files together: `.cs`, `.Designer.cs`, `ModelSnapshot.cs`.

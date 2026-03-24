@@ -126,7 +126,6 @@ namespace Verendar.AppHost.Extensions
                     var identityCluster = yarp.AddProjectCluster(identityService);
                     yarp.AddRoute("/api/v1/auth/{**catch-all}", identityCluster);
                     yarp.AddRoute("/api/v1/users/{**catch-all}", identityCluster);
-                    yarp.AddRoute("/api/internal/{**catch-all}", identityCluster);
 
                     var aiCluster = yarp.AddProjectCluster(aiService);
                     yarp.AddRoute("/api/v1/ai/{**catch-all}", aiCluster);

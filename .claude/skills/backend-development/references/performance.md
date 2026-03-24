@@ -1,118 +1,190 @@
-# Performance Reference
+# Performance Reference — .NET / EF Core (Verendar)
 
-## Do / Don't
+To apply query hygiene, N+1 prevention, caching, and async patterns in Verendar services.
 
-### Caching
+---
+
+## Query Hygiene
+
+### Always paginate lists
+
 ```csharp
-// DO — cache-aside: check cache first, load + store on miss
-var cached = await _cache.GetAsync<List<ProvinceResponse>>(CacheKeys.ProvincesAll);
-if (cached is not null) return ApiResponse<...>.SuccessResponse(cached, "...");
-var entities = await _unitOfWork.Provinces.GetAllAsync();
-var response = entities.Select(p => p.ToResponse()).ToList();
-await _cache.SetAsync(CacheKeys.ProvincesAll, response, CacheKeys.DefaultCacheDuration);
-
-// DON'T — cache the entity, store without TTL, or skip cache invalidation on writes
-await _cache.SetAsync(key, entities);   // ❌ cache the raw entity, not the DTO
-await _cache.SetAsync(key, response);   // ❌ no TTL means items never expire
-// forgetting:  await _cache.RemoveAsync(CacheKeys.ById(id))  after an update ❌
+// Use GetPagedAsync — never GetAllAsync on production data
+var (items, total) = await _unitOfWork.Projects.GetPagedAsync(
+    pageNumber, pageSize,
+    filter: p => p.DeletedAt == null,
+    orderBy: q => q.OrderByDescending(p => p.CreatedAt),
+    tracking: false);   // read-only → no tracking
 ```
 
-### Pagination
-```csharp
-// DO — call GetPagedAsync, normalize first
-request.Normalize();
-var (items, total) = await _unitOfWork.Brands.GetPagedAsync(request.PageNumber, request.PageSize, ...);
-return ApiResponse<...>.SuccessPagedResponse(items.Select(b => b.ToSummary()).ToList(), total, ...);
+### No-tracking for reads
 
-// DON'T — load all then slice in memory, or return unbounded lists for mutable data
-var all = await _unitOfWork.Brands.GetAllAsync();          // ❌ unbounded
-var page = all.Skip((n-1)*size).Take(size).ToList();       // ❌ slice in memory
-return ApiResponse<...>.SuccessResponse(all.Select(b => b.ToSummary()).ToList(), "..."); // ❌ unbounded response
+```csharp
+// tracking: false → EF skips change tracking → faster, less memory
+var entity = await _unitOfWork.Projects.GetByIdAsync(id, tracking: false);
+
+// tracking: true only when you need SaveChanges to auto-detect changes
+var entity = await _unitOfWork.Projects.GetByIdAsync(id, tracking: true);
+entity.Status = "active";
+await _unitOfWork.SaveChangesAsync(ct);
 ```
 
-### N+1 prevention
-```csharp
-// DO — Include in the repo method, AsNoTracking on reads
-public async Task<Brand?> GetByIdWithTypesAsync(Guid id)
-    => await _db.Brands.Include(b => b.VehicleType).AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+### Always filter soft-deleted rows
 
-// DON'T — navigate lazily or Include in the service/handler
-var brand = await _unitOfWork.Brands.GetByIdAsync(id);
-var typeName = brand.VehicleType.Name;   // ❌ lazy nav property → N+1 or NullRef
+```csharp
+filter: p => p.DeletedAt == null   // every query, without exception
 ```
 
 ---
 
-
-## Caching (Location & Identity — services with Redis)
-
-Cache-aside pattern with `ICacheService` from `Verendar.Common.Caching`.
-
-```csharp
-public async Task<ApiResponse<List<ProvinceResponse>>> GetAllProvincesAsync()
-{
-    var cached = await _cache.GetAsync<List<ProvinceResponse>>(CacheKeys.ProvincesAll);
-    if (cached is not null)
-        return ApiResponse<List<ProvinceResponse>>.SuccessResponse(cached, "...");
-
-    var entities = await _unitOfWork.Provinces.GetAllAsync();
-    var response  = entities.Select(p => p.ToResponse()).ToList();
-    await _cache.SetAsync(CacheKeys.ProvincesAll, response, CacheKeys.DefaultCacheDuration);
-    return ApiResponse<List<ProvinceResponse>>.SuccessResponse(response, "...");
-}
-```
-
-CacheKeys — use schema version suffix to auto-invalidate on DTO shape changes:
-
-```csharp
-public static class CacheKeys
-{
-    private const string Prefix  = "location";
-    private const string Version = "v2";   // bump when DTO fields change
-    public static readonly TimeSpan DefaultCacheDuration = TimeSpan.FromHours(24);
-
-    public static string ProvincesAll          => $"{Prefix}:provinces:{Version}";
-    public static string ById(string code)     => $"{Prefix}:provinces:{code}:{Version}";
-    public static string WardsOf(string code)  => $"{Prefix}:provinces:{code}:wards:{Version}";
-}
-```
-
-Invalidate on writes: `await _cache.RemoveAsync(CacheKeys.ById(id));`
-
-## Pagination (Vehicle, Identity, Media, Notification)
-
-Call `IGenericRepository<T>.GetPagedAsync` directly from the service — no custom repo wrapper needed.
-
-```csharp
-// Service
-request.Normalize();
-var (items, totalCount) = await _unitOfWork.Types.GetPagedAsync(
-    request.PageNumber,
-    request.PageSize,
-    orderBy: request.IsDescending.HasValue
-        ? (request.IsDescending.Value
-            ? q => q.OrderByDescending(t => t.CreatedAt)
-            : q => q.OrderBy(t => t.CreatedAt))
-        : null
-);
-return ApiResponse<List<TypeSummary>>.SuccessPagedResponse(
-    items.Select(t => t.ToSummary()).ToList(),
-    totalCount, request.PageNumber, request.PageSize, "...");
-```
-
-Call `request.Normalize()` first — sets sensible defaults for page/size if not provided.
-Never return unbounded lists for mutable data.
-
 ## N+1 Prevention
 
-Include navigations the `ToResponse()` needs — in the repository, not lazily.
+**The problem:** 1 query to load a list, then 1 query per item for a related entity.
+
+**Fix 1 — Eager load with Include:**
 
 ```csharp
-public async Task<Brand?> GetByIdWithTypesAsync(Guid id)
-    => await _db.Brands
-        .Include(b => b.VehicleType)
-        .AsNoTracking()
-        .FirstOrDefaultAsync(b => b.Id == id);
+var (items, total) = await _unitOfWork.Projects.GetPagedAsync(
+    pageNumber, pageSize,
+    includes: q => q.Include(p => p.Semester).Include(p => p.Members));
 ```
 
-`AsNoTracking()` on all read-only queries.
+**Fix 2 — Projection (select only what you need):**
+
+```csharp
+// Avoids loading full entity when only a few fields are needed
+var summaries = await _context.Projects
+    .Where(p => p.DeletedAt == null)
+    .Select(p => new ProjectSummaryResponse(p.Id, p.Name, p.Status))
+    .ToListAsync(ct);
+```
+
+**Fix 3 — AsQueryable() for complex joins:**
+
+```csharp
+var query = _context.Projects
+    .Where(p => p.DeletedAt == null && p.SemesterId == semesterId)
+    .Include(p => p.Members)
+    .OrderByDescending(p => p.CreatedAt);
+
+var total = await query.CountAsync(ct);
+var items = await query.Skip((page - 1) * size).Take(size).ToListAsync(ct);
+```
+
+---
+
+## Caching with ICacheService (Redis)
+
+Use cache-aside pattern. Cache stable reference data, not user-specific or security-sensitive data.
+
+**Cache key pattern** — use a static constants class with prefix + schema version:
+```csharp
+// Application/Shared/Const/CacheKeys.cs
+public static class CacheKeys
+{
+    private const string Prefix = "garage";
+    private const string SchemaVersion = "v1";
+
+    public const string AllBranches = $"{Prefix}:branches:{SchemaVersion}";
+    public static string BranchById(Guid id) => $"{Prefix}:branches:{id}:{SchemaVersion}";
+    public static readonly TimeSpan DefaultCacheDuration = TimeSpan.FromMinutes(30);
+}
+```
+
+```csharp
+// Read: check cache first, fallback to DB
+var cached = await _cache.GetAsync<List<BranchResponse>>(CacheKeys.AllBranches);
+if (cached is not null)
+    return ApiResponse<List<BranchResponse>>.SuccessResponse(cached, "Lấy danh sách thành công");
+
+var data = /* DB query */;
+await _cache.SetAsync(CacheKeys.AllBranches, data, CacheKeys.DefaultCacheDuration);
+return ApiResponse<List<BranchResponse>>.SuccessResponse(data, "Lấy danh sách thành công");
+
+// Write: always invalidate after mutation
+await _unitOfWork.SaveChangesAsync(ct);
+await _cache.RemoveAsync(CacheKeys.AllBranches);
+```
+
+**Cache-worthy:** stable reference data (Location provinces/wards — 24h TTL), semi-stable branch/product lists.
+**Do NOT cache:** OTPs, user-owned resources, booking state, anything where stale = incorrect behavior.
+
+---
+
+## Async Patterns
+
+```csharp
+// Never block the thread
+var x = task.Result;    // WRONG — deadlock risk
+var x = await task;     // correct
+
+// Always propagate CancellationToken
+Task<T> GetAsync(Guid id, CancellationToken ct = default)
+await _repo.GetAsync(id, ct);   // pass through
+
+// Parallel independent calls
+await Task.WhenAll(taskA, taskB);
+var a = await taskA; var b = await taskB;
+
+// Sequential dependent calls
+var garage = await _unitOfWork.Garages.GetByIdAsync(id, ct);
+if (garage is null) return ...;
+var branch = await _unitOfWork.GarageBranches.GetByIdAsync(garage.PrimaryBranchId, ct);
+```
+
+---
+
+## EF Core Indexes (Configurations)
+
+Always index columns used in `WHERE`, `ORDER BY`, or `JOIN`. Use partial indexes for soft-delete tables. Define indexes in `Data/Configurations/{Name}Configuration.cs`.
+
+```csharp
+// Partial index — only indexes active rows, much smaller
+builder.HasIndex(p => p.OwnerId)
+    .HasFilter("deleted_at IS NULL");
+
+// Composite index for multi-column filters
+builder.HasIndex(p => new { p.GarageId, p.Status });
+
+// Unique with exclusion of deleted rows
+builder.HasIndex(p => p.Slug)
+    .IsUnique()
+    .HasFilter("deleted_at IS NULL");
+```
+
+---
+
+## SaveChanges Discipline
+
+```csharp
+// One SaveChangesAsync per logical operation — not per entity
+await _unitOfWork.Projects.AddAsync(project);
+await _unitOfWork.Members.AddAsync(member);
+await _unitOfWork.SaveChangesAsync(ct);   // single round-trip to DB
+
+// Use transaction only when you have multiple SaveChanges calls
+await using var tx = await _unitOfWork.BeginTransactionAsync(ct);
+try {
+    await _unitOfWork.SaveChangesAsync(ct);  // step 1
+    await _unitOfWork.SaveChangesAsync(ct);  // step 2
+    await tx.CommitAsync(ct);
+} catch {
+    await tx.RollbackAsync(ct);
+    throw;
+}
+```
+
+---
+
+## Anti-Pattern Checklist
+
+| Anti-pattern                                    | Fix                             |
+| ----------------------------------------------- | ------------------------------- |
+| `GetAllAsync()` on large table                  | `GetPagedAsync()`               |
+| `tracking: true` for reads                      | `tracking: false`               |
+| Missing `DeletedAt == null` filter              | Add to every query              |
+| Loop + separate DB call per item                | `Include()` or projection       |
+| `.Result` / `.Wait()`                           | `await`                         |
+| No index on FK or filter column                 | Add in EF configuration         |
+| Cache without invalidation on write             | `RemoveAsync()` after save      |
+| Multiple `SaveChangesAsync` without transaction | Wrap in `BeginTransactionAsync` |
