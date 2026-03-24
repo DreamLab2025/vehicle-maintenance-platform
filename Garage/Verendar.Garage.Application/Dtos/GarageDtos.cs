@@ -1,4 +1,12 @@
+using Verendar.Common.Shared;
+using Verendar.Garage.Domain.Enums;
+
 namespace Verendar.Garage.Application.Dtos;
+
+public class GarageFilterRequest : PaginationRequest
+{
+    public GarageStatus? Status { get; set; }
+}
 
 public class GarageRequest
 {

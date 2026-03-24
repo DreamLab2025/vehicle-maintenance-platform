@@ -20,4 +20,20 @@ internal static class GarageServiceResponseAssert
         response.Data.Should().BeNull();
         response.Metadata.Should().BeNull();
     }
+
+    public static PagingMetadata AssertPagedSuccessEnvelope<T>(
+        ApiResponse<List<T>> response,
+        string expectedMessage,
+        int expectedItemCount,
+        int expectedTotal)
+    {
+        response.IsSuccess.Should().BeTrue();
+        response.StatusCode.Should().Be(200);
+        response.Message.Should().Be(expectedMessage);
+        response.Data.Should().HaveCount(expectedItemCount);
+        response.Metadata.Should().NotBeNull();
+        var meta = response.Metadata.Should().BeOfType<PagingMetadata>().Subject;
+        meta.TotalItems.Should().Be(expectedTotal);
+        return meta;
+    }
 }

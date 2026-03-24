@@ -18,6 +18,17 @@ public static class GarageApis
 
     public static RouteGroupBuilder MapGarageRoutes(this RouteGroupBuilder group)
     {
+        group.MapGet("/", GetGarages)
+            .WithName("GetGarages")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Lấy danh sách garage có phân trang, lọc theo trạng thái";
+                return operation;
+            })
+            .RequireAuthorization()
+            .Produces<ApiResponse<List<GarageResponse>>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized);
+
         group.MapGet("/business-lookup/{taxCode}", LookupBusiness)
             .WithName("LookupBusiness")
             .WithOpenApi(operation =>
@@ -45,6 +56,14 @@ public static class GarageApis
             .Produces(StatusCodes.Status401Unauthorized);
 
         return group;
+    }
+
+    private static async Task<IResult> GetGarages(
+        [AsParameters] GarageFilterRequest request,
+        IGarageService garageService)
+    {
+        var result = await garageService.GetGaragesAsync(request);
+        return result.ToHttpResult();
     }
 
     private static async Task<IResult> LookupBusiness(
