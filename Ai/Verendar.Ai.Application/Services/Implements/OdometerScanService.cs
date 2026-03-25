@@ -1,27 +1,17 @@
 using Verendar.Ai.Application.Dtos.OdometerScan;
+using Verendar.Ai.Application.Services.Interfaces;
+using Verendar.Ai.Domain.Enums;
 
 namespace Verendar.Ai.Application.Services.Implements
 {
     public class OdometerScanService(
-        IGenerativeAiService geminiService,
+        IGenerativeAiServiceFactory generativeAiFactory,
         IMediaServiceClient mediaServiceClient,
         ILogger<OdometerScanService> logger) : IOdometerScanService
     {
-        private readonly IGenerativeAiService _geminiService = geminiService;
+        private readonly IGenerativeAiService _generativeAiService = generativeAiFactory.Create(AiProvider.Gemini);
         private readonly IMediaServiceClient _mediaServiceClient = mediaServiceClient;
         private readonly ILogger<OdometerScanService> _logger = logger;
-
-        private const string OdometerPrompt =
-            """
-            Đây là ảnh đồng hồ tốc độ/công-tơ-mét của xe. Hãy đọc số km hiển thị trên màn hình odometer.
-            Trả về JSON theo đúng cấu trúc sau (không thêm bất kỳ văn bản nào khác):
-            {
-              "detectedOdometer": <số nguyên km, hoặc null nếu không đọc được>,
-              "confidence": "<high|medium|low>",
-              "message": "<giải thích ngắn gọn>"
-            }
-            Nếu không thể đọc được số km, trả về detectedOdometer = null và giải thích lý do trong message.
-            """;
 
         public async Task<ApiResponse<OdometerScanResponse>> ScanOdometerAsync(
             Guid userId,
@@ -35,9 +25,9 @@ namespace Verendar.Ai.Application.Services.Implements
                 return ApiResponse<OdometerScanResponse>.NotFoundResponse("Không tìm thấy ảnh. Vui lòng kiểm tra lại ID file.");
             }
 
-            var aiResult = await _geminiService.GenerateContentFromImageAsync(
+            var aiResult = await _generativeAiService.GenerateContentFromImageAsync(
                 imageUrl,
-                OdometerPrompt,
+                OdometerScanPrompt.Instructions,
                 AiOperation.ReadOdometerFromImage,
                 userId,
                 cancellationToken: cancellationToken);

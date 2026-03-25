@@ -39,7 +39,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 {
                     logger.LogError("Gemini API key is not configured");
                     return ApiResponse<GenerativeAiResponse>.FailureResponse(
-                        "AI service is not properly configured");
+                        AiExternalServiceMessages.AiNotConfigured);
                 }
 
                 var requestBody = new
@@ -105,7 +105,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                         logger.LogError(ex,
                             "Gemini API timeout - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ConfiguredTimeout: {ConfiguredTimeout}s, ElapsedTime: {ElapsedTime:F2}s, Attempt: {Attempt}",
                             selectedModel, operation, userId, _config.TimeoutSeconds, elapsedSeconds, attempt + 1);
-                        return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service request timeout");
+                        return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.AiRequestTimeout);
                     }
                     catch (HttpRequestException ex)
                     {
@@ -136,7 +136,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                     logger.LogWarning(
                         "Gemini API returned empty response - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
                         selectedModel, operation, userId);
-                    return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned empty response");
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.EmptyAiResponse);
                 }
 
                 var geminiResponse = ParseGeminiResponse(lastResponseContent, selectedModel, stopwatch.ElapsedMilliseconds);
@@ -153,7 +153,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 logger.LogError(ex,
                     "Gemini API unexpected error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ElapsedTime: {ElapsedTime}ms, ExceptionType: {ExceptionType}",
                     selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, ex.GetType().Name);
-                return ApiResponse<GenerativeAiResponse>.FailureResponse("An unexpected error occurred while calling AI service");
+                return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.UnexpectedAiError);
             }
         }
 
@@ -242,29 +242,29 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 if (string.IsNullOrWhiteSpace(_config.ApiKey))
                 {
                     logger.LogError("Gemini API key is not configured");
-                    return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service is not properly configured");
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.AiNotConfigured);
                 }
+
+                var imageFetch = await GenerativeAiImageHttp.FetchAsync(
+                    httpClientFactory,
+                    imageUrl,
+                    Math.Min(_config.TimeoutSeconds, 120),
+                    logger,
+                    "Gemini vision",
+                    cancellationToken);
+
+                if (!imageFetch.IsSuccess)
+                {
+                    if (imageFetch.IsDownloadHttpFailure)
+                        return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.ImageUrlDownloadFailed);
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.ImageUrlInvalidOrUnreachable);
+                }
+
+                var imageBytes = imageFetch.Bytes!;
+                var mimeType = imageFetch.MimeType;
 
                 var httpClient = httpClientFactory.CreateClient();
                 httpClient.Timeout = TimeSpan.FromSeconds(_config.TimeoutSeconds);
-
-                // Download image and encode to base64
-                byte[] imageBytes;
-                string mimeType;
-                try
-                {
-                    var imageResponse = await httpClient.GetAsync(imageUrl, cancellationToken);
-                    if (!imageResponse.IsSuccessStatusCode)
-                        return ApiResponse<GenerativeAiResponse>.FailureResponse("Không thể tải ảnh từ URL đã cung cấp.");
-
-                    imageBytes = await imageResponse.Content.ReadAsByteArrayAsync(cancellationToken);
-                    mimeType = imageResponse.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Failed to download image from {ImageUrl}", imageUrl);
-                    return ApiResponse<GenerativeAiResponse>.FailureResponse("Không thể tải ảnh. Vui lòng kiểm tra URL ảnh.");
-                }
 
                 var base64Image = Convert.ToBase64String(imageBytes);
 
@@ -332,7 +332,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                     {
                         stopwatch.Stop();
                         logger.LogError(ex, "Gemini multimodal API timeout - UserId: {UserId}", userId);
-                        return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service request timeout");
+                        return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.AiRequestTimeout);
                     }
                     catch (HttpRequestException ex)
                     {
@@ -370,7 +370,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
             {
                 stopwatch.Stop();
                 logger.LogError(ex, "Gemini multimodal API unexpected error - UserId: {UserId}", userId);
-                return ApiResponse<GenerativeAiResponse>.FailureResponse("An unexpected error occurred while calling AI service");
+                return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.UnexpectedAiError);
             }
         }
 

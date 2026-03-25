@@ -1,5 +1,7 @@
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Verendar.Media.Application.Configuration;
+using Verendar.Media.Application.Storage;
 using Verendar.Media.Application.IStorage;
 using Verendar.Media.Application.Mappings;
 using Verendar.Media.Application.Services.Interfaces;
@@ -11,11 +13,13 @@ namespace Verendar.Media.Application.Services.Implements
         IStorageService storageService,
         IUnitOfWork unitOfWork,
         IOptions<FileUploadConfiguration> uploadConfig,
+        IHostEnvironment hostEnvironment,
         ILogger<MediaUploadService> logger) : IMediaUploadService
     {
         private readonly IStorageService _storageService = storageService;
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly FileUploadConfiguration _uploadConfig = uploadConfig.Value;
+        private readonly IHostEnvironment _hostEnvironment = hostEnvironment;
         private readonly ILogger<MediaUploadService> _logger = logger;
 
         public async Task<ApiResponse<string>> ConfirmUploadFileAsync(Guid id, Guid userId)
@@ -187,7 +191,11 @@ namespace Verendar.Media.Application.Services.Implements
                     $"Kích thước file vượt quá giới hạn {maxSizeMB:F2} MB cho loại '{request.ContentType}'");
             }
 
-            string fileKey = GenerateFilePath(request.FileType, userId, request.FileName);
+            string fileKey = S3KeyBuilder.BuildMediaUploadKey(
+                _hostEnvironment.EnvironmentName,
+                request.FileType,
+                userId,
+                request.FileName);
             string presignedUrl;
             try
             {
@@ -207,22 +215,6 @@ namespace Verendar.Media.Application.Services.Implements
             return ApiResponse<InitUploadResponse>.SuccessResponse(
                 mediaFile.ToInitUploadResponse(presignedUrl),
                 "Khởi tạo upload thành công");
-        }
-
-        private string GenerateFilePath(FileType fileType, Guid userId, string fileName)
-        {
-            string folder = fileType switch
-            {
-                FileType.Avatar => $"users/{userId}/avatar",
-                FileType.VehicleType => "master/types",
-                FileType.VehicleBrand => "master/brands",
-                FileType.VehicleVariant => "master/variants",
-                FileType.PartCategory => "master/part-categories",
-                FileType.Other => "misc/general",
-                _ => "misc/unknown"
-            };
-
-            return $"{folder}/{Guid.NewGuid()}{Path.GetExtension(fileName).ToLower()}";
         }
     }
 }

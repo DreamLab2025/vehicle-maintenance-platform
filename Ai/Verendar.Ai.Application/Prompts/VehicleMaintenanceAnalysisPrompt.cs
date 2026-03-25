@@ -1,19 +1,21 @@
-namespace Verendar.Ai.Application.Prompts
+namespace Verendar.Ai.Application.Prompts;
+
+/// <summary>LLM instructions + JSON shape for vehicle maintenance questionnaire analysis.</summary>
+public static class VehicleMaintenanceAnalysisPrompt
 {
-    public static class PromptGenerator
+    public static string Build(
+        VehicleInfoDto vehicleInfo,
+        DefaultScheduleDto schedule,
+        IEnumerable<QuestionAnswerDto>? answers)
     {
-      public static string CreateVehicleMaintenancePrompt(
-            VehicleInfoDto vehicleInfo,
-            DefaultScheduleDto schedule,
-            IEnumerable<QuestionAnswerDto>? answers)
-      {
         var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
 
-        var scheduleBlock = $"ITEM: {{ \"Slug\": \"{schedule.PartCategorySlug}\", \"Initial_Km\": {schedule.InitialKm}, \"Interval_Km\": {schedule.KmInterval}, \"Interval_Month\": {schedule.MonthsInterval} }}";
+        var scheduleBlock =
+            $"ITEM: {{ \"Slug\": \"{schedule.PartCategorySlug}\", \"Initial_Km\": {schedule.InitialKm}, \"Interval_Km\": {schedule.KmInterval}, \"Interval_Month\": {schedule.MonthsInterval} }}";
 
         var answerBlock = (answers != null && answers.Any())
             ? string.Join("\n", answers.Where(a => !string.IsNullOrWhiteSpace(a.Value))
-                                        .Select(a => $"- User Input ({a.Question}): \"{a.Value}\""))
+                .Select(a => $"- User Input ({a.Question}): \"{a.Value}\""))
             : "No user input provided.";
 
         var vehicleName = $"{vehicleInfo.Brand} {vehicleInfo.Model}".Trim();
@@ -64,6 +66,5 @@ Kiểm tra trước khi trả về: predictedNextOdometer >= C (nếu không th�
 
 Output (JSON only, no markdown):
 {{""recommendations"":[{{""partCategorySlug"":""{schedule.PartCategorySlug}"",""lastServiceOdometer"":number|null,""lastServiceDate"":""yyyy-MM-dd""|null,""predictedNextOdometer"":number,""predictedNextDate"":""yyyy-MM-dd"",""confidenceScore"":0.4-1.0,""reasoning"":""string"",""needsImmediateAttention"":bool}}],""warnings"":[""string""]}}";
-      }
     }
 }

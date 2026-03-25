@@ -132,16 +132,16 @@ namespace Verendar.Vehicle.Infrastructure.Services
                                 }
                             });
 
-                            // Header row
-                            foreach (var c in columns)
+                            // One header row with one cell per column (QuestPDF: each Header() call is a row)
+                            table.Header(header =>
                             {
-                                table.Header(h =>
+                                foreach (var c in columns)
                                 {
-                                    h.Cell().Background(Colors.Blue.Medium)
+                                    header.Cell().Background(Colors.Blue.Medium)
                                         .Padding(4)
                                         .Text(GetColumnLabel(c)).Bold().FontColor(Colors.White).FontSize(9);
-                                });
-                            }
+                                }
+                            });
 
                             // Data rows
                             var rowIndex = 0;

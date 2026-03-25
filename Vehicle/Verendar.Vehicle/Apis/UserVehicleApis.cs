@@ -114,6 +114,18 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<StreakResponse>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/{userVehicleId:guid}/health-score", GetVehicleHealthScore)
+                .WithName("GetVehicleHealthScore")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Lấy điểm sức khỏe xe theo phụ tùng đang theo dõi";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<VehicleHealthScoreResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<VehicleHealthScoreResponse>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             group.MapPost("/{userVehicleId:guid}/apply-tracking", ApplyTrackingConfig)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<ApplyTrackingConfigRequest>())
                 .WithName("ApplyTrackingConfig")
@@ -172,6 +184,19 @@ namespace Verendar.Vehicle.Apis
                 return Results.Unauthorized();
 
             var result = await odometerHistoryService.GetVehicleStreakAsync(userId, userVehicleId);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> GetVehicleHealthScore(
+            Guid userVehicleId,
+            ICurrentUserService currentUserService,
+            IUserVehicleService vehicleService)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+                return Results.Unauthorized();
+
+            var result = await vehicleService.GetHealthScoreAsync(userId, userVehicleId);
             return result.ToHttpResult();
         }
 
