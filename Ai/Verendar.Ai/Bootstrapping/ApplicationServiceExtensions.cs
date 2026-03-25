@@ -71,6 +71,7 @@ namespace Verendar.Ai.Bootstrapping
 
             builder.Services.AddScoped<IVehicleMaintenanceAnalysisService, VehicleMaintenanceAnalysisService>();
             builder.Services.AddScoped<IOdometerScanService, OdometerScanService>();
+            builder.Services.AddScoped<IAiUsageAnalyticsService, AiUsageAnalyticsService>();
 
             return builder;
         }

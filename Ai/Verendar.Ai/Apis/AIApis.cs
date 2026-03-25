@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Application.Dtos.Health;
 using Verendar.Ai.Application.Dtos.OdometerScan;
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
@@ -59,6 +61,19 @@ namespace Verendar.Ai.Apis
                 .AllowAnonymous()
                 .Produces<HealthCheckResponse>(StatusCodes.Status200OK);
 
+            group.MapGet("/usage-stats/by-model", GetUsageStatsByModel)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<AiUsageStatsQueryRequest>())
+                .WithName("GetAiUsageStatsByModel")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Thống kê usage AI theo từng model (phân trang, lọc tên model và khoảng thời gian UTC)";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<List<AiUsageModelStatsResponse>>>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             return group;
         }
 
@@ -87,6 +102,19 @@ namespace Verendar.Ai.Apis
                 return Results.Unauthorized();
 
             var result = await odometerScanService.ScanOdometerAsync(userId, request, cancellationToken);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> GetUsageStatsByModel(
+            [AsParameters] AiUsageStatsQueryRequest query,
+            ICurrentUserService currentUserService,
+            IAiUsageAnalyticsService analyticsService,
+            CancellationToken cancellationToken)
+        {
+            if (currentUserService.UserId == Guid.Empty)
+                return Results.Unauthorized();
+
+            var result = await analyticsService.GetUsageByModelPagedAsync(query, cancellationToken);
             return result.ToHttpResult();
         }
 
