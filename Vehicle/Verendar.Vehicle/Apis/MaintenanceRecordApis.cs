@@ -70,11 +70,9 @@ namespace Verendar.Vehicle.Apis
             ICurrentUserService currentUserService,
             IMaintenanceRecordService maintenanceRecordService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await maintenanceRecordService.GetMaintenanceHistoryAsync(userId, userVehicleId);
+            var result = await maintenanceRecordService.GetMaintenanceHistoryAsync(
+                currentUserService.UserId,
+                userVehicleId);
             return result.ToHttpResult();
         }
 
@@ -84,11 +82,9 @@ namespace Verendar.Vehicle.Apis
             ICurrentUserService currentUserService,
             IMaintenanceRecordService maintenanceRecordService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await maintenanceRecordService.GetMaintenanceRecordDetailAsync(userId, maintenanceRecordId);
+            var result = await maintenanceRecordService.GetMaintenanceRecordDetailAsync(
+                currentUserService.UserId,
+                maintenanceRecordId);
             return result.ToHttpResult();
         }
 
@@ -97,11 +93,10 @@ namespace Verendar.Vehicle.Apis
             ICurrentUserService currentUserService,
             IMaintenanceRecordService maintenanceRecordService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await maintenanceRecordService.CreateMaintenanceRecordAsync(userId, request.UserVehicleId, request);
+            var result = await maintenanceRecordService.CreateMaintenanceRecordAsync(
+                currentUserService.UserId,
+                request.UserVehicleId,
+                request);
             return result.ToHttpResult();
         }
 
@@ -111,10 +106,6 @@ namespace Verendar.Vehicle.Apis
             IMaintenanceExportService maintenanceExportService,
             CancellationToken cancellationToken)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
             if (!Enum.TryParse<ExportFormat>(query.Format, ignoreCase: true, out var format))
                 return Results.BadRequest(ApiResponse<object>.FailureResponse("Định dạng không hợp lệ. Sử dụng 'pdf' hoặc 'csv'."));
 
@@ -131,7 +122,7 @@ namespace Verendar.Vehicle.Apis
                 Columns = columns
             };
 
-            var result = await maintenanceExportService.ExportAsync(userId, request, cancellationToken);
+            var result = await maintenanceExportService.ExportAsync(currentUserService.UserId, request, cancellationToken);
             if (!result.IsSuccess)
                 return result.ToHttpResult();
 

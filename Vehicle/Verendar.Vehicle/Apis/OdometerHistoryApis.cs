@@ -63,11 +63,10 @@ namespace Verendar.Vehicle.Apis
             ICurrentUserService currentUserService,
             IOdometerHistoryService odometerHistoryService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await odometerHistoryService.UpdateOdometerAsync(userId, userVehicleId, request);
+            var result = await odometerHistoryService.UpdateOdometerAsync(
+                currentUserService.UserId,
+                userVehicleId,
+                request);
             return result.ToHttpResult();
         }
 
@@ -78,11 +77,11 @@ namespace Verendar.Vehicle.Apis
             IOdometerHistoryService odometerHistoryService,
             CancellationToken cancellationToken)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await odometerHistoryService.FromScanOdometerAsync(userId, userVehicleId, request, cancellationToken);
+            var result = await odometerHistoryService.FromScanOdometerAsync(
+                currentUserService.UserId,
+                userVehicleId,
+                request,
+                cancellationToken);
             return result.ToHttpResult();
         }
 
@@ -91,12 +90,11 @@ namespace Verendar.Vehicle.Apis
             ICurrentUserService currentUserService,
             IOdometerHistoryService odometerHistoryService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
             query.Normalize();
-            var result = await odometerHistoryService.GetOdometerHistoryPagedAsync(userId, query.UserVehicleId, query);
+            var result = await odometerHistoryService.GetOdometerHistoryPagedAsync(
+                currentUserService.UserId,
+                query.UserVehicleId,
+                query);
             return result.ToHttpResult();
         }
     }

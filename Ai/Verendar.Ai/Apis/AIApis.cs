@@ -83,11 +83,10 @@ namespace Verendar.Ai.Apis
             ICurrentUserService currentUserService,
             CancellationToken cancellationToken)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await analysisService.AnalyzeQuestionnaireAsync(userId, request, cancellationToken);
+            var result = await analysisService.AnalyzeQuestionnaireAsync(
+                currentUserService.UserId,
+                request,
+                cancellationToken);
             return result.ToHttpResult();
         }
 
@@ -97,23 +96,18 @@ namespace Verendar.Ai.Apis
             ICurrentUserService currentUserService,
             CancellationToken cancellationToken)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await odometerScanService.ScanOdometerAsync(userId, request, cancellationToken);
+            var result = await odometerScanService.ScanOdometerAsync(
+                currentUserService.UserId,
+                request,
+                cancellationToken);
             return result.ToHttpResult();
         }
 
         private static async Task<IResult> GetUsageStatsByModel(
             [AsParameters] AiUsageStatsQueryRequest query,
-            ICurrentUserService currentUserService,
             IAiUsageAnalyticsService analyticsService,
             CancellationToken cancellationToken)
         {
-            if (currentUserService.UserId == Guid.Empty)
-                return Results.Unauthorized();
-
             var result = await analyticsService.GetUsageByModelPagedAsync(query, cancellationToken);
             return result.ToHttpResult();
         }

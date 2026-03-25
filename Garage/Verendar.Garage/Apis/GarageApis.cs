@@ -93,11 +93,7 @@ public static class GarageApis
         IGarageService garageService,
         CancellationToken ct)
     {
-        var userId = currentUserService.UserId;
-        if (userId == Guid.Empty)
-            return Results.Unauthorized();
-
-        var result = await garageService.GetMyGarageAsync(userId, ct);
+        var result = await garageService.GetMyGarageAsync(currentUserService.UserId, ct);
         return result.ToHttpResult();
     }
 
@@ -128,11 +124,7 @@ public static class GarageApis
         ICurrentUserService currentUserService,
         IGarageService garageService)
     {
-        var userId = currentUserService.UserId;
-        if (userId == Guid.Empty)
-            return Results.Unauthorized();
-
-        var result = await garageService.CreateGarageAsync(userId, request);
+        var result = await garageService.CreateGarageAsync(currentUserService.UserId, request);
         return result.ToHttpResult();
     }
 }

@@ -144,21 +144,13 @@ namespace Verendar.Identity.Apis
 
         private static async Task<IResult> ChangePassword(ChangePasswordRequest request, IAuthService authService, ICurrentUserService currentUserService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await authService.ChangePasswordAsync(userId, request);
+            var result = await authService.ChangePasswordAsync(currentUserService.UserId, request);
             return result.ToHttpResult();
         }
 
         private static async Task<IResult> RefreshToken(RefreshTokenRequest request, ICurrentUserService currentUser, IAuthService authService)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await authService.RefreshTokenAsync(userId, request.RefreshToken);
+            var result = await authService.RefreshTokenAsync(currentUser.UserId, request.RefreshToken);
             return result.ToHttpResult();
         }
 

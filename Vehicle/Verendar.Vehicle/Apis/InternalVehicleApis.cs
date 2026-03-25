@@ -30,11 +30,9 @@ namespace Verendar.Vehicle.Apis
             ICurrentUserService currentUserService,
             IUserVehicleService vehicleService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await vehicleService.GetUserVehicleByIdAsync(userId, userVehicleId);
+            var result = await vehicleService.GetUserVehicleByIdAsync(
+                currentUserService.UserId,
+                userVehicleId);
             return result.ToHttpResult();
         }
 
