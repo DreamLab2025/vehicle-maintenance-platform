@@ -49,6 +49,19 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<CreateRecordResponse>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapGet("/export", ExportMaintenance)
+                .WithName("ExportMaintenanceRecords")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Xuất lịch sử bảo dưỡng ra file PDF hoặc CSV";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces(StatusCodes.Status200OK)
+                .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<object>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             return group;
         }
 
@@ -90,6 +103,40 @@ namespace Verendar.Vehicle.Apis
 
             var result = await maintenanceRecordService.CreateMaintenanceRecordAsync(userId, request.UserVehicleId, request);
             return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> ExportMaintenance(
+            [AsParameters] ExportMaintenanceQueryRequest query,
+            ICurrentUserService currentUserService,
+            IMaintenanceExportService maintenanceExportService,
+            CancellationToken cancellationToken)
+        {
+            var userId = currentUserService.UserId;
+            if (userId == Guid.Empty)
+                return Results.Unauthorized();
+
+            if (!Enum.TryParse<ExportFormat>(query.Format, ignoreCase: true, out var format))
+                return Results.BadRequest(ApiResponse<object>.FailureResponse("Định dạng không hợp lệ. Sử dụng 'pdf' hoặc 'csv'."));
+
+            var columns = string.IsNullOrWhiteSpace(query.Columns)
+                ? null
+                : query.Columns.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+            var request = new ExportMaintenanceRequest
+            {
+                UserVehicleId = query.UserVehicleId,
+                Format = format,
+                From = query.From,
+                To = query.To,
+                Columns = columns
+            };
+
+            var result = await maintenanceExportService.ExportAsync(userId, request, cancellationToken);
+            if (!result.IsSuccess)
+                return result.ToHttpResult();
+
+            var (data, contentType, fileName) = result.Data!;
+            return Results.File(data, contentType, fileName);
         }
     }
 }

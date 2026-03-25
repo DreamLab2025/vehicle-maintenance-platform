@@ -156,6 +156,19 @@ namespace Verendar.Media.Application.Services.Implements
             await _unitOfWork.SaveChangesAsync();
         }
 
+        public async Task<ApiResponse<string>> GetMediaFileUrlAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var mediaFile = await _unitOfWork.MediaFileRepository.GetByIdAsync(id);
+            if (mediaFile == null || mediaFile.Status != FileStatus.Uploaded)
+            {
+                _logger.LogWarning("GetMediaFileUrl: file {FileId} not found or not uploaded", id);
+                return ApiResponse<string>.NotFoundResponse("File không tồn tại hoặc chưa được upload");
+            }
+
+            var url = _storageService.GetFilePath(mediaFile.FilePath);
+            return ApiResponse<string>.SuccessResponse(url);
+        }
+
         public async Task<ApiResponse<InitUploadResponse>> InitiateUploadAsync(InitUploadRequest request, Guid userId)
         {
             if (!_uploadConfig.IsContentTypeAllowed(request.ContentType))

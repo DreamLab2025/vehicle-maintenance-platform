@@ -303,6 +303,18 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
+        public static OdometerHistory ToPhotoInputOdometerHistory(this Guid userVehicleId, int odometerValue, int previousOdometerValue)
+        {
+            return new OdometerHistory
+            {
+                UserVehicleId = userVehicleId,
+                OdometerValue = odometerValue,
+                RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                Source = OdometerSource.PhotoInput,
+                KmOnRecordedDate = odometerValue - previousOdometerValue
+            };
+        }
+
         public static ReminderDetailDto ToReminderDetailDto(this MaintenanceReminder entity, int? vehicleCurrentOdometer = null)
         {
             var currentOdo = vehicleCurrentOdometer ?? entity.CurrentOdometer;

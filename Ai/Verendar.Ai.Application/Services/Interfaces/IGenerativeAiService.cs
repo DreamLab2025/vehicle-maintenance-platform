@@ -11,6 +11,19 @@ namespace Verendar.Ai.Application.Services.Interfaces
             int? maxTokens = null,
             decimal? temperature = null,
             decimal? topP = null);
+
+        Task<ApiResponse<GenerativeAiResponse>> GenerateContentFromImageAsync(
+            string imageUrl,
+            string prompt,
+            AiOperation operation,
+            Guid userId,
+            Guid? promptId = null,
+            string? model = null,
+            int? maxTokens = null,
+            decimal? temperature = null,
+            decimal? topP = null,
+            CancellationToken cancellationToken = default);
+
         Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default);
     }
 }

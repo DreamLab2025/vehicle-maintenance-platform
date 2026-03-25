@@ -33,6 +33,30 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
             return result;
         }
 
+        public async Task<ApiResponse<GenerativeAiResponse>> GenerateContentFromImageAsync(
+            string imageUrl,
+            string prompt,
+            AiOperation operation,
+            Guid userId,
+            Guid? promptId = null,
+            string? model = null,
+            int? maxTokens = null,
+            decimal? temperature = null,
+            decimal? topP = null,
+            CancellationToken cancellationToken = default)
+        {
+            var sw = Stopwatch.StartNew();
+            var result = await inner.GenerateContentFromImageAsync(imageUrl, prompt, operation, userId, promptId, model, maxTokens, temperature, topP, cancellationToken);
+            sw.Stop();
+
+            if (result.IsSuccess && result.Data != null)
+                await usageService.TrackSuccessAsync(userId, operation, promptId, result.Data, prompt);
+            else
+                await usageService.TrackFailedAsync(userId, provider, model ?? "default", operation, promptId, sw.ElapsedMilliseconds, result.Message ?? "Unknown error");
+
+            return result;
+        }
+
         public Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default) =>
             inner.CheckConnectivityAsync(cancellationToken);
     }

@@ -1,5 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Verendar.Ai.Apis;
+using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Services.Implements;
 using Verendar.Common.Http;
 using Verendar.Ai.Domain.Enums;
@@ -52,7 +54,21 @@ namespace Verendar.Ai.Bootstrapping
                 return new AiUsageTrackingDecorator(inner, sp.GetRequiredService<IAiUsageService>(), provider);
             });
 
+            // Keyed registration: always routes to Gemini regardless of global AiProvider config (for image tasks)
+            builder.Services.AddKeyedScoped<IGenerativeAiService>("gemini", (sp, _) =>
+                new AiUsageTrackingDecorator(
+                    sp.GetRequiredService<GeminiService>(),
+                    sp.GetRequiredService<IAiUsageService>(),
+                    AiProvider.Gemini));
+
             builder.Services.AddScoped<IVehicleMaintenanceAnalysisService, VehicleMaintenanceAnalysisService>();
+
+            // OdometerScanService always uses the keyed Gemini provider (bypasses global AiProvider config)
+            builder.Services.AddScoped<IOdometerScanService>(sp =>
+                new OdometerScanService(
+                    sp.GetRequiredKeyedService<IGenerativeAiService>("gemini"),
+                    sp.GetRequiredService<IMediaServiceClient>(),
+                    sp.GetRequiredService<ILogger<OdometerScanService>>()));
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ForwardAuthorizationHandler>();
@@ -66,6 +82,7 @@ namespace Verendar.Ai.Bootstrapping
             app.UseCommonService();
             app.UseHttpsRedirection();
             app.MapVehicleQuestionnaireApi();
+            app.MapOdometerScanApi();
             app.MapAiApi();
 
             return app;

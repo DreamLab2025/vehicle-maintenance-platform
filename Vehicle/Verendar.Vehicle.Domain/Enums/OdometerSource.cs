@@ -8,6 +8,8 @@ namespace Verendar.Vehicle.Domain.Enums
 
         GPS = 2,
 
-        ServiceRecord = 3
+        ServiceRecord = 3,
+
+        PhotoInput = 4
     }
 }

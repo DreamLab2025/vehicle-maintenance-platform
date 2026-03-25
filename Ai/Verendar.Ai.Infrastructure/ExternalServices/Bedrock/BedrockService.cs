@@ -221,6 +221,22 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
             return "Đã xảy ra lỗi khi gọi API AI. Vui lòng thử lại.";
         }
 
+        public Task<ApiResponse<GenerativeAiResponse>> GenerateContentFromImageAsync(
+            string imageUrl,
+            string prompt,
+            AiOperation operation,
+            Guid userId,
+            Guid? promptId = null,
+            string? model = null,
+            int? maxTokens = null,
+            decimal? temperature = null,
+            decimal? topP = null,
+            CancellationToken cancellationToken = default)
+        {
+            logger.LogWarning("GenerateContentFromImageAsync is not supported by Bedrock provider. Use Gemini for image tasks.");
+            return Task.FromResult(ApiResponse<GenerativeAiResponse>.FailureResponse("Image analysis is not supported by the current AI provider. Please use Gemini."));
+        }
+
         public async Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(_config.AccessKey) || string.IsNullOrWhiteSpace(_config.SecretKey))
