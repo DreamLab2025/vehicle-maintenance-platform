@@ -249,14 +249,14 @@ namespace Verendar.Garage.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -535,6 +535,10 @@ namespace Verendar.Garage.Infrastructure.Migrations
                         {
                             b1.Property<Guid>("GarageBranchId")
                                 .HasColumnType("uuid");
+
+                            b1.Property<string>("HouseNumber")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
 
                             b1.Property<string>("ProvinceCode")
                                 .IsRequired()

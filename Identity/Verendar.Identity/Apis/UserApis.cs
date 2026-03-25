@@ -51,11 +51,7 @@ namespace Verendar.Identity.Apis
 
         private static async Task<IResult> GetCurrentUser(ICurrentUserService currentUserService, IUserService userService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await userService.GetUserByIdAsync(userId);
+            var result = await userService.GetUserByIdAsync(currentUserService.UserId);
             return result.ToHttpResult();
         }
 

@@ -57,25 +57,24 @@ namespace Verendar.Media.Infrastructure.Storage
 
         public string ExtractKeyFromUrl(string url)
         {
-            if (string.IsNullOrWhiteSpace(url)) return null;
+            if (string.IsNullOrWhiteSpace(url)) return null!;
 
             try
             {
                 var uri = new Uri(url);
 
-                // Handle CloudFront URL
-                if (!string.IsNullOrWhiteSpace(_s3settings.CloudFrontUrl) &&
-                    url.StartsWith(_s3settings.CloudFrontUrl, StringComparison.OrdinalIgnoreCase))
+                var cloudFrontBase = NormalizedCloudFrontBaseUrl();
+                if (cloudFrontBase != null &&
+                    url.StartsWith(cloudFrontBase, StringComparison.OrdinalIgnoreCase))
                 {
                     return WebUtility.UrlDecode(uri.AbsolutePath.TrimStart('/'));
                 }
 
-                // Handle S3 URL
                 return WebUtility.UrlDecode(uri.AbsolutePath.TrimStart('/'));
             }
             catch
             {
-                return null;
+                return null!;
             }
         }
 
@@ -100,12 +99,30 @@ namespace Verendar.Media.Infrastructure.Storage
 
         public string GetFilePath(string fileKey)
         {
-            if (!string.IsNullOrWhiteSpace(_s3settings.CloudFrontUrl))
+            var cloudFrontBase = NormalizedCloudFrontBaseUrl();
+            if (cloudFrontBase != null)
             {
-                return $"{_s3settings.CloudFrontUrl.TrimEnd('/')}/{fileKey}";
+                return $"{cloudFrontBase}/{fileKey.TrimStart('/')}";
             }
 
             return $"https://{_s3settings.BucketName}.s3.{_s3settings.Region}.amazonaws.com/{fileKey}";
+        }
+
+        private string? NormalizedCloudFrontBaseUrl()
+        {
+            if (string.IsNullOrWhiteSpace(_s3settings.CloudFrontUrl))
+                return null;
+
+            var value = _s3settings.CloudFrontUrl.Trim();
+            if (!value.Contains("://", StringComparison.Ordinal))
+                value = "https://" + value;
+
+            value = value.TrimEnd('/');
+            if (!Uri.TryCreate(value, UriKind.Absolute, out var uri) || string.IsNullOrEmpty(uri.Host))
+                return null;
+
+            var path = uri.AbsolutePath.TrimEnd('/');
+            return $"{uri.Scheme}://{uri.Authority}{path}";
         }
     }
 }

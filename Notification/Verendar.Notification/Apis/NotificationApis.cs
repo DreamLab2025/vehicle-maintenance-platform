@@ -80,11 +80,10 @@ namespace Verendar.Notification.Apis
             [AsParameters] PaginationRequest request,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.GetInAppNotificationsForUserAsync(userId, request, cancellationToken);
+            var response = await notificationService.GetInAppNotificationsForUserAsync(
+                currentUser.UserId,
+                request,
+                cancellationToken);
             return response.ToHttpResult();
         }
 
@@ -94,11 +93,10 @@ namespace Verendar.Notification.Apis
             INotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.GetNotificationDetailForUserAsync(userId, id, cancellationToken);
+            var response = await notificationService.GetNotificationDetailForUserAsync(
+                currentUser.UserId,
+                id,
+                cancellationToken);
             return response.ToHttpResult();
         }
 
@@ -107,11 +105,7 @@ namespace Verendar.Notification.Apis
             INotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.GetStatusAsync(userId, cancellationToken);
+            var response = await notificationService.GetStatusAsync(currentUser.UserId, cancellationToken);
             return response.ToHttpResult();
         }
 
@@ -120,11 +114,7 @@ namespace Verendar.Notification.Apis
             INotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.MarkAllAsReadAsync(userId, cancellationToken);
+            var response = await notificationService.MarkAllAsReadAsync(currentUser.UserId, cancellationToken);
             return response.ToHttpResult();
         }
 
@@ -134,11 +124,7 @@ namespace Verendar.Notification.Apis
             INotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.MarkAsReadAsync(userId, id, cancellationToken);
+            var response = await notificationService.MarkAsReadAsync(currentUser.UserId, id, cancellationToken);
             return response.ToHttpResult();
         }
 
@@ -148,11 +134,7 @@ namespace Verendar.Notification.Apis
             INotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.SoftDeleteByIdAsync(userId, id, cancellationToken);
+            var response = await notificationService.SoftDeleteByIdAsync(currentUser.UserId, id, cancellationToken);
             return response.ToHttpResult();
         }
     }

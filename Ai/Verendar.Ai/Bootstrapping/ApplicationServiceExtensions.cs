@@ -1,9 +1,13 @@
-using Microsoft.Extensions.Options;
+using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
+using Verendar.Ai.Application.Validators;
 using Verendar.Ai.Apis;
+using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Services.Implements;
+using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Common.Http;
-using Verendar.Ai.Domain.Enums;
 using Verendar.Ai.Domain.Repositories.Interfaces;
+using Verendar.Ai.Infrastructure.Clients;
 using Verendar.Ai.Infrastructure.Configuration;
 using Verendar.Ai.Infrastructure.Data;
 using Verendar.Ai.Infrastructure.ExternalServices;
@@ -23,6 +27,30 @@ namespace Verendar.Ai.Bootstrapping
             builder.AddPostgresDatabase<AiDbContext>(Const.AiDatabase);
 
             builder.Services.AddHttpClient();
+
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<ForwardAuthorizationHandler>();
+
+            builder.Services.AddHttpClient<IVehicleServiceClient, VehicleServiceClient>(client =>
+            {
+                var baseUrl = builder.Configuration["VehicleService:BaseUrl"]
+                    ?? builder.Configuration["Services:Vehicle:BaseUrl"]
+                    ?? "https://localhost:8002";
+                client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+                client.Timeout = TimeSpan.FromSeconds(30);
+            })
+            .AddHttpMessageHandler<ForwardAuthorizationHandler>();
+
+            builder.Services.AddHttpClient<IMediaServiceClient, MediaServiceClient>(client =>
+            {
+                var baseUrl = builder.Configuration["MediaService:BaseUrl"]
+                    ?? builder.Configuration["Services:Media:BaseUrl"]
+                    ?? "https://localhost:8003";
+                client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
+
+            builder.Services.AddValidatorsFromAssemblyContaining<OdometerScanRequestValidator>();
             builder.Services.Configure<GeminiSettings>(
                 builder.Configuration.GetSection(GeminiSettings.SectionName));
             builder.Services.Configure<BedrockSettings>(
@@ -32,30 +60,18 @@ namespace Verendar.Ai.Bootstrapping
                 options.Provider = builder.Configuration.GetValue<string>(AiProviderOptions.ConfigKey) ?? "Gemini";
             });
 
-            builder.AddClients();
-
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IAiUsageService, AiUsageService>();
 
             builder.Services.AddScoped<GeminiService>();
             builder.Services.AddScoped<BedrockService>();
+            builder.Services.AddScoped<IGenerativeAiServiceFactory, GenerativeAiServiceFactory>();
             builder.Services.AddScoped<IGenerativeAiService>(sp =>
-            {
-                var options = sp.GetRequiredService<IOptions<AiProviderOptions>>().Value;
-                var isBedrock = (options.Provider ?? "Gemini").Trim().Equals("Bedrock", StringComparison.OrdinalIgnoreCase);
-
-                IGenerativeAiService inner = isBedrock
-                    ? sp.GetRequiredService<BedrockService>()
-                    : sp.GetRequiredService<GeminiService>();
-
-                var provider = isBedrock ? AiProvider.Bedrock : AiProvider.Gemini;
-                return new AiUsageTrackingDecorator(inner, sp.GetRequiredService<IAiUsageService>(), provider);
-            });
+                sp.GetRequiredService<IGenerativeAiServiceFactory>().CreateDefault());
 
             builder.Services.AddScoped<IVehicleMaintenanceAnalysisService, VehicleMaintenanceAnalysisService>();
-
-            builder.Services.AddHttpContextAccessor();
-            builder.Services.AddScoped<ForwardAuthorizationHandler>();
+            builder.Services.AddScoped<IOdometerScanService, OdometerScanService>();
+            builder.Services.AddScoped<IAiUsageAnalyticsService, AiUsageAnalyticsService>();
 
             return builder;
         }
@@ -65,7 +81,6 @@ namespace Verendar.Ai.Bootstrapping
             app.MapDefaultEndpoints();
             app.UseCommonService();
             app.UseHttpsRedirection();
-            app.MapVehicleQuestionnaireApi();
             app.MapAiApi();
 
             return app;

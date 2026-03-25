@@ -9,5 +9,6 @@ namespace Verendar.Media.Application.Services.Interfaces
             Guid supersededMediaFileId,
             FileType expectedFileType,
             CancellationToken cancellationToken = default);
+        Task<ApiResponse<string>> GetMediaFileUrlAsync(Guid id, CancellationToken cancellationToken = default);
     }
 }

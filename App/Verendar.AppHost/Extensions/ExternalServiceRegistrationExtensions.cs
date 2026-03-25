@@ -103,7 +103,9 @@ namespace Verendar.AppHost.Extensions
             var locationService = builder.AddProject<Projects.Verendar_Location>("location-service")
                 .WithReference(locationDb)
                 .WithReference(redis)
-                .WithReference(rabbitMq)
+                .WithReference(rabbitMq);
+            locationService = locationService
+                .WithReference(seq)
                 .WaitFor(postgres)
                 .WaitFor(redis)
                 .WaitFor(rabbitMq);
@@ -126,7 +128,6 @@ namespace Verendar.AppHost.Extensions
                     var identityCluster = yarp.AddProjectCluster(identityService);
                     yarp.AddRoute("/api/v1/auth/{**catch-all}", identityCluster);
                     yarp.AddRoute("/api/v1/users/{**catch-all}", identityCluster);
-                    yarp.AddRoute("/api/internal/{**catch-all}", identityCluster);
 
                     var aiCluster = yarp.AddProjectCluster(aiService);
                     yarp.AddRoute("/api/v1/ai/{**catch-all}", aiCluster);

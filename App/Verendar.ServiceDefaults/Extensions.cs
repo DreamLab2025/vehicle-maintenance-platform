@@ -80,12 +80,13 @@ namespace Verendar.ServiceDefaults
 
         private static TBuilder ConfigureSerilog<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
+            builder.Logging.ClearProviders();
             builder.Services.AddSerilog((services, lc) => lc
                 .ReadFrom.Configuration(builder.Configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .Enrich.WithMachineName(),
-                writeToProviders: false);
+                writeToProviders: true);
 
             return builder;
         }

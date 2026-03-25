@@ -59,7 +59,7 @@ namespace Verendar.Ai.Application.Services.Implements
             var schedule = scheduleResponse.Data;
             var defaultSchedule = schedule.ToDefaultScheduleDto(request.PartCategorySlug);
 
-            var prompt = PromptGenerator.CreateVehicleMaintenancePrompt(vehicleInfo, defaultSchedule, request.Answers);
+            var prompt = VehicleMaintenanceAnalysisPrompt.Build(vehicleInfo, defaultSchedule, request.Answers);
 
             ApiResponse<GenerativeAiResponse> aiResponse;
             try

@@ -23,6 +23,10 @@ Each service: 4 projects — `Verendar.{Service}` (Host), `.Application`, `.Doma
 Location additionally has `Verendar.Location.Tests` (unit tests — see testing patterns below).
 Special: `Verendar.Identity.Contracts` and `Verendar.Vehicle.Contracts` hold shared MassTransit event contracts.
 
+Shared projects (in `App/`):
+- `Verendar.Common` — `ApiResponse<T>`, `BaseEntity`, `ICacheService`, `ICurrentUserService`, `AddCommonService()`, `UseCommonService()`, `AddPostgresDatabase<T>()`, `AddRabbitMqEventBus()`
+- `Verendar.ServiceDefaults` — `AddServiceDefaults()`, OpenTelemetry, health check endpoints (`/health`, `/alive`)
+
 ## Commands
 
 ```bash
@@ -55,7 +59,7 @@ Prerequisites: .NET 9 SDK, Docker.
 
 | Service      | Routes                                                                                                                                                                                                                                                                           |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Identity     | `/api/v1/auth/**` · `/api/v1/users/**` · `/api/v1/subscriptions/**` · `/api/internal/**`                                                                                                                                                                                         |
+| Identity     | `/api/v1/auth/**` · `/api/v1/users/**` · `/api/v1/subscriptions/**`                                                                                                                                                                                                              |
 | Ai           | `/api/v1/ai/**`                                                                                                                                                                                                                                                                  |
 | Vehicle      | `/api/v1/brands/**` · `/api/v1/types/**` · `/api/v1/models/**` · `/api/v1/variants/**` · `/api/v1/vehicle-models/**` · `/api/v1/user-vehicles/**` · `/api/v1/maintenance-records/**` · `/api/v1/odometer-history/**` · `/api/v1/part-categories/**` · `/api/v1/part-products/**` |
 | Media        | `/api/v1/media-files/**`                                                                                                                                                                                                                                                         |
@@ -68,16 +72,36 @@ Prerequisites: .NET 9 SDK, Docker.
 
 | Rule           | Detail                                                                                                   |
 | -------------- | -------------------------------------------------------------------------------------------------------- |
-| No Controllers | Minimal API: `MapGroup` → `MapXxxRoutes()` → private handlers                                            |
+| No Controllers | Minimal API: `{Module}Apis.cs` · `MapXxxApi()` → `MapXxxRoutes()` → private static handlers             |
 | No AutoMapper  | Static extensions: `ToEntity()`, `ToResponse()`, `UpdateFromRequest()`                                   |
 | No MediatR     | Services call `IUnitOfWork` repositories directly                                                        |
 | Response       | `ApiResponse<T>` on all endpoints; FluentValidation/500s → RFC 7807                                      |
-| Validation     | Structural rules in `AbstractValidator<T>`, business rules in service                                    |
+| Validation     | Endpoint filter `ValidationEndpointFilter.Validate<T>()` for structural rules; business rules in service |
 | Soft delete    | `DeletedAt = DateTime.UtcNow` — never `DbContext.Remove()`                                               |
+| Entities       | Always inherit `BaseEntity` (provides `Id`, audit + soft-delete fields) — never re-declare them          |
 | Lists          | `PaginationRequest` + `GetPagedAsync` — never unbounded (read-only reference data may return full lists) |
 | Secrets        | User Secrets only — never `appsettings.json`                                                             |
 | Constructor    | Primary constructor + private readonly fields (project convention)                                       |
 | Async          | `async/await` throughout — never `.Result` or `.Wait()`                                                  |
+
+## Service Bootstrap Pattern
+
+Every service host follows this pattern:
+
+```csharp
+// Bootstrapping/ApplicationServiceExtensions.cs
+builder.AddServiceDefaults();          // OpenTelemetry, health checks
+builder.AddCommonService();            // CORS, JWT, MassTransit, Swagger, rate limiting
+builder.AddPostgresDatabase<{Service}DbContext>(Const.{Service}Database);  // e.g. "garage-db"
+// optional: builder.AddServiceRedis("garage-service", connectionName: Const.Redis);
+
+// Program.cs
+await app.MigrateDbContextAsync<{Service}DbContext>();  // runs EF migrations on startup
+app.UseApplicationServices();          // middleware pipeline + MapDefaultEndpoints()
+app.Map{Module}Api();                  // register route groups
+```
+
+DbContext naming: `{ServiceName}DbContext` (e.g. `GarageDbContext`, `LocationDbContext`).
 
 ## Key Exceptions
 
@@ -116,10 +140,12 @@ Key conventions:
 
 Load `.claude/skills/backend-development/` for detailed patterns and code examples:
 
-| Need                                               | File                         |
-| -------------------------------------------------- | ---------------------------- |
-| API structure, routes, handlers, pagination        | `references/api-design.md`   |
-| Layer responsibilities, what goes where, checklist | `references/architecture.md` |
-| SOLID, clean code, refactoring                     | `references/code-quality.md` |
-| N+1, caching, query hygiene                        | `references/performance.md`  |
-| Tests (xUnit + Moq + FluentAssertions)             | `references/testing.md`      |
+| Need                                               | File                           |
+| -------------------------------------------------- | ------------------------------ |
+| API structure, routes, handlers, pagination        | `references/api-design.md`     |
+| Layer responsibilities, what goes where, checklist | `references/architecture.md`   |
+| SOLID, clean code, refactoring                     | `references/code-quality.md`   |
+| N+1, caching, query hygiene                        | `references/performance.md`    |
+| Tests (xUnit + Moq + FluentAssertions)             | `references/testing.md`        |
+| Aspire orchestration, AppHost, DB/Redis wiring     | `references/aspire.md`         |
+| HTTP clients, MassTransit events/consumers         | `references/communication.md`  |

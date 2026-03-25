@@ -1,191 +1,261 @@
-# Code Quality Reference
+# Code Quality — SOLID, Design Patterns, Clean Code
 
-## Do / Don't
+To apply SOLID principles, common design patterns, clean code practices, and refactoring techniques in this .NET Clean Architecture backend.
 
-### Service pattern
+---
+
+## SOLID
+
+### Single Responsibility (SRP) — one class, one reason to change
+
 ```csharp
-// DO — primary constructor + private readonly fields + return ApiResponse<T>
-public class BrandService(ILogger<BrandService> logger, IUnitOfWork unitOfWork) : IBrandService
-{
-    private readonly ILogger<BrandService> _logger     = logger;
-    private readonly IUnitOfWork           _unitOfWork = unitOfWork;
+// ❌ One service doing too much
+class ProjectService { public Task CreateAsync(req) { /* save + email + upload */ } }
 
-    public async Task<ApiResponse<BrandResponse>> GetBrandByIdAsync(Guid id)
-    {
-        var brand = await _unitOfWork.Brands.GetByIdAsync(id);
-        if (brand is null)
-            return ApiResponse<BrandResponse>.NotFoundResponse("Không tìm thấy thương hiệu");
-        return ApiResponse<BrandResponse>.SuccessResponse(brand.ToResponse(), "Thành công");
+// ✅ Each class has one job
+class ProjectService    { public Task CreateAsync(req) { /* business logic only */ } }
+class EmailService      { public Task SendAsync(string to, string subject) { } }
+class FileUploadService { public Task<string> UploadAsync(IFormFile file)  { } }
+```
+
+### Open/Closed (OCP) — open for extension, closed for modification
+
+```csharp
+// ❌ Modify class to add formats
+class ReportExporter {
+    public byte[] Export(string type, IEnumerable<Project> data) {
+        if (type == "pdf") { /* ... */ }
+        else if (type == "csv") { /* ... */ } // adding Excel = modify here
     }
 }
 
-// DON'T — throw exceptions for business failures, inject DbContext directly
-public class BrandService
-{
-    private readonly VehicleDbContext _db;  // ❌ inject IUnitOfWork instead
-
-    public async Task<BrandResponse> GetBrandByIdAsync(Guid id)
-    {
-        var brand = await _db.Brands.FindAsync(id);
-        if (brand is null) throw new NotFoundException("Not found");  // ❌ return ApiResponse instead
-        return brand.ToResponse();  // ❌ return the envelope, not the raw DTO
-    }
+// ✅ Strategy pattern — add formats without changing ReportExporter
+interface IExportStrategy { byte[] Export(IEnumerable<Project> data); }
+class PdfExportStrategy   : IExportStrategy { /* ... */ }
+class CsvExportStrategy   : IExportStrategy { /* ... */ }
+class ReportExporter(IExportStrategy strategy) {
+    public byte[] Export(IEnumerable<Project> data) => strategy.Export(data);
 }
 ```
 
-### Mapping
-```csharp
-// DO — static extension methods in Application/Mappings/
-public static BrandResponse ToResponse(this Brand b) => new() { Id = b.Id, Name = b.Name, ... };
+### Liskov Substitution (LSP) — subtypes must be substitutable, never override to throw
 
-// DON'T — AutoMapper or manual mapping inline in the service
-services.AddAutoMapper(typeof(BrandProfile)); // ❌ no AutoMapper
-var dto = new BrandResponse { Id = brand.Id, Name = brand.Name }; // ❌ inline in service body
+```csharp
+// ❌ Violates LSP
+class ReadOnlyProjectRepository : IProjectRepository {
+    public Task AddAsync(Project p) => throw new NotSupportedException();
+}
+
+// ✅ Split interfaces so implementations never need to throw
+interface IReadProjectRepository  { Task<Project?> GetByIdAsync(Guid id, CancellationToken ct); }
+interface IWriteProjectRepository { Task AddAsync(Project p); }
 ```
 
-### FluentValidation scope
-```csharp
-// DO — structural rules only in the validator
-RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
+### Interface Segregation (ISP) — clients shouldn't depend on interfaces they don't use
 
-// DON'T — business rules in the validator
-RuleFor(x => x.VehicleTypeId).MustAsync(async (id, _) =>
-    await _unitOfWork.Types.GetByIdAsync(id) != null);  // ❌ business check → belongs in service
+```csharp
+// ❌ One fat interface forces every repo to implement BulkImport
+interface IRepository<T> { T GetById(Guid id); void Save(T e); void BulkImport(IEnumerable<T> items); }
+
+// ✅ Small, focused interfaces
+interface IReadRepository<T>  { Task<T?> GetByIdAsync(Guid id, CancellationToken ct); }
+interface IWriteRepository<T> { Task AddAsync(T entity); void Remove(T entity); }
+interface IBulkRepository<T>  { Task BulkImportAsync(IEnumerable<T> items, CancellationToken ct); }
 ```
 
-### MassTransit event publishing
-```csharp
-// DO — publish after SaveChanges, swallow publish failures
-await _unitOfWork.SaveChangesAsync();
-try { await _publishEndpoint.Publish(new BrandCreatedEvent { ... }); }
-catch (Exception ex) { _logger.LogWarning(ex, "Publish failed"); }
+### Dependency Inversion (DIP) — depend on abstractions, not concretions
 
-// DON'T — publish before save, or let a publish failure roll back the request
-await _publishEndpoint.Publish(new BrandCreatedEvent { ... }); // ❌ publish before save
-await _unitOfWork.SaveChangesAsync();   // if publish throws above, save never runs
+```csharp
+// ❌ Tight coupling — hard to test
+class ProjectService { private readonly EfProjectRepository _repo = new(); }
+
+// ✅ Constructor injection with interfaces
+class ProjectService(IProjectRepository repo, IEmailService email, IUnitOfWork uow) {
+    public async Task<ApiResponse<ProjectResponse>> CreateAsync(CreateProjectRequest req, CancellationToken ct) {
+        var project = req.ToEntity();
+        await repo.AddAsync(project);
+        await uow.SaveChangesAsync(ct);
+        return ApiResponse<ProjectResponse>.SuccessResponse(project.ToResponse(), 201);
+    }
+}
 ```
 
 ---
 
+## Design Patterns
 
-## Service Pattern
+### Repository + Unit of Work
 
-Primary constructor, `private readonly` fields, return `ApiResponse<T>`, business rules before repo.
-Inject `IPublishEndpoint` only in services that publish MassTransit events (e.g., Vehicle — not Location).
+Abstraction between business logic and data access. Transactions span multiple repos via UoW.
 
 ```csharp
-public class BrandService(
-    ILogger<BrandService> logger,
-    IUnitOfWork unitOfWork,
-    IPublishEndpoint publishEndpoint) : IBrandService  // IPublishEndpoint: Vehicle-specific
-{
-    private readonly ILogger<BrandService> _logger          = logger;
-    private readonly IUnitOfWork           _unitOfWork      = unitOfWork;
-    private readonly IPublishEndpoint      _publishEndpoint = publishEndpoint;
+interface IProjectRepository : IGenericRepository<Project> {
+    Task<Project?> GetWithMembersAsync(Guid id, CancellationToken ct = default);
+    Task<bool> ExistsAsync(string name, CancellationToken ct = default);
+}
 
-    public async Task<ApiResponse<BrandResponse>> CreateBrandAsync(BrandRequest request)
-    {
-        // 1. Business rule checks first
-        if (await BrandNameExistsAsync(request.Name))
-            return ApiResponse<BrandResponse>.ConflictResponse("Thương hiệu đã tồn tại");
-
-        var vehicleType = await _unitOfWork.Types.GetByIdAsync(request.VehicleTypeId);
-        if (vehicleType == null)
-            return ApiResponse<BrandResponse>.NotFoundResponse("Không tìm thấy loại xe");
-
-        // 2. Persist
-        var brand = request.ToEntity();
-        await _unitOfWork.Brands.AddAsync(brand);
-        await _unitOfWork.SaveChangesAsync();
-
-        // 3. Re-fetch with navigations, then return
-        var created = await _unitOfWork.Brands.GetByIdWithTypesAsync(brand.Id);
-        return ApiResponse<BrandResponse>.CreatedResponse(created!.ToResponse(), "Tạo thương hiệu thành công");
+class ProjectService(IProjectRepository repo, IUnitOfWork uow) {
+    public async Task<ApiResponse<ProjectResponse>> CreateAsync(CreateProjectRequest req, CancellationToken ct) {
+        if (await repo.ExistsAsync(req.Name, ct))
+            return ApiResponse<ProjectResponse>.FailureResponse(AppMessages.ProjectNameExists, 409);
+        var project = req.ToEntity();
+        await repo.AddAsync(project);
+        await uow.SaveChangesAsync(ct);
+        return ApiResponse<ProjectResponse>.SuccessResponse(project.ToResponse(), 201);
     }
 }
 ```
 
-## Mapping Extensions (No AutoMapper)
+### Factory
 
-Static methods in `Application/Mappings/`. Navigation properties may be null — guard with `?.`.
+Create objects without specifying the exact class. Use when the type varies at runtime.
 
 ```csharp
-public static class BrandMappings
-{
-    public static BrandResponse ToResponse(this Brand b) => new()
-    {
-        Id              = b.Id,
-        VehicleTypeName = b.VehicleType?.Name ?? string.Empty,
-        Name            = b.Name,
-        // ...
+interface INotificationChannel { Task SendAsync(string to, string msg, CancellationToken ct); }
+class EmailChannel : INotificationChannel { /* ... */ }
+class SmsChannel   : INotificationChannel { /* ... */ }
+
+class NotificationChannelFactory {
+    public static INotificationChannel Create(string type) => type switch {
+        "email" => new EmailChannel(),
+        "sms"   => new SmsChannel(),
+        _       => throw new ArgumentException($"Unknown channel: {type}")
     };
+}
+```
 
-    public static Brand ToEntity(this BrandRequest r) => new()
-    {
-        Name          = r.Name,
-        VehicleTypeId = r.VehicleTypeId,
-        // ...
-    };
+### Decorator
 
-    public static void UpdateEntity(this Brand b, BrandRequest r)
-    {
-        b.Name    = r.Name;
-        b.Website = r.Website;
-        // ...
+Add behavior without modifying the original class. Useful for cross-cutting concerns (logging, caching, retry).
+
+```csharp
+interface IFileStorageService { Task<string> UploadAsync(Stream file, string name, CancellationToken ct); }
+class S3StorageService : IFileStorageService { /* actual upload */ }
+
+class LoggingStorageDecorator(IFileStorageService inner, ILogger logger) : IFileStorageService {
+    public async Task<string> UploadAsync(Stream file, string name, CancellationToken ct) {
+        logger.LogInformation("Uploading: {Name}", name);
+        var url = await inner.UploadAsync(file, name, ct);
+        logger.LogInformation("Uploaded: {Url}", url);
+        return url;
     }
 }
 ```
 
-## DTOs
+---
+
+## Clean Code
+
+### Meaningful names — no abbreviations, no magic numbers
 
 ```csharp
-// Filter request extends PaginationRequest
-public class BrandFilterRequest : PaginationRequest { public Guid? TypeId { get; set; } }
+// ❌
+async Task<object> Proc(Guid id, int t) { if (file.Length > 52428800) { } }
 
-// Separate list (summary) and detail (full) response types
-public class BrandSummary { public Guid Id; public string Name; public string? LogoUrl; /* ... */ }
-public class BrandResponse { public Guid Id; public string Name; public DateTime CreatedAt; /* ... */ }
-```
-
-## Repository Interface
-
-Extend `IGenericRepository<T>` — provides `GetByIdAsync`, `AddAsync`, `DeleteAsync`, `FindOneAsync`, etc.
-Add only entity-specific query methods.
-
-```csharp
-public interface IBrandRepository : IGenericRepository<Brand>
-{
-    IQueryable<Brand> AsQueryableWithVehicleType();
-    Task<Brand?> GetByIdWithTypesAsync(Guid id);
+// ✅
+const long MaxFileSizeBytes = 50 * 1024 * 1024;
+async Task<ApiResponse<ProjectResponse>> GetProjectWithMembersAsync(Guid projectId, CancellationToken ct) {
+    if (file.Length > MaxFileSizeBytes) { }
 }
 ```
 
-## Soft Delete
-
-`DeleteAsync(id)` sets `DeletedAt = DateTime.UtcNow`. Never `DbContext.Remove()`.
-
-## FluentValidation
-
-Structural rules only (format, length, not-null). Business rules stay in the service.
+### Guard clauses at top — no deep nesting
 
 ```csharp
-public class BrandRequestValidator : AbstractValidator<BrandRequest>
-{
-    public BrandRequestValidator()
-    {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.VehicleTypeId).NotEmpty();
+// ❌ Arrow anti-pattern
+async Task CreateAsync(req) {
+    if (req != null) { if (await repo.ExistsAsync(req.Name)) { /* ... */ } }
+}
+
+// ✅
+async Task CreateAsync(req, ct) {
+    if (req is null) return ApiResponse<ProjectResponse>.FailureResponse(AppMessages.InvalidRequest, 400);
+    if (await repo.ExistsAsync(req.Name, ct))
+        return ApiResponse<ProjectResponse>.FailureResponse(AppMessages.ProjectNameExists, 409);
+    // happy path
+}
+```
+
+### Error handling — use AppMessages, let infrastructure exceptions propagate
+
+```csharp
+// ❌ Silent catch / raw strings
+try { var user = await repo.GetByIdAsync(id); return user; }
+catch (Exception e) { Console.WriteLine(e); return null; }
+
+// ✅
+var user = await repo.GetByIdAsync(id, ct);
+if (user is null)
+    return ApiResponse<UserResponse>.FailureResponse(AppMessages.UserNotFound, 404);
+// DB/network exceptions propagate to GlobalExceptionsMiddleware → 500
+```
+
+### DRY — one validator, shared across create/update
+
+```csharp
+// ❌ Duplicated validation in every endpoint handler
+if (string.IsNullOrWhiteSpace(req.Name) || req.Name.Length > 200) return Error(...);
+
+// ✅ One validator used via ValidateRequest()
+class CreateProjectRequestValidator : AbstractValidator<CreateProjectRequest> {
+    public CreateProjectRequestValidator() {
+        RuleFor(x => x.Name).NotEmpty().WithValidatorMessage(ValidatorMessages.ProjectNameRequired)
+                             .MaximumLength(255).WithValidatorMessage(ValidatorMessages.ProjectNameMaxLength);
     }
 }
-// Register: builder.Services.AddValidatorsFromAssemblyContaining<BrandRequestValidator>();
 ```
 
-## MassTransit Events
+---
 
-Publish after `SaveChangesAsync()`. Wrap in try/catch — publish failure should not fail the request.
+## Refactoring
+
+### Extract Method — pull single-purpose blocks into named methods
 
 ```csharp
-await _unitOfWork.SaveChangesAsync();
-try { await _publishEndpoint.Publish(new BrandLogoMediaSupersededEvent { ... }); }
-catch (Exception ex) { _logger.LogWarning(ex, "Failed to publish event {BrandId}", brandId); }
+// ❌ 150-line method mixing validation, business rules, persistence, email
+async Task ProcessApplicationAsync(Guid projectId, Guid applicantId) { /* ... */ }
+
+// ✅
+async Task ProcessApplicationAsync(Guid projectId, Guid applicantId, CancellationToken ct) {
+    var (project, applicant) = await ValidateAndGetAsync(projectId, applicantId, ct);
+    await AssertApplicationQuotaAsync(project, ct);
+    var application = await SaveApplicationAsync(project, applicant, ct);
+    await NotifyOwnerAsync(project, applicant, ct);
+}
+```
+
+### Replace Conditional with Strategy — swap type-checking chains with interfaces
+
+```csharp
+// ❌ Type switch — every new type = modify this method
+async Task SendNotificationAsync(string type, string to, string msg) {
+    if (type == "email") { /* ... */ }
+    else if (type == "sms") { /* ... */ }
+}
+
+// ✅ Strategy — add channels without touching the service
+interface INotificationChannel { bool CanHandle(string type); Task SendAsync(string to, string msg, CancellationToken ct); }
+class NotificationService(IEnumerable<INotificationChannel> channels) {
+    public Task SendAsync(string type, string to, string msg, CancellationToken ct) {
+        var channel = channels.First(c => c.CanHandle(type));
+        return channel.SendAsync(to, msg, ct);
+    }
+}
+```
+
+---
+
+## Checklist
+
+```
+[ ] SOLID principles applied — each class has one reason to change
+[ ] Methods are small and focused (<20 lines ideal)
+[ ] Meaningful names — no abbreviations, no magic numbers
+[ ] Guard clauses at top — no deep nesting (arrow anti-pattern)
+[ ] AppMessages used for all FailureResponse — no raw strings
+[ ] ValidatorMessages used for all validator rules — no bare .WithErrorCode + .WithMessage
+[ ] No silent catch blocks — infrastructure exceptions propagate to middleware
+[ ] DRY — validation, mapping, and query logic not duplicated
+[ ] All dependencies injected via interfaces — testable
+[ ] Comments explain "why", not "what"
 ```

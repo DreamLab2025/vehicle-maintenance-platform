@@ -42,11 +42,11 @@ public static class GarageBranchApis
         IGarageBranchService branchService,
         CancellationToken ct)
     {
-        var userId = currentUserService.UserId;
-        if (userId == Guid.Empty)
-            return Results.Unauthorized();
-
-        var result = await branchService.CreateBranchAsync(garageId, userId, request, ct);
+        var result = await branchService.CreateBranchAsync(
+            garageId,
+            currentUserService.UserId,
+            request,
+            ct);
         return result.ToHttpResult();
     }
 }

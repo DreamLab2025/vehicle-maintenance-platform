@@ -12,6 +12,48 @@ public class GarageService(
     private readonly ILogger<GarageService> _logger = logger;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
+    public async Task<ApiResponse<List<GarageResponse>>> GetGaragesAsync(GarageFilterRequest request)
+    {
+        request.Normalize();
+
+        var (items, totalCount) = await _unitOfWork.Garages.GetPagedAsync(
+            request.PageNumber,
+            request.PageSize,
+            filter: request.Status.HasValue ? g => g.Status == request.Status.Value : null,
+            orderBy: request.IsDescending == false
+                ? q => q.OrderBy(g => g.CreatedAt)
+                : q => q.OrderByDescending(g => g.CreatedAt));
+
+        return ApiResponse<GarageResponse>.SuccessPagedResponse(
+            items.Select(g => g.ToResponse()).ToList(),
+            totalCount,
+            request.PageNumber,
+            request.PageSize,
+            "Lấy danh sách garage thành công");
+    }
+
+    public async Task<ApiResponse<GarageDetailResponse>> GetMyGarageAsync(Guid ownerId, CancellationToken ct = default)
+    {
+        var garage = await _unitOfWork.Garages.GetWithBranchesAsync(g => g.OwnerId == ownerId, ct);
+
+        if (garage is null)
+            return ApiResponse<GarageDetailResponse>.NotFoundResponse("Bạn chưa đăng ký garage.");
+
+        return ApiResponse<GarageDetailResponse>.SuccessResponse(
+            garage.ToDetailResponse(), "Lấy thông tin garage thành công");
+    }
+
+    public async Task<ApiResponse<GarageDetailResponse>> GetGarageByIdAsync(Guid garageId, CancellationToken ct = default)
+    {
+        var garage = await _unitOfWork.Garages.GetWithBranchesAsync(g => g.Id == garageId, ct);
+
+        if (garage is null)
+            return ApiResponse<GarageDetailResponse>.NotFoundResponse($"Không tìm thấy garage.");
+
+        return ApiResponse<GarageDetailResponse>.SuccessResponse(
+            garage.ToDetailResponse(), "Lấy thông tin garage thành công");
+    }
+
     public async Task<ApiResponse<GarageResponse>> CreateGarageAsync(Guid ownerId, GarageRequest request)
     {
         var existing = await _unitOfWork.Garages.FindOneAsync(g => g.OwnerId == ownerId);

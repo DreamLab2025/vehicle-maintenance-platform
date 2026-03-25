@@ -33,4 +33,26 @@ public static class GarageMappings
             UpdatedAt = entity.UpdatedAt
         };
     }
+
+    public static GarageDetailResponse ToDetailResponse(this GarageEntity entity)
+    {
+        return new GarageDetailResponse
+        {
+            Id = entity.Id,
+            OwnerId = entity.OwnerId,
+            BusinessName = entity.BusinessName,
+            Slug = entity.Slug,
+            ShortName = entity.ShortName,
+            TaxCode = entity.TaxCode,
+            LogoUrl = entity.LogoUrl,
+            Status = entity.Status,
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt,
+            BranchCount = entity.Branches.Count,
+            Branches = entity.Branches
+                .Where(b => b.DeletedAt == null)
+                .Select(b => b.ToSummaryResponse())
+                .ToList()
+        };
+    }
 }

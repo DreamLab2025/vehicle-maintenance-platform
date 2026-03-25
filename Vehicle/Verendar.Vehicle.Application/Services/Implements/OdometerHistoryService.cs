@@ -50,6 +50,44 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 "Cập nhật số km thành công");
         }
 
+        public async Task<ApiResponse<UpdateOdometerResponse>> FromScanOdometerAsync(Guid userId, Guid vehicleId, FromScanOdometerRequest request, CancellationToken cancellationToken = default)
+        {
+            var vehicle = await _unitOfWork.UserVehicles
+                .FindOneAsync(v => v.Id == vehicleId && v.UserId == userId);
+
+            if (vehicle == null)
+            {
+                _logger.LogWarning("FromScanOdometer: vehicle not found {VehicleId} user {UserId}", vehicleId, userId);
+                return ApiResponse<UpdateOdometerResponse>.NotFoundResponse("Không tìm thấy xe");
+            }
+
+            if (request.ConfirmedOdometer < vehicle.CurrentOdometer)
+            {
+                _logger.LogWarning("FromScanOdometer: invalid odometer {NewOdo} < current {CurrentOdo} vehicle {VehicleId}", request.ConfirmedOdometer, vehicle.CurrentOdometer, vehicleId);
+                return ApiResponse<UpdateOdometerResponse>.FailureResponse("Số km xác nhận phải lớn hơn hoặc bằng số km hiện tại");
+            }
+
+            if (request.ConfirmedOdometer != vehicle.CurrentOdometer)
+            {
+                await _unitOfWork.ExecuteInTransactionAsync(async () =>
+                {
+                    var odometerHistory = vehicleId.ToPhotoInputOdometerHistory(request.ConfirmedOdometer, vehicle.CurrentOdometer);
+                    await _unitOfWork.OdometerHistories.AddAsync(odometerHistory);
+
+                    vehicle.UpdateOdometer(request.ConfirmedOdometer);
+                    await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
+
+                    await _maintenanceReminderService.SyncRemindersAsync(vehicleId, request.ConfirmedOdometer, userId);
+                });
+
+                await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
+            }
+
+            return ApiResponse<UpdateOdometerResponse>.SuccessResponse(
+                vehicle.ToUpdateOdometerResponse(),
+                "Cập nhật số km từ ảnh thành công");
+        }
+
         public async Task<ApiResponse<StreakResponse>> GetVehicleStreakAsync(Guid userId, Guid userVehicleId)
         {
             var vehicle = await _unitOfWork.UserVehicles

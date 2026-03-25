@@ -47,10 +47,7 @@ namespace Verendar.Media.Apis
             ICurrentUserService currentUserService,
             IMediaUploadService mediaUploadService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty) return Results.Unauthorized();
-
-            var result = await mediaUploadService.InitiateUploadAsync(request, userId);
+            var result = await mediaUploadService.InitiateUploadAsync(request, currentUserService.UserId);
             return result.ToHttpResult();
         }
 
@@ -59,10 +56,7 @@ namespace Verendar.Media.Apis
             ICurrentUserService currentUserService,
             IMediaUploadService mediaUploadService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty) return Results.Unauthorized();
-
-            var result = await mediaUploadService.ConfirmUploadFileAsync(id, userId);
+            var result = await mediaUploadService.ConfirmUploadFileAsync(id, currentUserService.UserId);
             return result.ToHttpResult();
         }
     }

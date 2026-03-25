@@ -28,6 +28,20 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<UpdateOdometerResponse>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
+            group.MapPost("/{userVehicleId:guid}/from-scan", FromScanOdometer)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<FromScanOdometerRequest>())
+                .WithName("FromScanOdometer")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Xác nhận và lưu số km từ ảnh AI quét";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces<ApiResponse<UpdateOdometerResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<UpdateOdometerResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<UpdateOdometerResponse>>(StatusCodes.Status404NotFound)
+                .Produces(StatusCodes.Status401Unauthorized);
+
             group.MapGet("/", GetOdometerHistory)
                 .WithName("GetOdometerHistory")
                 .WithOpenApi(operation =>
@@ -49,11 +63,25 @@ namespace Verendar.Vehicle.Apis
             ICurrentUserService currentUserService,
             IOdometerHistoryService odometerHistoryService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
+            var result = await odometerHistoryService.UpdateOdometerAsync(
+                currentUserService.UserId,
+                userVehicleId,
+                request);
+            return result.ToHttpResult();
+        }
 
-            var result = await odometerHistoryService.UpdateOdometerAsync(userId, userVehicleId, request);
+        private static async Task<IResult> FromScanOdometer(
+            Guid userVehicleId,
+            FromScanOdometerRequest request,
+            ICurrentUserService currentUserService,
+            IOdometerHistoryService odometerHistoryService,
+            CancellationToken cancellationToken)
+        {
+            var result = await odometerHistoryService.FromScanOdometerAsync(
+                currentUserService.UserId,
+                userVehicleId,
+                request,
+                cancellationToken);
             return result.ToHttpResult();
         }
 
@@ -62,12 +90,11 @@ namespace Verendar.Vehicle.Apis
             ICurrentUserService currentUserService,
             IOdometerHistoryService odometerHistoryService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
             query.Normalize();
-            var result = await odometerHistoryService.GetOdometerHistoryPagedAsync(userId, query.UserVehicleId, query);
+            var result = await odometerHistoryService.GetOdometerHistoryPagedAsync(
+                currentUserService.UserId,
+                query.UserVehicleId,
+                query);
             return result.ToHttpResult();
         }
     }

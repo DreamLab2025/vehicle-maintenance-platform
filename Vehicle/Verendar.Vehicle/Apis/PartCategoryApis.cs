@@ -70,11 +70,9 @@ namespace Verendar.Vehicle.Apis
         {
             if (userVehicleId.HasValue)
             {
-                var userId = currentUserService.UserId;
-                if (userId == Guid.Empty)
-                    return Results.Unauthorized();
-
-                var filtered = await service.GetCategoriesByVehicleDeclaredPartsAsync(userId, userVehicleId.Value);
+                var filtered = await service.GetCategoriesByVehicleDeclaredPartsAsync(
+                    currentUserService.UserId,
+                    userVehicleId.Value);
                 return filtered.ToHttpResult();
             }
 
@@ -94,11 +92,10 @@ namespace Verendar.Vehicle.Apis
             ICurrentUserService currentUserService,
             IPartCategoryService service)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await service.GetRemindersByCategorySlugAsync(userId, userVehicleId, partCategorySlug);
+            var result = await service.GetRemindersByCategorySlugAsync(
+                currentUserService.UserId,
+                userVehicleId,
+                partCategorySlug);
             return result.ToHttpResult();
         }
 

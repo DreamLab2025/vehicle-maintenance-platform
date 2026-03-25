@@ -39,7 +39,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 {
                     logger.LogError("Gemini API key is not configured");
                     return ApiResponse<GenerativeAiResponse>.FailureResponse(
-                        "AI service is not properly configured");
+                        AiExternalServiceMessages.AiNotConfigured);
                 }
 
                 var requestBody = new
@@ -105,7 +105,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                         logger.LogError(ex,
                             "Gemini API timeout - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ConfiguredTimeout: {ConfiguredTimeout}s, ElapsedTime: {ElapsedTime:F2}s, Attempt: {Attempt}",
                             selectedModel, operation, userId, _config.TimeoutSeconds, elapsedSeconds, attempt + 1);
-                        return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service request timeout");
+                        return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.AiRequestTimeout);
                     }
                     catch (HttpRequestException ex)
                     {
@@ -136,7 +136,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                     logger.LogWarning(
                         "Gemini API returned empty response - Model: {Model}, Operation: {Operation}, UserId: {UserId}",
                         selectedModel, operation, userId);
-                    return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned empty response");
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.EmptyAiResponse);
                 }
 
                 var geminiResponse = ParseGeminiResponse(lastResponseContent, selectedModel, stopwatch.ElapsedMilliseconds);
@@ -153,7 +153,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 logger.LogError(ex,
                     "Gemini API unexpected error - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ElapsedTime: {ElapsedTime}ms, ExceptionType: {ExceptionType}",
                     selectedModel, operation, userId, stopwatch.ElapsedMilliseconds, ex.GetType().Name);
-                return ApiResponse<GenerativeAiResponse>.FailureResponse("An unexpected error occurred while calling AI service");
+                return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.UnexpectedAiError);
             }
         }
 
@@ -220,6 +220,158 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                     ? "Dịch vụ AI gặp sự cố. Vui lòng thử lại sau."
                     : "Đã xảy ra lỗi khi gọi API AI. Vui lòng thử lại."
             };
+        }
+
+        public async Task<ApiResponse<GenerativeAiResponse>> GenerateContentFromImageAsync(
+            string imageUrl,
+            string prompt,
+            AiOperation operation,
+            Guid userId,
+            Guid? promptId = null,
+            string? model = null,
+            int? maxTokens = null,
+            decimal? temperature = null,
+            decimal? topP = null,
+            CancellationToken cancellationToken = default)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var selectedModel = model ?? _config.DefaultModel;
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(_config.ApiKey))
+                {
+                    logger.LogError("Gemini API key is not configured");
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.AiNotConfigured);
+                }
+
+                var imageFetch = await GenerativeAiImageHttp.FetchAsync(
+                    httpClientFactory,
+                    imageUrl,
+                    Math.Min(_config.TimeoutSeconds, 120),
+                    logger,
+                    "Gemini vision",
+                    cancellationToken);
+
+                if (!imageFetch.IsSuccess)
+                {
+                    if (imageFetch.IsDownloadHttpFailure)
+                        return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.ImageUrlDownloadFailed);
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.ImageUrlInvalidOrUnreachable);
+                }
+
+                var imageBytes = imageFetch.Bytes!;
+                var mimeType = imageFetch.MimeType;
+
+                var httpClient = httpClientFactory.CreateClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(_config.TimeoutSeconds);
+
+                var base64Image = Convert.ToBase64String(imageBytes);
+
+                var requestBody = new
+                {
+                    contents = new[]
+                    {
+                        new
+                        {
+                            parts = new object[]
+                            {
+                                new { inline_data = new { mime_type = mimeType, data = base64Image } },
+                                new { text = prompt }
+                            }
+                        }
+                    },
+                    generationConfig = new
+                    {
+                        maxOutputTokens = maxTokens ?? _config.DefaultParameters.MaxTokens,
+                        temperature = temperature ?? _config.DefaultParameters.Temperature,
+                        topP = topP ?? _config.DefaultParameters.TopP,
+                        topK = _config.DefaultParameters.TopK,
+                        responseMimeType = "application/json"
+                    }
+                };
+
+                var url = $"{_config.ApiEndpoint.TrimEnd('/')}/models/{selectedModel}:generateContent";
+                var jsonBody = JsonSerializer.Serialize(requestBody);
+
+                logger.LogInformation(
+                    "Calling Gemini multimodal API - Model: {Model}, Operation: {Operation}, UserId: {UserId}, ImageSize: {ImageSize}b",
+                    selectedModel, operation, userId, imageBytes.Length);
+
+                HttpResponseMessage? response = null;
+                var lastResponseContent = string.Empty;
+
+                for (var attempt = 0; attempt <= _config.MaxRetries; attempt++)
+                {
+                    if (attempt > 0)
+                    {
+                        var delayMs = GetRetryDelayMs(response!, attempt);
+                        logger.LogWarning(
+                            "Gemini multimodal API retry {Attempt}/{MaxRetries} after {DelayMs}ms",
+                            attempt, _config.MaxRetries, delayMs);
+                        await Task.Delay(delayMs, cancellationToken);
+                    }
+
+                    using var request = new HttpRequestMessage(HttpMethod.Post, url);
+                    request.Headers.TryAddWithoutValidation("X-goog-api-key", _config.ApiKey);
+                    request.Content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+
+                    try
+                    {
+                        response = await httpClient.SendAsync(request, cancellationToken);
+                        lastResponseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                        if (response.IsSuccessStatusCode)
+                            break;
+
+                        var isRetryable = response.StatusCode is System.Net.HttpStatusCode.TooManyRequests or System.Net.HttpStatusCode.ServiceUnavailable;
+                        if (attempt >= _config.MaxRetries || !isRetryable)
+                            break;
+                    }
+                    catch (TaskCanceledException ex)
+                    {
+                        stopwatch.Stop();
+                        logger.LogError(ex, "Gemini multimodal API timeout - UserId: {UserId}", userId);
+                        return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.AiRequestTimeout);
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        stopwatch.Stop();
+                        logger.LogError(ex, "Gemini multimodal API HTTP error - UserId: {UserId}", userId);
+                        if (attempt >= _config.MaxRetries)
+                            return ApiResponse<GenerativeAiResponse>.FailureResponse($"Network error: {ex.Message}");
+                        continue;
+                    }
+                }
+
+                stopwatch.Stop();
+
+                if (response == null || !response.IsSuccessStatusCode)
+                {
+                    logger.LogError(
+                        "Gemini multimodal API error - Status: {StatusCode}, UserId: {UserId}, Response: {Response}",
+                        response?.StatusCode, userId,
+                        lastResponseContent?.Length > 500 ? lastResponseContent[..500] + "..." : lastResponseContent);
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(GetUserFriendlyMessage(response?.StatusCode));
+                }
+
+                if (string.IsNullOrEmpty(lastResponseContent))
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse("AI service returned empty response");
+
+                var geminiResponse = ParseGeminiResponse(lastResponseContent, selectedModel, stopwatch.ElapsedMilliseconds);
+
+                logger.LogInformation(
+                    "Gemini multimodal API success - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Tokens: {TotalTokens}",
+                    selectedModel, operation, userId, geminiResponse.TotalTokens);
+
+                return ApiResponse<GenerativeAiResponse>.SuccessResponse(geminiResponse);
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                logger.LogError(ex, "Gemini multimodal API unexpected error - UserId: {UserId}", userId);
+                return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.UnexpectedAiError);
+            }
         }
 
         public async Task<(bool Success, string? ErrorMessage)> CheckConnectivityAsync(CancellationToken cancellationToken = default)
