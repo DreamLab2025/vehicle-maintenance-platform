@@ -122,11 +122,13 @@ namespace Verendar.AppHost.Extensions
 
             var garageService = builder.AddProject<Projects.Verendar_Garage>("garage-service")
                 .WithReference(garageDb)
-                .WithReference(rabbitMq);
+                .WithReference(rabbitMq)
+                .WithReference(locationService);
             garageService = garageService
                 .WithReference(seq)
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq);
+                .WaitFor(rabbitMq)
+                .WaitFor(locationService);
 
 
             var apiGateway = builder.AddYarp("api-gateway")

@@ -1,3 +1,7 @@
+using Verendar.Location.Application.ExternalServices;
+using Verendar.Location.Infrastructure.Configuration;
+using Verendar.Location.Infrastructure.ExternalServices.Geocoding;
+
 namespace Verendar.Location.Bootstrapping;
 
 public static class ApplicationServiceExtensions
@@ -18,6 +22,11 @@ public static class ApplicationServiceExtensions
         builder.Services.AddScoped<IWardService, WardService>();
         builder.Services.AddScoped<IAdministrativeUnitService, AdministrativeUnitService>();
         builder.Services.AddScoped<IAdministrativeRegionService, AdministrativeRegionService>();
+
+        builder.Services.Configure<GeocodingSettings>(
+            builder.Configuration.GetSection(GeocodingSettings.SectionName));
+        builder.Services.AddHttpClient();
+        builder.Services.AddScoped<IGeocodingService, GoogleMapsGeocodingService>();
 
         return builder;
     }

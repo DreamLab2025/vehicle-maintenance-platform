@@ -1,3 +1,6 @@
+using Verendar.Location.Application.Dtos;
+using Verendar.Location.Application.ExternalServices;
+
 namespace Verendar.Location.Apis;
 
 public static class InternalLocationApis
@@ -11,6 +14,11 @@ public static class InternalLocationApis
 
     public static RouteGroupBuilder MapInternalLocationRoutes(this RouteGroupBuilder group)
     {
+        group.MapGet("/geocode", GeocodeAddress)
+            .WithName("GeocodeAddress")
+            .Produces<GeocodeResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
+
         group.MapGet("/validate", ValidateLocation)
             .WithName("ValidateLocation")
             .Produces(200)
@@ -83,5 +91,19 @@ public static class InternalLocationApis
         }
 
         return Results.Ok(new { isValid = true, provinceName = province.Data.Name });
+    }
+
+    private static async Task<IResult> GeocodeAddress(
+        string? address,
+        IGeocodingService geocodingService,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(address))
+            return Results.BadRequest(new { error = "address is required" });
+
+        var coords = await geocodingService.GeocodeAsync(address, ct);
+        return Results.Ok(coords.HasValue
+            ? new GeocodeResponse(coords.Value.Latitude, coords.Value.Longitude)
+            : new GeocodeResponse(null, null));
     }
 }

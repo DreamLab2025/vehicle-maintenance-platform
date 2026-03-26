@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Verendar.Location.Application\Verendar.Location.Application.csproj" />
+    <ProjectReference Include="..\Verendar.Location.Infrastructure\Verendar.Location.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

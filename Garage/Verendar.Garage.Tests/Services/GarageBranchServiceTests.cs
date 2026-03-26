@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Dtos;
-using Verendar.Garage.Application.ExternalServices;
 using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Domain.Entities;
 using GarageEntity = Verendar.Garage.Domain.Entities.Garage;
@@ -46,7 +46,7 @@ public class GarageBranchServiceTests
             .ReturnsAsync((Expression<Func<GarageEntity, bool>> expr) =>
                 garages.FirstOrDefault(g => expr.Compile()(g)));
 
-        var geo = new Mock<IGeocodingService>(MockBehavior.Strict);
+        var geo = new Mock<ILocationClient>(MockBehavior.Strict);
 
         var sut = new GarageBranchService(NullLogger<GarageBranchService>.Instance, m.UnitOfWork.Object, geo.Object);
 
@@ -57,7 +57,7 @@ public class GarageBranchServiceTests
             404,
             $"Không tìm thấy garage với id '{garageId}'.");
         m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-        geo.Verify(g => g.GeocodeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        geo.Verify(l => l.GeocodeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class GarageBranchServiceTests
             .ReturnsAsync((Expression<Func<GarageEntity, bool>> expr) =>
                 garages.FirstOrDefault(g => expr.Compile()(g)));
 
-        var geo = new Mock<IGeocodingService>(MockBehavior.Strict);
+        var geo = new Mock<ILocationClient>(MockBehavior.Strict);
 
         var sut = new GarageBranchService(NullLogger<GarageBranchService>.Instance, m.UnitOfWork.Object, geo.Object);
 
@@ -93,7 +93,7 @@ public class GarageBranchServiceTests
             403,
             "Bạn không có quyền thêm chi nhánh cho garage này.");
         m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-        geo.Verify(g => g.GeocodeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        geo.Verify(l => l.GeocodeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -123,8 +123,8 @@ public class GarageBranchServiceTests
         m.GarageBranches.Setup(r => r.AddAsync(It.IsAny<GarageBranch>()))
             .ReturnsAsync((GarageBranch b) => b);
 
-        var geo = new Mock<IGeocodingService>(MockBehavior.Strict);
-        geo.Setup(g => g.GeocodeAsync("123 Phố Huế, Việt Nam", It.IsAny<CancellationToken>()))
+        var geo = new Mock<ILocationClient>(MockBehavior.Strict);
+        geo.Setup(l => l.GeocodeAsync("123 Phố Huế, Việt Nam", It.IsAny<CancellationToken>()))
             .ReturnsAsync((10.762622, 106.660172));
 
         var sut = new GarageBranchService(NullLogger<GarageBranchService>.Instance, m.UnitOfWork.Object, geo.Object);
@@ -165,8 +165,8 @@ public class GarageBranchServiceTests
         m.GarageBranches.Setup(r => r.AddAsync(It.IsAny<GarageBranch>()))
             .ReturnsAsync((GarageBranch b) => b);
 
-        var geo = new Mock<IGeocodingService>(MockBehavior.Strict);
-        geo.Setup(g => g.GeocodeAsync("123 Phố Huế, Việt Nam", It.IsAny<CancellationToken>()))
+        var geo = new Mock<ILocationClient>(MockBehavior.Strict);
+        geo.Setup(l => l.GeocodeAsync("123 Phố Huế, Việt Nam", It.IsAny<CancellationToken>()))
             .ReturnsAsync(((double, double)?)null);
 
         var sut = new GarageBranchService(NullLogger<GarageBranchService>.Instance, m.UnitOfWork.Object, geo.Object);

@@ -1,6 +1,6 @@
-namespace Verendar.Garage.Application.ExternalServices;
+namespace Verendar.Garage.Application.Clients;
 
-public interface IGeocodingService
+public interface ILocationClient
 {
     Task<(double Latitude, double Longitude)?> GeocodeAsync(string address, CancellationToken ct = default);
 }

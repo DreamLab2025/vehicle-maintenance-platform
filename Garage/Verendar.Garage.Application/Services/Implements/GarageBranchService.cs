@@ -1,5 +1,5 @@
+using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Dtos;
-using Verendar.Garage.Application.ExternalServices;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
 
@@ -8,11 +8,11 @@ namespace Verendar.Garage.Application.Services.Implements;
 public class GarageBranchService(
     ILogger<GarageBranchService> logger,
     IUnitOfWork unitOfWork,
-    IGeocodingService geocodingService) : IGarageBranchService
+    ILocationClient locationClient) : IGarageBranchService
 {
     private readonly ILogger<GarageBranchService> _logger = logger;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly IGeocodingService _geocodingService = geocodingService;
+    private readonly ILocationClient _locationClient = locationClient;
 
     public async Task<ApiResponse<GarageBranchResponse>> CreateBranchAsync(
         Guid garageId,
@@ -45,7 +45,7 @@ public class GarageBranchService(
         var geocodeQuery = string.IsNullOrWhiteSpace(request.Address.HouseNumber)
             ? $"{request.Address.StreetDetail}, Việt Nam"
             : $"{request.Address.HouseNumber} {request.Address.StreetDetail}, Việt Nam";
-        var coords = await _geocodingService.GeocodeAsync(geocodeQuery, ct);
+        var coords = await _locationClient.GeocodeAsync(geocodeQuery, ct);
         if (coords.HasValue)
         {
             branch.Latitude = coords.Value.Latitude;

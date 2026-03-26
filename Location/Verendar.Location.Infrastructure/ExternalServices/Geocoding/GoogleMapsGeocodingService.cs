@@ -2,10 +2,10 @@ using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Verendar.Garage.Application.ExternalServices;
-using Verendar.Garage.Infrastructure.Configuration;
+using Verendar.Location.Application.ExternalServices;
+using Verendar.Location.Infrastructure.Configuration;
 
-namespace Verendar.Garage.Infrastructure.ExternalServices.Geocoding;
+namespace Verendar.Location.Infrastructure.ExternalServices.Geocoding;
 
 public class GoogleMapsGeocodingService(
     IOptions<GeocodingSettings> options,
