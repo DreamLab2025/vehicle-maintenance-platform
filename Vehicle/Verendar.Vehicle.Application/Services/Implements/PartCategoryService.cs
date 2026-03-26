@@ -42,7 +42,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
             var previousIconMediaFileId = category.IconMediaFileId;
 
-            category.UpdateEntity(request);
+            category.UpdateFromRequest(request);
             await _unitOfWork.PartCategories.UpdateAsync(id, category);
             await _unitOfWork.SaveChangesAsync();
 

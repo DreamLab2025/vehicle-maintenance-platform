@@ -45,7 +45,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static void UpdateEntity(this Variant entity, VariantUpdateRequest request)
+        public static void UpdateFromRequest(this Variant entity, VariantUpdateRequest request)
         {
             entity.Color = request.Color;
             entity.ImageUrl = request.ImageUrl;

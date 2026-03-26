@@ -77,7 +77,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
             var previousImageMediaFileId = image.ImageMediaFileId;
 
-            image.UpdateEntity(request);
+            image.UpdateFromRequest(request);
             await _unitOfWork.Variants.UpdateAsync(image.Id, image);
             await _unitOfWork.SaveChangesAsync();
 

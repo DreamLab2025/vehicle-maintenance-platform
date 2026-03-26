@@ -1,5 +1,6 @@
 using FluentValidation;
 using Hangfire;
+using QuestPDF.Infrastructure;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Verendar.Common.Bootstrapping;
@@ -21,6 +22,8 @@ namespace Verendar.Vehicle.Bootstrapping
     {
         public static IHostApplicationBuilder AddApplicationServices(this IHostApplicationBuilder builder)
         {
+            QuestPDF.Settings.License = LicenseType.Community;
+
             builder.AddServiceDefaults();
 
             builder.AddCommonService();

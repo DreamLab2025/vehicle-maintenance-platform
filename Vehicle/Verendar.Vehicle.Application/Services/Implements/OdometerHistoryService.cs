@@ -71,7 +71,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
             {
                 await _unitOfWork.ExecuteInTransactionAsync(async () =>
                 {
-                    var odometerHistory = vehicleId.ToPhotoInputOdometerHistory(request.ConfirmedOdometer, vehicle.CurrentOdometer);
+                    var odometerHistory = vehicleId.ToPhotoInputOdometerHistory(request.ConfirmedOdometer, vehicle.CurrentOdometer, request.MediaFileId);
                     await _unitOfWork.OdometerHistories.AddAsync(odometerHistory);
 
                     vehicle.UpdateOdometer(request.ConfirmedOdometer);

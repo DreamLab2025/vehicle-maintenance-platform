@@ -37,7 +37,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static void UpdateEntity(this VehicleType entity, TypeRequest request)
+        public static void UpdateFromRequest(this VehicleType entity, TypeRequest request)
         {
             entity.Name = request.Name;
             entity.Description = request.Description;

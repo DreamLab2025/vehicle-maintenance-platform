@@ -148,7 +148,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
             var previousLogoMediaFileId = brand.LogoMediaFileId;
 
-            brand.UpdateEntity(request);
+            brand.UpdateFromRequest(request);
             brand.VehicleTypeId = request.VehicleTypeId;
             await _unitOfWork.Brands.UpdateAsync(id, brand);
             await _unitOfWork.SaveChangesAsync();

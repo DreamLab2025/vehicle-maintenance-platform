@@ -30,6 +30,10 @@ namespace Verendar.Media.Domain.Entities
 
         public FileStatus Status { get; set; } = FileStatus.Pending;
 
+        /// <summary>Full public URL (CloudFront or S3). Populated on upload confirm; null while Pending or after deletion.</summary>
+        [MaxLength(2000)]
+        public string? PublicPath { get; set; }
+
         [Column(TypeName = "jsonb")]
         public string? Metadata { get; set; }
     }
