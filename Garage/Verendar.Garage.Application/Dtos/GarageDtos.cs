@@ -58,3 +58,30 @@ public class GarageDetailResponse : GarageResponse
     public int BranchCount { get; set; }
     public List<GarageBranchSummaryResponse> Branches { get; set; } = [];
 }
+
+public class AddMemberRequest
+{
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public MemberRole Role { get; set; }
+    public Guid BranchId { get; set; }
+}
+
+public class UpdateMemberStatusRequest
+{
+    public MemberStatus Status { get; set; }
+}
+
+public class GarageMemberResponse
+{
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public Guid BranchId { get; set; }
+    public Guid GarageId { get; set; }
+    public MemberRole Role { get; set; }
+    public MemberStatus Status { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+}

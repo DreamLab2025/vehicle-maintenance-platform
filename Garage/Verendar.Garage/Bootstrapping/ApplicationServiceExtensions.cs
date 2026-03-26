@@ -21,6 +21,7 @@ public static class ApplicationServiceExtensions
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
         builder.Services.AddScoped<IGarageService, GarageService>();
         builder.Services.AddScoped<IGarageBranchService, GarageBranchService>();
+        builder.Services.AddScoped<IGarageMemberService, GarageMemberService>();
 
         builder.Services.AddHttpClient<IPaymentClient, PaymentHttpClient>(client =>
         {
@@ -34,6 +35,15 @@ public static class ApplicationServiceExtensions
             var baseAddress = builder.Configuration["Services:Location:BaseUrl"];
             client.BaseAddress = new Uri(string.IsNullOrEmpty(baseAddress)
                 ? "https+http://location-service"
+                : baseAddress);
+        })
+        .AddServiceDiscovery();
+
+        builder.Services.AddHttpClient<IIdentityClient, IdentityHttpClient>(client =>
+        {
+            var baseAddress = builder.Configuration["Services:Identity:BaseUrl"];
+            client.BaseAddress = new Uri(string.IsNullOrEmpty(baseAddress)
+                ? "https+http://identity-service"
                 : baseAddress);
         })
         .AddServiceDiscovery();
