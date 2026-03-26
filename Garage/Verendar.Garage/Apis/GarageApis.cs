@@ -77,6 +77,48 @@ public static class GarageApis
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status409Conflict)
             .Produces(StatusCodes.Status401Unauthorized);
 
+        group.MapPatch("/{id:guid}/status", UpdateGarageStatus)
+            .AddEndpointFilter(ValidationEndpointFilter.Validate<UpdateGarageStatusRequest>())
+            .WithName("UpdateGarageStatus")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Admin duyệt / từ chối / tạm khóa garage";
+                return operation;
+            })
+            .RequireAuthorization("Admin")
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
+
+        group.MapPut("/{id:guid}", UpdateGarageInfo)
+            .AddEndpointFilter(ValidationEndpointFilter.Validate<GarageRequest>())
+            .WithName("UpdateGarageInfo")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Chủ garage chỉnh sửa thông tin (chỉ khi Pending hoặc Rejected)";
+                return operation;
+            })
+            .RequireAuthorization()
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPatch("/{id:guid}/resubmit", ResubmitGarage)
+            .WithName("ResubmitGarage")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Chủ garage nộp lại hồ sơ sau khi bị từ chối (Rejected → Pending)";
+                return operation;
+            })
+            .RequireAuthorization()
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
         return group;
     }
 
@@ -125,6 +167,38 @@ public static class GarageApis
         IGarageService garageService)
     {
         var result = await garageService.CreateGarageAsync(currentUserService.UserId, request);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> UpdateGarageStatus(
+        Guid id,
+        UpdateGarageStatusRequest request,
+        ICurrentUserService currentUserService,
+        IGarageService garageService,
+        CancellationToken ct)
+    {
+        var result = await garageService.UpdateGarageStatusAsync(id, request, currentUserService.UserId, ct);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> UpdateGarageInfo(
+        Guid id,
+        GarageRequest request,
+        ICurrentUserService currentUserService,
+        IGarageService garageService,
+        CancellationToken ct)
+    {
+        var result = await garageService.UpdateGarageInfoAsync(id, currentUserService.UserId, request, ct);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> ResubmitGarage(
+        Guid id,
+        ICurrentUserService currentUserService,
+        IGarageService garageService,
+        CancellationToken ct)
+    {
+        var result = await garageService.ResubmitGarageAsync(id, currentUserService.UserId, ct);
         return result.ToHttpResult();
     }
 }

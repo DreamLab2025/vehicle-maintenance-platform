@@ -45,6 +45,12 @@ public static class ApplicationServiceExtensions
 
         builder.Services.AddScoped<IBusinessLookupService, VietQRBusinessLookupService>();
 
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("Admin", policy =>
+                policy.RequireRole(RoleType.Admin.ToString()));
+        });
+
         return builder;
     }
 

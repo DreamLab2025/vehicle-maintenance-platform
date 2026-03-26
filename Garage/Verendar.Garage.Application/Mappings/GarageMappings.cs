@@ -34,6 +34,14 @@ public static class GarageMappings
         };
     }
 
+    public static void UpdateFromRequest(this GarageEntity entity, GarageRequest request)
+    {
+        entity.BusinessName = request.BusinessName;
+        entity.ShortName = request.ShortName;
+        entity.TaxCode = request.TaxCode;
+        entity.LogoUrl = request.LogoUrl;
+    }
+
     public static GarageDetailResponse ToDetailResponse(this GarageEntity entity)
     {
         return new GarageDetailResponse

@@ -8,6 +8,17 @@ public class GarageFilterRequest : PaginationRequest
     public GarageStatus? Status { get; set; }
 }
 
+public class UpdateGarageStatusRequest
+{
+    public GarageStatus Status { get; set; }
+    public string? Reason { get; set; }
+}
+
+public class UpdateBranchStatusRequest
+{
+    public BranchStatus Status { get; set; }
+}
+
 public class GarageRequest
 {
     public string BusinessName { get; set; } = null!;
