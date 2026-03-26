@@ -19,6 +19,11 @@ public static class InternalLocationApis
             .Produces<GeocodeResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
 
+        group.MapGet("/map-links", GetMapLinks)
+            .WithName("GetMapLinks")
+            .Produces<MapLinksResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
+
         group.MapGet("/validate", ValidateLocation)
             .WithName("ValidateLocation")
             .Produces(200)
@@ -91,6 +96,14 @@ public static class InternalLocationApis
         }
 
         return Results.Ok(new { isValid = true, provinceName = province.Data.Name });
+    }
+
+    private static IResult GetMapLinks(double? lat, double? lng)
+    {
+        if (lat is null || lng is null)
+            return Results.BadRequest(new { error = "lat and lng are required" });
+
+        return Results.Ok(MapLinksResponse.From(lat.Value, lng.Value));
     }
 
     private static async Task<IResult> GeocodeAddress(

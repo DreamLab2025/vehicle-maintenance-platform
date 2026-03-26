@@ -46,10 +46,12 @@ public class GarageBranchService(
             ? $"{request.Address.StreetDetail}, Việt Nam"
             : $"{request.Address.HouseNumber} {request.Address.StreetDetail}, Việt Nam";
         var coords = await _locationClient.GeocodeAsync(geocodeQuery, ct);
+        MapLinksDto? mapLinks = null;
         if (coords.HasValue)
         {
             branch.Latitude = coords.Value.Latitude;
             branch.Longitude = coords.Value.Longitude;
+            mapLinks = await _locationClient.GetMapLinksAsync(coords.Value.Latitude, coords.Value.Longitude, ct);
         }
         else
         {
@@ -63,7 +65,10 @@ public class GarageBranchService(
         _logger.LogInformation("CreateBranch: created branch {BranchId} for garage {GarageId}",
             branch.Id, garageId);
 
+        var response = branch.ToResponse();
+        response.MapLinks = mapLinks;
+
         return ApiResponse<GarageBranchResponse>.CreatedResponse(
-            branch.ToResponse(), "Tạo chi nhánh thành công");
+            response, "Tạo chi nhánh thành công");
     }
 }

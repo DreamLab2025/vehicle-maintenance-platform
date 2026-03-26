@@ -35,6 +35,16 @@ public class GarageBranchRequest
     public WorkingHoursDto WorkingHours { get; set; } = null!;
 }
 
+// ── Map Links ─────────────────────────────────────────────────────────────────
+
+public class MapLinksDto
+{
+    public string GoogleMaps { get; set; } = null!;
+    public string AppleMaps { get; set; } = null!;
+    public string Waze { get; set; } = null!;
+    public string OpenStreetMap { get; set; } = null!;
+}
+
 // ── Response ──────────────────────────────────────────────────────────────────
 
 public class GarageBranchResponse
@@ -48,6 +58,7 @@ public class GarageBranchResponse
     public AddressDto Address { get; set; } = null!;
     public double Latitude { get; set; }
     public double Longitude { get; set; }
+    public MapLinksDto? MapLinks { get; set; }
     public WorkingHoursDto WorkingHours { get; set; } = null!;
     public string? PhoneNumber { get; set; }
     public string? TaxCode { get; set; }
