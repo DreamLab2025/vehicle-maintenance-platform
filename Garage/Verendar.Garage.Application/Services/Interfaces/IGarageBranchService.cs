@@ -14,4 +14,8 @@ public interface IGarageBranchService
         Guid garageId,
         Guid branchId,
         CancellationToken ct = default);
+
+    Task<ApiResponse<List<BranchMapItemResponse>>> GetBranchesForMapAsync(
+        BranchMapSearchRequest request,
+        CancellationToken ct = default);
 }

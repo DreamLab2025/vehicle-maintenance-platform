@@ -92,4 +92,57 @@ public class GarageBranchService(
         return ApiResponse<GarageBranchResponse>.SuccessResponse(
             response, "Lấy thông tin chi nhánh thành công");
     }
+
+    public async Task<ApiResponse<List<BranchMapItemResponse>>> GetBranchesForMapAsync(
+        BranchMapSearchRequest request,
+        CancellationToken ct = default)
+    {
+        request.Normalize();
+
+        double? centerLat = request.Lat;
+        double? centerLng = request.Lng;
+
+        // Geocode text address if lat/lng not provided
+        if (centerLat is null && centerLng is null && !string.IsNullOrWhiteSpace(request.Address))
+        {
+            var coords = await _locationClient.GeocodeAsync(request.Address, ct);
+            if (coords.HasValue)
+            {
+                centerLat = coords.Value.Latitude;
+                centerLng = coords.Value.Longitude;
+            }
+            else
+            {
+                _logger.LogWarning("GetBranchesForMap: geocoding failed for address '{Address}'", request.Address);
+                return ApiResponse<List<BranchMapItemResponse>>.SuccessPagedResponse(
+                    new List<BranchMapItemResponse>(), 0, request.PageNumber, request.PageSize, "Không tìm thấy địa chỉ");
+            }
+        }
+
+        // Compute bounding box from center + radius
+        double? minLat = null, maxLat = null, minLng = null, maxLng = null;
+        if (centerLat.HasValue && centerLng.HasValue)
+        {
+            var radiusKm = Math.Clamp(request.RadiusKm, 1, 200);
+            var latDelta = radiusKm / 111.0;
+            var lngDelta = radiusKm / (111.0 * Math.Cos(centerLat.Value * Math.PI / 180.0));
+            minLat = centerLat.Value - latDelta;
+            maxLat = centerLat.Value + latDelta;
+            minLng = centerLng.Value - lngDelta;
+            maxLng = centerLng.Value + lngDelta;
+        }
+
+        var (items, totalCount) = await _unitOfWork.GarageBranches.GetBranchesForMapAsync(
+            request.PageNumber,
+            request.PageSize,
+            minLat, maxLat, minLng, maxLng,
+            ct);
+
+        return ApiResponse<List<BranchMapItemResponse>>.SuccessPagedResponse(
+            items.Select(b => b.ToBranchMapItemResponse()).ToList(),
+            totalCount,
+            request.PageNumber,
+            request.PageSize,
+            "Lấy danh sách chi nhánh thành công");
+    }
 }

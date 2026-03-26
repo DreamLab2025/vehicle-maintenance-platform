@@ -12,6 +12,11 @@ public static class GarageBranchApis
             .WithTags("Garage Branch Api")
             .RequireRateLimiting("Fixed");
 
+        builder.MapGroup("/api/v1/garages/branches")
+            .MapGarageBranchMapRoutes()
+            .WithTags("Garage Branch Api")
+            .RequireRateLimiting("Fixed");
+
         return builder;
     }
 
@@ -43,6 +48,29 @@ public static class GarageBranchApis
             .Produces(StatusCodes.Status401Unauthorized);
 
         return group;
+    }
+
+    public static RouteGroupBuilder MapGarageBranchMapRoutes(this RouteGroupBuilder group)
+    {
+        group.MapGet("/maps", SearchBranchesOnMap)
+            .WithName("SearchGarageBranchesOnMap")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Tìm kiếm chi nhánh trên bản đồ (theo địa chỉ hoặc tọa độ + bán kính)";
+                return operation;
+            })
+            .Produces<ApiResponse<List<BranchMapItemResponse>>>(StatusCodes.Status200OK);
+
+        return group;
+    }
+
+    private static async Task<IResult> SearchBranchesOnMap(
+        [AsParameters] BranchMapSearchRequest request,
+        IGarageBranchService branchService,
+        CancellationToken ct)
+    {
+        var result = await branchService.GetBranchesForMapAsync(request, ct);
+        return result.ToHttpResult();
     }
 
     private static async Task<IResult> GetBranchById(
