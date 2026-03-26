@@ -29,15 +29,6 @@ namespace Verendar.AppHost.Extensions
                         .WithLifetime(ContainerLifetime.Persistent);
                 });
             }
-            else
-            {
-                postgres = postgres.WithPgAdmin(pgAdmin =>
-                {
-                    pgAdmin.WithContainerName("verendar-aspire-pgadmin")
-                        .WithHostPort(5050)
-                        .WithLifetime(ContainerLifetime.Persistent);
-                });
-            }
 
             var rabbitMq = builder.AddRabbitMQ("rabbitmq")
                 .WithContainerName("verendar-aspire-rabbitmq")
@@ -180,7 +171,12 @@ namespace Verendar.AppHost.Extensions
 
             if (isDevelopment)
             {
-                builder.AddScalarApiReference("api-docs")
+                builder.AddScalarApiReference("api-docs", configureOptions: options => options
+                    .PreferHttpsEndpoint()
+                    .AllowSelfSignedCertificates()
+                    .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json")
+                    .WithOperationTitleSource(OperationTitleSource.Path)
+                    .AddPreferredSecuritySchemes("Bearer"))
                     .WithApiReference(identityService)
                     .WithApiReference(vehicleService)
                     .WithApiReference(mediaService)
