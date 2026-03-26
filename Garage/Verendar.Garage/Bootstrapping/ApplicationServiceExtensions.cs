@@ -32,9 +32,11 @@ public static class ApplicationServiceExtensions
         builder.Services.AddHttpClient<ILocationClient, LocationHttpClient>(client =>
         {
             var baseAddress = builder.Configuration["Services:Location:BaseUrl"];
-            if (!string.IsNullOrEmpty(baseAddress))
-                client.BaseAddress = new Uri(baseAddress);
-        });
+            client.BaseAddress = new Uri(string.IsNullOrEmpty(baseAddress)
+                ? "https+http://location-service"
+                : baseAddress);
+        })
+        .AddServiceDiscovery();
 
         builder.Services.AddHttpClient();
 

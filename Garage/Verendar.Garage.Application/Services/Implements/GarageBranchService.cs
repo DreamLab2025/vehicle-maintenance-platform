@@ -71,4 +71,25 @@ public class GarageBranchService(
         return ApiResponse<GarageBranchResponse>.CreatedResponse(
             response, "Tạo chi nhánh thành công");
     }
+
+    public async Task<ApiResponse<GarageBranchResponse>> GetBranchByIdAsync(
+        Guid garageId,
+        Guid branchId,
+        CancellationToken ct = default)
+    {
+        var branch = await _unitOfWork.GarageBranches.FindOneAsync(
+            b => b.Id == branchId && b.GarageId == garageId && b.DeletedAt == null);
+
+        if (branch is null)
+            return ApiResponse<GarageBranchResponse>.NotFoundResponse(
+                $"Không tìm thấy chi nhánh với id '{branchId}'.");
+
+        var response = branch.ToResponse();
+
+        if (branch.Latitude != 0 || branch.Longitude != 0)
+            response.MapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude, branch.Longitude, ct);
+
+        return ApiResponse<GarageBranchResponse>.SuccessResponse(
+            response, "Lấy thông tin chi nhánh thành công");
+    }
 }

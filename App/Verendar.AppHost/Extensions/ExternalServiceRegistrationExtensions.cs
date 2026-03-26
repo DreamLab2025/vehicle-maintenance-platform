@@ -2,6 +2,7 @@ using Aspire.Hosting;
 using Microsoft.Extensions.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Yarp;
+using Scalar.Aspire;
 using Yarp.ReverseProxy.Configuration;
 
 namespace Verendar.AppHost.Extensions
@@ -176,6 +177,18 @@ namespace Verendar.AppHost.Extensions
                 .WaitFor(aiService)
                 .WaitFor(locationService)
                 .WaitFor(garageService);
+
+            if (isDevelopment)
+            {
+                builder.AddScalarApiReference("api-docs")
+                    .WithApiReference(identityService)
+                    .WithApiReference(vehicleService)
+                    .WithApiReference(mediaService)
+                    .WithApiReference(notificationService)
+                    .WithApiReference(aiService)
+                    .WithApiReference(locationService)
+                    .WithApiReference(garageService);
+            }
 
             return builder;
         }

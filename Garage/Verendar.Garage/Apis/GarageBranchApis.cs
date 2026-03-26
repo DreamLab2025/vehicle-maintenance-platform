@@ -17,6 +17,16 @@ public static class GarageBranchApis
 
     public static RouteGroupBuilder MapGarageBranchRoutes(this RouteGroupBuilder group)
     {
+        group.MapGet("/{branchId:guid}", GetBranchById)
+            .WithName("GetGarageBranchById")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Xem chi tiết chi nhánh garage";
+                return operation;
+            })
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status404NotFound);
+
         group.MapPost("/", CreateBranch)
             .AddEndpointFilter(ValidationEndpointFilter.Validate<GarageBranchRequest>())
             .WithName("CreateGarageBranch")
@@ -33,6 +43,16 @@ public static class GarageBranchApis
             .Produces(StatusCodes.Status401Unauthorized);
 
         return group;
+    }
+
+    private static async Task<IResult> GetBranchById(
+        Guid garageId,
+        Guid branchId,
+        IGarageBranchService branchService,
+        CancellationToken ct)
+    {
+        var result = await branchService.GetBranchByIdAsync(garageId, branchId, ct);
+        return result.ToHttpResult();
     }
 
     private static async Task<IResult> CreateBranch(
