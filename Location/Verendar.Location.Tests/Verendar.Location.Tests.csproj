@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.GeoPlaces" Version="3.7.400.40" />
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="FluentAssertions" Version="8.9.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
@@ -24,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Verendar.Location.Application\Verendar.Location.Application.csproj" />
+    <ProjectReference Include="..\Verendar.Location.Infrastructure\Verendar.Location.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

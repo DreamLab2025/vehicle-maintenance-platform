@@ -1,3 +1,4 @@
+using System.Globalization;
 using Verendar.Garage.Application.Dtos;
 
 namespace Verendar.Garage.Application.Mappings;
@@ -93,6 +94,51 @@ public static class GarageBranchMappings
             Status = entity.Status,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt
+        };
+    }
+
+    public static BranchMapItemResponse ToBranchMapItemResponse(this GarageBranch entity)
+    {
+        return new BranchMapItemResponse
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            Slug = entity.Slug,
+            CoverImageUrl = entity.CoverImageUrl,
+            Address = new AddressDto
+            {
+                ProvinceCode = entity.Address.ProvinceCode,
+                WardCode = entity.Address.WardCode,
+                HouseNumber = entity.Address.HouseNumber,
+                StreetDetail = entity.Address.StreetDetail
+            },
+            Latitude = entity.Latitude,
+            Longitude = entity.Longitude,
+            MapLinks = BuildMapLinks(entity.Latitude, entity.Longitude),
+            PhoneNumber = entity.PhoneNumber,
+            Status = entity.Status,
+            Garage = new GarageInfoDto
+            {
+                Id = entity.Garage.Id,
+                BusinessName = entity.Garage.BusinessName,
+                Slug = entity.Garage.Slug,
+                LogoUrl = entity.Garage.LogoUrl,
+                Status = entity.Garage.Status
+            }
+        };
+    }
+
+    private static MapLinksDto? BuildMapLinks(double lat, double lng)
+    {
+        if (lat == 0 && lng == 0) return null;
+        var latStr = lat.ToString(CultureInfo.InvariantCulture);
+        var lngStr = lng.ToString(CultureInfo.InvariantCulture);
+        return new MapLinksDto
+        {
+            GoogleMaps = $"https://www.google.com/maps?q={latStr},{lngStr}",
+            AppleMaps = $"https://maps.apple.com/?ll={latStr},{lngStr}",
+            Waze = $"https://waze.com/ul?ll={latStr},{lngStr}&navigate=yes",
+            OpenStreetMap = $"https://www.openstreetmap.org/?mlat={latStr}&mlon={lngStr}&zoom=17"
         };
     }
 }

@@ -3,10 +3,10 @@ using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
-using Verendar.Garage.Infrastructure.Configuration;
-using Verendar.Garage.Infrastructure.ExternalServices.Geocoding;
+using Verendar.Location.Infrastructure.Configuration;
+using Verendar.Location.Infrastructure.ExternalServices.Geocoding;
 
-namespace Verendar.Garage.Tests.ExternalServices;
+namespace Verendar.Location.Tests.ExternalServices;
 
 public class GoogleMapsGeocodingServiceTests
 {
@@ -15,7 +15,7 @@ public class GoogleMapsGeocodingServiceTests
     {
         var factory = new Mock<IHttpClientFactory>(MockBehavior.Strict);
 
-        var options = Options.Create(new GeocodingSettings { ApiKey = null });
+        var options = Options.Create(new GoogleGeocodingSettings { ApiKey = null });
         var sut = new GoogleMapsGeocodingService(
             options,
             factory.Object,
@@ -50,7 +50,7 @@ public class GoogleMapsGeocodingServiceTests
         factory.Setup(f => f.CreateClient(It.IsAny<string>()))
             .Returns(() => new HttpClient(handler));
 
-        var options = Options.Create(new GeocodingSettings { ApiKey = "test-key" });
+        var options = Options.Create(new GoogleGeocodingSettings { ApiKey = "test-key" });
         var sut = new GoogleMapsGeocodingService(
             options,
             factory.Object,
@@ -61,5 +61,34 @@ public class GoogleMapsGeocodingServiceTests
         result.Should().NotBeNull();
         result!.Value.Latitude.Should().Be(10.5);
         result.Value.Longitude.Should().Be(106.6);
+    }
+
+    [Fact]
+    public async Task GeocodeAsync_WhenGoogleReturnsNoResults_ReturnsNull()
+    {
+        var handler = new TestHttpMessageHandler
+        {
+            SendImpl = _ => new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """{"status":"ZERO_RESULTS","results":[]}""",
+                    Encoding.UTF8,
+                    "application/json")
+            }
+        };
+
+        var factory = new Mock<IHttpClientFactory>(MockBehavior.Strict);
+        factory.Setup(f => f.CreateClient(It.IsAny<string>()))
+            .Returns(() => new HttpClient(handler));
+
+        var options = Options.Create(new GoogleGeocodingSettings { ApiKey = "test-key" });
+        var sut = new GoogleMapsGeocodingService(
+            options,
+            factory.Object,
+            NullLogger<GoogleMapsGeocodingService>.Instance);
+
+        var result = await sut.GeocodeAsync("address not found");
+
+        result.Should().BeNull();
     }
 }

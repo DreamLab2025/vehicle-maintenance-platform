@@ -2,6 +2,7 @@ using Aspire.Hosting;
 using Microsoft.Extensions.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Yarp;
+using Scalar.Aspire;
 using Yarp.ReverseProxy.Configuration;
 
 namespace Verendar.AppHost.Extensions
@@ -24,15 +25,6 @@ namespace Verendar.AppHost.Extensions
                 postgres = postgres.WithPgWeb(pgWeb =>
                 {
                     pgWeb.WithContainerName("verendar-aspire-pgweb")
-                        .WithHostPort(5050)
-                        .WithLifetime(ContainerLifetime.Persistent);
-                });
-            }
-            else
-            {
-                postgres = postgres.WithPgAdmin(pgAdmin =>
-                {
-                    pgAdmin.WithContainerName("verendar-aspire-pgadmin")
                         .WithHostPort(5050)
                         .WithLifetime(ContainerLifetime.Persistent);
                 });
@@ -122,11 +114,13 @@ namespace Verendar.AppHost.Extensions
 
             var garageService = builder.AddProject<Projects.Verendar_Garage>("garage-service")
                 .WithReference(garageDb)
-                .WithReference(rabbitMq);
+                .WithReference(rabbitMq)
+                .WithReference(locationService);
             garageService = garageService
                 .WithReference(seq)
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq);
+                .WaitFor(rabbitMq)
+                .WaitFor(locationService);
 
 
             var apiGateway = builder.AddYarp("api-gateway")
@@ -174,6 +168,23 @@ namespace Verendar.AppHost.Extensions
                 .WaitFor(aiService)
                 .WaitFor(locationService)
                 .WaitFor(garageService);
+
+            if (isDevelopment)
+            {
+                builder.AddScalarApiReference("api-docs", configureOptions: options => options
+                    .PreferHttpsEndpoint()
+                    .AllowSelfSignedCertificates()
+                    .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json")
+                    .WithOperationTitleSource(OperationTitleSource.Path)
+                    .AddPreferredSecuritySchemes("Bearer"))
+                    .WithApiReference(identityService)
+                    .WithApiReference(vehicleService)
+                    .WithApiReference(mediaService)
+                    .WithApiReference(notificationService)
+                    .WithApiReference(aiService)
+                    .WithApiReference(locationService)
+                    .WithApiReference(garageService);
+            }
 
             return builder;
         }

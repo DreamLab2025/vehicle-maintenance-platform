@@ -4,4 +4,12 @@ namespace Verendar.Garage.Domain.Repositories.Interfaces;
 
 public interface IGarageBranchRepository : IGenericRepository<GarageBranch>
 {
+    Task<(List<GarageBranch> Items, int TotalCount)> GetBranchesForMapAsync(
+        int pageNumber,
+        int pageSize,
+        double? minLat = null,
+        double? maxLat = null,
+        double? minLng = null,
+        double? maxLng = null,
+        CancellationToken ct = default);
 }

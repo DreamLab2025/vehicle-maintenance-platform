@@ -1,4 +1,4 @@
-namespace Verendar.Garage.Application.ExternalServices;
+namespace Verendar.Location.Application.ExternalServices;
 
 public interface IGeocodingService
 {

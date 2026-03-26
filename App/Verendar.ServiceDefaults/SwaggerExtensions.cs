@@ -18,6 +18,8 @@ namespace Verendar.ServiceDefaults
     {
         public static IHostApplicationBuilder AddDefaultSwagger(this IHostApplicationBuilder builder)
         {
+            builder.Services.AddOpenApi();
+
             builder.Services.AddEndpointsApiExplorer();
 
             builder.Services.Configure<JsonOptions>(options =>
@@ -42,6 +44,7 @@ namespace Verendar.ServiceDefaults
                 options.SchemaFilter<EnumSchemaFilter>();
 
                 options.OperationFilter<EnumParameterOperationFilter>();
+                options.OperationFilter<RequestBodyExampleOperationFilter>();
 
                 options.UseInlineDefinitionsForEnums();
 
@@ -271,6 +274,82 @@ namespace Verendar.ServiceDefaults
                     schema.Description += "<p>Values:</p><ul><li>" + string.Join("</li><li>", enumDescriptions) + "</li></ul>";
                 }
             }
+        }
+    }
+
+    public class RequestBodyExampleOperationFilter : IOperationFilter
+    {
+        public void Apply(OpenApiOperation operation, OperationFilterContext context)
+        {
+            if (operation.RequestBody?.Content == null) return;
+
+            foreach (var mediaType in operation.RequestBody.Content.Values)
+            {
+                if (mediaType.Example != null || mediaType.Schema == null) continue;
+
+                var example = OpenApiExampleFactory.CreateExample(mediaType.Schema, context.SchemaRepository, new HashSet<string>(StringComparer.Ordinal));
+                if (example != null)
+                {
+                    mediaType.Example = example;
+                }
+            }
+        }
+    }
+
+    internal static class OpenApiExampleFactory
+    {
+        public static IOpenApiAny? CreateExample(OpenApiSchema schema, SchemaRepository repository, HashSet<string> visitedRefs)
+        {
+            if (schema.Example != null) return schema.Example;
+
+            if (schema.Reference?.Id is string refId)
+            {
+                if (!visitedRefs.Add(refId)) return null;
+                if (repository.Schemas.TryGetValue(refId, out var refSchema))
+                {
+                    return CreateExample(refSchema, repository, visitedRefs);
+                }
+                return null;
+            }
+
+            if (schema.Enum != null && schema.Enum.Count > 0)
+            {
+                return schema.Enum[0];
+            }
+
+            if (schema.Type == "object" || schema.Properties.Count > 0)
+            {
+                var obj = new OpenApiObject();
+                foreach (var (propertyName, propertySchema) in schema.Properties)
+                {
+                    var propertyExample = CreateExample(propertySchema, repository, visitedRefs);
+                    if (propertyExample != null)
+                    {
+                        obj[propertyName] = propertyExample;
+                    }
+                }
+                return obj;
+            }
+
+            if (schema.Type == "array")
+            {
+                var array = new OpenApiArray();
+                if (schema.Items != null)
+                {
+                    var itemExample = CreateExample(schema.Items, repository, visitedRefs);
+                    if (itemExample != null) array.Add(itemExample);
+                }
+                return array;
+            }
+
+            return schema.Type switch
+            {
+                "string" => new OpenApiString(schema.Format == "date-time" ? DateTime.UtcNow.ToString("O") : "string"),
+                "integer" => new OpenApiInteger(0),
+                "number" => new OpenApiDouble(0),
+                "boolean" => new OpenApiBoolean(false),
+                _ => null
+            };
         }
     }
 }

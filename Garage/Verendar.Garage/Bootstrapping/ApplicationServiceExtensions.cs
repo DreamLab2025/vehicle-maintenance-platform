@@ -5,7 +5,6 @@ using Verendar.Garage.Application.Services.Interfaces;
 using Verendar.Garage.Infrastructure.Clients;
 using Verendar.Garage.Infrastructure.Configuration;
 using Verendar.Garage.Infrastructure.ExternalServices;
-using Verendar.Garage.Infrastructure.ExternalServices.Geocoding;
 
 namespace Verendar.Garage.Bootstrapping;
 
@@ -30,20 +29,21 @@ public static class ApplicationServiceExtensions
                 client.BaseAddress = new Uri(baseAddress);
         });
 
+        builder.Services.AddHttpClient<ILocationClient, LocationHttpClient>(client =>
+        {
+            var baseAddress = builder.Configuration["Services:Location:BaseUrl"];
+            client.BaseAddress = new Uri(string.IsNullOrEmpty(baseAddress)
+                ? "https+http://location-service"
+                : baseAddress);
+        })
+        .AddServiceDiscovery();
+
         builder.Services.AddHttpClient();
 
         builder.Services.Configure<VietQRSettings>(
             builder.Configuration.GetSection(VietQRSettings.SectionName));
-        builder.Services.Configure<GeocodingSettings>(
-            builder.Configuration.GetSection(GeocodingSettings.SectionName));
 
         builder.Services.AddScoped<IBusinessLookupService, VietQRBusinessLookupService>();
-
-        var geocodingApiKey = builder.Configuration.GetSection(GeocodingSettings.SectionName)["ApiKey"];
-        if (!string.IsNullOrWhiteSpace(geocodingApiKey))
-            builder.Services.AddScoped<IGeocodingService, GoogleMapsGeocodingService>();
-        else
-            builder.Services.AddScoped<IGeocodingService, NominatimGeocodingService>();
 
         return builder;
     }
