@@ -15,7 +15,7 @@ public class GoogleMapsGeocodingServiceTests
     {
         var factory = new Mock<IHttpClientFactory>(MockBehavior.Strict);
 
-        var options = Options.Create(new GeocodingSettings { ApiKey = null });
+        var options = Options.Create(new GoogleGeocodingSettings { ApiKey = null });
         var sut = new GoogleMapsGeocodingService(
             options,
             factory.Object,
@@ -50,7 +50,7 @@ public class GoogleMapsGeocodingServiceTests
         factory.Setup(f => f.CreateClient(It.IsAny<string>()))
             .Returns(() => new HttpClient(handler));
 
-        var options = Options.Create(new GeocodingSettings { ApiKey = "test-key" });
+        var options = Options.Create(new GoogleGeocodingSettings { ApiKey = "test-key" });
         var sut = new GoogleMapsGeocodingService(
             options,
             factory.Object,
@@ -81,7 +81,7 @@ public class GoogleMapsGeocodingServiceTests
         factory.Setup(f => f.CreateClient(It.IsAny<string>()))
             .Returns(() => new HttpClient(handler));
 
-        var options = Options.Create(new GeocodingSettings { ApiKey = "test-key" });
+        var options = Options.Create(new GoogleGeocodingSettings { ApiKey = "test-key" });
         var sut = new GoogleMapsGeocodingService(
             options,
             factory.Object,

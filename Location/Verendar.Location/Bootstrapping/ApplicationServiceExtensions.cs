@@ -1,3 +1,4 @@
+using Amazon.GeoPlaces;
 using Verendar.Location.Application.ExternalServices;
 using Verendar.Location.Infrastructure.Configuration;
 using Verendar.Location.Infrastructure.ExternalServices.Geocoding;
@@ -23,10 +24,23 @@ public static class ApplicationServiceExtensions
         builder.Services.AddScoped<IAdministrativeUnitService, AdministrativeUnitService>();
         builder.Services.AddScoped<IAdministrativeRegionService, AdministrativeRegionService>();
 
-        builder.Services.Configure<GeocodingSettings>(
-            builder.Configuration.GetSection(GeocodingSettings.SectionName));
-        builder.Services.AddHttpClient();
-        builder.Services.AddScoped<IGeocodingService, GoogleMapsGeocodingService>();
+        if (builder.Environment.IsDevelopment())
+        {
+            // Dev: AWS GeoPlaces + GrabMaps (ap-southeast-1)
+            builder.Services.Configure<AwsGeocodingSettings>(
+                builder.Configuration.GetSection(AwsGeocodingSettings.SectionName));
+            builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions("Geocoding:AWS"));
+            builder.Services.AddAWSService<IAmazonGeoPlaces>();
+            builder.Services.AddScoped<IGeocodingService, AwsGeocodingService>();
+        }
+        else
+        {
+            // Production: Google Maps
+            builder.Services.Configure<GoogleGeocodingSettings>(
+                builder.Configuration.GetSection(GoogleGeocodingSettings.SectionName));
+            builder.Services.AddHttpClient();
+            builder.Services.AddScoped<IGeocodingService, GoogleMapsGeocodingService>();
+        }
 
         return builder;
     }

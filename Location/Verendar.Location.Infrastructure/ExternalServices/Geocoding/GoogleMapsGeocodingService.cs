@@ -8,11 +8,11 @@ using Verendar.Location.Infrastructure.Configuration;
 namespace Verendar.Location.Infrastructure.ExternalServices.Geocoding;
 
 public class GoogleMapsGeocodingService(
-    IOptions<GeocodingSettings> options,
+    IOptions<GoogleGeocodingSettings> options,
     IHttpClientFactory httpClientFactory,
     ILogger<GoogleMapsGeocodingService> logger) : IGeocodingService
 {
-    private readonly GeocodingSettings _settings = options.Value;
+    private readonly GoogleGeocodingSettings _settings = options.Value;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly ILogger<GoogleMapsGeocodingService> _logger = logger;
 
