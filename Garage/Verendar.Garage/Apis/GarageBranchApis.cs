@@ -22,6 +22,16 @@ public static class GarageBranchApis
 
     public static RouteGroupBuilder MapGarageBranchRoutes(this RouteGroupBuilder group)
     {
+        group.MapGet("/", GetBranches)
+            .WithName("GetGarageBranches")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Lấy danh sách chi nhánh của garage (có phân trang)";
+                return operation;
+            })
+            .Produces<ApiResponse<List<GarageBranchSummaryResponse>>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<List<GarageBranchSummaryResponse>>>(StatusCodes.Status404NotFound);
+
         group.MapGet("/{branchId:guid}", GetBranchById)
             .WithName("GetGarageBranchById")
             .WithOpenApi(operation =>
@@ -47,6 +57,49 @@ public static class GarageBranchApis
             .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
 
+        group.MapPut("/{branchId:guid}", UpdateBranch)
+            .AddEndpointFilter(ValidationEndpointFilter.Validate<GarageBranchRequest>())
+            .WithName("UpdateGarageBranch")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Cập nhật chi nhánh garage (chỉ chủ garage)";
+                return operation;
+            })
+            .RequireAuthorization()
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status403Forbidden)
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapDelete("/{branchId:guid}", DeleteBranch)
+            .WithName("DeleteGarageBranch")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Xóa chi nhánh garage (chỉ chủ garage, soft delete)";
+                return operation;
+            })
+            .RequireAuthorization()
+            .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<bool>>(StatusCodes.Status403Forbidden)
+            .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPatch("/{branchId:guid}/status", UpdateBranchStatus)
+            .AddEndpointFilter(ValidationEndpointFilter.Validate<UpdateBranchStatusRequest>())
+            .WithName("UpdateGarageBranchStatus")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Chủ garage bật/tắt hoạt động chi nhánh (Active ↔ Inactive)";
+                return operation;
+            })
+            .RequireAuthorization()
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status400BadRequest)
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status403Forbidden)
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
         return group;
     }
 
@@ -62,6 +115,51 @@ public static class GarageBranchApis
             .Produces<ApiResponse<List<BranchMapItemResponse>>>(StatusCodes.Status200OK);
 
         return group;
+    }
+
+    private static async Task<IResult> GetBranches(
+        Guid garageId,
+        [AsParameters] PaginationRequest request,
+        IGarageBranchService branchService,
+        CancellationToken ct)
+    {
+        var result = await branchService.GetBranchesAsync(garageId, request, ct);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> UpdateBranch(
+        Guid garageId,
+        Guid branchId,
+        GarageBranchRequest request,
+        ICurrentUserService currentUserService,
+        IGarageBranchService branchService,
+        CancellationToken ct)
+    {
+        var result = await branchService.UpdateBranchAsync(garageId, branchId, currentUserService.UserId, request, ct);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> DeleteBranch(
+        Guid garageId,
+        Guid branchId,
+        ICurrentUserService currentUserService,
+        IGarageBranchService branchService,
+        CancellationToken ct)
+    {
+        var result = await branchService.DeleteBranchAsync(garageId, branchId, currentUserService.UserId, ct);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> UpdateBranchStatus(
+        Guid garageId,
+        Guid branchId,
+        UpdateBranchStatusRequest request,
+        ICurrentUserService currentUserService,
+        IGarageBranchService branchService,
+        CancellationToken ct)
+    {
+        var result = await branchService.UpdateBranchStatusAsync(garageId, branchId, currentUserService.UserId, request, ct);
+        return result.ToHttpResult();
     }
 
     private static async Task<IResult> SearchBranchesOnMap(

@@ -2,6 +2,34 @@ using Verendar.Garage.Application.Dtos;
 
 namespace Verendar.Garage.Application.Validators;
 
+public class UpdateGarageStatusRequestValidator : AbstractValidator<UpdateGarageStatusRequest>
+{
+    private static readonly GarageStatus[] AllowedStatuses =
+        [GarageStatus.Active, GarageStatus.Rejected, GarageStatus.Suspended];
+
+    public UpdateGarageStatusRequestValidator()
+    {
+        RuleFor(x => x.Status)
+            .Must(s => AllowedStatuses.Contains(s))
+            .WithMessage("Trạng thái không hợp lệ. Chỉ chấp nhận: Active, Rejected, Suspended.");
+
+        RuleFor(x => x.Reason)
+            .NotEmpty()
+            .WithMessage("Lý do từ chối là bắt buộc khi trạng thái là Rejected.")
+            .When(x => x.Status == GarageStatus.Rejected);
+    }
+}
+
+public class UpdateBranchStatusRequestValidator : AbstractValidator<UpdateBranchStatusRequest>
+{
+    public UpdateBranchStatusRequestValidator()
+    {
+        RuleFor(x => x.Status)
+            .IsInEnum()
+            .WithMessage("Trạng thái chi nhánh không hợp lệ. Chỉ chấp nhận: Active, Inactive.");
+    }
+}
+
 public class GarageRequestValidator : AbstractValidator<GarageRequest>
 {
     public GarageRequestValidator()

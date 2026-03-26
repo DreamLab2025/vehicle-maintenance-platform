@@ -21,6 +21,7 @@ public static class ApplicationServiceExtensions
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
         builder.Services.AddScoped<IGarageService, GarageService>();
         builder.Services.AddScoped<IGarageBranchService, GarageBranchService>();
+        builder.Services.AddScoped<IGarageMemberService, GarageMemberService>();
 
         builder.Services.AddHttpClient<IPaymentClient, PaymentHttpClient>(client =>
         {
@@ -38,12 +39,27 @@ public static class ApplicationServiceExtensions
         })
         .AddServiceDiscovery();
 
+        builder.Services.AddHttpClient<IIdentityClient, IdentityHttpClient>(client =>
+        {
+            var baseAddress = builder.Configuration["Services:Identity:BaseUrl"];
+            client.BaseAddress = new Uri(string.IsNullOrEmpty(baseAddress)
+                ? "https+http://identity-service"
+                : baseAddress);
+        })
+        .AddServiceDiscovery();
+
         builder.Services.AddHttpClient();
 
         builder.Services.Configure<VietQRSettings>(
             builder.Configuration.GetSection(VietQRSettings.SectionName));
 
         builder.Services.AddScoped<IBusinessLookupService, VietQRBusinessLookupService>();
+
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("Admin", policy =>
+                policy.RequireRole(RoleType.Admin.ToString()));
+        });
 
         return builder;
     }

@@ -59,6 +59,36 @@ public class LocationHttpClient(HttpClient httpClient, ILogger<LocationHttpClien
         }
     }
 
+    public async Task<(bool IsValid, string? ProvinceName, string? WardName)> ValidateLocationAsync(
+        string provinceCode, string wardCode, CancellationToken ct = default)
+    {
+        try
+        {
+            var encodedProvince = Uri.EscapeDataString(provinceCode);
+            var encodedWard = Uri.EscapeDataString(wardCode);
+            var response = await _httpClient.GetAsync(
+                $"/api/internal/locations/validate?provinceCode={encodedProvince}&wardCode={encodedWard}", ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Location validation returned {Status} for province '{Province}', ward '{Ward}'",
+                    response.StatusCode, provinceCode, wardCode);
+                return (false, null, null);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<LocationValidationResult>(cancellationToken: ct);
+            return result is { IsValid: true }
+                ? (true, result.ProvinceName, result.WardName)
+                : (false, null, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Location validation error for province '{Province}', ward '{Ward}'",
+                provinceCode, wardCode);
+            return (false, null, null);
+        }
+    }
+
     private sealed record GeocodeResponse(
         [property: JsonPropertyName("latitude")] double? Latitude,
         [property: JsonPropertyName("longitude")] double? Longitude);
@@ -68,4 +98,9 @@ public class LocationHttpClient(HttpClient httpClient, ILogger<LocationHttpClien
         [property: JsonPropertyName("appleMaps")] string AppleMaps,
         [property: JsonPropertyName("waze")] string Waze,
         [property: JsonPropertyName("openStreetMap")] string OpenStreetMap);
+
+    private sealed record LocationValidationResult(
+        [property: JsonPropertyName("isValid")] bool IsValid,
+        [property: JsonPropertyName("provinceName")] string? ProvinceName,
+        [property: JsonPropertyName("wardName")] string? WardName);
 }

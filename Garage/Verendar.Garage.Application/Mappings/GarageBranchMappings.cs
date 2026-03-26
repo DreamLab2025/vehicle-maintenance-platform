@@ -37,6 +37,34 @@ public static class GarageBranchMappings
         };
     }
 
+    public static void UpdateFromRequest(this GarageBranch entity, GarageBranchRequest request)
+    {
+        entity.Name = request.Name;
+        entity.Description = request.Description;
+        entity.CoverImageUrl = request.CoverImageUrl;
+        entity.PhoneNumber = request.PhoneNumber;
+        entity.TaxCode = request.TaxCode;
+        entity.Address = new Address
+        {
+            ProvinceCode = request.Address.ProvinceCode,
+            WardCode = request.Address.WardCode,
+            HouseNumber = request.Address.HouseNumber,
+            StreetDetail = request.Address.StreetDetail
+        };
+        entity.WorkingHours = new WorkingHours
+        {
+            Schedule = request.WorkingHours.Schedule
+                .ToDictionary(
+                    kv => kv.Key,
+                    kv => new DaySchedule
+                    {
+                        OpenTime = kv.Value.OpenTime,
+                        CloseTime = kv.Value.CloseTime,
+                        IsClosed = kv.Value.IsClosed
+                    })
+        };
+    }
+
     public static GarageBranchSummaryResponse ToSummaryResponse(this GarageBranch entity)
     {
         return new GarageBranchSummaryResponse

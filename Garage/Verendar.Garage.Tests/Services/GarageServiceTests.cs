@@ -1,9 +1,11 @@
 using System.Linq.Expressions;
+using MassTransit;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Verendar.Common.Shared;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
+using Verendar.Garage.Contracts.Events;
 using Verendar.Garage.Domain.Entities;
 using Verendar.Garage.Domain.Enums;
 using Verendar.Garage.Domain.ValueObjects;
@@ -31,11 +33,14 @@ public class GarageServiceTests
             .ReturnsAsync((Expression<Func<GarageEntity, bool>> expr) =>
                 store.FirstOrDefault(g => expr.Compile()(g)));
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.CreateGarageAsync(ownerId, new GarageRequest { BusinessName = "New Name" });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 409, "Tài khoản đã có garage đăng ký");
+        GarageServiceResponseAssert.AssertFailureEnvelope(
+            result,
+            409,
+            "Tài khoản đã có garage đăng ký. Nếu bị từ chối, hãy chỉnh sửa và nộp lại.");
         m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         m.Garages.Verify(r => r.AddAsync(It.IsAny<GarageEntity>()), Times.Never);
     }
@@ -53,7 +58,7 @@ public class GarageServiceTests
         m.Garages.Setup(r => r.AddAsync(It.IsAny<GarageEntity>()))
             .ReturnsAsync((GarageEntity g) => g);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var request = new GarageRequest { BusinessName = "Garage Alpha" };
         var result = await sut.CreateGarageAsync(ownerId, request);
@@ -83,7 +88,7 @@ public class GarageServiceTests
                 It.IsAny<Func<IQueryable<GarageEntity>, IOrderedQueryable<GarageEntity>>>()))
             .ReturnsAsync((garages, garages.Count));
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetGaragesAsync(new GarageFilterRequest { PageNumber = 1, PageSize = 10 });
 
@@ -110,7 +115,7 @@ public class GarageServiceTests
                 It.IsAny<Func<IQueryable<GarageEntity>, IOrderedQueryable<GarageEntity>>>()))
             .ReturnsAsync((new List<GarageEntity> { activeGarage }, 1));
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetGaragesAsync(new GarageFilterRequest { Status = GarageStatus.Active });
 
@@ -132,7 +137,7 @@ public class GarageServiceTests
                 It.IsAny<Func<IQueryable<GarageEntity>, IOrderedQueryable<GarageEntity>>>()))
             .ReturnsAsync((new List<GarageEntity>(), 0));
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetGaragesAsync(new GarageFilterRequest());
 
@@ -166,7 +171,7 @@ public class GarageServiceTests
             .ReturnsAsync((Expression<Func<GarageEntity, bool>> expr, CancellationToken _) =>
                 expr.Compile()(garage) ? garage : null);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetMyGarageAsync(ownerId);
 
@@ -185,7 +190,7 @@ public class GarageServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((GarageEntity?)null);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetMyGarageAsync(Guid.NewGuid());
 
@@ -215,7 +220,7 @@ public class GarageServiceTests
             .ReturnsAsync((Expression<Func<GarageEntity, bool>> expr, CancellationToken _) =>
                 expr.Compile()(garage) ? garage : null);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetGarageByIdAsync(garageId);
 
@@ -236,10 +241,170 @@ public class GarageServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((GarageEntity?)null);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetGarageByIdAsync(Guid.NewGuid());
 
         GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, "Không tìm thấy garage.");
+    }
+
+    [Fact]
+    public async Task UpdateGarageStatusAsync_WhenGarageNotFound_Returns404()
+    {
+        var garageId = Guid.NewGuid();
+        var m = new GarageUnitOfWorkMock();
+        m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
+            .ReturnsAsync((GarageEntity?)null);
+
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+
+        var result = await sut.UpdateGarageStatusAsync(garageId, new UpdateGarageStatusRequest
+        {
+            Status = GarageStatus.Active
+        }, Guid.NewGuid());
+
+        result.IsSuccess.Should().BeFalse();
+        result.StatusCode.Should().Be(404);
+        result.Message.Should().Be($"Không tìm thấy garage với id '{garageId}'.");
+    }
+
+    [Fact]
+    public async Task UpdateGarageStatusAsync_WhenInvalidTransition_Returns400()
+    {
+        var garageId = Guid.NewGuid();
+        var garage = new GarageEntity
+        {
+            Id = garageId,
+            OwnerId = Guid.NewGuid(),
+            BusinessName = "G",
+            Slug = "g",
+            Status = GarageStatus.Active
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
+            .ReturnsAsync(garage);
+
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+
+        var result = await sut.UpdateGarageStatusAsync(garageId, new UpdateGarageStatusRequest
+        {
+            Status = GarageStatus.Pending
+        }, Guid.NewGuid());
+
+        GarageServiceResponseAssert.AssertFailureEnvelope(
+            result,
+            400,
+            "Không thể chuyển trạng thái từ 'Active' sang 'Pending'.");
+    }
+
+    [Fact]
+    public async Task UpdateGarageInfoAsync_WhenGarageOwnedAndEditable_Returns200()
+    {
+        var garageId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var garage = new GarageEntity
+        {
+            Id = garageId,
+            OwnerId = ownerId,
+            BusinessName = "Old",
+            Slug = "old",
+            Status = GarageStatus.Pending
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
+            .ReturnsAsync(garage);
+
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+
+        var result = await sut.UpdateGarageInfoAsync(garageId, ownerId, new GarageRequest
+        {
+            BusinessName = "New Name",
+            ShortName = "NN"
+        });
+
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật thông tin garage thành công");
+        result.Data!.BusinessName.Should().Be("New Name");
+    }
+
+    [Fact]
+    public async Task ResubmitGarageAsync_WhenStatusIsRejected_Returns200()
+    {
+        var garageId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var garage = new GarageEntity
+        {
+            Id = garageId,
+            OwnerId = ownerId,
+            BusinessName = "G",
+            Slug = "g",
+            Status = GarageStatus.Rejected
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
+            .ReturnsAsync(garage);
+        m.StatusHistories.Setup(r => r.AddAsync(It.IsAny<GarageStatusHistory>()))
+            .ReturnsAsync((GarageStatusHistory h) => h);
+
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+
+        var result = await sut.ResubmitGarageAsync(garageId, ownerId);
+
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Nộp lại hồ sơ thành công");
+        result.Data!.Status.Should().Be(GarageStatus.Pending);
+    }
+
+    [Fact]
+    public async Task UpdateGarageStatusAsync_WhenValidTransition_Returns200AndPublishesEvent()
+    {
+        var garageId = Guid.NewGuid();
+        var adminId = Guid.NewGuid();
+        var garage = new GarageEntity
+        {
+            Id = garageId,
+            OwnerId = Guid.NewGuid(),
+            BusinessName = "G",
+            Slug = "g",
+            Status = GarageStatus.Pending
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
+            .ReturnsAsync(garage);
+        m.StatusHistories.Setup(r => r.AddAsync(It.IsAny<GarageStatusHistory>()))
+            .ReturnsAsync((GarageStatusHistory h) => h);
+
+        var publish = new Mock<IPublishEndpoint>(MockBehavior.Strict);
+        publish.Setup(p => p.Publish(It.IsAny<GarageStatusChangedEvent>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, publish.Object);
+
+        var result = await sut.UpdateGarageStatusAsync(garageId, new UpdateGarageStatusRequest { Status = GarageStatus.Active }, adminId);
+
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật trạng thái garage thành công");
+        garage.Status.Should().Be(GarageStatus.Active);
+        publish.VerifyAll();
+    }
+
+    [Fact]
+    public async Task UpdateGarageInfoAsync_WhenStatusActive_Returns400()
+    {
+        var garage = new GarageEntity
+        {
+            Id = Guid.NewGuid(),
+            OwnerId = Guid.NewGuid(),
+            BusinessName = "G",
+            Slug = "g",
+            Status = GarageStatus.Active
+        };
+        var m = new GarageUnitOfWorkMock();
+        m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
+            .ReturnsAsync(garage);
+        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+
+        var result = await sut.UpdateGarageInfoAsync(garage.Id, garage.OwnerId, new GarageRequest { BusinessName = "N" });
+
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, "Không thể chỉnh sửa thông tin garage khi đang ở trạng thái Active hoặc Suspended.");
     }
 }

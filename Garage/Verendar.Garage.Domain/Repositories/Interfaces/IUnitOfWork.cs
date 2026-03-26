@@ -10,4 +10,5 @@ public interface IUnitOfWork : IBaseUnitOfWork
     IGarageMemberRepository Members { get; }
     IBookingRepository Bookings { get; }
     IReviewRepository Reviews { get; }
+    IGarageStatusHistoryRepository StatusHistories { get; }
 }
