@@ -82,8 +82,6 @@ namespace Verendar.Vehicle.Infrastructure.Services
 
         private static byte[] GeneratePdf(UserVehicle vehicle, List<MaintenanceRecord> records, List<string> columns)
         {
-            QuestPDF.Settings.License = LicenseType.Community;
-
             var plate = vehicle.LicensePlate ?? vehicle.Id.ToString("N")[..8];
             var totalCost = records.Sum(r => r.TotalCost);
 

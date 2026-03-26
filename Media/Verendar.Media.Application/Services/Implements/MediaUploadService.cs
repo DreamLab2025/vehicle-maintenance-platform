@@ -53,10 +53,6 @@ namespace Verendar.Media.Application.Services.Implements
                 return ApiResponse<string>.FailureResponse("File chưa được upload lên storage. Vui lòng upload file lên Presigned URL trước khi xác nhận.");
             }
 
-            mediaFile.Status = FileStatus.Uploaded;
-            await _unitOfWork.MediaFileRepository.UpdateAsync(id, mediaFile);
-            await _unitOfWork.SaveChangesAsync();
-
             string finalUrl;
             try
             {
@@ -67,6 +63,11 @@ namespace Verendar.Media.Application.Services.Implements
                 _logger.LogError(ex, "Storage GetFilePath failed for file {FileId}", id);
                 return ApiResponse<string>.FailureResponse("Lỗi khi xác nhận upload");
             }
+
+            mediaFile.Status = FileStatus.Uploaded;
+            mediaFile.PublicPath = finalUrl;
+            await _unitOfWork.MediaFileRepository.UpdateAsync(id, mediaFile);
+            await _unitOfWork.SaveChangesAsync();
 
             return ApiResponse<string>.SuccessResponse(finalUrl, "Xác nhận upload thành công");
         }
@@ -108,6 +109,7 @@ namespace Verendar.Media.Application.Services.Implements
 
             mediaFile.DeletedAt = DateTime.UtcNow;
             mediaFile.FilePath = string.Empty;
+            mediaFile.PublicPath = null;
             mediaFile.Status = FileStatus.Deleted;
 
             await _unitOfWork.MediaFileRepository.UpdateAsync(mediaFile.Id, mediaFile);
@@ -154,6 +156,7 @@ namespace Verendar.Media.Application.Services.Implements
 
             mediaFile.DeletedAt = DateTime.UtcNow;
             mediaFile.FilePath = string.Empty;
+            mediaFile.PublicPath = null;
             mediaFile.Status = FileStatus.Deleted;
 
             await _unitOfWork.MediaFileRepository.UpdateAsync(mediaFile.Id, mediaFile);
@@ -169,7 +172,9 @@ namespace Verendar.Media.Application.Services.Implements
                 return ApiResponse<string>.NotFoundResponse("File không tồn tại hoặc chưa được upload");
             }
 
-            var url = _storageService.GetFilePath(mediaFile.FilePath);
+            var url = !string.IsNullOrWhiteSpace(mediaFile.PublicPath)
+                ? mediaFile.PublicPath
+                : _storageService.GetFilePath(mediaFile.FilePath);
             return ApiResponse<string>.SuccessResponse(url);
         }
 

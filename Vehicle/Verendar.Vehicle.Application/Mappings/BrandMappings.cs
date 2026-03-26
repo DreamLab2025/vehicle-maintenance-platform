@@ -47,7 +47,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static void UpdateEntity(this Brand entity, BrandRequest request)
+        public static void UpdateFromRequest(this Brand entity, BrandRequest request)
         {
             entity.VehicleTypeId = request.VehicleTypeId;
             entity.Name = request.Name;

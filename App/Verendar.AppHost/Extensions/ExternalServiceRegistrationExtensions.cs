@@ -1,4 +1,5 @@
 using Aspire.Hosting;
+using Microsoft.Extensions.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Yarp;
 using Yarp.ReverseProxy.Configuration;
@@ -7,10 +8,10 @@ namespace Verendar.AppHost.Extensions
 {
     public static class ExternalServiceRegistrationExtensions
     {
-        private const string PgAdminEnvVar = "VERENDAR_PGADMIN";
-
         public static IDistributedApplicationBuilder AddApplicationServices(this IDistributedApplicationBuilder builder)
         {
+            var isDevelopment = builder.Environment.IsDevelopment();
+
             var postgres = builder.AddPostgres("postgres")
                 .WithContainerName("verendar-aspire-postgres")
                 .WithImage("postgres", "17.4-alpine")
@@ -18,7 +19,16 @@ namespace Verendar.AppHost.Extensions
                 .WithLifetime(ContainerLifetime.Persistent)
                 .WithDataVolume();
 
-            if (string.Equals(Environment.GetEnvironmentVariable(PgAdminEnvVar), "1", StringComparison.OrdinalIgnoreCase))
+            if (isDevelopment)
+            {
+                postgres = postgres.WithPgWeb(pgWeb =>
+                {
+                    pgWeb.WithContainerName("verendar-aspire-pgweb")
+                        .WithHostPort(5050)
+                        .WithLifetime(ContainerLifetime.Persistent);
+                });
+            }
+            else
             {
                 postgres = postgres.WithPgAdmin(pgAdmin =>
                 {

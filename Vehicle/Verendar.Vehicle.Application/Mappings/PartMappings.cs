@@ -54,7 +54,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static void UpdateEntity(this PartCategory entity, PartCategoryRequest request)
+        public static void UpdateFromRequest(this PartCategory entity, PartCategoryRequest request)
         {
             entity.Name = request.Name;
             entity.Description = request.Description;
@@ -119,7 +119,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static void UpdateEntity(this PartProduct entity, PartProductRequest request)
+        public static void UpdateFromRequest(this PartProduct entity, PartProductRequest request)
         {
             entity.PartCategoryId = request.PartCategoryId;
             entity.Name = request.Name;

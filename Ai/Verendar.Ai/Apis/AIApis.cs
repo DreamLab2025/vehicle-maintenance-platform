@@ -4,6 +4,7 @@ using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Application.Dtos.Health;
 using Verendar.Ai.Application.Dtos.OdometerScan;
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
+using Verendar.Ai.Domain.Enums;
 using Verendar.Ai.Infrastructure.Configuration;
 using Verendar.Common.EndpointFilters;
 
@@ -113,22 +114,35 @@ namespace Verendar.Ai.Apis
         }
 
         private static async Task<IResult> GetHealth(
-            IGenerativeAiService aiService,
+            IGenerativeAiServiceFactory factory,
             IOptions<AiProviderOptions> providerOptions,
             CancellationToken cancellationToken)
         {
-            var provider = string.IsNullOrWhiteSpace(providerOptions.Value.Provider) ? "Gemini" : providerOptions.Value.Provider.Trim();
-            var (success, errorMessage) = await aiService.CheckConnectivityAsync(cancellationToken);
+            var activeProvider = string.IsNullOrWhiteSpace(providerOptions.Value.Provider) ? "Gemini" : providerOptions.Value.Provider.Trim();
 
-            var response = new HealthCheckResponse
+            var checks = Enum.GetValues<AiProvider>().Select(async provider =>
             {
-                Status = success ? "Healthy" : "Unhealthy",
-                Provider = provider,
-                ThirdPartyAiConnected = success,
-                Message = success ? null : errorMessage
-            };
+                var service = factory.Create(provider);
+                var (connected, error) = await service.CheckConnectivityAsync(cancellationToken);
+                return new ProviderHealthStatus
+                {
+                    Provider = provider.ToString(),
+                    Connected = connected,
+                    Message = connected ? null : error
+                };
+            });
 
-            return Results.Ok(response);
+            var results = (await Task.WhenAll(checks)).ToList();
+
+            var activeStatus = results.FirstOrDefault(r =>
+                r.Provider.Equals(activeProvider, StringComparison.OrdinalIgnoreCase));
+
+            return Results.Ok(new HealthCheckResponse
+            {
+                Status = activeStatus?.Connected == true ? "Healthy" : "Unhealthy",
+                ActiveProvider = activeProvider,
+                Providers = results
+            });
         }
     }
 }

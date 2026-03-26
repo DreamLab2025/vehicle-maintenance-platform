@@ -199,7 +199,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static void UpdateEntity(this UserVehicle entity, UserVehicleRequest request)
+        public static void UpdateFromRequest(this UserVehicle entity, UserVehicleRequest request)
         {
             entity.VehicleVariantId = request.VehicleVariantId;
             entity.LicensePlate = request.LicensePlate;
@@ -303,7 +303,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static OdometerHistory ToPhotoInputOdometerHistory(this Guid userVehicleId, int odometerValue, int previousOdometerValue)
+        public static OdometerHistory ToPhotoInputOdometerHistory(this Guid userVehicleId, int odometerValue, int previousOdometerValue, Guid? mediaFileId = null)
         {
             return new OdometerHistory
             {
@@ -311,7 +311,8 @@ namespace Verendar.Vehicle.Application.Mappings
                 OdometerValue = odometerValue,
                 RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
                 Source = OdometerSource.PhotoInput,
-                KmOnRecordedDate = odometerValue - previousOdometerValue
+                KmOnRecordedDate = odometerValue - previousOdometerValue,
+                MediaFileId = mediaFileId
             };
         }
 

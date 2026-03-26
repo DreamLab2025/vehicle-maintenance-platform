@@ -193,7 +193,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<UserVehicleResponse>.ConflictResponse("Biển số xe đã tồn tại trong danh sách của bạn");
             }
 
-            vehicle.UpdateEntity(request);
+            vehicle.UpdateFromRequest(request);
             await _unitOfWork.UserVehicles.UpdateAsync(vehicleId, vehicle);
             await _unitOfWork.SaveChangesAsync();
 

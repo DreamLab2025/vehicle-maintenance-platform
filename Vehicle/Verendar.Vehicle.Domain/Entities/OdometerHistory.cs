@@ -14,6 +14,8 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public int? KmOnRecordedDate { get; set; }
 
+        public Guid? MediaFileId { get; set; }
+
         public UserVehicle UserVehicle { get; set; } = null!;
     }
 }

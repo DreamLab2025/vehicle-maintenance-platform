@@ -158,7 +158,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<ModelResponse>.ConflictResponse("Tên mẫu xe đã tồn tại cho thương hiệu này");
             }
 
-            model.UpdateEntity(request);
+            model.UpdateFromRequest(request);
             await _unitOfWork.Models.UpdateAsync(id, model);
             await _unitOfWork.SaveChangesAsync();
 

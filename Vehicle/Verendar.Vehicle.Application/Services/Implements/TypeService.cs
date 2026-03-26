@@ -107,7 +107,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<TypeResponse>.ConflictResponse("Tên loại xe đã tồn tại");
             }
 
-            vehicleType.UpdateEntity(request);
+            vehicleType.UpdateFromRequest(request);
             await _unitOfWork.Types.UpdateAsync(id, vehicleType);
             await _unitOfWork.SaveChangesAsync();
 

@@ -45,7 +45,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 return ApiResponse<PartProductResponse>.NotFoundResponse("Không tìm thấy danh mục phụ tùng");
             }
 
-            product.UpdateEntity(request);
+            product.UpdateFromRequest(request);
             await _unitOfWork.PartProducts.UpdateAsync(id, product);
             await _unitOfWork.SaveChangesAsync();
 
