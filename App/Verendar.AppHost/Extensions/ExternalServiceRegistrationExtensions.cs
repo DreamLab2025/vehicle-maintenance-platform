@@ -12,15 +12,23 @@ namespace Verendar.AppHost.Extensions
         public static IDistributedApplicationBuilder AddApplicationServices(this IDistributedApplicationBuilder builder)
         {
             var isDevelopment = builder.Environment.IsDevelopment();
+            var isIsolatedTestRun = IsIsolatedTestRun();
+            var runSuffix = isIsolatedTestRun
+                ? $"-test-{Guid.NewGuid():N}".Substring(0, 14)
+                : string.Empty;
 
             var postgres = builder.AddPostgres("postgres")
-                .WithContainerName("verendar-aspire-postgres")
+                .WithContainerName($"verendar-aspire-postgres{runSuffix}")
                 .WithImage("postgres", "17.4-alpine")
                 .WithImagePullPolicy(ImagePullPolicy.Missing)
-                .WithLifetime(ContainerLifetime.Persistent)
-                .WithDataVolume();
+                .WithLifetime(isIsolatedTestRun ? ContainerLifetime.Session : ContainerLifetime.Persistent);
 
-            if (isDevelopment)
+            if (!isIsolatedTestRun)
+            {
+                postgres = postgres.WithDataVolume();
+            }
+
+            if (isDevelopment && !isIsolatedTestRun)
             {
                 postgres = postgres.WithPgWeb(pgWeb =>
                 {
@@ -31,26 +39,34 @@ namespace Verendar.AppHost.Extensions
             }
 
             var rabbitMq = builder.AddRabbitMQ("rabbitmq")
-                .WithContainerName("verendar-aspire-rabbitmq")
+                .WithContainerName($"verendar-aspire-rabbitmq{runSuffix}")
                 .WithImageTag("3-management-alpine")
                 .WithImagePullPolicy(ImagePullPolicy.Missing)
-                .WithLifetime(ContainerLifetime.Persistent)
-                .WithManagementPlugin(15672)
-                .WithDataVolume();
+                .WithLifetime(isIsolatedTestRun ? ContainerLifetime.Session : ContainerLifetime.Persistent)
+                .WithManagementPlugin(isIsolatedTestRun ? null : 15672);
+
+            if (!isIsolatedTestRun)
+            {
+                rabbitMq = rabbitMq.WithDataVolume();
+            }
 
             var redis = builder.AddRedis("redis")
                 .WithImage("redis", "7.4-alpine")
                 .WithImagePullPolicy(ImagePullPolicy.Missing)
-                .WithLifetime(ContainerLifetime.Persistent)
-                .WithContainerName("verendar-aspire-redis");
+                .WithLifetime(isIsolatedTestRun ? ContainerLifetime.Session : ContainerLifetime.Persistent)
+                .WithContainerName($"verendar-aspire-redis{runSuffix}");
 
             var seq = builder.AddSeq("seq")
                 .WithImage("datalust/seq", "2025.2")
                 .WithImagePullPolicy(ImagePullPolicy.Missing)
-                .WithLifetime(ContainerLifetime.Persistent)
-                .WithDataVolume()
-                .WithContainerName("verendar-aspire-seq")
+                .WithLifetime(isIsolatedTestRun ? ContainerLifetime.Session : ContainerLifetime.Persistent)
+                .WithContainerName($"verendar-aspire-seq{runSuffix}")
                 .ExcludeFromManifest();
+
+            if (!isIsolatedTestRun)
+            {
+                seq = seq.WithDataVolume();
+            }
 
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
             var vehicleDb = postgres.AddDatabase("vehicle-db", "Vehicles");
@@ -72,7 +88,8 @@ namespace Verendar.AppHost.Extensions
 
             var vehicleService = builder.AddProject<Projects.Verendar_Vehicle>("vehicle-service")
                 .WithReference(vehicleDb)
-                .WithReference(rabbitMq);
+                .WithReference(rabbitMq)
+                .WithReference(identityService);
             vehicleService = vehicleService
                 .WithReference(seq)
                 .WaitFor(postgres)
@@ -124,9 +141,8 @@ namespace Verendar.AppHost.Extensions
 
 
             var apiGateway = builder.AddYarp("api-gateway")
-                .WithContainerName("verendar-aspire-gateway")
-                .WithHostPort(8080)
-                .WithLifetime(ContainerLifetime.Persistent)
+                .WithContainerName($"verendar-aspire-gateway{runSuffix}")
+                .WithLifetime(isIsolatedTestRun ? ContainerLifetime.Session : ContainerLifetime.Persistent)
                 .WithConfiguration(yarp =>
                 {
                     var identityCluster = yarp.AddProjectCluster(identityService);
@@ -160,6 +176,11 @@ namespace Verendar.AppHost.Extensions
 
                     var garageCluster = yarp.AddProjectCluster(garageService);
                     yarp.AddRoute("/api/v1/garages/{**catch-all}", garageCluster);
+                    yarp.AddRoute("/api/v1/bookings/{**catch-all}", garageCluster);
+                    yarp.AddRoute("/api/v1/garage-products/{**catch-all}", garageCluster);
+                    yarp.AddRoute("/api/v1/garage-services/{**catch-all}", garageCluster);
+                    yarp.AddRoute("/api/v1/garage-bundles/{**catch-all}", garageCluster);
+                    yarp.AddRoute("/api/v1/service-categories/{**catch-all}", garageCluster);
                 })
                 .WaitFor(identityService)
                 .WaitFor(vehicleService)
@@ -168,6 +189,11 @@ namespace Verendar.AppHost.Extensions
                 .WaitFor(aiService)
                 .WaitFor(locationService)
                 .WaitFor(garageService);
+
+            if (!isIsolatedTestRun)
+            {
+                apiGateway = apiGateway.WithHostPort(8080);
+            }
 
             if (isDevelopment)
             {
@@ -187,6 +213,13 @@ namespace Verendar.AppHost.Extensions
             }
 
             return builder;
+        }
+
+        private static bool IsIsolatedTestRun()
+        {
+            var isolatedFlag = Environment.GetEnvironmentVariable("VERENDAR_TEST_ISOLATED");
+            return string.Equals(isolatedFlag, "1", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(isolatedFlag, "true", StringComparison.OrdinalIgnoreCase);
         }
 
         private static YarpCluster AddProjectCluster(this IYarpConfigurationBuilder yarp, IResourceBuilder<ProjectResource> resource)

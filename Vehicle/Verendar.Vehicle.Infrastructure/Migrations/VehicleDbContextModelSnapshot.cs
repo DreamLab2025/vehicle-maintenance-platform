@@ -135,6 +135,133 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.ToTable("DefaultMaintenanceSchedules");
                 });
 
+            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceProposal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AppliedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BranchName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GarageBranchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int?>("OdometerAtService")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ResultMaintenanceRecordId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("ServiceDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserVehicleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId")
+                        .IsUnique();
+
+                    b.HasIndex("UserVehicleId");
+
+                    b.ToTable("MaintenanceProposals");
+                });
+
+            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceProposalItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ItemName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("PartCategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid>("ProposalId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("RecommendedKmInterval")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RecommendedMonthsInterval")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("UpdatesTracking")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProposalId");
+
+                    b.ToTable("MaintenanceProposalItems");
+                });
+
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -887,6 +1014,28 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Navigation("VehicleModel");
                 });
 
+            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceProposal", b =>
+                {
+                    b.HasOne("Verendar.Vehicle.Domain.Entities.UserVehicle", "UserVehicle")
+                        .WithMany()
+                        .HasForeignKey("UserVehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UserVehicle");
+                });
+
+            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceProposalItem", b =>
+                {
+                    b.HasOne("Verendar.Vehicle.Domain.Entities.MaintenanceProposal", "Proposal")
+                        .WithMany("Items")
+                        .HasForeignKey("ProposalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Proposal");
+                });
+
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceRecord", b =>
                 {
                     b.HasOne("Verendar.Vehicle.Domain.Entities.UserVehicle", "UserVehicle")
@@ -1028,6 +1177,11 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.Brand", b =>
                 {
                     b.Navigation("VehicleModels");
+                });
+
+            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceProposal", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceRecord", b =>

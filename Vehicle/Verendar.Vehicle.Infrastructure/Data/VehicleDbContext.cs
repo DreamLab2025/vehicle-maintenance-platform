@@ -30,6 +30,10 @@ namespace Verendar.Vehicle.Infrastructure.Data
         public DbSet<MaintenanceRecord> MaintenanceRecords { get; set; } = null!;
         public DbSet<MaintenanceRecordItem> MaintenanceRecordItems { get; set; } = null!;
 
+        // Booking Maintenance Proposals
+        public DbSet<MaintenanceProposal> MaintenanceProposals { get; set; } = null!;
+        public DbSet<MaintenanceProposalItem> MaintenanceProposalItems { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

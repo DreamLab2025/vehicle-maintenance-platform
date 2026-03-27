@@ -53,7 +53,7 @@ namespace Verendar.Notification.Apis
                 .WithName("GetNotificationDetailForUser")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Lấy chi tiết thông báo (kèm metadata snapshot lúc gửi)";
+                    operation.Summary = "Lấy chi tiết thông báo. Với MaintenanceReminder, response có thêm maintenanceReminderFreshness (tra Vehicle) để biết phụ tùng đã cập nhật sau khi gửi.";
                     return operation;
                 })
                 .Produces<ApiResponse<NotificationDetailDto>>(StatusCodes.Status200OK)

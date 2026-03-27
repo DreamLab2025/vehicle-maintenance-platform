@@ -53,9 +53,6 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.Property<Guid>("GarageBranchId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("GarageProductId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("MechanicId")
                         .HasColumnType("uuid");
 
@@ -88,13 +85,66 @@ namespace Verendar.Garage.Infrastructure.Migrations
 
                     b.HasIndex("GarageBranchId");
 
-                    b.HasIndex("GarageProductId");
-
                     b.HasIndex("MechanicId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Bookings");
+                });
+
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.BookingLineItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BookingId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("BundleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IncludeInstallation")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ServiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("BundleId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("BookingLineItems");
                 });
 
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.BookingStatusHistory", b =>
@@ -285,6 +335,109 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.ToTable("GarageBranches");
                 });
 
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageBundle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<decimal?>("DiscountPercent")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid>("GarageBranchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GarageBranchId");
+
+                    b.ToTable("GarageBundles");
+                });
+
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageBundleItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GarageBundleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IncludeInstallation")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ServiceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GarageBundleId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.ToTable("GarageBundleItems");
+                });
+
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageMember", b =>
                 {
                     b.Property<Guid>("Id")
@@ -312,8 +465,17 @@ namespace Verendar.Garage.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<Guid>("GarageBranchId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("Role")
                         .HasColumnType("integer");
@@ -378,6 +540,9 @@ namespace Verendar.Garage.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<Guid?>("InstallationServiceId")
+                        .HasColumnType("uuid");
+
                     b.Property<int?>("ManufacturerKmInterval")
                         .HasColumnType("integer");
 
@@ -395,9 +560,6 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -407,6 +569,8 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("GarageBranchId");
+
+                    b.HasIndex("InstallationServiceId");
 
                     b.ToTable("GarageProducts");
                 });
@@ -462,6 +626,64 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.ToTable("GarageReviews");
                 });
 
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageService", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int?>("EstimatedDurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("GarageBranchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("ServiceCategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GarageBranchId");
+
+                    b.HasIndex("ServiceCategoryId");
+
+                    b.ToTable("GarageServices");
+                });
+
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageStatusHistory", b =>
                 {
                     b.Property<Guid>("Id")
@@ -512,6 +734,61 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.ToTable("GarageStatusHistories");
                 });
 
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.ServiceCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("IconUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DisplayOrder");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("ServiceCategories");
+                });
+
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.Booking", b =>
                 {
                     b.HasOne("Verendar.Garage.Domain.Entities.GarageBranch", "GarageBranch")
@@ -520,17 +797,11 @@ namespace Verendar.Garage.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Verendar.Garage.Domain.Entities.GarageProduct", "GarageProduct")
-                        .WithMany()
-                        .HasForeignKey("GarageProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Verendar.Garage.Domain.Entities.GarageMember", "Mechanic")
                         .WithMany()
                         .HasForeignKey("MechanicId");
 
-                    b.OwnsOne("Verendar.Garage.Domain.ValueObjects.Money", "BookedPrice", b1 =>
+                    b.OwnsOne("Verendar.Garage.Domain.ValueObjects.Money", "BookedTotalPrice", b1 =>
                         {
                             b1.Property<Guid>("BookingId")
                                 .HasColumnType("uuid");
@@ -552,14 +823,69 @@ namespace Verendar.Garage.Infrastructure.Migrations
                                 .HasForeignKey("BookingId");
                         });
 
-                    b.Navigation("BookedPrice")
+                    b.Navigation("BookedTotalPrice")
                         .IsRequired();
 
                     b.Navigation("GarageBranch");
 
-                    b.Navigation("GarageProduct");
-
                     b.Navigation("Mechanic");
+                });
+
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.BookingLineItem", b =>
+                {
+                    b.HasOne("Verendar.Garage.Domain.Entities.Booking", "Booking")
+                        .WithMany("LineItems")
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Verendar.Garage.Domain.Entities.GarageBundle", "Bundle")
+                        .WithMany()
+                        .HasForeignKey("BundleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Verendar.Garage.Domain.Entities.GarageProduct", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Verendar.Garage.Domain.Entities.GarageService", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.OwnsOne("Verendar.Garage.Domain.ValueObjects.Money", "BookedItemPrice", b1 =>
+                        {
+                            b1.Property<Guid>("BookingLineItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)");
+
+                            b1.HasKey("BookingLineItemId");
+
+                            b1.ToTable("BookingLineItems");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BookingLineItemId");
+                        });
+
+                    b.Navigation("BookedItemPrice")
+                        .IsRequired();
+
+                    b.Navigation("Booking");
+
+                    b.Navigation("Bundle");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.BookingStatusHistory", b =>
@@ -619,6 +945,66 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.Navigation("Garage");
                 });
 
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageBundle", b =>
+                {
+                    b.HasOne("Verendar.Garage.Domain.Entities.GarageBranch", "GarageBranch")
+                        .WithMany()
+                        .HasForeignKey("GarageBranchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Verendar.Garage.Domain.ValueObjects.Money", "DiscountAmount", b1 =>
+                        {
+                            b1.Property<Guid>("GarageBundleId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)");
+
+                            b1.HasKey("GarageBundleId");
+
+                            b1.ToTable("GarageBundles");
+
+                            b1.WithOwner()
+                                .HasForeignKey("GarageBundleId");
+                        });
+
+                    b.Navigation("DiscountAmount");
+
+                    b.Navigation("GarageBranch");
+                });
+
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageBundleItem", b =>
+                {
+                    b.HasOne("Verendar.Garage.Domain.Entities.GarageBundle", "GarageBundle")
+                        .WithMany("Items")
+                        .HasForeignKey("GarageBundleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Verendar.Garage.Domain.Entities.GarageProduct", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Verendar.Garage.Domain.Entities.GarageService", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("GarageBundle");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Service");
+                });
+
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageMember", b =>
                 {
                     b.HasOne("Verendar.Garage.Domain.Entities.GarageBranch", "GarageBranch")
@@ -638,7 +1024,12 @@ namespace Verendar.Garage.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.OwnsOne("Verendar.Garage.Domain.ValueObjects.Money", "Price", b1 =>
+                    b.HasOne("Verendar.Garage.Domain.Entities.GarageService", "InstallationService")
+                        .WithMany()
+                        .HasForeignKey("InstallationServiceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.OwnsOne("Verendar.Garage.Domain.ValueObjects.Money", "MaterialPrice", b1 =>
                         {
                             b1.Property<Guid>("GarageProductId")
                                 .HasColumnType("uuid");
@@ -662,7 +1053,9 @@ namespace Verendar.Garage.Infrastructure.Migrations
 
                     b.Navigation("GarageBranch");
 
-                    b.Navigation("Price")
+                    b.Navigation("InstallationService");
+
+                    b.Navigation("MaterialPrice")
                         .IsRequired();
                 });
 
@@ -685,6 +1078,49 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.Navigation("GarageBranch");
                 });
 
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageService", b =>
+                {
+                    b.HasOne("Verendar.Garage.Domain.Entities.GarageBranch", "GarageBranch")
+                        .WithMany()
+                        .HasForeignKey("GarageBranchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Verendar.Garage.Domain.Entities.ServiceCategory", "ServiceCategory")
+                        .WithMany("Services")
+                        .HasForeignKey("ServiceCategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.OwnsOne("Verendar.Garage.Domain.ValueObjects.Money", "LaborPrice", b1 =>
+                        {
+                            b1.Property<Guid>("GarageServiceId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)");
+
+                            b1.HasKey("GarageServiceId");
+
+                            b1.ToTable("GarageServices");
+
+                            b1.WithOwner()
+                                .HasForeignKey("GarageServiceId");
+                        });
+
+                    b.Navigation("GarageBranch");
+
+                    b.Navigation("LaborPrice")
+                        .IsRequired();
+
+                    b.Navigation("ServiceCategory");
+                });
+
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageStatusHistory", b =>
                 {
                     b.HasOne("Verendar.Garage.Domain.Entities.Garage", "Garage")
@@ -698,6 +1134,8 @@ namespace Verendar.Garage.Infrastructure.Migrations
 
             modelBuilder.Entity("Verendar.Garage.Domain.Entities.Booking", b =>
                 {
+                    b.Navigation("LineItems");
+
                     b.Navigation("Review");
 
                     b.Navigation("StatusHistory");
@@ -715,6 +1153,16 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.Navigation("Products");
 
                     b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.GarageBundle", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Verendar.Garage.Domain.Entities.ServiceCategory", b =>
+                {
+                    b.Navigation("Services");
                 });
 #pragma warning restore 612, 618
         }

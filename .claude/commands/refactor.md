@@ -11,8 +11,8 @@ Read the target code first. Understand why it exists before changing it.
 - Preserve all existing behavior (semantics-preserving)
 - No public API contract changes (method signatures, route shapes, response shapes)
 - No AutoMapper, no Controllers — see CLAUDE.md Core Rules
-- If splitting a class, keep each piece in the correct layer (Domain / Application / Infrastructure / Host)
-- Preserve all auth and resource ownership checks
+- If splitting a class, keep each piece in the correct CA layer
+- Preserve all RBAC and resource ownership checks
 
 ## Output
 1. What the current code does (briefly)

@@ -10,6 +10,7 @@ namespace Verendar.Notification.Application.Constants
             public const string Welcome = "Welcome";
             public const string OdometerReminder = "OdometerReminder";
             public const string MaintenanceReminder = "MaintenanceReminder";
+            public const string MemberAccountCreated = "MemberAccountCreated";
         }
 
         public static class MaintenanceLevelLabels
@@ -36,6 +37,7 @@ namespace Verendar.Notification.Application.Constants
             public const string Otp = "Mã xác thực OTP";
             public const string Welcome = "Chào mừng đến với Verendar!";
             public const string OdometerReminder = "Nhắc nhở cập nhật số km";
+            public const string MemberAccountCreated = "Tài khoản Garage của bạn đã được tạo";
             public static readonly string MaintenanceCriticalPart = $"{MaintenanceLevelLabels.Critical}: Cần thay";
             public static readonly string MaintenanceCritical = $"{MaintenanceLevelLabels.Critical}: Cần thay linh kiện";
             public const string MaintenanceNormalPrefix = "Nhắc nhở bảo dưỡng";

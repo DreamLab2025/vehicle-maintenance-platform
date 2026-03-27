@@ -1,8 +1,10 @@
+using FluentValidation;
 using Verendar.Garage.Application.Clients;
+using Verendar.Garage.Infrastructure.Clients;
 using Verendar.Garage.Application.ExternalServices;
 using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Application.Services.Interfaces;
-using Verendar.Garage.Infrastructure.Clients;
+using Verendar.Garage.Application.Validators;
 using Verendar.Garage.Infrastructure.Configuration;
 using Verendar.Garage.Infrastructure.ExternalServices;
 
@@ -22,6 +24,14 @@ public static class ApplicationServiceExtensions
         builder.Services.AddScoped<IGarageService, GarageService>();
         builder.Services.AddScoped<IGarageBranchService, GarageBranchService>();
         builder.Services.AddScoped<IGarageMemberService, GarageMemberService>();
+        builder.Services.AddScoped<IBookingService, BookingService>();
+        builder.Services.AddScoped<IServiceCategoryService, ServiceCategoryService>();
+        builder.Services.AddScoped<IGarageProductService, GarageProductService>();
+        builder.Services.AddScoped<IGarageServiceService, GarageServiceService>();
+        builder.Services.AddScoped<IGarageBundleService, GarageBundleService>();
+        builder.Services.AddScoped<IReviewService, ReviewService>();
+
+        builder.Services.AddValidatorsFromAssemblyContaining<CreateBookingRequestValidator>();
 
         builder.Services.AddHttpClient<IPaymentClient, PaymentHttpClient>(client =>
         {
@@ -44,6 +54,24 @@ public static class ApplicationServiceExtensions
             var baseAddress = builder.Configuration["Services:Identity:BaseUrl"];
             client.BaseAddress = new Uri(string.IsNullOrEmpty(baseAddress)
                 ? "https+http://identity-service"
+                : baseAddress);
+        })
+        .AddServiceDiscovery();
+
+        builder.Services.AddHttpClient<IGarageIdentityContactClient, GarageIdentityContactHttpClient>(client =>
+        {
+            var baseAddress = builder.Configuration["Services:Identity:BaseUrl"];
+            client.BaseAddress = new Uri(string.IsNullOrEmpty(baseAddress)
+                ? "https+http://identity-service"
+                : baseAddress);
+        })
+        .AddServiceDiscovery();
+
+        builder.Services.AddHttpClient<IVehicleGarageClient, VehicleGarageHttpClient>(client =>
+        {
+            var baseAddress = builder.Configuration["Services:Vehicle:BaseUrl"];
+            client.BaseAddress = new Uri(string.IsNullOrEmpty(baseAddress)
+                ? "https+http://vehicle-service"
                 : baseAddress);
         })
         .AddServiceDiscovery();

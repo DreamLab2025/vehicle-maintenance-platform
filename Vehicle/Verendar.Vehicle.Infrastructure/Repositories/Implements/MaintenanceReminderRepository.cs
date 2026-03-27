@@ -75,5 +75,23 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .Where(x => x.TrackingCycle.PartTracking.UserVehicleId == userVehicleId && x.Status == ReminderStatus.Active)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<IReadOnlyList<MaintenanceReminder>> GetByIdsForUserAsync(
+            IReadOnlyList<Guid> reminderIds,
+            Guid userId,
+            CancellationToken cancellationToken = default)
+        {
+            if (reminderIds.Count == 0)
+                return [];
+
+            return await _dbSet
+                .Include(x => x.TrackingCycle)
+                    .ThenInclude(tc => tc.PartTracking)
+                        .ThenInclude(pt => pt!.UserVehicle)
+                .Where(x =>
+                    reminderIds.Contains(x.Id) &&
+                    x.TrackingCycle.PartTracking.UserVehicle.UserId == userId)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

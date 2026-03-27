@@ -8,10 +8,12 @@ using Verendar.Notification.Apis;
 using Verendar.Notification.Application.Hubs;
 using Verendar.Notification.Infrastructure.Configuration;
 using Verendar.Notification.Infrastructure.Data;
+using Verendar.Notification.Infrastructure.Clients;
 using Verendar.Notification.Infrastructure.ExternalServices.ESms;
 using Verendar.Notification.Infrastructure.ExternalServices.Resend;
 using Verendar.Notification.Infrastructure.Repositories.Implements;
 using Verendar.Notification.Infrastructure.Services;
+using Verendar.Notification.Application.Clients;
 using Verendar.Notification.Application.Services.Implements;
 using Verendar.ServiceDefaults;
 
@@ -39,6 +41,14 @@ namespace Verendar.Notification.Bootstrapping
             builder.Services.AddHttpClient<IResendEmailService, ResendEmailService>()
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
+
+            builder.Services.AddHttpClient<IVehicleMaintenanceReminderLookupClient, VehicleMaintenanceReminderLookupClient>(client =>
+            {
+                var baseUrl = builder.Configuration["VehicleService:BaseUrl"] ?? "https://localhost:8002";
+                client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+                client.Timeout = TimeSpan.FromSeconds(15);
+            })
+                .AddPolicyHandler(GetRetryPolicy());
 
             builder.Services.AddSingleton<IEmailTemplateService, SimpleEmailTemplateService>();
 

@@ -71,6 +71,8 @@ public class BranchMapItemResponse
     public string? PhoneNumber { get; set; }
     public BranchStatus Status { get; set; }
     public GarageInfoDto Garage { get; set; } = null!;
+    public double? AverageRating { get; set; }
+    public int ReviewCount { get; set; }
 }
 
 // ── Map Links ─────────────────────────────────────────────────────────────────
@@ -101,6 +103,8 @@ public class GarageBranchResponse
     public string? PhoneNumber { get; set; }
     public string? TaxCode { get; set; }
     public BranchStatus Status { get; set; }
+    public double? AverageRating { get; set; }
+    public int ReviewCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 }

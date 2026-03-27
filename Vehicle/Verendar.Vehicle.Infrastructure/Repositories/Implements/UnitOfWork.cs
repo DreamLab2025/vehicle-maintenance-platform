@@ -29,6 +29,9 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         private IMaintenanceRecordRepository? _maintenanceRecords;
         private IMaintenanceRecordItemRepository? _maintenanceRecordItems;
 
+        // Booking Maintenance Proposals
+        private IMaintenanceProposalRepository? _maintenanceProposals;
+
         // Vehicle Catalog
         public ITypeRepository Types =>
             _types ??= new TypeRepository(Context);
@@ -75,5 +78,9 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 
         public IMaintenanceRecordItemRepository MaintenanceRecordItems =>
             _maintenanceRecordItems ??= new MaintenanceRecordItemRepository(Context);
+
+        // Booking Maintenance Proposals
+        public IMaintenanceProposalRepository MaintenanceProposals =>
+            _maintenanceProposals ??= new MaintenanceProposalRepository(Context);
     }
 }

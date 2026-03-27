@@ -43,6 +43,15 @@ namespace Verendar.Notification.Application.Mapping
             RegistrationDate = message.RegistrationDate
         };
 
+        public static MemberAccountCreatedEmailModel ToMemberAccountCreatedEmailModel(this MemberAccountCreatedEvent message) => new()
+        {
+            FullName = message.FullName,
+            UserName = message.FullName,
+            UserEmail = message.Email,
+            TempPassword = message.TempPassword,
+            Role = message.Role
+        };
+
         public static NotificationDeliveryContext ToDeliveryContext(
             Guid notificationId,
             string recipientEmail,

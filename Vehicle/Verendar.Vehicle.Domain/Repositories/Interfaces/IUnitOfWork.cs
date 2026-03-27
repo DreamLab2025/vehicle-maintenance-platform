@@ -27,5 +27,8 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
         // Maintenance History
         IMaintenanceRecordRepository MaintenanceRecords { get; }
         IMaintenanceRecordItemRepository MaintenanceRecordItems { get; }
+
+        // Booking Maintenance Proposals
+        IMaintenanceProposalRepository MaintenanceProposals { get; }
     }
 }
