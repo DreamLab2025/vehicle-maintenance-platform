@@ -4,6 +4,8 @@ public class AwsGeocodingSettings
 {
     public const string SectionName = "Geocoding:AWS";
 
+    public bool Enabled { get; set; } = true;
+
     public double MinMatchScore { get; set; } = 0.7;
 }
 
