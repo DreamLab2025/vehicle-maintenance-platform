@@ -1,37 +1,90 @@
 namespace Verendar.Garage.Application.Dtos;
 
+// ── Requests ──────────────────────────────────────────────────────────────────
+
 public record CreateBookingRequest
 {
     public Guid GarageBranchId { get; init; }
-    public Guid GarageProductId { get; init; }
     public Guid UserVehicleId { get; init; }
     public DateTime ScheduledAt { get; init; }
     public string? Note { get; init; }
+    public List<CreateBookingLineItemRequest> Items { get; init; } = [];
 }
 
-public record BookingResponse
+public record CreateBookingLineItemRequest
+{
+    /// <summary>Exactly one of ProductId / ServiceId / BundleId must be non-null.</summary>
+    public Guid? ProductId { get; init; }
+    public Guid? ServiceId { get; init; }
+    public Guid? BundleId { get; init; }
+    /// <summary>Chỉ có nghĩa khi ProductId != null và product có InstallationServiceId.</summary>
+    public bool IncludeInstallation { get; init; }
+    public int SortOrder { get; init; }
+}
+
+public record AssignBookingRequest
+{
+    public Guid GarageMemberId { get; init; }
+}
+
+public record UpdateBookingMechanicStatusRequest
+{
+    public BookingStatus Status { get; init; }
+    public int? CurrentOdometer { get; init; }
+}
+
+// ── Nested response ───────────────────────────────────────────────────────────
+
+public record BookingBranchSummary
 {
     public Guid Id { get; init; }
-    public Guid UserId { get; init; }
-    public Guid UserVehicleId { get; init; }
-    public Guid GarageBranchId { get; init; }
-    public Guid GarageProductId { get; init; }
-    public Guid? MechanicId { get; init; }
-    public string? MechanicDisplayName { get; init; }
-    public BookingStatus Status { get; init; }
-    public DateTime ScheduledAt { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string AddressLine { get; init; } = string.Empty;
+    public Guid GarageId { get; init; }
+    public string GarageBusinessName { get; init; } = string.Empty;
+}
+
+public record BookingLineItemResponse
+{
+    public Guid Id { get; init; }
+    public Guid? ProductId { get; init; }
+    public Guid? ServiceId { get; init; }
+    public Guid? BundleId { get; init; }
+    public bool IncludeInstallation { get; init; }
+    public string ItemName { get; init; } = string.Empty;
+    public decimal BookedItemAmount { get; init; }
+    public string BookedItemCurrency { get; init; } = "VND";
+    public int SortOrder { get; init; }
+    /// <summary>Chi tiết bundle — chỉ có khi BundleId != null.</summary>
+    public BookingBundleSummary? BundleDetails { get; init; }
+}
+
+public record BookingBundleSummary
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public decimal? DiscountAmount { get; init; }
+    public decimal? DiscountPercent { get; init; }
+    public List<BookingBundleItemSummary> Items { get; init; } = [];
+}
+
+public record BookingBundleItemSummary
+{
+    public Guid? ProductId { get; init; }
+    public Guid? ServiceId { get; init; }
+    public string ItemName { get; init; } = string.Empty;
+    public bool IncludeInstallation { get; init; }
+}
+
+public record BookingStatusHistoryItemResponse
+{
+    public Guid Id { get; init; }
+    public BookingStatus FromStatus { get; init; }
+    public BookingStatus ToStatus { get; init; }
+    public Guid ChangedByUserId { get; init; }
     public string? Note { get; init; }
-    public decimal BookedAmount { get; init; }
-    public string BookedCurrency { get; init; } = "VND";
-    public DateTime? CompletedAt { get; init; }
-    public int? CurrentOdometer { get; init; }
-    public string? CancellationReason { get; init; }
-    public Guid? PaymentId { get; init; }
-    public BookingBranchSummary Branch { get; init; } = null!;
-    public BookingProductSummary Product { get; init; } = null!;
-    public IReadOnlyList<BookingStatusHistoryItemResponse> StatusHistory { get; init; } = [];
-    public BookingCustomerSummary? Customer { get; init; }
-    public BookingVehicleSummary? Vehicle { get; init; }
+    public DateTime ChangedAt { get; init; }
+    public DateTime CreatedAt { get; init; }
 }
 
 public record BookingCustomerSummary
@@ -52,44 +105,30 @@ public record BookingVehicleSummary
     public string VariantColor { get; init; } = string.Empty;
 }
 
-public record AssignBookingRequest
-{
-    public Guid GarageMemberId { get; init; }
-}
+// ── Booking responses ─────────────────────────────────────────────────────────
 
-public record UpdateBookingMechanicStatusRequest
+public record BookingResponse
 {
+    public Guid Id { get; init; }
+    public Guid UserId { get; init; }
+    public Guid UserVehicleId { get; init; }
+    public Guid GarageBranchId { get; init; }
+    public Guid? MechanicId { get; init; }
+    public string? MechanicDisplayName { get; init; }
     public BookingStatus Status { get; init; }
-    public int? CurrentOdometer { get; init; }
-}
-
-public record BookingBranchSummary
-{
-    public Guid Id { get; init; }
-    public string Name { get; init; } = string.Empty;
-    public string AddressLine { get; init; } = string.Empty;
-    public Guid GarageId { get; init; }
-    public string GarageBusinessName { get; init; } = string.Empty;
-}
-
-public record BookingProductSummary
-{
-    public Guid Id { get; init; }
-    public string Name { get; init; } = string.Empty;
-    public ProductType Type { get; init; }
-    public Guid? PartCategoryId { get; init; }
-    public int? EstimatedDurationMinutes { get; init; }
-}
-
-public record BookingStatusHistoryItemResponse
-{
-    public Guid Id { get; init; }
-    public BookingStatus FromStatus { get; init; }
-    public BookingStatus ToStatus { get; init; }
-    public Guid ChangedByUserId { get; init; }
+    public DateTime ScheduledAt { get; init; }
     public string? Note { get; init; }
-    public DateTime ChangedAt { get; init; }
-    public DateTime CreatedAt { get; init; }
+    public decimal BookedTotalAmount { get; init; }
+    public string BookedCurrency { get; init; } = "VND";
+    public DateTime? CompletedAt { get; init; }
+    public int? CurrentOdometer { get; init; }
+    public string? CancellationReason { get; init; }
+    public Guid? PaymentId { get; init; }
+    public BookingBranchSummary Branch { get; init; } = null!;
+    public List<BookingLineItemResponse> LineItems { get; init; } = [];
+    public IReadOnlyList<BookingStatusHistoryItemResponse> StatusHistory { get; init; } = [];
+    public BookingCustomerSummary? Customer { get; init; }
+    public BookingVehicleSummary? Vehicle { get; init; }
 }
 
 public record BookingListItemResponse
@@ -99,7 +138,8 @@ public record BookingListItemResponse
     public DateTime ScheduledAt { get; init; }
     public Guid GarageBranchId { get; init; }
     public string BranchName { get; init; } = string.Empty;
-    public string ProductName { get; init; } = string.Empty;
-    public decimal BookedAmount { get; init; }
+    /// <summary>Tên item đầu tiên (hoặc tóm tắt "X sản phẩm/dịch vụ").</summary>
+    public string ItemsSummary { get; init; } = string.Empty;
+    public decimal BookedTotalAmount { get; init; }
     public string BookedCurrency { get; init; } = "VND";
 }

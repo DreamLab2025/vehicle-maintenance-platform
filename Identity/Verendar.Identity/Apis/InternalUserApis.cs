@@ -34,6 +34,18 @@ namespace Verendar.Identity.Apis
                 .Produces(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status400BadRequest);
 
+            group.MapPost("/manager", CreateManager)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<CreateManagerRequest>())
+                .WithName("CreateManagerUser")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Tạo tài khoản manager (internal — Garage service)";
+                    return operation;
+                })
+                .Produces<CreateManagerResponse>(StatusCodes.Status201Created)
+                .Produces(StatusCodes.Status409Conflict)
+                .Produces(StatusCodes.Status400BadRequest);
+
             group.MapGet("/{id:guid}/garage-contact", GetGarageContact)
                 .WithName("GetUserGarageContact")
                 .WithOpenApi(operation =>
@@ -78,6 +90,19 @@ namespace Verendar.Identity.Apis
         private static async Task<IResult> CreateMechanic(CreateMechanicRequest request, IUserService userService)
         {
             var result = await userService.CreateMechanicAsync(request);
+            if (!result.IsSuccess)
+            {
+                return result.StatusCode == 409
+                    ? Results.Conflict(new { error = result.Message })
+                    : Results.Problem(result.Message, statusCode: 500);
+            }
+
+            return Results.Json(result.Data, statusCode: 201);
+        }
+
+        private static async Task<IResult> CreateManager(CreateManagerRequest request, IUserService userService)
+        {
+            var result = await userService.CreateManagerAsync(request);
             if (!result.IsSuccess)
             {
                 return result.StatusCode == 409

@@ -8,8 +8,6 @@ public class Booking : BaseEntity
 {
     public Guid GarageBranchId { get; set; }
 
-    public Guid GarageProductId { get; set; }
-
     public Guid UserId { get; set; }
 
     public Guid UserVehicleId { get; set; }
@@ -23,7 +21,8 @@ public class Booking : BaseEntity
     [MaxLength(1000)]
     public string? Note { get; set; }
 
-    public Money BookedPrice { get; set; } = null!;
+    /// <summary>Snapshot tổng giá tại thời điểm đặt lịch.</summary>
+    public Money BookedTotalPrice { get; set; } = null!;
 
     public DateTime? CompletedAt { get; set; }
 
@@ -34,9 +33,10 @@ public class Booking : BaseEntity
 
     public Guid? PaymentId { get; set; }
 
+    // Navigation
     public GarageBranch GarageBranch { get; set; } = null!;
-    public GarageProduct GarageProduct { get; set; } = null!;
     public GarageMember? Mechanic { get; set; }
+    public List<BookingLineItem> LineItems { get; set; } = [];
     public List<BookingStatusHistory> StatusHistory { get; set; } = [];
     public GarageReview? Review { get; set; }
 }

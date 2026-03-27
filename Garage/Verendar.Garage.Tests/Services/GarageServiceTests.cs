@@ -10,6 +10,7 @@ using Verendar.Garage.Domain.Entities;
 using Verendar.Garage.Domain.Enums;
 using Verendar.Garage.Domain.ValueObjects;
 using GarageEntity = Verendar.Garage.Domain.Entities.Garage;
+using GarageServiceApp = Verendar.Garage.Application.Services.Implements.GarageService;
 
 namespace Verendar.Garage.Tests.Services;
 
@@ -33,7 +34,7 @@ public class GarageServiceTests
             .ReturnsAsync((Expression<Func<GarageEntity, bool>> expr) =>
                 store.FirstOrDefault(g => expr.Compile()(g)));
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.CreateGarageAsync(ownerId, new GarageRequest { BusinessName = "New Name" });
 
@@ -58,7 +59,7 @@ public class GarageServiceTests
         m.Garages.Setup(r => r.AddAsync(It.IsAny<GarageEntity>()))
             .ReturnsAsync((GarageEntity g) => g);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var request = new GarageRequest { BusinessName = "Garage Alpha" };
         var result = await sut.CreateGarageAsync(ownerId, request);
@@ -88,7 +89,7 @@ public class GarageServiceTests
                 It.IsAny<Func<IQueryable<GarageEntity>, IOrderedQueryable<GarageEntity>>>()))
             .ReturnsAsync((garages, garages.Count));
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetGaragesAsync(new GarageFilterRequest { PageNumber = 1, PageSize = 10 });
 
@@ -115,7 +116,7 @@ public class GarageServiceTests
                 It.IsAny<Func<IQueryable<GarageEntity>, IOrderedQueryable<GarageEntity>>>()))
             .ReturnsAsync((new List<GarageEntity> { activeGarage }, 1));
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetGaragesAsync(new GarageFilterRequest { Status = GarageStatus.Active });
 
@@ -137,7 +138,7 @@ public class GarageServiceTests
                 It.IsAny<Func<IQueryable<GarageEntity>, IOrderedQueryable<GarageEntity>>>()))
             .ReturnsAsync((new List<GarageEntity>(), 0));
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetGaragesAsync(new GarageFilterRequest());
 
@@ -171,7 +172,7 @@ public class GarageServiceTests
             .ReturnsAsync((Expression<Func<GarageEntity, bool>> expr, CancellationToken _) =>
                 expr.Compile()(garage) ? garage : null);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetMyGarageAsync(ownerId);
 
@@ -190,7 +191,7 @@ public class GarageServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((GarageEntity?)null);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetMyGarageAsync(Guid.NewGuid());
 
@@ -220,7 +221,7 @@ public class GarageServiceTests
             .ReturnsAsync((Expression<Func<GarageEntity, bool>> expr, CancellationToken _) =>
                 expr.Compile()(garage) ? garage : null);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetGarageByIdAsync(garageId);
 
@@ -241,7 +242,7 @@ public class GarageServiceTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((GarageEntity?)null);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.GetGarageByIdAsync(Guid.NewGuid());
 
@@ -256,7 +257,7 @@ public class GarageServiceTests
         m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
             .ReturnsAsync((GarageEntity?)null);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.UpdateGarageStatusAsync(garageId, new UpdateGarageStatusRequest
         {
@@ -285,7 +286,7 @@ public class GarageServiceTests
         m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
             .ReturnsAsync(garage);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.UpdateGarageStatusAsync(garageId, new UpdateGarageStatusRequest
         {
@@ -316,7 +317,7 @@ public class GarageServiceTests
         m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
             .ReturnsAsync(garage);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.UpdateGarageInfoAsync(garageId, ownerId, new GarageRequest
         {
@@ -348,7 +349,7 @@ public class GarageServiceTests
         m.StatusHistories.Setup(r => r.AddAsync(It.IsAny<GarageStatusHistory>()))
             .ReturnsAsync((GarageStatusHistory h) => h);
 
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.ResubmitGarageAsync(garageId, ownerId);
 
@@ -378,7 +379,7 @@ public class GarageServiceTests
 
         var publish = new Mock<IPublishEndpoint>(MockBehavior.Strict);
         publish.Setup(p => p.Publish(It.IsAny<GarageStatusChangedEvent>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, publish.Object);
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, publish.Object);
 
         var result = await sut.UpdateGarageStatusAsync(garageId, new UpdateGarageStatusRequest { Status = GarageStatus.Active }, adminId);
 
@@ -401,7 +402,7 @@ public class GarageServiceTests
         var m = new GarageUnitOfWorkMock();
         m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
             .ReturnsAsync(garage);
-        var sut = new GarageService(NullLogger<GarageService>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
+        var sut = new GarageServiceApp(NullLogger<GarageServiceApp>.Instance, m.UnitOfWork.Object, Mock.Of<IPublishEndpoint>());
 
         var result = await sut.UpdateGarageInfoAsync(garage.Id, garage.OwnerId, new GarageRequest { BusinessName = "N" });
 

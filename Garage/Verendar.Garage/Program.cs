@@ -12,5 +12,9 @@ app.MapGarageApi();
 app.MapGarageBranchApi();
 app.MapGarageMemberApi();
 app.MapBookingApi();
+app.MapServiceCategoryApi();
+app.MapGarageProductApi();
+app.MapGarageServiceApi();
+app.MapGarageBundleApi();
 
 await app.RunAsync();

@@ -33,6 +33,7 @@ namespace Verendar.Identity.Domain.Entities
         User = 1,
         Admin = 2,
         GarageOwner = 3,
-        Mechanic = 4
+        Mechanic = 4,
+        GarageManager = 5
     }
 }

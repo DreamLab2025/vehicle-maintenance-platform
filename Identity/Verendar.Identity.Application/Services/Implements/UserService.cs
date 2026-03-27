@@ -87,5 +87,45 @@ namespace Verendar.Identity.Application.Services.Implements
                 "Tạo tài khoản mechanic thành công."
             );
         }
+
+        public async Task<ApiResponse<CreateManagerResponse>> CreateManagerAsync(CreateManagerRequest request)
+        {
+            var email = EmailHelper.Normalize(request.Email);
+
+            var existing = await _unitOfWork.Users.FindOneAsync(u => u.Email == email);
+            if (existing != null)
+            {
+                _logger.LogWarning("CreateManager: email already registered {Email}", email);
+                return ApiResponse<CreateManagerResponse>.ConflictResponse("Email đã được đăng ký.");
+            }
+
+            var tempPassword = "Manager@" + RandomNumberGenerator.GetInt32(100000, 999999);
+
+            var user = new User
+            {
+                Id = Guid.CreateVersion7(),
+                FullName = request.FullName,
+                Email = email,
+                PhoneNumber = request.PhoneNumber,
+                PasswordHash = string.Empty,
+                EmailVerified = false,
+                PhoneNumberVerified = false,
+                Roles = [UserRole.GarageManager],
+                RefreshToken = string.Empty,
+                RefreshTokenExpiryTime = null
+            };
+
+            user.PasswordHash = _passwordHasher.HashPassword(user, tempPassword);
+
+            await _unitOfWork.Users.AddAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("Created manager user {UserId} for email {Email}", user.Id, email);
+
+            return ApiResponse<CreateManagerResponse>.CreatedResponse(
+                new CreateManagerResponse(user.Id),
+                "Tạo tài khoản manager thành công."
+            );
+        }
     }
 }

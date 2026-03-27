@@ -32,7 +32,7 @@ namespace Verendar.Notification.Application.Consumers
             {
                 var title = "Đặt lịch thành công";
                 var content =
-                    $"Bạn đã đặt lịch tại {message.BranchName} — {message.ProductName}. "
+                    $"Bạn đã đặt lịch tại {message.BranchName} — {message.ItemsSummary}. "
                     + $"Lịch: {message.ScheduledAt:dd/MM/yyyy HH:mm} (UTC).";
 
                 var notification = message.BookingCreatedToNotificationEntity(title, content);

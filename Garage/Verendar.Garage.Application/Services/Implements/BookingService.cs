@@ -4,6 +4,7 @@ using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
 using Verendar.Garage.Contracts.Events;
+using Verendar.Garage.Domain.ValueObjects;
 
 namespace Verendar.Garage.Application.Services.Implements;
 
@@ -41,55 +42,60 @@ public class BookingService(
         if (branch.Status != BranchStatus.Active)
             return ApiResponse<BookingResponse>.FailureResponse("Chi nhánh không hoạt động, không thể đặt lịch.");
 
-        var product = await _unitOfWork.GarageProducts.FindOneAsync(
-            p => p.Id == request.GarageProductId
-                && p.GarageBranchId == branch.Id
-                && p.DeletedAt == null);
-        if (product is null)
-            return ApiResponse<BookingResponse>.NotFoundResponse("Không tìm thấy sản phẩm/dịch vụ tại chi nhánh này.");
-
-        if (product.Status != ProductStatus.Active)
-            return ApiResponse<BookingResponse>.FailureResponse("Sản phẩm/dịch vụ không khả dụng.");
+        if (request.Items.Count == 0)
+            return ApiResponse<BookingResponse>.FailureResponse("Booking phải có ít nhất một mục.", 422);
 
         var scheduledUtc = NormalizeToUtc(request.ScheduledAt);
         if (scheduledUtc <= DateTime.UtcNow)
             return ApiResponse<BookingResponse>.FailureResponse("Thời gian đặt lịch phải ở tương lai.");
 
+        // Resolve all line items and compute total
+        var resolvedItems = await ResolveCreateLineItemsAsync(request.Items, branch.Id, ct);
+        if (resolvedItems.Error is not null)
+            return ApiResponse<BookingResponse>.FailureResponse(resolvedItems.Error, 422);
+
+        decimal totalAmount = resolvedItems.LineItems!.Sum(i => i.BookedItemPrice.Amount);
+
         var booking = new Booking
         {
             GarageBranchId = branch.Id,
-            GarageProductId = product.Id,
             UserId = userId,
             UserVehicleId = request.UserVehicleId,
             ScheduledAt = scheduledUtc,
             Status = BookingStatus.Pending,
             Note = request.Note,
-            BookedPrice = new Money
-            {
-                Amount = product.Price.Amount,
-                Currency = product.Price.Currency
-            },
+            BookedTotalPrice = new Money { Amount = totalAmount, Currency = "VND" },
             PaymentId = null
         };
+
+        foreach (var lineItem in resolvedItems.LineItems!)
+            booking.LineItems.Add(lineItem);
 
         AddHistory(booking, BookingStatus.Pending, BookingStatus.Pending, userId);
 
         await _unitOfWork.Bookings.AddAsync(booking);
         await _unitOfWork.SaveChangesAsync(ct);
 
-        _logger.LogInformation("CreateBooking: {BookingId} user {UserId} branch {BranchId}", booking.Id, userId, branch.Id);
+        _logger.LogInformation("CreateBooking: {BookingId} user={UserId} branch={BranchId} items={ItemCount}",
+            booking.Id, userId, branch.Id, booking.LineItems.Count);
 
         try
         {
+            var firstItemName = resolvedItems.LineItems.Count > 0
+                ? resolvedItems.LineItems[0].Product?.Name ?? resolvedItems.LineItems[0].Service?.Name ?? resolvedItems.LineItems[0].Bundle?.Name ?? string.Empty
+                : string.Empty;
+
             await _publishEndpoint.Publish(new BookingCreatedEvent
             {
                 BookingId = booking.Id,
                 UserId = userId,
                 UserVehicleId = booking.UserVehicleId,
                 GarageBranchId = branch.Id,
-                GarageProductId = product.Id,
                 BranchName = branch.Name,
-                ProductName = product.Name,
+                ItemsSummary = resolvedItems.LineItems.Count == 1
+                    ? firstItemName
+                    : $"{firstItemName} và {resolvedItems.LineItems.Count - 1} mục khác",
+                TotalAmount = totalAmount,
                 ScheduledAt = booking.ScheduledAt
             }, ct);
         }
@@ -376,15 +382,18 @@ public class BookingService(
             }
             else if (request.Status == BookingStatus.Completed)
             {
+                var lineItems = await ResolveCompletedLineItemsAsync(booking, ct);
                 await _publishEndpoint.Publish(new BookingCompletedEvent
                 {
                     BookingId = booking.Id,
                     UserId = booking.UserId,
                     UserVehicleId = booking.UserVehicleId,
                     GarageBranchId = booking.GarageBranchId,
-                    GarageProductId = booking.GarageProductId,
+                    BranchName = booking.GarageBranch.Name,
                     CurrentOdometer = booking.CurrentOdometer,
-                    CompletedAt = booking.CompletedAt ?? DateTime.UtcNow
+                    CompletedAt = booking.CompletedAt ?? DateTime.UtcNow,
+                    TotalAmount = booking.BookedTotalPrice.Amount,
+                    LineItems = lineItems
                 }, ct);
             }
         }
@@ -441,6 +450,168 @@ public class BookingService(
         }
 
         return ApiResponse<bool>.SuccessResponse(true, "Đã hủy booking.");
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+
+    private record ResolvedLineItems(List<BookingLineItem>? LineItems, string? Error);
+
+    /// <summary>
+    /// Resolve CreateBookingLineItemRequest list → BookingLineItem entities with prices.
+    /// Validates items belong to the branch and are Active.
+    /// </summary>
+    private async Task<ResolvedLineItems> ResolveCreateLineItemsAsync(
+        List<CreateBookingLineItemRequest> requests,
+        Guid branchId,
+        CancellationToken ct)
+    {
+        var result = new List<BookingLineItem>();
+
+        for (var i = 0; i < requests.Count; i++)
+        {
+            var req = requests[i];
+            var setCount = (req.ProductId.HasValue ? 1 : 0) + (req.ServiceId.HasValue ? 1 : 0) + (req.BundleId.HasValue ? 1 : 0);
+            if (setCount != 1)
+                return new ResolvedLineItems(null, $"Mục #{i + 1}: phải chỉ định đúng một trong ProductId, ServiceId hoặc BundleId.");
+
+            decimal itemPrice;
+
+            if (req.ProductId.HasValue)
+            {
+                var product = await _unitOfWork.GarageProducts.GetByIdWithInstallationAsync(req.ProductId.Value, ct);
+                if (product is null || product.GarageBranchId != branchId || product.DeletedAt != null)
+                    return new ResolvedLineItems(null, $"Mục #{i + 1}: sản phẩm không tồn tại hoặc không thuộc chi nhánh này.");
+                if (product.Status != ProductStatus.Active)
+                    return new ResolvedLineItems(null, $"Mục #{i + 1}: sản phẩm '{product.Name}' không khả dụng.");
+
+                itemPrice = product.MaterialPrice.Amount;
+                if (req.IncludeInstallation)
+                {
+                    if (product.InstallationService is null)
+                        return new ResolvedLineItems(null, $"Mục #{i + 1}: sản phẩm '{product.Name}' không có dịch vụ lắp đặt.");
+                    itemPrice += product.InstallationService.LaborPrice.Amount;
+                }
+            }
+            else if (req.ServiceId.HasValue)
+            {
+                var service = await _unitOfWork.GarageServices.FindOneAsync(
+                    s => s.Id == req.ServiceId.Value && s.GarageBranchId == branchId && s.DeletedAt == null);
+                if (service is null)
+                    return new ResolvedLineItems(null, $"Mục #{i + 1}: dịch vụ không tồn tại hoặc không thuộc chi nhánh này.");
+                if (service.Status != ProductStatus.Active)
+                    return new ResolvedLineItems(null, $"Mục #{i + 1}: dịch vụ '{service.Name}' không khả dụng.");
+
+                itemPrice = service.LaborPrice.Amount;
+            }
+            else // BundleId
+            {
+                var bundle = await _unitOfWork.GarageBundles.GetByIdWithItemsAsync(req.BundleId!.Value, ct);
+                if (bundle is null || bundle.GarageBranchId != branchId || bundle.DeletedAt != null)
+                    return new ResolvedLineItems(null, $"Mục #{i + 1}: combo không tồn tại hoặc không thuộc chi nhánh này.");
+                if (bundle.Status != ProductStatus.Active)
+                    return new ResolvedLineItems(null, $"Mục #{i + 1}: combo '{bundle.Name}' không khả dụng.");
+
+                var subTotal = GarageBundleMappings.CalculateSubTotal(bundle);
+                itemPrice = GarageBundleMappings.CalculateFinalPrice(bundle, subTotal);
+            }
+
+            result.Add(new BookingLineItem
+            {
+                ProductId = req.ProductId,
+                ServiceId = req.ServiceId,
+                BundleId = req.BundleId,
+                IncludeInstallation = req.IncludeInstallation,
+                BookedItemPrice = new Money { Amount = itemPrice, Currency = "VND" },
+                SortOrder = req.SortOrder > 0 ? req.SortOrder : i
+            });
+        }
+
+        return new ResolvedLineItems(result, null);
+    }
+
+    /// <summary>
+    /// Flatten booking line items at completion time for the BookingCompletedEvent.
+    /// Bundles are expanded into individual items so Vehicle service can update PartTracking.
+    /// </summary>
+    private async Task<List<BookingCompletedLineItem>> ResolveCompletedLineItemsAsync(
+        Booking booking,
+        CancellationToken ct)
+    {
+        var result = new List<BookingCompletedLineItem>();
+
+        foreach (var lineItem in booking.LineItems.OrderBy(i => i.SortOrder))
+        {
+            if (lineItem.ProductId.HasValue)
+            {
+                var product = await _unitOfWork.GarageProducts.FindOneAsync(
+                    p => p.Id == lineItem.ProductId.Value);
+                if (product is not null)
+                {
+                    result.Add(new BookingCompletedLineItem
+                    {
+                        GarageProductId = product.Id,
+                        PartCategoryId = product.PartCategoryId,
+                        ItemName = product.Name,
+                        UpdatesTracking = product.PartCategoryId.HasValue,
+                        Price = lineItem.BookedItemPrice.Amount
+                    });
+                }
+            }
+            else if (lineItem.ServiceId.HasValue)
+            {
+                var service = await _unitOfWork.GarageServices.FindOneAsync(
+                    s => s.Id == lineItem.ServiceId.Value);
+                if (service is not null)
+                {
+                    result.Add(new BookingCompletedLineItem
+                    {
+                        GarageServiceId = service.Id,
+                        ItemName = service.Name,
+                        UpdatesTracking = false,
+                        Price = lineItem.BookedItemPrice.Amount
+                    });
+                }
+            }
+            else if (lineItem.BundleId.HasValue)
+            {
+                // Expand bundle items
+                var bundle = await _unitOfWork.GarageBundles.GetByIdWithItemsAsync(lineItem.BundleId.Value, ct);
+                if (bundle is not null)
+                {
+                    foreach (var bundleItem in bundle.Items.OrderBy(bi => bi.SortOrder))
+                    {
+                        if (bundleItem.ProductId.HasValue && bundleItem.Product is not null)
+                        {
+                            result.Add(new BookingCompletedLineItem
+                            {
+                                GarageProductId = bundleItem.Product.Id,
+                                PartCategoryId = bundleItem.Product.PartCategoryId,
+                                ItemName = bundleItem.Product.Name,
+                                UpdatesTracking = bundleItem.Product.PartCategoryId.HasValue,
+                                Price = 0 // price is on the bundle line item, not per sub-item
+                            });
+                        }
+                        else if (bundleItem.ServiceId.HasValue && bundleItem.Service is not null)
+                        {
+                            result.Add(new BookingCompletedLineItem
+                            {
+                                GarageServiceId = bundleItem.Service.Id,
+                                ItemName = bundleItem.Service.Name,
+                                UpdatesTracking = false,
+                                Price = 0
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Bundle {BundleId} not found at completion of booking {BookingId}",
+                        lineItem.BundleId, booking.Id);
+                }
+            }
+        }
+
+        return result;
     }
 
     private static void AddHistory(
