@@ -4,6 +4,19 @@ namespace Verendar.AppHost.Tests.Support;
 
 internal static class ApiResponseJsonReader
 {
+    public static int ReadDataArrayCount(string apiResponseJson)
+    {
+        using var document = JsonDocument.Parse(apiResponseJson);
+
+        if (!document.RootElement.TryGetProperty("data", out var data) ||
+            data.ValueKind != JsonValueKind.Array)
+        {
+            return 0;
+        }
+
+        return data.GetArrayLength();
+    }
+
     public static string? ReadFirstArrayItemStringProperty(string apiResponseJson, string propertyName)
     {
         using var document = JsonDocument.Parse(apiResponseJson);

@@ -42,17 +42,15 @@ namespace Verendar.Vehicle.Bootstrapping
 
             builder.Services.AddHangfireServer();
 
-            builder.Services.AddScoped<ForwardAuthorizationHandler>();
-
             builder.Services.AddHttpClient<IIdentityServiceClient, IdentityServiceClient>(client =>
             {
                 var baseUrl = builder.Configuration["Identity:BaseUrl"]
-                    ?? builder.Configuration["Services:Identity:BaseUrl"]
-                    ?? "https://localhost:8001";
-                client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+                    ?? builder.Configuration["Services:Identity:BaseUrl"];
+                client.BaseAddress = new Uri(string.IsNullOrEmpty(baseUrl)
+                    ? "https+http://identity-service"
+                    : baseUrl.TrimEnd('/') + "/");
                 client.Timeout = TimeSpan.FromSeconds(10);
-            })
-            .AddHttpMessageHandler<ForwardAuthorizationHandler>();
+            });
 
             builder.Services.AddScoped<OdometerReminderJob>();
             builder.Services.AddScoped<MaintenanceReminderJob>();
