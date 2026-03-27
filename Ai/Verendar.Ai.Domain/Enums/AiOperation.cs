@@ -10,5 +10,6 @@ namespace Verendar.Ai.Domain.Enums
         GenerateVideo = 4,
         GenerateCode = 5,
         ReadOdometerFromImage = 6,
+        AnalyzeMaintenanceQuestionnaire = 7,
     }
 }

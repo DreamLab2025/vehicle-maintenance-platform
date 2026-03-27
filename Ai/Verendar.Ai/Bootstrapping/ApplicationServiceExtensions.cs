@@ -1,19 +1,24 @@
 using FluentValidation;
+using Hangfire;
+using Hangfire.Dashboard;
+using Hangfire.PostgreSql;
 using Microsoft.Extensions.DependencyInjection;
 using Verendar.Ai.Application.Validators;
 using Verendar.Ai.Apis;
 using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Services.Implements;
 using Verendar.Ai.Application.Services.Interfaces;
+using Verendar.Common.Bootstrapping;
 using Verendar.Common.Http;
 using Verendar.Ai.Domain.Repositories.Interfaces;
 using Verendar.Ai.Infrastructure.Clients;
 using Verendar.Ai.Infrastructure.Configuration;
 using Verendar.Ai.Infrastructure.Data;
 using Verendar.Ai.Infrastructure.ExternalServices;
+using Verendar.Ai.Infrastructure.Jobs;
 using Verendar.Ai.Infrastructure.Repositories.Implements;
 using Verendar.Ai.Infrastructure.Services;
-using Verendar.Common.Bootstrapping;
+using Verendar.Common.Shared;
 using Verendar.ServiceDefaults;
 
 namespace Verendar.Ai.Bootstrapping
@@ -25,6 +30,18 @@ namespace Verendar.Ai.Bootstrapping
             builder.AddServiceDefaults();
             builder.AddCommonService();
             builder.AddPostgresDatabase<AiDbContext>(Const.AiDatabase);
+            builder.AddServiceRedis("ai-service", connectionName: Const.Redis);
+
+            var connectionString = builder.Configuration.GetConnectionString(Const.AiDatabase)
+                ?? throw new InvalidOperationException($"Connection string '{Const.AiDatabase}' not found.");
+
+            builder.Services.AddHangfire(config => config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(options => options.UseNpgsqlConnection(connectionString)));
+
+            builder.Services.AddHangfireServer();
 
             builder.Services.AddHttpClient();
 
@@ -59,6 +76,8 @@ namespace Verendar.Ai.Bootstrapping
             {
                 options.Provider = builder.Configuration.GetValue<string>(AiProviderOptions.ConfigKey) ?? "Gemini";
             });
+            builder.Services.Configure<PromptVersioningOptions>(
+                builder.Configuration.GetSection(PromptVersioningOptions.SectionName));
 
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<IAiUsageService, AiUsageService>();
@@ -69,9 +88,12 @@ namespace Verendar.Ai.Bootstrapping
             builder.Services.AddScoped<IGenerativeAiService>(sp =>
                 sp.GetRequiredService<IGenerativeAiServiceFactory>().CreateDefault());
 
+            builder.Services.AddScoped<IAiPromptService, AiPromptService>();
             builder.Services.AddScoped<IVehicleMaintenanceAnalysisService, VehicleMaintenanceAnalysisService>();
             builder.Services.AddScoped<IOdometerScanService, OdometerScanService>();
             builder.Services.AddScoped<IAiUsageAnalyticsService, AiUsageAnalyticsService>();
+
+            builder.Services.AddScoped<AiPromptRetentionJob>();
 
             return builder;
         }
@@ -80,8 +102,23 @@ namespace Verendar.Ai.Bootstrapping
         {
             app.MapDefaultEndpoints();
             app.UseCommonService();
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseHangfireDashboard("/hangfire", new DashboardOptions
+                {
+                    Authorization = Array.Empty<IDashboardAuthorizationFilter>()
+                });
+            }
+
+            RecurringJob.AddOrUpdate<AiPromptRetentionJob>(
+                "ai-prompt-retention",
+                job => job.ExecuteAsync(CancellationToken.None),
+                Cron.Daily);
+
             app.UseHttpsRedirection();
             app.MapAiApi();
+            app.MapAiPromptApi();
 
             return app;
         }

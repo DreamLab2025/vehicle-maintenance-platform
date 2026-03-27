@@ -1,11 +1,13 @@
 namespace Verendar.Ai.Application.Services.Implements
 {
     public class VehicleMaintenanceAnalysisService(
-        IGenerativeAiService aiService,
+        IAiPromptService promptService,
+        IGenerativeAiServiceFactory generativeAiFactory,
         IVehicleServiceClient vehicleServiceClient,
         ILogger<VehicleMaintenanceAnalysisService> logger) : IVehicleMaintenanceAnalysisService
     {
-        private readonly IGenerativeAiService _aiService = aiService;
+        private readonly IAiPromptService _promptService = promptService;
+        private readonly IGenerativeAiServiceFactory _generativeAiFactory = generativeAiFactory;
         private readonly IVehicleServiceClient _vehicleServiceClient = vehicleServiceClient;
         private readonly ILogger<VehicleMaintenanceAnalysisService> _logger = logger;
 
@@ -14,6 +16,13 @@ namespace Verendar.Ai.Application.Services.Implements
             VehicleQuestionnaireRequest request,
             CancellationToken cancellationToken = default)
         {
+            var promptResult = await _promptService.GetPromptAsync(AiOperation.AnalyzeMaintenanceQuestionnaire, cancellationToken);
+            if (!promptResult.IsSuccess || promptResult.Data == null)
+            {
+                _logger.LogError("AnalyzeQuestionnaire: failed to load prompt for AnalyzeMaintenanceQuestionnaire");
+                return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse("Không thể tải prompt AI");
+            }
+
             ApiResponse<VehicleServiceUserVehicleResponse> vehicleResponse;
             try
             {
@@ -59,14 +68,17 @@ namespace Verendar.Ai.Application.Services.Implements
             var schedule = scheduleResponse.Data;
             var defaultSchedule = schedule.ToDefaultScheduleDto(request.PartCategorySlug);
 
-            var prompt = VehicleMaintenanceAnalysisPrompt.Build(vehicleInfo, defaultSchedule, request.Answers);
+            var prompt = VehicleMaintenanceAnalysisPrompt.ApplyTemplate(
+                promptResult.Data.Content, vehicleInfo, defaultSchedule, request.Answers);
+
+            var aiService = _generativeAiFactory.Create((AiProvider)promptResult.Data.Provider);
 
             ApiResponse<GenerativeAiResponse> aiResponse;
             try
             {
-                aiResponse = await _aiService.GenerateContentAsync(
+                aiResponse = await aiService.GenerateContentAsync(
                     prompt,
-                    AiOperation.GenerateText,
+                    AiOperation.AnalyzeMaintenanceQuestionnaire,
                     userId,
                     temperature: 0.5m
                 );

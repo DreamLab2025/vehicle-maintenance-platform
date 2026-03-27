@@ -45,7 +45,7 @@ public static class ServiceCategoryApis
                 op.Summary = "Tạo danh mục dịch vụ (Admin only)";
                 return op;
             })
-            .RequireAuthorization("Admin")
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
             .Produces<ApiResponse<ServiceCategoryResponse>>(StatusCodes.Status201Created)
             .Produces<ApiResponse<ServiceCategoryResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<ServiceCategoryResponse>>(StatusCodes.Status409Conflict)
@@ -60,7 +60,7 @@ public static class ServiceCategoryApis
                 op.Summary = "Cập nhật danh mục dịch vụ (Admin only)";
                 return op;
             })
-            .RequireAuthorization("Admin")
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
             .Produces<ApiResponse<ServiceCategoryResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<ServiceCategoryResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<ServiceCategoryResponse>>(StatusCodes.Status404NotFound)
@@ -74,7 +74,7 @@ public static class ServiceCategoryApis
                 op.Summary = "Xóa danh mục dịch vụ (Admin only)";
                 return op;
             })
-            .RequireAuthorization("Admin")
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
             .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized)

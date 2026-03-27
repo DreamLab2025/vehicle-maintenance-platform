@@ -50,4 +50,13 @@ public static class EndpointMessages
         public const string GetReviewSuccess = "Lấy đánh giá thành công.";
         public const string GetBranchReviewsSuccess = "Lấy danh sách đánh giá thành công.";
     }
+
+    public static class Stats
+    {
+        public const string GarageNotFound = "Không tìm thấy garage.";
+        public const string BranchNotFound = "Không tìm thấy chi nhánh.";
+        public const string Forbidden = "Bạn không có quyền xem thống kê này.";
+        public const string GarageStatsSuccess = "Lấy thống kê garage thành công.";
+        public const string BranchStatsSuccess = "Lấy thống kê chi nhánh thành công.";
+    }
 }

@@ -46,7 +46,7 @@ public static class GarageProductApis
                 op.Summary = "Owner/Manager tạo sản phẩm cho chi nhánh";
                 return op;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner), nameof(RoleType.GarageManager)))
             .Produces<ApiResponse<GarageProductResponse>>(StatusCodes.Status201Created)
             .Produces<ApiResponse<GarageProductResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageProductResponse>>(StatusCodes.Status403Forbidden)
@@ -61,7 +61,7 @@ public static class GarageProductApis
                 op.Summary = "Owner/Manager cập nhật sản phẩm";
                 return op;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner), nameof(RoleType.GarageManager)))
             .Produces<ApiResponse<GarageProductResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageProductResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageProductResponse>>(StatusCodes.Status403Forbidden)
@@ -76,7 +76,7 @@ public static class GarageProductApis
                 op.Summary = "Owner/Manager bật/tắt trạng thái sản phẩm";
                 return op;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner), nameof(RoleType.GarageManager)))
             .Produces<ApiResponse<GarageProductResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageProductResponse>>(StatusCodes.Status403Forbidden)
             .Produces<ApiResponse<GarageProductResponse>>(StatusCodes.Status404NotFound)
@@ -89,7 +89,7 @@ public static class GarageProductApis
                 op.Summary = "Owner/Manager xóa sản phẩm (soft delete)";
                 return op;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner), nameof(RoleType.GarageManager)))
             .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<bool>>(StatusCodes.Status403Forbidden)
             .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound)

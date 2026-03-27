@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Dtos.Ai;
+using Verendar.Ai.Application.Dtos.AiPrompt;
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 using Verendar.Ai.Application.Dtos.VehicleService;
 using Verendar.Ai.Application.Services.Implements;
@@ -17,12 +18,31 @@ public class VehicleMaintenanceAnalysisServiceTests
     private static readonly Guid UserVehicleId = Guid.NewGuid();
     private static readonly Guid VehicleModelId = Guid.NewGuid();
 
-    private static (VehicleMaintenanceAnalysisService Sut, Mock<IGenerativeAiService> AiService, Mock<IVehicleServiceClient> VehicleClient) CreateSut()
+    private static AiPromptResponse MakePromptResponse() => new()
+    {
+        Id = Guid.NewGuid(),
+        Operation = (int)AiOperation.AnalyzeMaintenanceQuestionnaire,
+        OperationName = nameof(AiOperation.AnalyzeMaintenanceQuestionnaire),
+        Provider = (int)AiProvider.Gemini,
+        ProviderName = nameof(AiProvider.Gemini),
+        Name = "Vehicle Maintenance Analysis Prompt",
+        Content = "Test template with [[TODAY]] [[VEHICLE_NAME]] [[CURRENT_ODO]] [[PURCHASE_DATE]] [[SCHEDULE_BLOCK]] [[ANSWER_BLOCK]] [[PART_CATEGORY_SLUG]]",
+        VersionNumber = 1,
+    };
+
+    private static (VehicleMaintenanceAnalysisService Sut, Mock<IGenerativeAiService> AiService, Mock<IVehicleServiceClient> VehicleClient, Mock<IAiPromptService> PromptService) CreateSut()
     {
         var aiService = new Mock<IGenerativeAiService>(MockBehavior.Strict);
+        var factory = new Mock<IGenerativeAiServiceFactory>(MockBehavior.Strict);
+        factory.Setup(f => f.Create(AiProvider.Gemini)).Returns(aiService.Object);
+
+        var promptService = new Mock<IAiPromptService>(MockBehavior.Strict);
+        promptService.Setup(p => p.GetPromptAsync(AiOperation.AnalyzeMaintenanceQuestionnaire, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<AiPromptResponse>.SuccessResponse(MakePromptResponse()));
+
         var vehicleClient = new Mock<IVehicleServiceClient>(MockBehavior.Strict);
-        var sut = new VehicleMaintenanceAnalysisService(aiService.Object, vehicleClient.Object, NullLogger<VehicleMaintenanceAnalysisService>.Instance);
-        return (sut, aiService, vehicleClient);
+        var sut = new VehicleMaintenanceAnalysisService(promptService.Object, factory.Object, vehicleClient.Object, NullLogger<VehicleMaintenanceAnalysisService>.Instance);
+        return (sut, aiService, vehicleClient, promptService);
     }
 
     private static VehicleQuestionnaireRequest MakeRequest() => new()
@@ -74,9 +94,24 @@ public class VehicleMaintenanceAnalysisServiceTests
         """;
 
     [Fact]
+    public async Task AnalyzeQuestionnaireAsync_WhenPromptNotFound_ReturnsFailure()
+    {
+        var promptService = new Mock<IAiPromptService>(MockBehavior.Strict);
+        promptService.Setup(p => p.GetPromptAsync(AiOperation.AnalyzeMaintenanceQuestionnaire, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<AiPromptResponse>.NotFoundResponse("Không tìm thấy prompt"));
+        var factory = new Mock<IGenerativeAiServiceFactory>(MockBehavior.Strict);
+        var vehicleClient = new Mock<IVehicleServiceClient>(MockBehavior.Strict);
+        var sut = new VehicleMaintenanceAnalysisService(promptService.Object, factory.Object, vehicleClient.Object, NullLogger<VehicleMaintenanceAnalysisService>.Instance);
+
+        var result = await sut.AnalyzeQuestionnaireAsync(UserId, MakeRequest());
+
+        AiServiceResponseAssert.AssertFailureEnvelope(result, "Không thể tải prompt AI");
+    }
+
+    [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenVehicleServiceThrows_ReturnsFailure()
     {
-        var (sut, _, vehicleClient) = CreateSut();
+        var (sut, _, vehicleClient, _) = CreateSut();
         vehicleClient.Setup(c => c.GetUserVehicleByIdAsync(UserVehicleId, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("Connection refused"));
 
@@ -88,7 +123,7 @@ public class VehicleMaintenanceAnalysisServiceTests
     [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenVehicleNotFound_ReturnsFailure()
     {
-        var (sut, _, vehicleClient) = CreateSut();
+        var (sut, _, vehicleClient, _) = CreateSut();
         vehicleClient.Setup(c => c.GetUserVehicleByIdAsync(UserVehicleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<VehicleServiceUserVehicleResponse>.NotFoundResponse("Không tìm thấy xe"));
 
@@ -100,7 +135,7 @@ public class VehicleMaintenanceAnalysisServiceTests
     [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenScheduleServiceThrows_ReturnsFailure()
     {
-        var (sut, _, vehicleClient) = CreateSut();
+        var (sut, _, vehicleClient, _) = CreateSut();
         vehicleClient.Setup(c => c.GetUserVehicleByIdAsync(UserVehicleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<VehicleServiceUserVehicleResponse>.SuccessResponse(MakeVehicleResponse()));
         vehicleClient.Setup(c => c.GetDefaultScheduleAsync(VehicleModelId, "engine-oil", It.IsAny<CancellationToken>()))
@@ -114,7 +149,7 @@ public class VehicleMaintenanceAnalysisServiceTests
     [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenScheduleNotFound_ReturnsFailure()
     {
-        var (sut, _, vehicleClient) = CreateSut();
+        var (sut, _, vehicleClient, _) = CreateSut();
         vehicleClient.Setup(c => c.GetUserVehicleByIdAsync(UserVehicleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<VehicleServiceUserVehicleResponse>.SuccessResponse(MakeVehicleResponse()));
         vehicleClient.Setup(c => c.GetDefaultScheduleAsync(VehicleModelId, "engine-oil", It.IsAny<CancellationToken>()))
@@ -128,13 +163,13 @@ public class VehicleMaintenanceAnalysisServiceTests
     [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenAiServiceThrows_ReturnsFailure()
     {
-        var (sut, aiService, vehicleClient) = CreateSut();
+        var (sut, aiService, vehicleClient, _) = CreateSut();
         vehicleClient.Setup(c => c.GetUserVehicleByIdAsync(UserVehicleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<VehicleServiceUserVehicleResponse>.SuccessResponse(MakeVehicleResponse()));
         vehicleClient.Setup(c => c.GetDefaultScheduleAsync(VehicleModelId, "engine-oil", It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<VehicleServiceDefaultScheduleResponse>.SuccessResponse(MakeScheduleResponse()));
         aiService.Setup(a => a.GenerateContentAsync(
-                It.IsAny<string>(), AiOperation.GenerateText, UserId,
+                It.IsAny<string>(), AiOperation.AnalyzeMaintenanceQuestionnaire, UserId,
                 null, null, null, 0.5m, null))
             .ThrowsAsync(new InvalidOperationException("AI unavailable"));
 
@@ -146,13 +181,13 @@ public class VehicleMaintenanceAnalysisServiceTests
     [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenAiServiceFails_ReturnsFailure()
     {
-        var (sut, aiService, vehicleClient) = CreateSut();
+        var (sut, aiService, vehicleClient, _) = CreateSut();
         vehicleClient.Setup(c => c.GetUserVehicleByIdAsync(UserVehicleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<VehicleServiceUserVehicleResponse>.SuccessResponse(MakeVehicleResponse()));
         vehicleClient.Setup(c => c.GetDefaultScheduleAsync(VehicleModelId, "engine-oil", It.IsAny<CancellationToken>()))
             .ReturnsAsync(ApiResponse<VehicleServiceDefaultScheduleResponse>.SuccessResponse(MakeScheduleResponse()));
         aiService.Setup(a => a.GenerateContentAsync(
-                It.IsAny<string>(), AiOperation.GenerateText, UserId,
+                It.IsAny<string>(), AiOperation.AnalyzeMaintenanceQuestionnaire, UserId,
                 null, null, null, 0.5m, null))
             .ReturnsAsync(ApiResponse<GenerativeAiResponse>.FailureResponse("Rate limited"));
 
@@ -164,7 +199,7 @@ public class VehicleMaintenanceAnalysisServiceTests
     [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenAiReturnsInvalidJson_ReturnsFailure()
     {
-        var (sut, aiService, vehicleClient) = CreateSut();
+        var (sut, aiService, vehicleClient, _) = CreateSut();
         SetupHappyPathDependencies(vehicleClient);
         var aiResponse = new GenerativeAiResponse
         {
@@ -174,7 +209,7 @@ public class VehicleMaintenanceAnalysisServiceTests
             TotalTokens = 50
         };
         aiService.Setup(a => a.GenerateContentAsync(
-                It.IsAny<string>(), AiOperation.GenerateText, UserId,
+                It.IsAny<string>(), AiOperation.AnalyzeMaintenanceQuestionnaire, UserId,
                 null, null, null, 0.5m, null))
             .ReturnsAsync(ApiResponse<GenerativeAiResponse>.SuccessResponse(aiResponse));
 
@@ -187,7 +222,7 @@ public class VehicleMaintenanceAnalysisServiceTests
     [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenAiReturnsEmptyRecommendations_ReturnsFailure()
     {
-        var (sut, aiService, vehicleClient) = CreateSut();
+        var (sut, aiService, vehicleClient, _) = CreateSut();
         SetupHappyPathDependencies(vehicleClient);
         var aiResponse = new GenerativeAiResponse
         {
@@ -197,7 +232,7 @@ public class VehicleMaintenanceAnalysisServiceTests
             TotalTokens = 50
         };
         aiService.Setup(a => a.GenerateContentAsync(
-                It.IsAny<string>(), AiOperation.GenerateText, UserId,
+                It.IsAny<string>(), AiOperation.AnalyzeMaintenanceQuestionnaire, UserId,
                 null, null, null, 0.5m, null))
             .ReturnsAsync(ApiResponse<GenerativeAiResponse>.SuccessResponse(aiResponse));
 
@@ -209,7 +244,7 @@ public class VehicleMaintenanceAnalysisServiceTests
     [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenAiReturnsMultipleRecommendations_ReturnsFailure()
     {
-        var (sut, aiService, vehicleClient) = CreateSut();
+        var (sut, aiService, vehicleClient, _) = CreateSut();
         SetupHappyPathDependencies(vehicleClient);
         var multipleRecJson = """
         {
@@ -228,7 +263,7 @@ public class VehicleMaintenanceAnalysisServiceTests
             TotalTokens = 200
         };
         aiService.Setup(a => a.GenerateContentAsync(
-                It.IsAny<string>(), AiOperation.GenerateText, UserId,
+                It.IsAny<string>(), AiOperation.AnalyzeMaintenanceQuestionnaire, UserId,
                 null, null, null, 0.5m, null))
             .ReturnsAsync(ApiResponse<GenerativeAiResponse>.SuccessResponse(aiResponse));
 
@@ -241,7 +276,7 @@ public class VehicleMaintenanceAnalysisServiceTests
     [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenSuccess_ReturnsMappedResponse()
     {
-        var (sut, aiService, vehicleClient) = CreateSut();
+        var (sut, aiService, vehicleClient, _) = CreateSut();
         SetupHappyPathDependencies(vehicleClient);
         var aiResponse = new GenerativeAiResponse
         {
@@ -253,7 +288,7 @@ public class VehicleMaintenanceAnalysisServiceTests
             ResponseTimeMs = 1200
         };
         aiService.Setup(a => a.GenerateContentAsync(
-                It.IsAny<string>(), AiOperation.GenerateText, UserId,
+                It.IsAny<string>(), AiOperation.AnalyzeMaintenanceQuestionnaire, UserId,
                 null, null, null, 0.5m, null))
             .ReturnsAsync(ApiResponse<GenerativeAiResponse>.SuccessResponse(aiResponse));
 

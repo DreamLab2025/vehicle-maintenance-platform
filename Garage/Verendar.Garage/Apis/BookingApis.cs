@@ -54,7 +54,7 @@ public static class BookingApis
                 operation.Summary = "Owner/Manager gán thợ máy (Pending/AwaitingConfirmation → Confirmed)";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner), nameof(RoleType.GarageManager)))
             .Produces<ApiResponse<BookingResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<BookingResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<BookingResponse>>(StatusCodes.Status403Forbidden)
@@ -69,7 +69,7 @@ public static class BookingApis
                 operation.Summary = "Thợ được gán cập nhật tiến độ (Confirmed → InProgress → Completed)";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Mechanic)))
             .Produces<ApiResponse<BookingResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<BookingResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<BookingResponse>>(StatusCodes.Status403Forbidden)

@@ -18,6 +18,15 @@ public class GarageMemberRepository(GarageDbContext context)
                  && m.DeletedAt == null,
             ct);
 
+    public Task<bool> IsActiveManagerOfBranchAsync(Guid branchId, Guid userId, CancellationToken ct = default) =>
+        context.GarageMembers.AnyAsync(
+            m => m.GarageBranchId == branchId
+                 && m.UserId == userId
+                 && m.Role == MemberRole.Manager
+                 && m.Status == MemberStatus.Active
+                 && m.DeletedAt == null,
+            ct);
+
     public Task<List<GarageMember>> GetActiveByGarageIdAsync(Guid garageId, CancellationToken ct = default) =>
         context.GarageMembers
             .Where(m => m.GarageBranch.GarageId == garageId
