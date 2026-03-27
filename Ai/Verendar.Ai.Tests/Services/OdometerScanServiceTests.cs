@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Dtos.Ai;
+using Verendar.Ai.Application.Dtos.AiPrompt;
 using Verendar.Ai.Application.Dtos.OdometerScan;
 using Verendar.Ai.Application.Services.Implements;
 using Verendar.Ai.Application.Services.Interfaces;
@@ -15,23 +16,54 @@ public class OdometerScanServiceTests
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly Guid MediaFileId = Guid.NewGuid();
 
-    private static (OdometerScanService Sut, Mock<IGenerativeAiService> AiService, Mock<IMediaServiceClient> MediaClient) CreateSut()
+    private static AiPromptResponse MakePromptResponse() => new()
+    {
+        Id = Guid.NewGuid(),
+        Operation = (int)AiOperation.ReadOdometerFromImage,
+        OperationName = nameof(AiOperation.ReadOdometerFromImage),
+        Provider = (int)AiProvider.Gemini,
+        ProviderName = nameof(AiProvider.Gemini),
+        Name = "Odometer Scan Prompt",
+        Content = "Test prompt content",
+        VersionNumber = 1,
+    };
+
+    private static (OdometerScanService Sut, Mock<IGenerativeAiService> AiService, Mock<IMediaServiceClient> MediaClient, Mock<IAiPromptService> PromptService) CreateSut()
     {
         var aiService = new Mock<IGenerativeAiService>(MockBehavior.Strict);
         var factory = new Mock<IGenerativeAiServiceFactory>(MockBehavior.Strict);
         factory.Setup(f => f.Create(AiProvider.Gemini)).Returns(aiService.Object);
 
+        var promptService = new Mock<IAiPromptService>(MockBehavior.Strict);
+        promptService.Setup(p => p.GetPromptAsync(AiOperation.ReadOdometerFromImage, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<AiPromptResponse>.SuccessResponse(MakePromptResponse()));
+
         var mediaClient = new Mock<IMediaServiceClient>(MockBehavior.Strict);
-        var sut = new OdometerScanService(factory.Object, mediaClient.Object, NullLogger<OdometerScanService>.Instance);
-        return (sut, aiService, mediaClient);
+        var sut = new OdometerScanService(promptService.Object, factory.Object, mediaClient.Object, NullLogger<OdometerScanService>.Instance);
+        return (sut, aiService, mediaClient, promptService);
     }
 
     private static OdometerScanRequest MakeRequest() => new() { MediaFileId = MediaFileId };
 
     [Fact]
+    public async Task ScanOdometerAsync_WhenPromptNotFound_ReturnsFailure()
+    {
+        var promptService = new Mock<IAiPromptService>(MockBehavior.Strict);
+        promptService.Setup(p => p.GetPromptAsync(AiOperation.ReadOdometerFromImage, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<AiPromptResponse>.NotFoundResponse("Không tìm thấy prompt"));
+        var factory = new Mock<IGenerativeAiServiceFactory>(MockBehavior.Strict);
+        var mediaClient = new Mock<IMediaServiceClient>(MockBehavior.Strict);
+        var sut = new OdometerScanService(promptService.Object, factory.Object, mediaClient.Object, NullLogger<OdometerScanService>.Instance);
+
+        var result = await sut.ScanOdometerAsync(UserId, MakeRequest());
+
+        AiServiceResponseAssert.AssertFailureEnvelope(result, "Không thể tải prompt AI");
+    }
+
+    [Fact]
     public async Task ScanOdometerAsync_WhenMediaFileNotFound_ReturnsNotFound()
     {
-        var (sut, _, mediaClient) = CreateSut();
+        var (sut, _, mediaClient, _) = CreateSut();
         mediaClient.Setup(c => c.GetMediaFileUrlAsync(MediaFileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((string?)null);
 
@@ -43,7 +75,7 @@ public class OdometerScanServiceTests
     [Fact]
     public async Task ScanOdometerAsync_WhenMediaReturnsEmpty_ReturnsNotFound()
     {
-        var (sut, _, mediaClient) = CreateSut();
+        var (sut, _, mediaClient, _) = CreateSut();
         mediaClient.Setup(c => c.GetMediaFileUrlAsync(MediaFileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(string.Empty);
 
@@ -55,7 +87,7 @@ public class OdometerScanServiceTests
     [Fact]
     public async Task ScanOdometerAsync_WhenAiCallFails_ReturnsSuccessWithNullOdometer()
     {
-        var (sut, aiService, mediaClient) = CreateSut();
+        var (sut, aiService, mediaClient, _) = CreateSut();
         mediaClient.Setup(c => c.GetMediaFileUrlAsync(MediaFileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.example.com/image.jpg");
         aiService.Setup(a => a.GenerateContentFromImageAsync(
@@ -79,7 +111,7 @@ public class OdometerScanServiceTests
     [Fact]
     public async Task ScanOdometerAsync_WhenAiReturnsValidJson_ReturnsParsedOdometer()
     {
-        var (sut, aiService, mediaClient) = CreateSut();
+        var (sut, aiService, mediaClient, _) = CreateSut();
         mediaClient.Setup(c => c.GetMediaFileUrlAsync(MediaFileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.example.com/image.jpg");
 
@@ -111,7 +143,7 @@ public class OdometerScanServiceTests
     [Fact]
     public async Task ScanOdometerAsync_WhenAiReturnsMarkdownWrappedJson_StripsAndParsesCorrectly()
     {
-        var (sut, aiService, mediaClient) = CreateSut();
+        var (sut, aiService, mediaClient, _) = CreateSut();
         mediaClient.Setup(c => c.GetMediaFileUrlAsync(MediaFileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.example.com/image.jpg");
 
@@ -139,7 +171,7 @@ public class OdometerScanServiceTests
     [Fact]
     public async Task ScanOdometerAsync_WhenAiReturnsInvalidJson_ReturnsNullOdometerGracefully()
     {
-        var (sut, aiService, mediaClient) = CreateSut();
+        var (sut, aiService, mediaClient, _) = CreateSut();
         mediaClient.Setup(c => c.GetMediaFileUrlAsync(MediaFileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.example.com/image.jpg");
 
@@ -169,7 +201,7 @@ public class OdometerScanServiceTests
     [Fact]
     public async Task ScanOdometerAsync_WhenAiReturnsNullOdometerInJson_ReturnsNullOdometer()
     {
-        var (sut, aiService, mediaClient) = CreateSut();
+        var (sut, aiService, mediaClient, _) = CreateSut();
         mediaClient.Setup(c => c.GetMediaFileUrlAsync(MediaFileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync("https://storage.example.com/image.jpg");
 
@@ -196,22 +228,27 @@ public class OdometerScanServiceTests
     }
 
     [Fact]
-    public async Task ScanOdometerAsync_AlwaysUsesGeminiProvider_RegardlessOfConfig()
+    public async Task ScanOdometerAsync_UsesProviderFromPrompt_NotHardcoded()
     {
+        var promptResponse = MakePromptResponse();
+        promptResponse.Provider = (int)AiProvider.Bedrock;
+
         var aiService = new Mock<IGenerativeAiService>(MockBehavior.Strict);
         var factory = new Mock<IGenerativeAiServiceFactory>(MockBehavior.Strict);
-        factory.Setup(f => f.Create(AiProvider.Gemini)).Returns(aiService.Object);
+        factory.Setup(f => f.Create(AiProvider.Bedrock)).Returns(aiService.Object);
+
+        var promptService = new Mock<IAiPromptService>(MockBehavior.Strict);
+        promptService.Setup(p => p.GetPromptAsync(AiOperation.ReadOdometerFromImage, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ApiResponse<AiPromptResponse>.SuccessResponse(promptResponse));
 
         var mediaClient = new Mock<IMediaServiceClient>(MockBehavior.Strict);
         mediaClient.Setup(c => c.GetMediaFileUrlAsync(MediaFileId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((string?)null);
 
-        var sut = new OdometerScanService(factory.Object, mediaClient.Object, NullLogger<OdometerScanService>.Instance);
+        var sut = new OdometerScanService(promptService.Object, factory.Object, mediaClient.Object, NullLogger<OdometerScanService>.Instance);
 
         await sut.ScanOdometerAsync(UserId, MakeRequest());
 
-        factory.Verify(f => f.Create(AiProvider.Gemini), Times.Once);
         factory.Verify(f => f.CreateDefault(), Times.Never);
-        factory.Verify(f => f.Create(AiProvider.Bedrock), Times.Never);
     }
 }

@@ -16,6 +16,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Prompts\odometer-scan.txt" />
+    <EmbeddedResource Include="Prompts\analyze-maintenance-questionnaire.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Verendar.Ai.Application\Verendar.Ai.Application.csproj" />
     <ProjectReference Include="..\Verendar.Ai.Domain\Verendar.Ai.Domain.csproj" />
   </ItemGroup>

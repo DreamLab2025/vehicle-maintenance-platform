@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Verendar.Ai.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Verendar.Ai.Infrastructure.Data;
 namespace Verendar.Ai.Infrastructure.Migrations
 {
     [DbContext(typeof(AiDbContext))]
-    partial class AiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327162619_AddAiPrompts")]
+    partial class AddAiPrompts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
