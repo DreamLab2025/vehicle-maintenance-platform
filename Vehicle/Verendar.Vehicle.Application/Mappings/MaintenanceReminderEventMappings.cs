@@ -18,6 +18,8 @@ namespace Verendar.Vehicle.Application.Mappings
 
             return new MaintenanceReminderItemDto
             {
+                PartTrackingId = pt?.Id ?? Guid.Empty,
+                DataCapturedAtUtc = DateTime.UtcNow,
                 PartCategoryName = pt?.PartCategory?.Name ?? string.Empty,
                 Description = pt?.PartCategory?.Description,
                 UserVehicleId = pt?.UserVehicleId ?? Guid.Empty,

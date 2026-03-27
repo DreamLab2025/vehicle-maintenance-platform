@@ -11,5 +11,6 @@ app.UseApplicationServices();
 app.MapGarageApi();
 app.MapGarageBranchApi();
 app.MapGarageMemberApi();
+app.MapBookingApi();
 
 await app.RunAsync();

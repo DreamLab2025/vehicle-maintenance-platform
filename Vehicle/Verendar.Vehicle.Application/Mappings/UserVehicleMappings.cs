@@ -1,3 +1,4 @@
+using Verendar.Vehicle.Contracts.Dtos.Internal;
 using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Application.Mappings
@@ -26,6 +27,25 @@ namespace Verendar.Vehicle.Application.Mappings
                 UserVehicleId = entity.Id,
                 CurrentOdometer = entity.CurrentOdometer,
                 LastOdometerUpdate = entity.LastOdometerUpdate
+            };
+        }
+
+        public static GaragePartnerUserVehicleDto ToGaragePartnerDto(this UserVehicle entity)
+        {
+            var variant = entity.Variant;
+            var model = variant?.VehicleModel;
+            var brand = model?.Brand;
+
+            return new GaragePartnerUserVehicleDto
+            {
+                Id = entity.Id,
+                UserId = entity.UserId,
+                LicensePlate = entity.LicensePlate,
+                Vin = entity.VIN,
+                CurrentOdometer = entity.CurrentOdometer,
+                ModelName = model?.Name ?? string.Empty,
+                BrandName = brand?.Name ?? string.Empty,
+                VariantColor = variant?.Color ?? string.Empty
             };
         }
 

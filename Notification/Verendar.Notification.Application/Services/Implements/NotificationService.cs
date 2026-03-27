@@ -1,9 +1,15 @@
 using System.Text.Json;
+using Verendar.Notification.Application.Clients;
+using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Mapping;
+using Verendar.Vehicle.Contracts.Dtos.Internal;
 
 namespace Verendar.Notification.Application.Services.Implements
 {
-    public class NotificationService(IUnitOfWork unitOfWork, ILogger<NotificationService> logger) : INotificationService
+    public class NotificationService(
+        IUnitOfWork unitOfWork,
+        IVehicleMaintenanceReminderLookupClient vehicleLookupClient,
+        ILogger<NotificationService> logger) : INotificationService
     {
         private readonly ILogger<NotificationService> _logger = logger;
 
@@ -27,7 +33,90 @@ namespace Verendar.Notification.Application.Services.Implements
                 return ApiResponse<NotificationDetailDto>.FailureResponse("Thông báo không có trong app.");
             }
 
-            return ApiResponse<NotificationDetailDto>.SuccessResponse(notification.ToDetailDto());
+            var dto = notification.ToDetailDto();
+
+            if (string.Equals(notification.EntityType, "MaintenanceReminder", StringComparison.OrdinalIgnoreCase))
+            {
+                var reminderIds = ParseReminderIdsFromMetadata(notification.MetadataJson);
+                if (reminderIds.Count > 0)
+                {
+                    try
+                    {
+                        var rows = await vehicleLookupClient.LookupAsync(notification.UserId, reminderIds, cancellationToken);
+                        if (rows != null && rows.Count > 0)
+                        {
+                            var freshness = rows
+                                .Select(r => BuildFreshness(r, notification.CreatedAt))
+                                .ToList();
+                            dto = dto with { MaintenanceReminderFreshness = freshness };
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Vehicle reminder lookup failed for notification {NotificationId}", notificationId);
+                    }
+                }
+            }
+
+            return ApiResponse<NotificationDetailDto>.SuccessResponse(dto);
+        }
+
+        private static List<Guid> ParseReminderIdsFromMetadata(string? metadataJson)
+        {
+            if (string.IsNullOrEmpty(metadataJson))
+                return [];
+
+            try
+            {
+                using var doc = JsonDocument.Parse(metadataJson);
+                if ((!doc.RootElement.TryGetProperty("items", out var itemsEl) && !doc.RootElement.TryGetProperty("Items", out itemsEl))
+                    || itemsEl.ValueKind != JsonValueKind.Array)
+                    return [];
+
+                var list = new List<Guid>();
+                foreach (var el in itemsEl.EnumerateArray())
+                {
+                    if (!TryGetGuidProperty(el, "reminderId", "ReminderId", out var g))
+                        continue;
+                    list.Add(g);
+                }
+
+                return list;
+            }
+            catch
+            {
+                return [];
+            }
+        }
+
+        private static MaintenanceReminderFreshnessDto BuildFreshness(
+            MaintenanceReminderLookupItemResponse row,
+            DateTime notificationCreatedAtUtc)
+        {
+            var reminderIsActive = string.Equals(row.ReminderStatus, "Active", StringComparison.OrdinalIgnoreCase);
+            var notificationDate = DateOnly.FromDateTime(notificationCreatedAtUtc.ToUniversalTime());
+            var replacedAfter = row.LastReplacementDate.HasValue && row.LastReplacementDate.Value >= notificationDate;
+            var trackingChanged = !reminderIsActive || replacedAfter;
+
+            return new MaintenanceReminderFreshnessDto
+            {
+                ReminderId = row.ReminderId,
+                PartTrackingId = row.PartTrackingId,
+                ReminderIsActive = reminderIsActive,
+                ReminderStatus = row.ReminderStatus,
+                LastReplacementDate = row.LastReplacementDate,
+                LastReplacementOdometer = row.LastReplacementOdometer,
+                TrackingChangedSinceNotification = trackingChanged
+            };
+        }
+
+        private static bool TryGetGuidProperty(JsonElement el, string camelName, string pascalName, out Guid value)
+        {
+            value = Guid.Empty;
+            if (!el.TryGetProperty(camelName, out var prop) && !el.TryGetProperty(pascalName, out prop))
+                return false;
+            var s = prop.GetString();
+            return s != null && Guid.TryParse(s, out value);
         }
 
         public async Task<ApiResponse<List<NotificationListItemDto>>> GetInAppNotificationsForUserAsync(

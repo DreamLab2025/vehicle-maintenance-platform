@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Verendar.Garage.Contracts.Events;
 using Verendar.Notification.Application.Constants;
 using Verender.Identity.Contracts.Events;
 using Verendar.Vehicle.Contracts.Enums;
@@ -9,6 +10,12 @@ namespace Verendar.Notification.Application.Mapping
 {
     public static class NotificationMappings
     {
+        private static readonly JsonSerializerOptions MaintenanceReminderMetadataJsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = false
+        };
+
         public static Domain.Entities.Notification OtpRequestedToNotificationEntity(
                 this OtpRequestedEvent message,
                 string title,
@@ -57,6 +64,26 @@ namespace Verendar.Notification.Application.Mapping
             };
         }
 
+        public static Domain.Entities.Notification BookingCreatedToNotificationEntity(
+            this BookingCreatedEvent message,
+            string title,
+            string content)
+        {
+            return new Domain.Entities.Notification
+            {
+                UserId = message.UserId,
+                Title = title,
+                Message = content,
+                NotificationType = NotificationType.User,
+                Priority = NotificationPriority.Medium,
+                Status = NotificationStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
+                MetadataJson = JsonSerializer.Serialize(new { Type = "BookingCreated", BookingId = message.BookingId }),
+                EntityType = "Booking",
+                EntityId = message.BookingId
+            };
+        }
+
         public static Domain.Entities.Notification OdometerReminderToNotificationEntity(
             this OdometerReminderEvent message,
             string title,
@@ -84,6 +111,7 @@ namespace Verendar.Notification.Application.Mapping
             string content)
         {
             var firstItem = message.Items?.FirstOrDefault();
+            var snapshotAtUtc = DateTime.UtcNow;
 
             var priority = message.Level switch
             {
@@ -102,14 +130,15 @@ namespace Verendar.Notification.Application.Mapping
                 NotificationType = NotificationType.User,
                 Priority = priority,
                 Status = NotificationStatus.Pending,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = snapshotAtUtc,
                 MetadataJson = JsonSerializer.Serialize(new
                 {
                     Type = "MaintenanceReminder",
                     Level = message.Level,
                     LevelName = NotificationConstants.MaintenanceLevelLabels.GetLabel(message.Level),
-                    Items = message.Items
-                }),
+                    Items = message.Items,
+                    SnapshotAtUtc = snapshotAtUtc
+                }, MaintenanceReminderMetadataJsonOptions),
                 EntityType = "MaintenanceReminder",
                 EntityId = firstItem?.UserVehicleId
             };

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
+using Verendar.Vehicle.Contracts.Dtos.Internal;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
@@ -135,6 +136,24 @@ namespace Verendar.Vehicle.Application.Services.Implements
             return ApiResponse<UserVehicleDetailResponse>.SuccessResponse(
                 vehicle.ToDetailResponse(totalMaintenanceActivities, lastMaintenanceDate),
                 "Lấy thông tin xe thành công");
+        }
+
+        public async Task<ApiResponse<GaragePartnerUserVehicleDto>> GetUserVehicleForGaragePartnerAsync(
+            Guid ownerUserId,
+            Guid userVehicleId,
+            CancellationToken cancellationToken = default)
+        {
+            var vehicle = await _unitOfWork.UserVehicles.GetByIdAndUserIdWithoutPartTrackingsAsync(userVehicleId, ownerUserId);
+
+            if (vehicle == null)
+            {
+                _logger.LogWarning("GetUserVehicleForGaragePartner: not found {VehicleId} owner {OwnerId}", userVehicleId, ownerUserId);
+                return ApiResponse<GaragePartnerUserVehicleDto>.NotFoundResponse("Không tìm thấy xe");
+            }
+
+            return ApiResponse<GaragePartnerUserVehicleDto>.SuccessResponse(
+                vehicle.ToGaragePartnerDto(),
+                "Lấy thông tin xe (Garage) thành công");
         }
 
         public async Task<ApiResponse<List<UserVehicleSummaryDto>>> GetUserVehiclesAsync(Guid userId, PaginationRequest paginationRequest)

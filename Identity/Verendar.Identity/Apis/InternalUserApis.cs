@@ -1,5 +1,6 @@
 using Verendar.Common.EndpointFilters;
 using Verendar.Common.Shared;
+using Verendar.Identity.Application.Dtos;
 
 namespace Verendar.Identity.Apis
 {
@@ -33,6 +34,16 @@ namespace Verendar.Identity.Apis
                 .Produces(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status400BadRequest);
 
+            group.MapGet("/{id:guid}/garage-contact", GetGarageContact)
+                .WithName("GetUserGarageContact")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Thông tin liên hệ user cho Garage (internal)";
+                    return operation;
+                })
+                .Produces<ApiResponse<GarageContactResponse>>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status404NotFound);
+
             return builder;
         }
 
@@ -47,6 +58,21 @@ namespace Verendar.Identity.Apis
                 return Results.NotFound();
 
             return Results.Ok(ApiResponse<UserEmailResponse>.SuccessResponse(new UserEmailResponse(email)));
+        }
+
+        private static async Task<IResult> GetGarageContact(Guid id, IUserService userService)
+        {
+            var result = await userService.GetUserByIdAsync(id);
+            if (!result.IsSuccess || result.Data == null)
+                return Results.NotFound();
+
+            var u = result.Data;
+            var dto = new GarageContactResponse(
+                u.UserName,
+                u.Email ?? string.Empty,
+                u.PhoneNumber ?? string.Empty);
+
+            return Results.Ok(ApiResponse<GarageContactResponse>.SuccessResponse(dto));
         }
 
         private static async Task<IResult> CreateMechanic(CreateMechanicRequest request, IUserService userService)

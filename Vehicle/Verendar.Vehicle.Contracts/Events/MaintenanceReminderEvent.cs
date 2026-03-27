@@ -20,6 +20,8 @@ namespace Verendar.Vehicle.Contracts.Events
 
     public class MaintenanceReminderItemDto
     {
+        public Guid PartTrackingId { get; set; }
+        public DateTime DataCapturedAtUtc { get; set; }
         public string PartCategoryName { get; set; } = string.Empty;
         public string? Description { get; set; }
         public Guid UserVehicleId { get; set; }
