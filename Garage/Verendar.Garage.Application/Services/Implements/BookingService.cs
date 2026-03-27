@@ -1,5 +1,6 @@
 using MassTransit;
 using Verendar.Garage.Application.Clients;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
@@ -29,25 +30,25 @@ public class BookingService(
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(
             b => b.Id == request.GarageBranchId && b.DeletedAt == null);
         if (branch is null)
-            return ApiResponse<BookingResponse>.NotFoundResponse("Không tìm thấy chi nhánh.");
+            return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.BranchNotFound);
 
         var garage = await _unitOfWork.Garages.FindOneAsync(
             g => g.Id == branch.GarageId && g.DeletedAt == null);
         if (garage is null)
-            return ApiResponse<BookingResponse>.NotFoundResponse("Không tìm thấy garage.");
+            return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.GarageNotFound);
 
         if (garage.Status != GarageStatus.Active)
-            return ApiResponse<BookingResponse>.FailureResponse("Garage chưa hoạt động, không thể đặt lịch.");
+            return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.GarageInactive);
 
         if (branch.Status != BranchStatus.Active)
-            return ApiResponse<BookingResponse>.FailureResponse("Chi nhánh không hoạt động, không thể đặt lịch.");
+            return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.BranchInactive);
 
         if (request.Items.Count == 0)
-            return ApiResponse<BookingResponse>.FailureResponse("Booking phải có ít nhất một mục.", 422);
+            return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.EmptyItems, 422);
 
         var scheduledUtc = NormalizeToUtc(request.ScheduledAt);
         if (scheduledUtc <= DateTime.UtcNow)
-            return ApiResponse<BookingResponse>.FailureResponse("Thời gian đặt lịch phải ở tương lai.");
+            return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.ScheduleMustBeFuture);
 
         // Resolve all line items and compute total
         var resolvedItems = await ResolveCreateLineItemsAsync(request.Items, branch.Id, ct);
@@ -106,9 +107,9 @@ public class BookingService(
 
         var created = await _unitOfWork.Bookings.GetByIdWithDetailsAsync(booking.Id, ct);
         if (created is null)
-            return ApiResponse<BookingResponse>.FailureResponse("Không thể tải booking vừa tạo.");
+            return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.BookingReloadFailed);
 
-        return ApiResponse<BookingResponse>.CreatedResponse(created.ToResponse(), "Đặt lịch thành công.");
+        return ApiResponse<BookingResponse>.CreatedResponse(created.ToResponse(), EndpointMessages.Booking.BookingCreated);
     }
 
     public async Task<ApiResponse<BookingResponse>> GetBookingByIdAsync(
@@ -118,10 +119,10 @@ public class BookingService(
     {
         var booking = await _unitOfWork.Bookings.GetByIdWithDetailsAsync(bookingId, ct);
         if (booking is null)
-            return ApiResponse<BookingResponse>.NotFoundResponse("Không tìm thấy booking.");
+            return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.BookingNotFound);
 
         if (!await CanViewerAccessBookingAsync(booking, viewerId, ct))
-            return ApiResponse<BookingResponse>.ForbiddenResponse("Bạn không có quyền xem booking này.");
+            return ApiResponse<BookingResponse>.ForbiddenResponse(EndpointMessages.Booking.BookingForbiddenView);
 
         var isAssignedMechanic = await IsAssignedMechanicViewerAsync(booking, viewerId, ct);
         BookingCustomerSummary? customer = null;
@@ -134,7 +135,7 @@ public class BookingService(
 
         return ApiResponse<BookingResponse>.SuccessResponse(
             booking.ToResponse(customer, vehicle),
-            "Lấy thông tin booking thành công.");
+            EndpointMessages.Booking.BookingDetailSuccess);
     }
 
     public async Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsAsync(
@@ -147,11 +148,11 @@ public class BookingService(
     {
         if (assignedToMe && (branchId.HasValue || userId.HasValue))
             return ApiResponse<List<BookingListItemResponse>>.FailureResponse(
-                "Không kết hợp assignedToMe với branchId hoặc userId.");
+                EndpointMessages.Booking.AssignedToMeConflict);
 
         if (branchId.HasValue && userId.HasValue)
             return ApiResponse<List<BookingListItemResponse>>.FailureResponse(
-                "Chỉ chọn một trong branchId hoặc userId.");
+                EndpointMessages.Booking.BranchAndUserConflict);
 
         if (assignedToMe)
             return await GetBookingsAssignedToMeAsync(currentUserId, pagination, ct);
@@ -163,7 +164,7 @@ public class BookingService(
             return await GetBookingsByUserIdAsync(userId.Value, currentUserId, pagination, ct);
 
         return ApiResponse<List<BookingListItemResponse>>.FailureResponse(
-            "Thiếu tham số: userId, branchId hoặc assignedToMe=true.");
+            EndpointMessages.Booking.MissingFilter);
     }
 
     private async Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsByUserIdAsync(
@@ -176,7 +177,7 @@ public class BookingService(
 
         if (requestedUserId != currentUserId)
             return ApiResponse<List<BookingListItemResponse>>.ForbiddenResponse(
-                "Chỉ được xem danh sách booking của chính mình.");
+                EndpointMessages.Booking.UserMismatchForbidden);
 
         var (items, totalCount) = await _unitOfWork.Bookings.GetPagedByUserIdAsync(
             requestedUserId,
@@ -189,7 +190,7 @@ public class BookingService(
             totalCount,
             request.PageNumber,
             request.PageSize,
-            "Lấy danh sách booking thành công.");
+            EndpointMessages.Booking.BookingListSuccess);
     }
 
     private async Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsByBranchIdAsync(
@@ -202,11 +203,11 @@ public class BookingService(
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(b => b.Id == branchId && b.DeletedAt == null);
         if (branch is null)
-            return ApiResponse<List<BookingListItemResponse>>.NotFoundResponse("Không tìm thấy chi nhánh.");
+            return ApiResponse<List<BookingListItemResponse>>.NotFoundResponse(EndpointMessages.Booking.BranchNotFound);
 
         var garage = await _unitOfWork.Garages.FindOneAsync(g => g.Id == branch.GarageId && g.DeletedAt == null);
         if (garage is null)
-            return ApiResponse<List<BookingListItemResponse>>.NotFoundResponse("Không tìm thấy garage.");
+            return ApiResponse<List<BookingListItemResponse>>.NotFoundResponse(EndpointMessages.Booking.GarageNotFound);
 
         var isOwner = garage.OwnerId == viewerId;
         if (!isOwner)
@@ -219,7 +220,7 @@ public class BookingService(
                 && m.DeletedAt == null);
             if (manager is null)
                 return ApiResponse<List<BookingListItemResponse>>.ForbiddenResponse(
-                    "Bạn không có quyền xem danh sách booking của chi nhánh này.");
+                    EndpointMessages.Booking.BranchBookingForbidden);
         }
 
         var (items, totalCount) = await _unitOfWork.Bookings.GetPagedByBranchIdAsync(
@@ -233,7 +234,7 @@ public class BookingService(
             totalCount,
             request.PageNumber,
             request.PageSize,
-            "Lấy danh sách booking theo chi nhánh thành công.");
+            EndpointMessages.Booking.BranchBookingListSuccess);
     }
 
     private async Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsAssignedToMeAsync(
@@ -246,7 +247,7 @@ public class BookingService(
         var memberIds = await GetActiveMechanicMemberIdsAsync(mechanicUserId, ct);
         if (memberIds.Count == 0)
             return ApiResponse<List<BookingListItemResponse>>.ForbiddenResponse(
-                "Tài khoản không phải thợ máy hoặc chưa được kích hoạt.");
+                EndpointMessages.Booking.NotMechanicForbidden);
 
         var (items, totalCount) = await _unitOfWork.Bookings.GetPagedByMechanicMemberIdsAsync(
             memberIds,
@@ -259,7 +260,7 @@ public class BookingService(
             totalCount,
             request.PageNumber,
             request.PageSize,
-            "Lấy danh sách booking được giao thành công.");
+            EndpointMessages.Booking.MechanicBookingListSuccess);
     }
 
     public async Task<ApiResponse<BookingResponse>> AssignMechanicAsync(
@@ -270,14 +271,14 @@ public class BookingService(
     {
         var booking = await _unitOfWork.Bookings.GetByIdTrackedWithDetailsAsync(bookingId, ct);
         if (booking is null)
-            return ApiResponse<BookingResponse>.NotFoundResponse("Không tìm thấy booking.");
+            return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.BookingNotFound);
 
         if (booking.Status is not (BookingStatus.Pending or BookingStatus.AwaitingConfirmation))
-            return ApiResponse<BookingResponse>.FailureResponse("Chỉ có thể gán thợ khi booking đang chờ xử lý.");
+            return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.AssignStatusInvalid);
 
         var garage = booking.GarageBranch.Garage;
         if (!await CanOwnerOrManagerBranchAsync(garage.OwnerId, booking.GarageBranchId, actorId))
-            return ApiResponse<BookingResponse>.ForbiddenResponse("Bạn không có quyền gán thợ cho booking này.");
+            return ApiResponse<BookingResponse>.ForbiddenResponse(EndpointMessages.Booking.AssignForbidden);
 
         var mechanic = await _unitOfWork.Members.FindOneAsync(m =>
             m.Id == request.GarageMemberId
@@ -287,7 +288,7 @@ public class BookingService(
             && m.DeletedAt == null);
 
         if (mechanic is null)
-            return ApiResponse<BookingResponse>.NotFoundResponse("Không tìm thấy thợ máy thuộc chi nhánh này.");
+            return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.MechanicNotFound);
 
         var from = booking.Status;
         booking.MechanicId = mechanic.Id;
@@ -317,7 +318,7 @@ public class BookingService(
         var reloaded = await _unitOfWork.Bookings.GetByIdWithDetailsAsync(bookingId, ct);
         return ApiResponse<BookingResponse>.SuccessResponse(
             reloaded!.ToResponse(),
-            "Đã gán thợ và xác nhận booking.");
+            EndpointMessages.Booking.AssignSuccess);
     }
 
     public async Task<ApiResponse<BookingResponse>> UpdateMechanicStatusAsync(
@@ -328,30 +329,30 @@ public class BookingService(
     {
         var booking = await _unitOfWork.Bookings.GetByIdTrackedWithDetailsAsync(bookingId, ct);
         if (booking is null)
-            return ApiResponse<BookingResponse>.NotFoundResponse("Không tìm thấy booking.");
+            return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.BookingNotFound);
 
         if (booking.MechanicId is null)
-            return ApiResponse<BookingResponse>.FailureResponse("Booking chưa được gán thợ.");
+            return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.NotAssignedYet);
 
         var mechanicMember = await _unitOfWork.Members.FindOneAsync(m =>
             m.Id == booking.MechanicId && m.DeletedAt == null);
         if (mechanicMember is null || mechanicMember.UserId != mechanicUserId)
-            return ApiResponse<BookingResponse>.ForbiddenResponse("Bạn không phải thợ được gán cho booking này.");
+            return ApiResponse<BookingResponse>.ForbiddenResponse(EndpointMessages.Booking.MechanicForbidden);
 
         var from = booking.Status;
 
         if (request.Status == BookingStatus.InProgress)
         {
             if (from != BookingStatus.Confirmed)
-                return ApiResponse<BookingResponse>.FailureResponse("Chỉ có thể bắt đầu khi booking đã xác nhận.");
+                return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.StartInvalid);
         }
         else if (request.Status == BookingStatus.Completed)
         {
             if (from != BookingStatus.InProgress)
-                return ApiResponse<BookingResponse>.FailureResponse("Chỉ có thể hoàn tất khi đang thực hiện.");
+                return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.CompleteInvalid);
         }
         else
-            return ApiResponse<BookingResponse>.FailureResponse("Trạng thái cập nhật không hợp lệ.");
+            return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.MechanicStatusInvalid);
 
         booking.Status = request.Status;
         booking.UpdatedAt = DateTime.UtcNow;
@@ -405,7 +406,7 @@ public class BookingService(
         var reloaded = await _unitOfWork.Bookings.GetByIdWithDetailsAsync(bookingId, ct);
         return ApiResponse<BookingResponse>.SuccessResponse(
             reloaded!.ToResponse(),
-            "Cập nhật tiến độ booking thành công.");
+            EndpointMessages.Booking.MechanicStatusUpdated);
     }
 
     public async Task<ApiResponse<bool>> CancelBookingAsync(
@@ -416,13 +417,13 @@ public class BookingService(
     {
         var booking = await _unitOfWork.Bookings.GetByIdTrackedWithDetailsAsync(bookingId, ct);
         if (booking is null)
-            return ApiResponse<bool>.NotFoundResponse("Không tìm thấy booking.");
+            return ApiResponse<bool>.NotFoundResponse(EndpointMessages.Booking.BookingNotFound);
 
         if (booking.Status is BookingStatus.Completed or BookingStatus.Cancelled)
-            return ApiResponse<bool>.FailureResponse("Không thể hủy booking ở trạng thái này.");
+            return ApiResponse<bool>.FailureResponse(EndpointMessages.Booking.CancelStatusInvalid);
 
         if (!await CanCancelBookingAsync(booking, actorId))
-            return ApiResponse<bool>.ForbiddenResponse("Bạn không có quyền hủy booking này.");
+            return ApiResponse<bool>.ForbiddenResponse(EndpointMessages.Booking.CancelForbidden);
 
         var from = booking.Status;
         booking.Status = BookingStatus.Cancelled;
@@ -449,7 +450,7 @@ public class BookingService(
             _logger.LogWarning(ex, "Failed to publish BookingCancelledEvent for booking {BookingId}", booking.Id);
         }
 
-        return ApiResponse<bool>.SuccessResponse(true, "Đã hủy booking.");
+        return ApiResponse<bool>.SuccessResponse(true, EndpointMessages.Booking.CancelSuccess);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
