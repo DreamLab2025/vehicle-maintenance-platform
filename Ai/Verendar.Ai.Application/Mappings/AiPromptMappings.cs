@@ -19,7 +19,7 @@ public static class AiPromptMappings
         UpdatedAt = entity.UpdatedAt,
     };
 
-    public static AiPromptVersionResponse ToVersionResponse(this AiPromptHistory history, int currentVersion) => new()
+    public static AiPromptVersionResponse ToVersionResponse(this AiPromptHistory history, bool isCurrent) => new()
     {
         VersionNumber = history.VersionNumber,
         Provider = (int)history.Provider,
@@ -27,6 +27,17 @@ public static class AiPromptMappings
         Content = history.Content,
         Note = history.Note,
         CreatedAt = history.CreatedAt,
-        IsCurrent = history.VersionNumber == currentVersion,
+        IsCurrent = isCurrent,
+    };
+
+    public static AiPromptVersionResponse ToCurrentVersionResponse(this AiPrompt entity) => new()
+    {
+        VersionNumber = entity.VersionNumber,
+        Provider = (int)entity.Provider,
+        ProviderName = entity.Provider.ToString(),
+        Content = entity.Content,
+        Note = null,
+        CreatedAt = entity.UpdatedAt ?? entity.CreatedAt,
+        IsCurrent = true,
     };
 }

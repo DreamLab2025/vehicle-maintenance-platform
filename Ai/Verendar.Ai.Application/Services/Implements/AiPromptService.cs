@@ -117,7 +117,9 @@ public class AiPromptService(
             return ApiResponse<List<AiPromptVersionResponse>>.NotFoundResponse($"Không tìm thấy prompt cho operation {operation}");
 
         var histories = await _unitOfWork.AiPromptHistories.GetByPromptIdAsync(entity.Id, cancellationToken);
-        var responses = histories.Select(h => h.ToVersionResponse(entity.VersionNumber)).ToList();
+        var responses = new List<AiPromptVersionResponse> { entity.ToCurrentVersionResponse() };
+        responses.AddRange(histories.Select(h => h.ToVersionResponse(isCurrent: false)));
+        responses.Sort((a, b) => b.VersionNumber.CompareTo(a.VersionNumber));
 
         return ApiResponse<List<AiPromptVersionResponse>>.SuccessResponse(responses);
     }
@@ -137,6 +139,10 @@ public class AiPromptService(
         var historyRecord = await _unitOfWork.AiPromptHistories.GetByVersionAsync(entity.Id, request.VersionNumber, cancellationToken);
         if (historyRecord == null)
             return ApiResponse<AiPromptResponse>.NotFoundResponse($"Không tìm thấy version {request.VersionNumber}");
+
+        var rollbackPlaceholderError = ValidatePlaceholders(operation, historyRecord.Content);
+        if (rollbackPlaceholderError != null)
+            return ApiResponse<AiPromptResponse>.FailureResponse(rollbackPlaceholderError);
 
         var snapshotHistory = new AiPromptHistory
         {

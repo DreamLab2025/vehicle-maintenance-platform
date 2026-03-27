@@ -41,17 +41,7 @@ public static class AiPromptSeeder
                 VersionNumber = 1,
             };
 
-            var history = new AiPromptHistory
-            {
-                AiPromptId = prompt.Id,
-                VersionNumber = 1,
-                Provider = provider,
-                Content = content,
-                Note = "Initial seed",
-            };
-
             await context.AiPrompts.AddAsync(prompt);
-            await context.AiPromptHistories.AddAsync(history);
         }
 
         await context.SaveChangesAsync();
