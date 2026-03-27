@@ -50,7 +50,7 @@ public static class GarageBranchApis
                 operation.Summary = "Tạo chi nhánh mới cho garage (chỉ chủ garage)";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner)))
             .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status201Created)
             .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status403Forbidden)
@@ -65,7 +65,7 @@ public static class GarageBranchApis
                 operation.Summary = "Cập nhật chi nhánh garage (chỉ chủ garage)";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner)))
             .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status403Forbidden)
@@ -79,7 +79,7 @@ public static class GarageBranchApis
                 operation.Summary = "Xóa chi nhánh garage (chỉ chủ garage, soft delete)";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner)))
             .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<bool>>(StatusCodes.Status403Forbidden)
             .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound)
@@ -93,7 +93,7 @@ public static class GarageBranchApis
                 operation.Summary = "Chủ garage bật/tắt hoạt động chi nhánh (Active ↔ Inactive)";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner)))
             .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status403Forbidden)

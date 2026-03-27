@@ -26,7 +26,7 @@ public static class GarageMemberApis
                 operation.Summary = "Owner hoặc Manager thêm thành viên cho chi nhánh";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner), nameof(RoleType.GarageManager)))
             .Produces<ApiResponse<GarageMemberResponse>>(StatusCodes.Status201Created)
             .Produces<ApiResponse<GarageMemberResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageMemberResponse>>(StatusCodes.Status403Forbidden)
@@ -40,7 +40,7 @@ public static class GarageMemberApis
                 operation.Summary = "Owner hoặc Manager xem danh sách thành viên theo branch (phân trang)";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner), nameof(RoleType.GarageManager)))
             .Produces<ApiResponse<List<GarageMemberResponse>>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<List<GarageMemberResponse>>>(StatusCodes.Status403Forbidden)
             .Produces<ApiResponse<List<GarageMemberResponse>>>(StatusCodes.Status404NotFound)
@@ -54,7 +54,7 @@ public static class GarageMemberApis
                 operation.Summary = "Owner hoặc Manager cập nhật trạng thái thành viên";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner), nameof(RoleType.GarageManager)))
             .Produces<ApiResponse<GarageMemberResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageMemberResponse>>(StatusCodes.Status403Forbidden)
             .Produces<ApiResponse<GarageMemberResponse>>(StatusCodes.Status404NotFound)
@@ -67,7 +67,7 @@ public static class GarageMemberApis
                 operation.Summary = "Owner hoặc Manager xóa mềm thành viên";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner), nameof(RoleType.GarageManager)))
             .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<bool>>(StatusCodes.Status403Forbidden)
             .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound)

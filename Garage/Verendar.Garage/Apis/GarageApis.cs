@@ -36,10 +36,11 @@ public static class GarageApis
                 operation.Summary = "Xem thông tin garage của tôi kèm danh sách chi nhánh";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner)))
             .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
 
         group.MapGet("/{id:guid}", GetGarageById)
             .WithName("GetGarageById")
@@ -85,7 +86,7 @@ public static class GarageApis
                 operation.Summary = "Admin duyệt / từ chối / tạm khóa garage";
                 return operation;
             })
-            .RequireAuthorization("Admin")
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status404NotFound)
@@ -100,11 +101,12 @@ public static class GarageApis
                 operation.Summary = "Chủ garage chỉnh sửa thông tin (chỉ khi Pending hoặc Rejected)";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner)))
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
 
         group.MapPatch("/{id:guid}/resubmit", ResubmitGarage)
             .WithName("ResubmitGarage")
@@ -113,11 +115,12 @@ public static class GarageApis
                 operation.Summary = "Chủ garage nộp lại hồ sơ sau khi bị từ chối (Rejected → Pending)";
                 return operation;
             })
-            .RequireAuthorization()
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner)))
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized);
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
 
         return group;
     }

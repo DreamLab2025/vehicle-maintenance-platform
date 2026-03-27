@@ -30,6 +30,7 @@ namespace Verendar.Common.Shared
         Admin,
         User,
         GarageOwner,
-        Mechanic
+        Mechanic,
+        GarageManager
     }
 }
