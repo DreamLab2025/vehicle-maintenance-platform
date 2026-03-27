@@ -37,4 +37,10 @@ public class BookingCompletedLineItem
     public bool UpdatesTracking { get; set; }
 
     public decimal Price { get; set; }
+
+    /// <summary>Chu kỳ thay thế theo km từ GarageProduct.ManufacturerKmInterval. Null nếu không có.</summary>
+    public int? RecommendedKmInterval { get; set; }
+
+    /// <summary>Chu kỳ thay thế theo tháng từ GarageProduct.ManufacturerMonthInterval. Null nếu không có.</summary>
+    public int? RecommendedMonthsInterval { get; set; }
 }

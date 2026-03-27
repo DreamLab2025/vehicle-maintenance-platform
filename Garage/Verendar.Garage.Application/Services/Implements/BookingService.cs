@@ -553,7 +553,9 @@ public class BookingService(
                         PartCategoryId = product.PartCategoryId,
                         ItemName = product.Name,
                         UpdatesTracking = product.PartCategoryId.HasValue,
-                        Price = lineItem.BookedItemPrice.Amount
+                        Price = lineItem.BookedItemPrice.Amount,
+                        RecommendedKmInterval = product.ManufacturerKmInterval,
+                        RecommendedMonthsInterval = product.ManufacturerMonthInterval
                     });
                 }
             }
@@ -588,7 +590,9 @@ public class BookingService(
                                 PartCategoryId = bundleItem.Product.PartCategoryId,
                                 ItemName = bundleItem.Product.Name,
                                 UpdatesTracking = bundleItem.Product.PartCategoryId.HasValue,
-                                Price = 0 // price is on the bundle line item, not per sub-item
+                                Price = 0, // price is on the bundle line item, not per sub-item
+                                RecommendedKmInterval = bundleItem.Product.ManufacturerKmInterval,
+                                RecommendedMonthsInterval = bundleItem.Product.ManufacturerMonthInterval
                             });
                         }
                         else if (bundleItem.ServiceId.HasValue && bundleItem.Service is not null)

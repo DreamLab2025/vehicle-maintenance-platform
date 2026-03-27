@@ -5,6 +5,7 @@ using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
 using Verendar.Garage.Contracts.Events;
+using GarageEntity = Verendar.Garage.Domain.Entities.Garage;
 
 namespace Verendar.Garage.Application.Services.Implements;
 
@@ -161,7 +162,7 @@ public class GarageService(
         return ApiResponse<GarageResponse>.SuccessResponse(garage.ToResponse(), "Nộp lại hồ sơ thành công");
     }
 
-    private async Task HandleRoleAndMembersAsync(Garage garage, GarageStatus newStatus, CancellationToken ct)
+    private async Task HandleRoleAndMembersAsync(GarageEntity garage, GarageStatus newStatus, CancellationToken ct)
     {
         try
         {

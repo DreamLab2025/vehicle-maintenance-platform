@@ -102,6 +102,31 @@ namespace Verendar.Notification.Application.Mapping
             };
         }
 
+        public static Domain.Entities.Notification BookingCompletedToNotificationEntity(
+            this BookingCompletedEvent message,
+            string title,
+            string content)
+        {
+            return new Domain.Entities.Notification
+            {
+                UserId = message.UserId,
+                Title = title,
+                Message = content,
+                NotificationType = NotificationType.User,
+                Priority = NotificationPriority.High,
+                Status = NotificationStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
+                MetadataJson = JsonSerializer.Serialize(new
+                {
+                    Type = "BookingCompleted",
+                    BookingId = message.BookingId,
+                    UserVehicleId = message.UserVehicleId
+                }),
+                EntityType = "MaintenanceProposal",
+                EntityId = message.UserVehicleId
+            };
+        }
+
         public static Domain.Entities.Notification OdometerReminderToNotificationEntity(
             this OdometerReminderEvent message,
             string title,

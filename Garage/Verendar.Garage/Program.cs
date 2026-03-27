@@ -16,5 +16,6 @@ app.MapServiceCategoryApi();
 app.MapGarageProductApi();
 app.MapGarageServiceApi();
 app.MapGarageBundleApi();
+app.MapReviewApi();
 
 await app.RunAsync();

@@ -101,6 +101,10 @@ public class GarageBranchService(
         if (branch.Latitude != 0 || branch.Longitude != 0)
             response.MapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude, branch.Longitude, ct);
 
+        var (avg, count) = await _unitOfWork.Reviews.GetRatingSummaryAsync(branchId, ct);
+        response.AverageRating = count > 0 ? Math.Round(avg, 1) : null;
+        response.ReviewCount = count;
+
         return ApiResponse<GarageBranchResponse>.SuccessResponse(
             response, "Lấy thông tin chi nhánh thành công");
     }
@@ -319,8 +323,22 @@ public class GarageBranchService(
             minLat, maxLat, minLng, maxLng,
             ct);
 
+        var ratingSummary = await _unitOfWork.Reviews.GetBulkRatingSummaryAsync(
+            items.Select(b => b.Id), ct);
+
+        var mapped = items.Select(b =>
+        {
+            var r = b.ToBranchMapItemResponse();
+            if (ratingSummary.TryGetValue(b.Id, out var rating))
+            {
+                r.AverageRating = Math.Round(rating.AverageRating, 1);
+                r.ReviewCount = rating.ReviewCount;
+            }
+            return r;
+        }).ToList();
+
         return ApiResponse<List<BranchMapItemResponse>>.SuccessPagedResponse(
-            items.Select(b => b.ToBranchMapItemResponse()).ToList(),
+            mapped,
             totalCount,
             request.PageNumber,
             request.PageSize,
