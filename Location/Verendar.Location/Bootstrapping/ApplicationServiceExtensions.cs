@@ -26,12 +26,20 @@ public static class ApplicationServiceExtensions
 
         if (builder.Environment.IsDevelopment())
         {
-            // Dev: AWS GeoPlaces + GrabMaps (ap-southeast-1)
             builder.Services.Configure<AwsGeocodingSettings>(
                 builder.Configuration.GetSection(AwsGeocodingSettings.SectionName));
-            builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions("Geocoding:AWS"));
-            builder.Services.AddAWSService<IAmazonGeoPlaces>();
-            builder.Services.AddScoped<IGeocodingService, AwsGeocodingService>();
+
+            var awsGeoEnabled = builder.Configuration.GetValue("Geocoding:AWS:Enabled", true);
+            if (awsGeoEnabled)
+            {
+                builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions("Geocoding:AWS"));
+                builder.Services.AddAWSService<IAmazonGeoPlaces>();
+                builder.Services.AddScoped<IGeocodingService, AwsGeocodingService>();
+            }
+            else
+            {
+                builder.Services.AddScoped<IGeocodingService, NullGeocodingService>();
+            }
         }
         else
         {

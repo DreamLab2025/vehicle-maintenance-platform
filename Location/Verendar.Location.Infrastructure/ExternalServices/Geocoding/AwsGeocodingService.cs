@@ -1,5 +1,6 @@
 using Amazon.GeoPlaces;
 using Amazon.GeoPlaces.Model;
+using Amazon.Runtime;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Verendar.Location.Application.ExternalServices;
@@ -51,6 +52,15 @@ public class AwsGeocodingService(
 
             // AWS returns [lng, lat] — swap to (lat, lng)
             return (item.Position[1], item.Position[0]);
+        }
+        catch (AmazonServiceException ex) when (
+            ex.Message.Contains("IAM security credentials", StringComparison.OrdinalIgnoreCase)
+            || ex.Message.Contains("Unable to get IAM", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning(
+                "AWS GeoPlaces: unable to get IAM credentials. Address: '{Address}'",
+                address);
+            return null;
         }
         catch (Exception ex)
         {
