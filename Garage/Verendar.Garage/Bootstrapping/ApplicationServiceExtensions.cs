@@ -30,6 +30,7 @@ public static class ApplicationServiceExtensions
         builder.Services.AddScoped<IGarageServiceService, GarageServiceService>();
         builder.Services.AddScoped<IGarageBundleService, GarageBundleService>();
         builder.Services.AddScoped<IReviewService, ReviewService>();
+        builder.Services.AddScoped<IStatsService, StatsService>();
 
         builder.Services.AddValidatorsFromAssemblyContaining<CreateBookingRequestValidator>();
 
