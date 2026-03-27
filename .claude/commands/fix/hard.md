@@ -6,17 +6,17 @@ This requires deep investigation before any code changes. Do not jump to fixing 
 - Read the relevant domain entities, application services, and infrastructure layers
 - Trace the full call path from API request to database and back
 - Identify all the places the broken behavior could originate
-- Check cross-service interactions: MassTransit consumers, IPaymentClient HTTP calls, SignalR hubs
+- Check `docs/architecture/` for expected domain model if data-related
 
 ## Step 2 — Identify root cause
 - State the exact root cause (specific file, line, incorrect assumption)
-- Explain why this isn't obvious (hidden coupling, async timing, EF tracking issue, event ordering, soft-delete filter, etc.)
+- Explain why this isn't obvious (hidden coupling, async timing, EF tracking issue, permission logic, etc.)
 
 ## Step 3 — Plan the fix
 - List every file that needs to change and why
-- Check for side effects: migration needed? contract change? consumer registration change?
+- Check for side effects: migration needed? contract change? permission mapping change?
 
 ## Step 4 — Implement
-- Fix layer by layer (Domain → Application → Infrastructure → Host)
-- Write or update tests if applicable (see `Location/Verendar.Location.Tests` for patterns)
+- Fix layer by layer following Clean Architecture (Domain → Application → Infrastructure → Api)
+- Write or update tests if applicable
 - Confirm no regressions in adjacent behavior
