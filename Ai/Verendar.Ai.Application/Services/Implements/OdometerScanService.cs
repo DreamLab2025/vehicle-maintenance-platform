@@ -5,11 +5,13 @@ using Verendar.Ai.Domain.Enums;
 namespace Verendar.Ai.Application.Services.Implements
 {
     public class OdometerScanService(
+        IAiPromptService promptService,
         IGenerativeAiServiceFactory generativeAiFactory,
         IMediaServiceClient mediaServiceClient,
         ILogger<OdometerScanService> logger) : IOdometerScanService
     {
-        private readonly IGenerativeAiService _generativeAiService = generativeAiFactory.Create(AiProvider.Gemini);
+        private readonly IAiPromptService _promptService = promptService;
+        private readonly IGenerativeAiServiceFactory _generativeAiFactory = generativeAiFactory;
         private readonly IMediaServiceClient _mediaServiceClient = mediaServiceClient;
         private readonly ILogger<OdometerScanService> _logger = logger;
 
@@ -18,6 +20,13 @@ namespace Verendar.Ai.Application.Services.Implements
             OdometerScanRequest request,
             CancellationToken cancellationToken = default)
         {
+            var promptResult = await _promptService.GetPromptAsync(AiOperation.ReadOdometerFromImage, cancellationToken);
+            if (!promptResult.IsSuccess || promptResult.Data == null)
+            {
+                _logger.LogError("ScanOdometer: failed to load prompt for ReadOdometerFromImage");
+                return ApiResponse<OdometerScanResponse>.FailureResponse("Không thể tải prompt AI");
+            }
+
             var imageUrl = await _mediaServiceClient.GetMediaFileUrlAsync(request.MediaFileId, cancellationToken);
             if (string.IsNullOrEmpty(imageUrl))
             {
@@ -25,9 +34,10 @@ namespace Verendar.Ai.Application.Services.Implements
                 return ApiResponse<OdometerScanResponse>.NotFoundResponse("Không tìm thấy ảnh. Vui lòng kiểm tra lại ID file.");
             }
 
-            var aiResult = await _generativeAiService.GenerateContentFromImageAsync(
+            var aiService = _generativeAiFactory.Create((AiProvider)promptResult.Data.Provider);
+            var aiResult = await aiService.GenerateContentFromImageAsync(
                 imageUrl,
-                OdometerScanPrompt.Instructions,
+                promptResult.Data.Content,
                 AiOperation.ReadOdometerFromImage,
                 userId,
                 cancellationToken: cancellationToken);
@@ -54,7 +64,6 @@ namespace Verendar.Ai.Application.Services.Implements
             try
             {
                 var json = content.Trim();
-                // Strip markdown code blocks if present
                 if (json.StartsWith("```"))
                 {
                     var start = json.IndexOf('{');
