@@ -23,6 +23,50 @@ public class IdentityHttpClient(
     public Task<Guid?> CreateManagerUserAsync(CreateMemberUserRequest request, CancellationToken ct = default) =>
         CreateMemberAsync("/api/internal/users/manager", request, ct);
 
+    public Task<bool> AssignRoleAsync(Guid userId, string role, CancellationToken ct = default) =>
+        SendRoleRequestAsync(HttpMethod.Post, $"/api/internal/users/{userId}/roles", new { Role = role }, ct);
+
+    public Task<bool> RevokeRoleAsync(Guid userId, string role, CancellationToken ct = default) =>
+        SendRoleRequestAsync(HttpMethod.Delete, $"/api/internal/users/{userId}/roles/{role}", null, ct);
+
+    public async Task<bool> BulkDeactivateAsync(IEnumerable<Guid> userIds, CancellationToken ct = default)
+    {
+        var ids = userIds.ToList();
+        if (ids.Count == 0) return true;
+        return await SendRoleRequestAsync(HttpMethod.Post, "/api/internal/users/bulk-deactivate", new { UserIds = ids }, ct);
+    }
+
+    private async Task<bool> SendRoleRequestAsync(HttpMethod method, string path, object? body, CancellationToken ct)
+    {
+        try
+        {
+            using var message = new HttpRequestMessage(method, path);
+            if (body != null)
+                message.Content = JsonContent.Create(body);
+
+            message.Headers.Authorization = new AuthenticationHeaderValue(
+                "Bearer",
+                _serviceTokenProvider.GenerateServiceToken());
+
+            var response = await _httpClient.SendAsync(message, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogWarning("Identity role request failed: {Method} {Path} {Status} {Body}",
+                    method, path, response.StatusCode, content);
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calling identity role endpoint {Method} {Path}", method, path);
+            return false;
+        }
+    }
+
     private async Task<Guid?> CreateMemberAsync(string path, CreateMemberUserRequest request, CancellationToken ct)
     {
         try

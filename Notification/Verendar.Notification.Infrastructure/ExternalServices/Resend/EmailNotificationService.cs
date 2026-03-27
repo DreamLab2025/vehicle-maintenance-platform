@@ -186,6 +186,26 @@ namespace Verendar.Notification.Infrastructure.Services
             return (singleEmailSent, [singleNotification.Id]);
         }
 
+        public async Task<bool> SendMemberAccountCreatedEmailAsync(MemberAccountCreatedEvent message, CancellationToken cancellationToken = default)
+        {
+            var title = NotificationConstants.Titles.MemberAccountCreated;
+            var messageContent = $"Tài khoản của {message.FullName} đã được tạo thành công. Vui lòng đổi mật khẩu sau lần đăng nhập đầu tiên.";
+
+            var notification = message.MemberAccountCreatedToNotificationEntity(title, messageContent);
+            await _unitOfWork.Notifications.AddAsync(notification);
+
+            var emailDelivery = notification.CreateDelivery(message.Email, EmailChannel);
+            await _unitOfWork.NotificationDeliveries.AddAsync(emailDelivery);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var templateModel = message.ToMemberAccountCreatedEmailModel();
+            var deliveryContext = EmailDeliveryContextMappings.ToDeliveryContext(
+                notification.Id, message.Email, title, messageContent,
+                notification.NotificationType, templateModel, NotificationConstants.TemplateKeys.MemberAccountCreated);
+
+            return await SendEmailDeliveryAsync(notification, emailDelivery, deliveryContext, cancellationToken);
+        }
+
         // Unified email send + delivery status update — used by all three send methods.
         private async Task<bool> SendEmailDeliveryAsync(
             NotificationEntity notification,

@@ -65,6 +65,14 @@ namespace Verendar.Notification.Application.Dtos.Email
         public string? EstimatedNextReplacementDate { get; set; }
     }
 
+    // Tài khoản thành viên Garage mới (mechanic / manager)
+    public class MemberAccountCreatedEmailModel : EmailTemplateModel
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string TempPassword { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+
     // Nhắc nhở cập nhật số km
     public class OdometerReminderEmailModel : EmailTemplateModel
     {

@@ -64,6 +64,24 @@ namespace Verendar.Notification.Application.Mapping
             };
         }
 
+        public static Domain.Entities.Notification MemberAccountCreatedToNotificationEntity(
+            this MemberAccountCreatedEvent message,
+            string title,
+            string content)
+        {
+            return new Domain.Entities.Notification
+            {
+                UserId = message.UserId,
+                Title = title,
+                Message = content,
+                NotificationType = NotificationType.System,
+                Priority = NotificationPriority.High,
+                Status = NotificationStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
+                MetadataJson = JsonSerializer.Serialize(new { Role = message.Role })
+            };
+        }
+
         public static Domain.Entities.Notification BookingCreatedToNotificationEntity(
             this BookingCreatedEvent message,
             string title,

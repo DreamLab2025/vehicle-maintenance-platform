@@ -1,5 +1,6 @@
 using MassTransit;
 using Verendar.Common.Shared;
+using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
@@ -10,11 +11,13 @@ namespace Verendar.Garage.Application.Services.Implements;
 public class GarageService(
     ILogger<GarageService> logger,
     IUnitOfWork unitOfWork,
-    IPublishEndpoint publishEndpoint) : IGarageService
+    IPublishEndpoint publishEndpoint,
+    IIdentityClient identityClient) : IGarageService
 {
     private readonly ILogger<GarageService> _logger = logger;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
+    private readonly IIdentityClient _identityClient = identityClient;
 
     public async Task<ApiResponse<List<GarageResponse>>> GetGaragesAsync(GarageFilterRequest request)
     {
@@ -89,6 +92,8 @@ public class GarageService(
         _logger.LogInformation("UpdateGarageStatus: garage {GarageId} {From} → {To} by admin {AdminId}",
             garageId, fromStatus, request.Status, adminUserId);
 
+        await HandleRoleAndMembersAsync(garage, request.Status, ct);
+
         await _publishEndpoint.Publish(new GarageStatusChangedEvent
         {
             GarageId = garage.Id,
@@ -154,6 +159,48 @@ public class GarageService(
         _logger.LogInformation("ResubmitGarage: garage {GarageId} resubmitted by owner {OwnerId}", garageId, ownerId);
 
         return ApiResponse<GarageResponse>.SuccessResponse(garage.ToResponse(), "Nộp lại hồ sơ thành công");
+    }
+
+    private async Task HandleRoleAndMembersAsync(Garage garage, GarageStatus newStatus, CancellationToken ct)
+    {
+        try
+        {
+            if (newStatus == GarageStatus.Active)
+            {
+                var assigned = await _identityClient.AssignRoleAsync(garage.OwnerId, "GarageOwner", ct);
+                if (!assigned)
+                    _logger.LogWarning("HandleRoleAndMembers: failed to assign GarageOwner role for owner {OwnerId}", garage.OwnerId);
+                return;
+            }
+
+            if (newStatus == GarageStatus.Suspended || newStatus == GarageStatus.Rejected)
+            {
+                var revoked = await _identityClient.RevokeRoleAsync(garage.OwnerId, "GarageOwner", ct);
+                if (!revoked)
+                    _logger.LogWarning("HandleRoleAndMembers: failed to revoke GarageOwner role for owner {OwnerId}", garage.OwnerId);
+
+                var activeMembers = await _unitOfWork.Members.GetActiveByGarageIdAsync(garage.Id, ct);
+                if (activeMembers.Count == 0) return;
+
+                foreach (var member in activeMembers)
+                {
+                    member.Status = MemberStatus.Inactive;
+                    member.UpdatedAt = DateTime.UtcNow;
+                }
+                await _unitOfWork.SaveChangesAsync(ct);
+
+                var memberUserIds = activeMembers.Select(m => m.UserId);
+                var deactivated = await _identityClient.BulkDeactivateAsync(memberUserIds, ct);
+                if (!deactivated)
+                    _logger.LogWarning("HandleRoleAndMembers: failed to deactivate {Count} member accounts for garage {GarageId}",
+                        activeMembers.Count, garage.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "HandleRoleAndMembers: unexpected error for garage {GarageId} status {Status}",
+                garage.Id, newStatus);
+        }
     }
 
     private static bool IsValidAdminTransition(GarageStatus from, GarageStatus to) => (from, to) switch

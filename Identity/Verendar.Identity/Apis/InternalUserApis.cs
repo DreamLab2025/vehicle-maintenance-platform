@@ -1,6 +1,7 @@
 using Verendar.Common.EndpointFilters;
 using Verendar.Common.Shared;
 using Verendar.Identity.Application.Dtos;
+using Verendar.Identity.Domain.Entities;
 
 namespace Verendar.Identity.Apis
 {
@@ -45,6 +46,35 @@ namespace Verendar.Identity.Apis
                 .Produces<CreateManagerResponse>(StatusCodes.Status201Created)
                 .Produces(StatusCodes.Status409Conflict)
                 .Produces(StatusCodes.Status400BadRequest);
+
+            group.MapPost("/{id:guid}/roles", AssignRole)
+                .WithName("AssignUserRole")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Gán role cho user (internal)";
+                    return operation;
+                })
+                .Produces(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status404NotFound);
+
+            group.MapDelete("/{id:guid}/roles/{role}", RevokeRole)
+                .WithName("RevokeUserRole")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Thu hồi role của user (internal)";
+                    return operation;
+                })
+                .Produces(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status404NotFound);
+
+            group.MapPost("/bulk-deactivate", BulkDeactivate)
+                .WithName("BulkDeactivateUsers")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Vô hiệu hóa nhiều tài khoản (internal)";
+                    return operation;
+                })
+                .Produces(StatusCodes.Status200OK);
 
             group.MapGet("/{id:guid}/garage-contact", GetGarageContact)
                 .WithName("GetUserGarageContact")
@@ -98,6 +128,44 @@ namespace Verendar.Identity.Apis
             }
 
             return Results.Json(result.Data, statusCode: 201);
+        }
+
+        private static async Task<IResult> AssignRole(Guid id, AssignRoleRequest request, IUserService userService)
+        {
+            if (!Enum.TryParse<UserRole>(request.Role, ignoreCase: true, out var role))
+                return Results.BadRequest(new { error = $"Role '{request.Role}' không hợp lệ." });
+
+            var result = await userService.AssignRoleAsync(id, role);
+            if (!result.IsSuccess)
+            {
+                return result.StatusCode == 404
+                    ? Results.NotFound(new { error = result.Message })
+                    : Results.Problem(result.Message, statusCode: 500);
+            }
+
+            return Results.Ok(result);
+        }
+
+        private static async Task<IResult> RevokeRole(Guid id, string role, IUserService userService)
+        {
+            if (!Enum.TryParse<UserRole>(role, ignoreCase: true, out var userRole))
+                return Results.BadRequest(new { error = $"Role '{role}' không hợp lệ." });
+
+            var result = await userService.RevokeRoleAsync(id, userRole);
+            if (!result.IsSuccess)
+            {
+                return result.StatusCode == 404
+                    ? Results.NotFound(new { error = result.Message })
+                    : Results.Problem(result.Message, statusCode: 500);
+            }
+
+            return Results.Ok(result);
+        }
+
+        private static async Task<IResult> BulkDeactivate(BulkDeactivateRequest request, IUserService userService)
+        {
+            var result = await userService.BulkDeactivateAsync(request.UserIds);
+            return Results.Ok(result);
         }
 
         private static async Task<IResult> CreateManager(CreateManagerRequest request, IUserService userService)

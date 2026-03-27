@@ -29,4 +29,8 @@ namespace Verendar.Identity.Application.Dtos
     public record CreateManagerResponse(Guid UserId);
 
     public record GarageContactResponse(string FullName, string Email, string PhoneNumber);
+
+    public record AssignRoleRequest(string Role);
+
+    public record BulkDeactivateRequest(IEnumerable<Guid> UserIds);
 }

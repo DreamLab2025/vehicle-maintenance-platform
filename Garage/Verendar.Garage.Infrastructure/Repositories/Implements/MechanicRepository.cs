@@ -17,4 +17,11 @@ public class GarageMemberRepository(GarageDbContext context)
                  && m.UserId == userId
                  && m.DeletedAt == null,
             ct);
+
+    public Task<List<GarageMember>> GetActiveByGarageIdAsync(Guid garageId, CancellationToken ct = default) =>
+        context.GarageMembers
+            .Where(m => m.GarageBranch.GarageId == garageId
+                        && m.Status == MemberStatus.Active
+                        && m.DeletedAt == null)
+            .ToListAsync(ct);
 }
