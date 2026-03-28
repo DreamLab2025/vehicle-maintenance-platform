@@ -138,6 +138,14 @@ public class BookingService(
             EndpointMessages.Booking.BookingDetailSuccess);
     }
 
+    public async Task<bool> CanViewBookingAsync(Guid bookingId, Guid viewerId, CancellationToken ct = default)
+    {
+        var booking = await _unitOfWork.Bookings.GetByIdForAccessCheckAsync(bookingId, ct);
+        if (booking is null)
+            return false;
+        return await CanViewerAccessBookingAsync(booking, viewerId, ct);
+    }
+
     public async Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsAsync(
         Guid currentUserId,
         bool assignedToMe,
@@ -185,8 +193,11 @@ public class BookingService(
             request.PageSize,
             ct);
 
+        var summaries = await _unitOfWork.Bookings.GetItemsSummariesForBookingsAsync(
+            items.Select(b => b.Id).ToList(), ct);
+
         return ApiResponse<List<BookingListItemResponse>>.SuccessPagedResponse(
-            items.Select(b => b.ToListItemResponse()).ToList(),
+            items.Select(b => b.ToListItemResponse(summaries[b.Id])).ToList(),
             totalCount,
             request.PageNumber,
             request.PageSize,
@@ -229,8 +240,11 @@ public class BookingService(
             request.PageSize,
             ct);
 
+        var summariesB = await _unitOfWork.Bookings.GetItemsSummariesForBookingsAsync(
+            items.Select(b => b.Id).ToList(), ct);
+
         return ApiResponse<List<BookingListItemResponse>>.SuccessPagedResponse(
-            items.Select(b => b.ToListItemResponse()).ToList(),
+            items.Select(b => b.ToListItemResponse(summariesB[b.Id])).ToList(),
             totalCount,
             request.PageNumber,
             request.PageSize,
@@ -255,8 +269,11 @@ public class BookingService(
             request.PageSize,
             ct);
 
+        var summariesM = await _unitOfWork.Bookings.GetItemsSummariesForBookingsAsync(
+            items.Select(b => b.Id).ToList(), ct);
+
         return ApiResponse<List<BookingListItemResponse>>.SuccessPagedResponse(
-            items.Select(b => b.ToListItemResponse()).ToList(),
+            items.Select(b => b.ToListItemResponse(summariesM[b.Id])).ToList(),
             totalCount,
             request.PageNumber,
             request.PageSize,

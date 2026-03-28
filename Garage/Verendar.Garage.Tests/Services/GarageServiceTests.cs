@@ -3,6 +3,7 @@ using MassTransit;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Verendar.Common.Shared;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
@@ -42,7 +43,7 @@ public class GarageServiceTests
         GarageServiceResponseAssert.AssertFailureEnvelope(
             result,
             409,
-            "Tài khoản đã có garage đăng ký. Nếu bị từ chối, hãy chỉnh sửa và nộp lại.");
+            EndpointMessages.OwnerGarage.ConflictExistingGarage);
         m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         m.Garages.Verify(r => r.AddAsync(It.IsAny<GarageEntity>()), Times.Never);
     }
@@ -65,7 +66,7 @@ public class GarageServiceTests
         var request = new GarageRequest { BusinessName = "Garage Alpha" };
         var result = await sut.CreateGarageAsync(ownerId, request);
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, "Đăng ký garage thành công");
+        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.OwnerGarage.RegisterSuccess);
         result.Data.Should().NotBeNull();
         result.Data!.OwnerId.Should().Be(ownerId);
         result.Data.BusinessName.Should().Be("Garage Alpha");
@@ -94,7 +95,7 @@ public class GarageServiceTests
 
         var result = await sut.GetGaragesAsync(new GarageFilterRequest { PageNumber = 1, PageSize = 10 });
 
-        var meta = GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, "Lấy danh sách garage thành công", 2, 2);
+        var meta = GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.OwnerGarage.ListSuccess, 2, 2);
         meta.PageNumber.Should().Be(1);
         meta.PageSize.Should().Be(10);
         result.Data![0].BusinessName.Should().Be("Garage A");
@@ -121,7 +122,7 @@ public class GarageServiceTests
 
         var result = await sut.GetGaragesAsync(new GarageFilterRequest { Status = GarageStatus.Active });
 
-        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, "Lấy danh sách garage thành công", 1, 1);
+        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.OwnerGarage.ListSuccess, 1, 1);
         result.Data![0].Status.Should().Be(GarageStatus.Active);
         m.Garages.Verify(r => r.GetPagedAsync(
             It.IsAny<int>(), It.IsAny<int>(),
@@ -143,7 +144,7 @@ public class GarageServiceTests
 
         var result = await sut.GetGaragesAsync(new GarageFilterRequest());
 
-        var meta = GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, "Lấy danh sách garage thành công", 0, 0);
+        var meta = GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.OwnerGarage.ListSuccess, 0, 0);
         meta.TotalPages.Should().Be(0);
         meta.HasNextPage.Should().BeFalse();
         meta.HasPreviousPage.Should().BeFalse();
@@ -177,7 +178,7 @@ public class GarageServiceTests
 
         var result = await sut.GetMyGarageAsync(ownerId);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Lấy thông tin garage thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.OwnerGarage.GetDetailSuccess);
         result.Data!.BusinessName.Should().Be("My Garage");
         result.Data.BranchCount.Should().Be(2);
         result.Data.Branches.Should().HaveCount(2);
@@ -196,7 +197,7 @@ public class GarageServiceTests
 
         var result = await sut.GetMyGarageAsync(Guid.NewGuid());
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, "Bạn chưa đăng ký garage.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, EndpointMessages.OwnerGarage.MyGarageNotRegistered);
     }
 
     [Fact]
@@ -226,7 +227,7 @@ public class GarageServiceTests
 
         var result = await sut.GetGarageByIdAsync(garageId);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Lấy thông tin garage thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.OwnerGarage.GetDetailSuccess);
         result.Data!.Id.Should().Be(garageId);
         result.Data.BusinessName.Should().Be("Target Garage");
         result.Data.BranchCount.Should().Be(1);
@@ -247,7 +248,7 @@ public class GarageServiceTests
 
         var result = await sut.GetGarageByIdAsync(Guid.NewGuid());
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, "Không tìm thấy garage.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, EndpointMessages.OwnerGarage.GarageNotFoundPlain);
     }
 
     [Fact]
@@ -267,7 +268,7 @@ public class GarageServiceTests
 
         result.IsSuccess.Should().BeFalse();
         result.StatusCode.Should().Be(404);
-        result.Message.Should().Be($"Không tìm thấy garage với id '{garageId}'.");
+        result.Message.Should().Be(string.Format(EndpointMessages.OwnerGarage.GarageNotFoundByIdFormat, garageId));
     }
 
     [Fact]
@@ -297,7 +298,7 @@ public class GarageServiceTests
         GarageServiceResponseAssert.AssertFailureEnvelope(
             result,
             400,
-            "Không thể chuyển trạng thái từ 'Active' sang 'Pending'.");
+            string.Format(EndpointMessages.OwnerGarage.StatusTransitionInvalidFormat, GarageStatus.Active, GarageStatus.Pending));
     }
 
     [Fact]
@@ -326,7 +327,7 @@ public class GarageServiceTests
             ShortName = "NN"
         });
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật thông tin garage thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.OwnerGarage.UpdateInfoSuccess);
         result.Data!.BusinessName.Should().Be("New Name");
     }
 
@@ -354,7 +355,7 @@ public class GarageServiceTests
 
         var result = await sut.ResubmitGarageAsync(garageId, ownerId);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Nộp lại hồ sơ thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.OwnerGarage.ResubmitSuccess);
         result.Data!.Status.Should().Be(GarageStatus.Pending);
     }
 
@@ -384,7 +385,7 @@ public class GarageServiceTests
 
         var result = await sut.UpdateGarageStatusAsync(garageId, new UpdateGarageStatusRequest { Status = GarageStatus.Active }, adminId);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật trạng thái garage thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.OwnerGarage.UpdateStatusSuccess);
         garage.Status.Should().Be(GarageStatus.Active);
         publish.VerifyAll();
     }
@@ -407,7 +408,7 @@ public class GarageServiceTests
 
         var result = await sut.UpdateGarageInfoAsync(garage.Id, garage.OwnerId, new GarageRequest { BusinessName = "N" });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, "Không thể chỉnh sửa thông tin garage khi đang ở trạng thái Active hoặc Suspended.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, EndpointMessages.OwnerGarage.CannotEditWhenActiveOrSuspended);
     }
 
     [Fact]
@@ -436,7 +437,7 @@ public class GarageServiceTests
         GarageServiceResponseAssert.AssertFailureEnvelope(
             result,
             400,
-            "Garage của bạn đã bị từ chối. Hãy chỉnh sửa thông tin qua PUT /api/v1/garages/{id} và nộp lại qua PATCH /api/v1/garages/{id}/resubmit.");
+            EndpointMessages.OwnerGarage.RejectedUseEditResubmitFlow);
         m.Garages.Verify(r => r.AddAsync(It.IsAny<GarageEntity>()), Times.Never);
     }
 
@@ -485,7 +486,7 @@ public class GarageServiceTests
             new UpdateGarageStatusRequest { Status = GarageStatus.Suspended, Reason = "Temporarily closed" },
             adminId);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật trạng thái garage thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.OwnerGarage.UpdateStatusSuccess);
         members[0].Status.Should().Be(MemberStatus.Inactive);
         identity.VerifyAll();
         publish.VerifyAll();

@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Verendar.Common.Shared;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Dtos.Clients;
@@ -50,7 +51,7 @@ public class GarageMemberServiceTests
             BranchId = branchId
         });
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, "Thêm thành viên thành công");
+        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.Member.AddSuccess);
         result.Data!.Role.Should().Be(MemberRole.Manager);
         members.Should().ContainSingle(x => x.UserId == createdUserId && x.Role == MemberRole.Manager);
         m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -85,7 +86,7 @@ public class GarageMemberServiceTests
             BranchId = branchId
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, "Manager chỉ được phép thêm Mechanic.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, EndpointMessages.Member.ManagerOnlyMechanic);
         m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -114,7 +115,7 @@ public class GarageMemberServiceTests
 
         var result = await sut.GetMembersAsync(garageId, branchId, requesterId, new PaginationRequest(), CancellationToken.None);
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, "Bạn không có quyền xem danh sách thành viên.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, EndpointMessages.Member.ForbiddenListMembers);
     }
 
     [Fact]
@@ -142,7 +143,7 @@ public class GarageMemberServiceTests
 
         var result = await sut.UpdateMemberStatusAsync(targetManagerId, managerUserId, new UpdateMemberStatusRequest { Status = MemberStatus.Inactive });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, "Manager chỉ được phép cập nhật Mechanic trong chi nhánh của mình.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, EndpointMessages.Member.ManagerOnlyUpdateMechanic);
     }
 
     [Fact]
@@ -168,7 +169,7 @@ public class GarageMemberServiceTests
 
         var result = await sut.RemoveMemberAsync(memberId, ownerId);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Xóa thành viên thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Member.RemoveSuccess);
         members.Single(x => x.Id == memberId).DeletedAt.Should().NotBeNull();
         m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -201,7 +202,7 @@ public class GarageMemberServiceTests
             BranchId = branchId
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, "Không thể tạo tài khoản thành viên từ Identity service.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, EndpointMessages.Member.IdentityCreateFailed);
     }
 
     [Fact]
@@ -224,7 +225,7 @@ public class GarageMemberServiceTests
 
         var result = await sut.GetMembersAsync(garageId, branchId, ownerId, new PaginationRequest(), CancellationToken.None);
 
-        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, "Lấy danh sách thành viên thành công", 1, 1);
+        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.Member.ListSuccess, 1, 1);
     }
 
     [Fact]
@@ -248,7 +249,7 @@ public class GarageMemberServiceTests
 
         var result = await sut.UpdateMemberStatusAsync(memberId, ownerId, new UpdateMemberStatusRequest { Status = MemberStatus.Inactive });
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật trạng thái thành viên thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Member.UpdateStatusSuccess);
         members[0].Status.Should().Be(MemberStatus.Inactive);
     }
 

@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Verendar.Common.Shared;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Domain.Entities;
@@ -24,7 +25,7 @@ public class GarageProductServiceTests
 
         var result = await sut.GetProductByIdAsync(id);
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, $"Không tìm thấy sản phẩm với id '{id}'.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.Product.NotFoundByIdFormat, id));
     }
 
     [Fact]
@@ -50,7 +51,7 @@ public class GarageProductServiceTests
             InstallationServiceId = Guid.NewGuid()
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, "Dịch vụ lắp đặt không tồn tại hoặc không thuộc chi nhánh này.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, EndpointMessages.Product.InstallationServiceInvalid);
     }
 
     [Fact]
@@ -95,7 +96,7 @@ public class GarageProductServiceTests
             InstallationServiceId = installationServiceId
         });
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, "Tạo sản phẩm thành công");
+        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.Product.CreateSuccess);
     }
 
     [Fact]
@@ -124,7 +125,7 @@ public class GarageProductServiceTests
         var sut = new GarageProductService(NullLogger<GarageProductService>.Instance, m.UnitOfWork.Object);
         var result = await sut.DeleteProductAsync(product.Id, ownerId);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Xóa sản phẩm thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Product.DeleteSuccess);
         product.DeletedAt.Should().NotBeNull();
     }
 
@@ -153,7 +154,7 @@ public class GarageProductServiceTests
         var sut = new GarageProductService(NullLogger<GarageProductService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetProductsByBranchAsync(branchId, false, new PaginationRequest());
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, $"Không tìm thấy chi nhánh với id '{branchId}'.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
     }
 
     [Fact]
@@ -182,7 +183,7 @@ public class GarageProductServiceTests
         var sut = new GarageProductService(NullLogger<GarageProductService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetProductsByBranchAsync(branchId, false, new PaginationRequest());
 
-        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, "Lấy danh sách sản phẩm thành công", 1, 1);
+        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.Product.ListSuccess, 1, 1);
     }
 
     [Fact]
@@ -203,7 +204,7 @@ public class GarageProductServiceTests
         var sut = new GarageProductService(NullLogger<GarageProductService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetProductByIdAsync(id);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Lấy thông tin sản phẩm thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Product.GetSuccess);
     }
 
     [Fact]
@@ -221,7 +222,7 @@ public class GarageProductServiceTests
             MaterialPrice = new MoneyDto { Amount = 1, Currency = "VND" }
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, $"Không tìm thấy chi nhánh với id '{branchId}'.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
     }
 
     [Fact]
@@ -242,7 +243,7 @@ public class GarageProductServiceTests
             MaterialPrice = new MoneyDto { Amount = 1, Currency = "VND" }
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, "Không tìm thấy garage.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, EndpointMessages.Member.GarageNotFound);
     }
 
     [Fact]
@@ -266,7 +267,7 @@ public class GarageProductServiceTests
             MaterialPrice = new MoneyDto { Amount = 1, Currency = "VND" }
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, "Bạn không có quyền quản lý sản phẩm của chi nhánh này.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, EndpointMessages.BranchManager.ForbiddenManageProducts);
     }
 
     [Fact]
@@ -302,7 +303,7 @@ public class GarageProductServiceTests
             MaterialPrice = new MoneyDto { Amount = 1, Currency = "VND" }
         });
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, "Tạo sản phẩm thành công");
+        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.Product.CreateSuccess);
     }
 
     [Fact]
@@ -336,7 +337,7 @@ public class GarageProductServiceTests
             MaterialPrice = new MoneyDto { Amount = 1, Currency = "VND" }
         });
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, "Tạo sản phẩm thành công");
+        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.Product.CreateSuccess);
     }
 
     [Fact]
@@ -376,7 +377,7 @@ public class GarageProductServiceTests
             MaterialPrice = new MoneyDto { Amount = 2, Currency = "VND" }
         });
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật sản phẩm thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Product.UpdateSuccess);
     }
 
     [Fact]
@@ -412,7 +413,7 @@ public class GarageProductServiceTests
             InstallationServiceId = Guid.NewGuid()
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, "Dịch vụ lắp đặt không tồn tại hoặc không thuộc chi nhánh này.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, EndpointMessages.Product.InstallationServiceInvalid);
     }
 
     [Fact]
@@ -451,7 +452,7 @@ public class GarageProductServiceTests
         var sut = new GarageProductService(NullLogger<GarageProductService>.Instance, m.UnitOfWork.Object);
         var result = await sut.UpdateProductStatusAsync(productId, ownerId, new UpdateGarageProductStatusRequest { Status = ProductStatus.Inactive });
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật trạng thái sản phẩm thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Product.UpdateStatusSuccess);
     }
 
     [Fact]
@@ -483,7 +484,7 @@ public class GarageProductServiceTests
 
         result.IsSuccess.Should().BeFalse();
         result.StatusCode.Should().Be(403);
-        result.Message.Should().Be("Bạn không có quyền quản lý sản phẩm của chi nhánh này.");
+        result.Message.Should().Be(EndpointMessages.BranchManager.ForbiddenManageProducts);
     }
 
     [Fact]
@@ -529,6 +530,6 @@ public class GarageProductServiceTests
 
         result.IsSuccess.Should().BeFalse();
         result.StatusCode.Should().Be(403);
-        result.Message.Should().Be("Bạn không có quyền quản lý sản phẩm của chi nhánh này.");
+        result.Message.Should().Be(EndpointMessages.BranchManager.ForbiddenManageProducts);
     }
 }

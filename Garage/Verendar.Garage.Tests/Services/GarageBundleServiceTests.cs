@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Verendar.Common.Shared;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Domain.Entities;
@@ -23,7 +24,7 @@ public class GarageBundleServiceTests
         var sut = new GarageBundleService(NullLogger<GarageBundleService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetBundleByIdAsync(id);
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, $"Không tìm thấy combo với id '{id}'.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.Bundle.NotFoundByIdFormat, id));
     }
 
     [Fact]
@@ -46,7 +47,7 @@ public class GarageBundleServiceTests
             Items = []
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, "Combo phải có ít nhất một mục.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, EndpointMessages.Bundle.EmptyItems);
     }
 
     [Fact]
@@ -91,7 +92,7 @@ public class GarageBundleServiceTests
             Items = [new BundleItemRequest { ProductId = productId }]
         });
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, "Tạo combo thành công");
+        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.Bundle.CreateSuccess);
     }
 
     [Fact]
@@ -114,7 +115,7 @@ public class GarageBundleServiceTests
         var sut = new GarageBundleService(NullLogger<GarageBundleService>.Instance, m.UnitOfWork.Object);
         var result = await sut.DeleteBundleAsync(bundle.Id, ownerId);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Xóa combo thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Bundle.DeleteSuccess);
         bundle.DeletedAt.Should().NotBeNull();
     }
 
@@ -143,7 +144,7 @@ public class GarageBundleServiceTests
         var sut = new GarageBundleService(NullLogger<GarageBundleService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetBundlesByBranchAsync(branchId, false, new PaginationRequest());
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, $"Không tìm thấy chi nhánh với id '{branchId}'.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
     }
 
     [Fact]
@@ -172,7 +173,7 @@ public class GarageBundleServiceTests
         var sut = new GarageBundleService(NullLogger<GarageBundleService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetBundlesByBranchAsync(branchId, false, new PaginationRequest());
 
-        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, "Lấy danh sách combo thành công", 1, 1);
+        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.Bundle.ListSuccess, 1, 1);
     }
 
     [Fact]
@@ -187,7 +188,7 @@ public class GarageBundleServiceTests
         var sut = new GarageBundleService(NullLogger<GarageBundleService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetBundleByIdAsync(id);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Lấy thông tin combo thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Bundle.GetSuccess);
     }
 
     [Fact]
@@ -210,7 +211,7 @@ public class GarageBundleServiceTests
             Items = [new BundleItemRequest { ProductId = Guid.NewGuid(), ServiceId = Guid.NewGuid() }]
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, "Mục #1: phải chỉ định đúng một trong ProductId hoặc ServiceId.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, string.Format(EndpointMessages.Bundle.ItemSpecifyProductOrServiceFormat, 1));
     }
 
     [Fact]
@@ -235,7 +236,7 @@ public class GarageBundleServiceTests
             Items = [new BundleItemRequest { ProductId = Guid.NewGuid() }]
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, "Mục #1: sản phẩm không tồn tại hoặc không thuộc chi nhánh này.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, string.Format(EndpointMessages.Bundle.ItemProductNotInBranchFormat, 1));
     }
 
     [Fact]
@@ -268,7 +269,7 @@ public class GarageBundleServiceTests
             Items = [new BundleItemRequest { ServiceId = serviceId }]
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, "Mục #1: dịch vụ 'Wash' không khả dụng.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, string.Format(EndpointMessages.Bundle.ItemServiceUnavailableFormat, 1, "Wash"));
     }
 
     [Fact]
@@ -292,7 +293,7 @@ public class GarageBundleServiceTests
             Items = [new BundleItemRequest { ProductId = Guid.NewGuid() }]
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, "Bạn không có quyền quản lý combo của chi nhánh này.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, EndpointMessages.BranchManager.ForbiddenManageBundles);
     }
 
     [Fact]
@@ -340,7 +341,7 @@ public class GarageBundleServiceTests
             Items = [new BundleItemRequest { ProductId = productId }]
         });
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật combo thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Bundle.UpdateSuccess);
     }
 
     [Fact]
@@ -354,7 +355,7 @@ public class GarageBundleServiceTests
         var sut = new GarageBundleService(NullLogger<GarageBundleService>.Instance, m.UnitOfWork.Object);
         var result = await sut.UpdateBundleAsync(id, Guid.NewGuid(), new UpdateGarageBundleRequest { Name = "N", Items = [] });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, $"Không tìm thấy combo với id '{id}'.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.Bundle.NotFoundByIdFormat, id));
     }
 
     [Fact]
@@ -379,7 +380,7 @@ public class GarageBundleServiceTests
         var sut = new GarageBundleService(NullLogger<GarageBundleService>.Instance, m.UnitOfWork.Object);
         var result = await sut.UpdateBundleStatusAsync(bundleId, ownerId, new UpdateGarageBundleStatusRequest { Status = ProductStatus.Inactive });
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật trạng thái combo thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Bundle.UpdateStatusSuccess);
     }
 
     [Fact]
@@ -419,6 +420,6 @@ public class GarageBundleServiceTests
 
         result.IsSuccess.Should().BeFalse();
         result.StatusCode.Should().Be(403);
-        result.Message.Should().Be("Bạn không có quyền quản lý combo của chi nhánh này.");
+        result.Message.Should().Be(EndpointMessages.BranchManager.ForbiddenManageBundles);
     }
 }

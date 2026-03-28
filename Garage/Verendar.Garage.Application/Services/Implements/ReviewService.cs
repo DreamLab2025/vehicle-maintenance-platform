@@ -1,16 +1,18 @@
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;
-using Verendar.Garage.Application.Services.Interfaces;
 using Verendar.Garage.Application.Constants;
+using Verendar.Garage.Application.Services.Interfaces;
 
 namespace Verendar.Garage.Application.Services.Implements;
 
 public class ReviewService(
     ILogger<ReviewService> logger,
-    IUnitOfWork unitOfWork) : IReviewService
+    IUnitOfWork unitOfWork,
+    IBookingService bookingService) : IReviewService
 {
     private readonly ILogger<ReviewService> _logger = logger;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IBookingService _bookingService = bookingService;
 
     public async Task<ApiResponse<GarageReviewResponse>> SubmitReviewAsync(
         Guid userId, Guid bookingId, CreateReviewRequest request, CancellationToken ct = default)
@@ -50,12 +52,15 @@ public class ReviewService(
     }
 
     public async Task<ApiResponse<GarageReviewResponse>> GetByBookingAsync(
-        Guid bookingId, CancellationToken ct = default)
+        Guid bookingId, Guid viewerId, CancellationToken ct = default)
     {
         var review = await _unitOfWork.Reviews.FindOneAsync(
             r => r.BookingId == bookingId && r.DeletedAt == null);
         if (review is null)
             return ApiResponse<GarageReviewResponse>.NotFoundResponse(EndpointMessages.Review.ReviewNotFound);
+
+        if (!await _bookingService.CanViewBookingAsync(bookingId, viewerId, ct))
+            return ApiResponse<GarageReviewResponse>.ForbiddenResponse(EndpointMessages.Booking.BookingForbiddenView);
 
         return ApiResponse<GarageReviewResponse>.SuccessResponse(review.ToResponse(), EndpointMessages.Review.GetReviewSuccess);
     }

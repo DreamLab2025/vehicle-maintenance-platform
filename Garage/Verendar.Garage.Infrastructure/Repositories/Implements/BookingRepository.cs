@@ -1,4 +1,5 @@
 using System.Globalization;
+using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Domain.Enums;
 using Verendar.Garage.Domain.Models;
 
@@ -54,7 +55,6 @@ public class BookingRepository(GarageDbContext context)
             .AsNoTracking()
             .Where(b => b.UserId == userId && b.DeletedAt == null)
             .Include(b => b.GarageBranch)
-            .Include(b => b.LineItems.OrderBy(i => i.SortOrder))
             .OrderByDescending(b => b.ScheduledAt);
 
         var totalCount = await query.CountAsync(ct);
@@ -73,7 +73,6 @@ public class BookingRepository(GarageDbContext context)
             .AsNoTracking()
             .Where(b => b.GarageBranchId == branchId && b.DeletedAt == null)
             .Include(b => b.GarageBranch)
-            .Include(b => b.LineItems.OrderBy(i => i.SortOrder))
             .OrderByDescending(b => b.ScheduledAt);
 
         var totalCount = await query.CountAsync(ct);
@@ -98,7 +97,6 @@ public class BookingRepository(GarageDbContext context)
                 && mechanicMemberIds.Contains(b.MechanicId.Value)
                 && b.DeletedAt == null)
             .Include(b => b.GarageBranch)
-            .Include(b => b.LineItems.OrderBy(i => i.SortOrder))
             .OrderByDescending(b => b.ScheduledAt);
 
         var totalCount = await query.CountAsync(ct);
@@ -108,6 +106,38 @@ public class BookingRepository(GarageDbContext context)
             .ToListAsync(ct);
 
         return (items, totalCount);
+    }
+
+    public async Task<Booking?> GetByIdForAccessCheckAsync(Guid id, CancellationToken ct = default) =>
+        await _db.Set<Booking>()
+            .AsNoTracking()
+            .Include(b => b.GarageBranch)
+                .ThenInclude(br => br.Garage)
+            .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null, ct);
+
+    public async Task<IReadOnlyDictionary<Guid, string>> GetItemsSummariesForBookingsAsync(
+        IReadOnlyList<Guid> bookingIds,
+        CancellationToken ct = default)
+    {
+        if (bookingIds.Count == 0)
+            return new Dictionary<Guid, string>();
+
+        var distinctIds = bookingIds.Distinct().ToList();
+
+        var lineItems = await _db.Set<BookingLineItem>()
+            .AsNoTracking()
+            .Where(li => distinctIds.Contains(li.BookingId))
+            .Include(li => li.Product)
+            .Include(li => li.Service)
+            .Include(li => li.Bundle)
+            .ToListAsync(ct);
+
+        var result = distinctIds.ToDictionary(i => i, _ => string.Empty);
+
+        foreach (var group in lineItems.GroupBy(li => li.BookingId))
+            result[group.Key] = BookingMappings.BuildItemsSummaryFromLineItems(group.ToList());
+
+        return result;
     }
 
     public async Task<RevenueStats> GetRevenueStatsAsync(

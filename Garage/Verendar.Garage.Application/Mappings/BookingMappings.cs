@@ -59,9 +59,9 @@ public static class BookingMappings
         };
     }
 
-    public static BookingListItemResponse ToListItemResponse(this Booking booking)
+    public static BookingListItemResponse ToListItemResponse(this Booking booking, string? itemsSummaryOverride = null)
     {
-        var itemsSummary = BuildItemsSummary(booking);
+        var itemsSummary = itemsSummaryOverride ?? BuildItemsSummary(booking);
 
         return new BookingListItemResponse
         {
@@ -74,6 +74,18 @@ public static class BookingMappings
             BookedTotalAmount = booking.BookedTotalPrice.Amount,
             BookedCurrency = booking.BookedTotalPrice.Currency
         };
+    }
+
+    public static string BuildItemsSummaryFromLineItems(IReadOnlyList<BookingLineItem> items)
+    {
+        var ordered = items.OrderBy(i => i.SortOrder).ToList();
+        if (ordered.Count == 0)
+            return string.Empty;
+        if (ordered.Count == 1)
+            return ordered[0].Product?.Name ?? ordered[0].Service?.Name ?? ordered[0].Bundle?.Name ?? string.Empty;
+
+        var firstName = ordered[0].Product?.Name ?? ordered[0].Service?.Name ?? ordered[0].Bundle?.Name ?? string.Empty;
+        return $"{firstName} và {ordered.Count - 1} mục khác";
     }
 
     private static BookingLineItemResponse ToLineItemResponse(this BookingLineItem item)
@@ -120,14 +132,7 @@ public static class BookingMappings
     private static string BuildItemsSummary(Booking booking)
     {
         var items = booking.LineItems.OrderBy(i => i.SortOrder).ToList();
-        if (items.Count == 0)
-            return string.Empty;
-
-        if (items.Count == 1)
-            return items[0].Product?.Name ?? items[0].Service?.Name ?? items[0].Bundle?.Name ?? string.Empty;
-
-        var firstName = items[0].Product?.Name ?? items[0].Service?.Name ?? items[0].Bundle?.Name ?? string.Empty;
-        return $"{firstName} và {items.Count - 1} mục khác";
+        return BuildItemsSummaryFromLineItems(items);
     }
 
     private static string FormatAddressLine(GarageBranch branch)

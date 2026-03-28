@@ -14,6 +14,8 @@ public interface IBookingService
         Guid viewerId,
         CancellationToken ct = default);
 
+    Task<bool> CanViewBookingAsync(Guid bookingId, Guid viewerId, CancellationToken ct = default);
+
     Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsAsync(
         Guid currentUserId,
         bool assignedToMe,

@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Domain.Entities;
@@ -20,7 +21,7 @@ public class ServiceCategoryServiceTests
         var sut = new ServiceCategoryService(NullLogger<ServiceCategoryService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetByIdAsync(id);
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, $"Không tìm thấy danh mục dịch vụ với id '{id}'.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.ServiceCategory.NotFoundByIdFormat, id));
     }
 
     [Fact]
@@ -33,7 +34,7 @@ public class ServiceCategoryServiceTests
         var sut = new ServiceCategoryService(NullLogger<ServiceCategoryService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetAllAsync();
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Lấy danh sách danh mục dịch vụ thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.ServiceCategory.ListSuccess);
         result.Data.Should().HaveCount(1);
     }
 
@@ -47,7 +48,7 @@ public class ServiceCategoryServiceTests
         var sut = new ServiceCategoryService(NullLogger<ServiceCategoryService>.Instance, m.UnitOfWork.Object);
         var result = await sut.CreateAsync(new CreateServiceCategoryRequest { Name = "Oil", Slug = "oil" });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 409, "Slug 'oil' đã được sử dụng.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 409, string.Format(EndpointMessages.ServiceCategory.SlugTakenFormat, "oil"));
     }
 
     [Fact]
@@ -62,7 +63,7 @@ public class ServiceCategoryServiceTests
         var sut = new ServiceCategoryService(NullLogger<ServiceCategoryService>.Instance, m.UnitOfWork.Object);
         var result = await sut.CreateAsync(new CreateServiceCategoryRequest { Name = "Wash", Slug = "wash" });
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, "Tạo danh mục dịch vụ thành công");
+        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.ServiceCategory.CreateSuccess);
         result.Data!.Slug.Should().Be("wash");
     }
 
@@ -78,7 +79,7 @@ public class ServiceCategoryServiceTests
         var sut = new ServiceCategoryService(NullLogger<ServiceCategoryService>.Instance, m.UnitOfWork.Object);
         var result = await sut.UpdateAsync(id, new UpdateServiceCategoryRequest { Name = "Oil Plus", DisplayOrder = 1 });
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật danh mục dịch vụ thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.ServiceCategory.UpdateSuccess);
         result.Data!.Name.Should().Be("Oil Plus");
     }
 
@@ -94,7 +95,7 @@ public class ServiceCategoryServiceTests
         var sut = new ServiceCategoryService(NullLogger<ServiceCategoryService>.Instance, m.UnitOfWork.Object);
         var result = await sut.DeleteAsync(id);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Xóa danh mục dịch vụ thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.ServiceCategory.DeleteSuccess);
         entity.DeletedAt.Should().NotBeNull();
     }
 }
