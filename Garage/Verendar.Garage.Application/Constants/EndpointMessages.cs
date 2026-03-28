@@ -86,6 +86,7 @@ public static class EndpointMessages
         public const string GarageNotApprovedBranchStatus = "Garage chưa được duyệt nên chưa thể đổi trạng thái chi nhánh.";
         public const string UpdateStatusSuccess = "Đã cập nhật trạng thái chi nhánh.";
         public const string GeocodeAddressNotFound = "Không tìm thấy vị trí theo địa chỉ đã nhập. Vui lòng thử địa chỉ khác.";
+        public const string MyBranchNoMembership = "Tài khoản chưa được gán vào chi nhánh đang hoạt động.";
     }
 
     public static class OwnerGarage

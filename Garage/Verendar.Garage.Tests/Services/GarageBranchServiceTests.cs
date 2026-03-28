@@ -369,4 +369,71 @@ public class GarageBranchServiceTests
 
         GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.GarageBranches.ListSuccess, 1, 1);
     }
+
+    [Fact]
+    public async Task GetMyBranchAsync_WhenNoActiveMembership_Returns404()
+    {
+        var userId = Guid.NewGuid();
+        var m = new GarageUnitOfWorkMock();
+        m.Members.Setup(r => r.GetLatestActiveMembershipWithBranchAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GarageMember?)null);
+        var geo = new Mock<ILocationClient>(MockBehavior.Strict);
+        var sut = new GarageBranchService(NullLogger<GarageBranchService>.Instance, m.UnitOfWork.Object, geo.Object);
+
+        var result = await sut.GetMyBranchAsync(userId, CancellationToken.None);
+
+        GarageServiceResponseAssert.AssertFailureEnvelope(
+            result,
+            404,
+            EndpointMessages.GarageBranches.MyBranchNoMembership);
+    }
+
+    [Fact]
+    public async Task GetMyBranchAsync_WhenHasActiveMembership_ReturnsBranchDetail()
+    {
+        var userId = Guid.NewGuid();
+        var branchId = Guid.NewGuid();
+        var garageId = Guid.NewGuid();
+        var garage = new GarageEntity
+        {
+            Id = garageId,
+            OwnerId = Guid.NewGuid(),
+            BusinessName = "G",
+            Slug = "g",
+            Status = GarageStatus.Active
+        };
+        var branch = new GarageBranch
+        {
+            Id = branchId,
+            GarageId = garageId,
+            Name = "B",
+            Slug = "b",
+            Latitude = 10,
+            Longitude = 106,
+            Address = new() { ProvinceCode = "79", WardCode = "1", StreetDetail = "x" },
+            WorkingHours = new() { Schedule = [] },
+            Garage = garage
+        };
+        var member = new GarageMember
+        {
+            UserId = userId,
+            GarageBranchId = branchId,
+            GarageBranch = branch,
+            Status = MemberStatus.Active
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.Members.Setup(r => r.GetLatestActiveMembershipWithBranchAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        var geo = new Mock<ILocationClient>(MockBehavior.Strict);
+        geo.Setup(l => l.GetMapLinksAsync(10, 106, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MapLinksDto?)null);
+        var sut = new GarageBranchService(NullLogger<GarageBranchService>.Instance, m.UnitOfWork.Object, geo.Object);
+
+        var result = await sut.GetMyBranchAsync(userId, CancellationToken.None);
+
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.GarageBranches.GetDetailSuccess);
+        result.Data!.Id.Should().Be(branchId);
+        result.Data.GarageId.Should().Be(garageId);
+    }
 }

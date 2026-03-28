@@ -97,14 +97,20 @@ public class GarageBranchService(
             return ApiResponse<GarageBranchResponse>.NotFoundResponse(
                 string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
 
-        var response = branch.ToResponse();
+        var response = await ToBranchDetailResponseAsync(branch, ct);
 
-        if (branch.Latitude != 0 || branch.Longitude != 0)
-            response.MapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude, branch.Longitude, ct);
+        return ApiResponse<GarageBranchResponse>.SuccessResponse(
+            response, EndpointMessages.GarageBranches.GetDetailSuccess);
+    }
 
-        var (avg, count) = await _unitOfWork.Reviews.GetRatingSummaryAsync(branchId, ct);
-        response.AverageRating = count > 0 ? Math.Round(avg, 1) : null;
-        response.ReviewCount = count;
+    public async Task<ApiResponse<GarageBranchResponse>> GetMyBranchAsync(Guid userId, CancellationToken ct = default)
+    {
+        var member = await _unitOfWork.Members.GetLatestActiveMembershipWithBranchAsync(userId, ct);
+        if (member is null)
+            return ApiResponse<GarageBranchResponse>.NotFoundResponse(EndpointMessages.GarageBranches.MyBranchNoMembership);
+
+        var branch = member.GarageBranch;
+        var response = await ToBranchDetailResponseAsync(branch, ct);
 
         return ApiResponse<GarageBranchResponse>.SuccessResponse(
             response, EndpointMessages.GarageBranches.GetDetailSuccess);
@@ -344,5 +350,19 @@ public class GarageBranchService(
             request.PageNumber,
             request.PageSize,
             EndpointMessages.GarageBranches.ListSuccess);
+    }
+
+    private async Task<GarageBranchResponse> ToBranchDetailResponseAsync(GarageBranch branch, CancellationToken ct)
+    {
+        var response = branch.ToResponse();
+
+        if (branch.Latitude != 0 || branch.Longitude != 0)
+            response.MapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude, branch.Longitude, ct);
+
+        var (avg, count) = await _unitOfWork.Reviews.GetRatingSummaryAsync(branch.Id, ct);
+        response.AverageRating = count > 0 ? Math.Round(avg, 1) : null;
+        response.ReviewCount = count;
+
+        return response;
     }
 }

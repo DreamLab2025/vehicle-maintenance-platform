@@ -15,6 +15,8 @@ public interface IGarageBranchService
         Guid branchId,
         CancellationToken ct = default);
 
+    Task<ApiResponse<GarageBranchResponse>> GetMyBranchAsync(Guid userId, CancellationToken ct = default);
+
     Task<ApiResponse<List<GarageBranchSummaryResponse>>> GetBranchesAsync(
         Guid garageId,
         PaginationRequest request,
