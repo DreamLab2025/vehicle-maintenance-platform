@@ -194,6 +194,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 PredictedNextOdometer = entity.PredictedNextOdometer,
                 PredictedNextDate = entity.PredictedNextDate,
                 IsDeclared = entity.IsDeclared,
+                IsBaseline = entity.IsBaseline,
                 ActiveCycle = activeCycle?.ToSummary(vehicleCurrentOdometer)
             };
         }
@@ -285,6 +286,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 LastReplacementDate = request.LastReplacementDate,
                 PredictedNextOdometer = request.PredictedNextOdometer,
                 PredictedNextDate = request.PredictedNextDate,
+                IsBaseline = request.IsBaseline,
             };
         }
 
@@ -296,6 +298,7 @@ namespace Verendar.Vehicle.Application.Mappings
             entity.PredictedNextOdometer = request.PredictedNextOdometer;
             entity.PredictedNextDate = request.PredictedNextDate;
             entity.IsDeclared = true;
+            entity.IsBaseline = request.IsBaseline;
         }
 
         public static OdometerHistory ToOdometerHistory(this Guid userVehicleId, int odometerValue)

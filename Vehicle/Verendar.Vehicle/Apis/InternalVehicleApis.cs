@@ -22,6 +22,15 @@ namespace Verendar.Vehicle.Apis
                     GetDefaultScheduleForModelPartCategory)
                 .WithName("InternalGetDefaultScheduleByModelPartCategory");
 
+            group.MapGet("/user-vehicles/{userVehicleId:guid}/odometer-summary", GetOdometerSummary)
+                .WithName("InternalGetOdometerSummary");
+
+            group.MapGet("/user-vehicles/{userVehicleId:guid}/baseline-parts", GetBaselineParts)
+                .WithName("InternalGetBaselineParts");
+
+            group.MapPost("/user-vehicles/{vehicleId:guid}/apply-tracking", InternalApplyTracking)
+                .WithName("InternalApplyTracking");
+
             return group;
         }
 
@@ -46,6 +55,34 @@ namespace Verendar.Vehicle.Apis
                 vehicleModelId,
                 partCategorySlug,
                 cancellationToken);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> GetOdometerSummary(
+            Guid userVehicleId,
+            IOdometerHistoryService odometerHistoryService,
+            CancellationToken cancellationToken)
+        {
+            var result = await odometerHistoryService.GetSummaryAsync(userVehicleId, cancellationToken);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> GetBaselineParts(
+            Guid userVehicleId,
+            IPartTrackingService partTrackingService,
+            CancellationToken cancellationToken)
+        {
+            var result = await partTrackingService.GetBaselinePartsAsync(userVehicleId, cancellationToken);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> InternalApplyTracking(
+            Guid vehicleId,
+            Guid userId,
+            ApplyTrackingConfigRequest request,
+            IPartTrackingService partTrackingService)
+        {
+            var result = await partTrackingService.ApplyTrackingConfigAsync(userId, vehicleId, request);
             return result.ToHttpResult();
         }
     }

@@ -28,6 +28,8 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public bool IsDeclared { get; set; } = false;
 
+        public bool IsBaseline { get; set; } = false;
+
         public UserVehicle UserVehicle { get; set; } = null!;
 
         public PartCategory PartCategory { get; set; } = null!;

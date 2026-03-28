@@ -1,6 +1,5 @@
 namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire
 {
-
     public class VehicleQuestionnaireResponse
     {
         public List<PartTrackingRecommendation> Recommendations { get; set; } = new();
@@ -18,11 +17,25 @@ namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire
 
         public DateOnly? LastReplacementDate { get; set; }
 
+        // Backward compat — final predicted (base × adjustmentFactor)
         public int? PredictedNextOdometer { get; set; }
 
         public DateOnly? PredictedNextDate { get; set; }
 
-        public double ConfidenceScore { get; set; }
+        // Range fields
+        public int? EarliestNextOdometer { get; set; }
+
+        public int? LatestNextOdometer { get; set; }
+
+        public DateOnly? EarliestNextDate { get; set; }
+
+        public DateOnly? LatestNextDate { get; set; }
+
+        public string ConfidenceTier { get; set; } = "low";
+
+        public string AnalysisPhase { get; set; } = "baseline";
+
+        public List<string> RangeNarrowsWhen { get; set; } = [];
 
         public string Reasoning { get; set; } = string.Empty;
 

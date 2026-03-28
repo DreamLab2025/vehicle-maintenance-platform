@@ -1,4 +1,5 @@
 using Verendar.Common.Databases.Base;
+using Verendar.Vehicle.Application.Dtos.Internal;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Domain.Enums;
@@ -126,6 +127,36 @@ namespace Verendar.Vehicle.Application.Services.Implements
             return ApiResponse<PartTrackingSummary>.SuccessResponse(
                 tracking.ToSummary(vehicle.CurrentOdometer),
                 "Áp dụng cấu hình theo dõi thành công");
+        }
+
+        public async Task<ApiResponse<List<BaselinePartItemDto>>> GetBaselinePartsAsync(Guid userVehicleId, CancellationToken cancellationToken = default)
+        {
+            var trackings = await _unitOfWork.PartTrackings.GetBaselineByUserVehicleIdAsync(userVehicleId, cancellationToken);
+
+            if (!trackings.Any())
+                return ApiResponse<List<BaselinePartItemDto>>.SuccessResponse([]);
+
+            var vehicle = await _unitOfWork.UserVehicles.FindOneAsync(v => v.Id == userVehicleId);
+            if (vehicle == null)
+            {
+                _logger.LogWarning("GetBaselineParts: vehicle not found {UserVehicleId}", userVehicleId);
+                return ApiResponse<List<BaselinePartItemDto>>.NotFoundResponse("Không tìm thấy xe");
+            }
+
+            var variant = await _unitOfWork.Variants.GetByIdAsync(vehicle.VehicleVariantId);
+            var vehicleModelId = variant?.VehicleModelId ?? Guid.Empty;
+
+            var items = trackings
+                .Where(t => t.PartCategory != null)
+                .Select(t => new BaselinePartItemDto
+                {
+                    PartTrackingId = t.Id,
+                    PartCategorySlug = t.PartCategory!.Slug,
+                    VehicleModelId = vehicleModelId
+                })
+                .ToList();
+
+            return ApiResponse<List<BaselinePartItemDto>>.SuccessResponse(items);
         }
 
         public async Task InitializeForVehicleAsync(Guid userVehicleId, Guid vehicleModelId)

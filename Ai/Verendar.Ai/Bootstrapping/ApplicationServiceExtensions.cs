@@ -3,9 +3,11 @@ using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
 using Verendar.Ai.Application.Validators;
 using Verendar.Ai.Apis;
 using Verendar.Ai.Application.Clients;
+using Verendar.Ai.Application.Jobs;
 using Verendar.Ai.Application.Services.Implements;
 using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Common.Bootstrapping;
@@ -44,6 +46,13 @@ namespace Verendar.Ai.Bootstrapping
             builder.Services.AddHangfireServer();
 
             builder.Services.AddHttpClient();
+
+            builder.Services.ConfigureAll<HttpStandardResilienceOptions>(options =>
+            {
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(180);
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(360);
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(360);
+            });
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<ForwardAuthorizationHandler>();
@@ -92,6 +101,10 @@ namespace Verendar.Ai.Bootstrapping
             builder.Services.AddScoped<IVehicleMaintenanceAnalysisService, VehicleMaintenanceAnalysisService>();
             builder.Services.AddScoped<IOdometerScanService, OdometerScanService>();
             builder.Services.AddScoped<IAiUsageAnalyticsService, AiUsageAnalyticsService>();
+            builder.Services.AddScoped<IPredictionComputationService, PredictionComputationService>();
+            builder.Services.AddScoped<IConfidenceCalculationService, ConfidenceCalculationService>();
+            builder.Services.AddScoped<IReAnalysisService, ReAnalysisService>();
+            builder.Services.AddScoped<ReAnalyzePartJob>();
 
             builder.Services.AddScoped<AiPromptRetentionJob>();
 

@@ -4,8 +4,6 @@ namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire
     {
         public Guid UserVehicleId { get; set; }
 
-        public Guid VehicleModelId { get; set; }
-
         public string PartCategorySlug { get; set; } = string.Empty;
 
         public List<QuestionAnswerDto> Answers { get; set; } = new();

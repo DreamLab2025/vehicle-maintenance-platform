@@ -1,16 +1,21 @@
+using MassTransit;
+using Verendar.Vehicle.Application.Dtos.Internal;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
+using Verendar.Vehicle.Contracts.Events;
 
 namespace Verendar.Vehicle.Application.Services.Implements
 {
     public class OdometerHistoryService(
         ILogger<OdometerHistoryService> logger,
         IUnitOfWork unitOfWork,
-        IMaintenanceReminderService maintenanceReminderService) : IOdometerHistoryService
+        IMaintenanceReminderService maintenanceReminderService,
+        IPublishEndpoint publishEndpoint) : IOdometerHistoryService
     {
         private readonly ILogger<OdometerHistoryService> _logger = logger;
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
         private readonly IMaintenanceReminderService _maintenanceReminderService = maintenanceReminderService;
+        private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
         public async Task<ApiResponse<UpdateOdometerResponse>> UpdateOdometerAsync(Guid userId, Guid vehicleId, UpdateOdometerRequest request)
         {
@@ -43,6 +48,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 });
 
                 await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
+
+                await PublishOdometerUpdatedAsync(vehicleId, userId, request.CurrentOdometer);
             }
 
             return ApiResponse<UpdateOdometerResponse>.SuccessResponse(
@@ -81,6 +88,8 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 });
 
                 await _maintenanceReminderService.PublishMaintenanceReminderIfNeededAsync(vehicleId, userId);
+
+                await PublishOdometerUpdatedAsync(vehicleId, userId, request.ConfirmedOdometer);
             }
 
             return ApiResponse<UpdateOdometerResponse>.SuccessResponse(
@@ -101,6 +110,64 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
             var streak = await _unitOfWork.OdometerHistories.GetCurrentStreakAsync(userVehicleId);
             return ApiResponse<StreakResponse>.SuccessResponse(streak.ToStreakResponse(userVehicleId), "Lấy chuỗi xe thành công");
+        }
+
+        public async Task<ApiResponse<OdometerHistorySummaryDto>> GetSummaryAsync(Guid userVehicleId, CancellationToken cancellationToken = default)
+        {
+            var cutoff = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-90));
+
+            var last3MonthsTask = _unitOfWork.OdometerHistories.GetRecordedOnOrAfterOrderedAsync(userVehicleId, cutoff, cancellationToken);
+            var allTask = _unitOfWork.OdometerHistories.GetAllByUserVehicleIdAsync(userVehicleId, cancellationToken);
+
+            await Task.WhenAll(last3MonthsTask, allTask);
+
+            var last3Months = last3MonthsTask.Result;
+            var all = allTask.Result;
+
+            return ApiResponse<OdometerHistorySummaryDto>.SuccessResponse(new OdometerHistorySummaryDto
+            {
+                EntryCount = all.Count,
+                KmPerMonthAvg = ComputeKmPerMonth(all),
+                KmPerMonthLast3Months = ComputeKmPerMonth(last3Months)
+            });
+        }
+
+        private async Task PublishOdometerUpdatedAsync(Guid vehicleId, Guid userId, int newOdometerValue)
+        {
+            try
+            {
+                var totalEntryCount = (int)await _unitOfWork.OdometerHistories.CountAsync(h => h.UserVehicleId == vehicleId);
+
+                await _publishEndpoint.Publish(new OdometerUpdatedEvent
+                {
+                    UserVehicleId = vehicleId,
+                    UserId = userId,
+                    NewOdometerValue = newOdometerValue,
+                    RecordedDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    TotalEntryCount = totalEntryCount
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "PublishOdometerUpdated: failed to publish event for vehicle {VehicleId}", vehicleId);
+            }
+        }
+
+        private static double? ComputeKmPerMonth(IReadOnlyList<Domain.Entities.OdometerHistory> records)
+        {
+            if (records.Count < 2) return null;
+
+            var ordered = records.OrderBy(r => r.RecordedDate).ToList();
+            var first = ordered.First();
+            var last = ordered.Last();
+
+            var days = last.RecordedDate.DayNumber - first.RecordedDate.DayNumber;
+            if (days <= 0) return null;
+
+            var kmDiff = last.OdometerValue - first.OdometerValue;
+            if (kmDiff <= 0) return null;
+
+            return Math.Round(kmDiff / (days / 30.0), 2);
         }
 
         public async Task<ApiResponse<List<OdometerHistoryItemDto>>> GetOdometerHistoryPagedAsync(Guid userId, Guid userVehicleId, OdometerHistoryQueryRequest query)

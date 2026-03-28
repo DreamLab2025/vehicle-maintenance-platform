@@ -1,46 +1,40 @@
-Nhiệm vụ: Dự đoán mốc bảo dưỡng tiếp theo và trả về JSON đúng format. Điền lastServiceOdometer/lastServiceDate khi suy được từ Q&A; predictedNextOdometer/predictedNextDate luôn có giá trị (không null).
-
-Quy tắc ưu tiên: (1) Có Q&A → suy L (last service), R_km (chu kỳ km), R_month (chu kỳ tháng) từ câu trả lời; confidenceScore 0.75–1.0. (2) Chỉ khi Q&A trống hoặc không suy được mới dùng lịch hãng (Initial_Km I, Interval_Km R, Interval_Month); confidenceScore 0.4–0.6.
+Nhiệm vụ: Phân tích thói quen sử dụng xe và trả về hệ số điều chỉnh (usageAdjustmentFactor) dựa trên thông tin Q&A của người dùng. Hệ thống đã tính toán baseline dự đoán — nhiệm vụ của bạn là điều chỉnh dựa trên thực tế sử dụng.
 
 ---
 Today: [[TODAY]] | Xe: [[VEHICLE_NAME]] | Current_ODO (C): [[CURRENT_ODO]] km | Mua: [[PURCHASE_DATE]]
 
-Q&A (ưu tiên):
-    [[ANSWER_BLOCK]]
+Baseline dự đoán từ hệ thống:
+[[BASE_PREDICTION]]
 
-Lịch hãng (fallback): [[SCHEDULE_BLOCK]]
+Thói quen lái xe:
+[[DRIVING_PATTERN]]
+
+Q&A người dùng (ưu tiên cao nhất):
+[[ANSWER_BLOCK]]
+
+Lịch hãng (tham khảo): [[SCHEDULE_BLOCK]]
 
 ---
-Cách làm (tổng quát, áp dụng mọi trường hợp):
+Hướng dẫn:
 
-1) Suy L (lastServiceOdometer / lastServiceDate) từ Q&A:
-   - "X km trước" / "X km ago" / "over X km ago" → L_ODO = C - X. Ghi lastServiceOdometer = L_ODO.
-   - "Thay ở Y km" / "at Y km" → L_ODO = Y.
-   - "Z tháng/ngày/tuần trước" → L_Date = today trừ Z. Ghi lastServiceDate = L_Date (yyyy-MM-dd).
-   - Nếu không suy được từ Q&A → lastServiceOdometer/lastServiceDate = null.
+1) Phân tích Q&A để xác định mức độ sử dụng so với bình thường:
+   - Địa hình khó (đèo, đường xấu, bụi nhiều) → tăng tần suất bảo dưỡng (factor < 1.0)
+   - Tải nặng, chạy liên tục, thời tiết khắc nghiệt → factor < 1.0
+   - Sử dụng nhẹ nhàng, đường tốt, thành phố → factor gần 1.0
+   - Không có thông tin → usageAdjustmentFactor = 1.0 (dùng baseline)
 
-2) Suy chu kỳ từ Q&A:
-   - R_km: từ câu kiểu "mỗi A km", "A–B km" (lấy giá trị hoặc biên trên). Không có thì dùng lịch hãng Interval_Km.
-   - R_month: từ câu kiểu "mỗi A tháng". Không có thì dùng lịch hãng Interval_Month.
+2) usageAdjustmentFactor nằm trong khoảng 0.7–1.3:
+   - 0.7–0.9: sử dụng nặng, cần bảo dưỡng sớm hơn
+   - 0.9–1.1: sử dụng bình thường
+   - 1.1–1.3: sử dụng nhẹ, có thể bảo dưỡng muộn hơn
 
-3) Predicted_Next_ODO (predictedNextOdometer):
-   - Ràng buộc bắt buộc: predictedNextOdometer PHẢI >= C (số km hiện tại). Đây là mốc km mà người dùng NÊN thay/bảo dưỡng — không thể là mốc đã qua (ví dụ C=8000 thì không được trả về 6500; phải là 8000 trở lên).
-   - Khi có L_ODO và R_km: dãy mốc là L_ODO + R_km, L_ODO + 2*R_km, ... Chọn mốc ĐẦU TIÊN trong dãy mà >= C. Nếu mốc tính được (vd 6500) < C (8000) thì bỏ qua, lấy mốc tiếp theo (8000). Cấm dùng C + R_km. Cấm trả về giá trị < C.
-   - Công thức: next = L_ODO + ceil((C - L_ODO) / R_km) * R_km, với ceil làm tròn lên (đảm bảo next >= C). Nếu C <= L_ODO thì next = L_ODO + R_km.
-   - Fallback (không có L_ODO): dùng I, R từ lịch hãng. Nếu C < I thì next = I. Nếu C >= I thì next = I + (floor((C - I) / R) + 1) * R.
+3) lastServiceOdometer / lastServiceDate: Suy từ Q&A nếu có ("X km trước", "Z tháng trước", "tại Y km"...). Null nếu không suy được.
 
-4) Predicted_Next_Date (predictedNextDate):
-   - Nếu predictedNextOdometer <= C hoặc predictedNextDate theo thời gian đã <= today → đã quá hạn: predictedNextDate = today.
-   - Nếu chưa quá hạn và có L_Date, R_month: predictedNextDate = L_Date + R_month (theo tháng).
-   - Fallback: today + Interval_Month (lịch hãng).
+4) needsImmediateAttention: true khi xe đã vượt mốc bảo dưỡng dự kiến (current_odo >= baseline predicted odo).
 
-5) needsImmediateAttention: true khi và chỉ khi predictedNextOdometer <= C hoặc predictedNextDate <= today.
+5) reasoning: Giải thích ngắn bằng tiếng Việt về thói quen sử dụng, lý do chọn adjustment factor, và tình trạng hiện tại.
 
-6) reasoning: Giải thích ngắn bằng tiếng Việt: nguồn L_ODO/L_Date, R_km/R_month, cách tính mốc tiếp theo, và (nếu quá hạn) vì sao cần bảo dưỡng ngay.
-
-7) warnings: Mảng chuỗi. Thêm cảnh báo khi xe đã vượt mốc bảo dưỡng dự kiến (C > mốc kế sau L_ODO): nội dung nêu rõ mốc đã vượt (km) và yêu cầu bảo dưỡng ngay tại C km hiện tại. Không có thì [].
-
-Kiểm tra trước khi trả về: predictedNextOdometer >= C (nếu không thì tính lại; giá trị < C là sai).
+6) warnings: Cảnh báo nếu xe đã quá hạn bảo dưỡng hoặc có dấu hiệu bất thường. Mảng rỗng nếu không có gì.
 
 Output (JSON only, no markdown):
-{"recommendations":[{"partCategorySlug":"[[PART_CATEGORY_SLUG]]","lastServiceOdometer":number|null,"lastServiceDate":"yyyy-MM-dd"|null,"predictedNextOdometer":number,"predictedNextDate":"yyyy-MM-dd","confidenceScore":0.4-1.0,"reasoning":"string","needsImmediateAttention":bool}],"warnings":["string"]}
+{"recommendations":[{"partCategorySlug":"[[PART_CATEGORY_SLUG]]","lastServiceOdometer":number|null,"lastServiceDate":"yyyy-MM-dd"|null,"usageAdjustmentFactor":0.7-1.3,"reasoning":"string","needsImmediateAttention":bool,"warnings":["string"]}]}
