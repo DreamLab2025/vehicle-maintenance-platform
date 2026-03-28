@@ -17,6 +17,7 @@ if (app.Environment.IsDevelopment())
     var db = scope.ServiceProvider.GetRequiredService<UserDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     await TestUserSeeder.SeedAsync(db, logger);
+    await GarageOwnerDevUserSeeder.SeedAsync(db, logger);
     await AdminUserSeeder.SeedAsync(db, logger);
     await GarageDevMemberUserSeeder.SeedAsync(db, logger);
 }

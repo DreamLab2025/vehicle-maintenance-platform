@@ -1,3 +1,5 @@
+using Verendar.Notification.Application.Dtos.Email;
+
 namespace Verendar.Notification.Application.Services.Interfaces;
 
 public interface IEmailNotificationService
@@ -6,15 +8,11 @@ public interface IEmailNotificationService
         string email,
         string otpCode,
         DateTime expiresAt,
-        string otpType,
         CancellationToken cancellationToken = default);
 
     Task<bool> SendMemberAccountCreatedEmailAsync(
-        string email,
-        string displayName,
-        string tempPassword,
-        string role,
-        string loginUrl,
+        string recipientEmail,
+        MemberAccountCreatedEmailModel model,
         CancellationToken cancellationToken = default);
 
     Task<bool> SendNotificationEmailAsync(
@@ -23,6 +21,5 @@ public interface IEmailNotificationService
         string message,
         string ctaUrl,
         string ctaText,
-        string? userName,
         CancellationToken cancellationToken = default);
 }

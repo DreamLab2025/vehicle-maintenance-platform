@@ -7,11 +7,8 @@ namespace Verendar.Notification.Application.Constants
         public static class TemplateKeys
         {
             public const string Otp = "Otp";
-            public const string Welcome = "Welcome";
-            public const string OdometerReminder = "OdometerReminder";
-            public const string MaintenanceReminder = "MaintenanceReminder";
-            public const string MemberAccountCreated = "MemberAccountCreated";
             public const string Notification = "Notification";
+            public const string MemberAccountCreated = "MemberAccountCreated";
         }
 
         public static class MaintenanceLevelLabels

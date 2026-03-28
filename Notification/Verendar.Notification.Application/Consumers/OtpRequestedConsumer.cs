@@ -27,7 +27,6 @@ public class OtpRequestedConsumer(
                 message.TargetValue!,
                 message.Otp,
                 message.ExpiryTime,
-                message.Type.ToString(),
                 context.CancellationToken);
 
             if (success)

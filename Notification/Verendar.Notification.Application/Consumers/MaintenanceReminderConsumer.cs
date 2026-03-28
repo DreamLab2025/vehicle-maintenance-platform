@@ -80,7 +80,6 @@ public class MaintenanceReminderConsumer(
                         body,
                         actionAbsolute,
                         NotificationConstants.ConsumerCopy.EmailCtaViewApp,
-                        message.UserName,
                         context.CancellationToken);
                     await ConsumerNotificationFlow.FinalizeEmailDeliveryAsync(
                         unitOfWork, emailDelivery, ok, context.CancellationToken);

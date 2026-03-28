@@ -1,5 +1,4 @@
 using Verendar.Notification.Application.Constants;
-using Verendar.Notification.Application.Dtos.Email;
 using Verendar.Notification.Domain.Enums;
 using Verendar.Vehicle.Contracts.Enums;
 using Verendar.Vehicle.Contracts.Events;
@@ -83,34 +82,4 @@ public static class MaintenanceReminderMappings
         };
     }
 
-    public static MaintenanceReminderItemEmailDto ToEmailDto(this MaintenanceReminderItemDto item) => new()
-    {
-        PartCategoryName = item.PartCategoryName,
-        Description = item.Description,
-        VehicleDisplayName = item.VehicleDisplayName,
-        CurrentOdometer = item.CurrentOdometer,
-        TargetOdometer = item.TargetOdometer,
-        PercentageRemaining = item.PercentageRemaining,
-        EstimatedNextReplacementDate = item.EstimatedNextReplacementDate?.ToString(NotificationConstants.DateFormats.DateOnly)
-    };
-
-    public static MaintenanceReminderEmailModel ToEmailModel(this MaintenanceReminderEvent message, string title, string messageContent, MaintenanceReminderItemDto singleItem) => new()
-    {
-        UserName = message.UserName ?? string.Empty,
-        UserEmail = message.TargetValue,
-        Title = title,
-        LevelName = NotificationConstants.MaintenanceLevelLabels.GetLabel(message.Level),
-        IsCritical = true,
-        Items = [singleItem.ToEmailDto()]
-    };
-
-    public static MaintenanceReminderEmailModel ToEmailModel(this MaintenanceReminderEvent message, string title, string messageContent, IEnumerable<MaintenanceReminderItemDto> items) => new()
-    {
-        UserName = message.UserName ?? string.Empty,
-        UserEmail = message.TargetValue,
-        Title = title,
-        LevelName = NotificationConstants.MaintenanceLevelLabels.GetLabel(message.Level),
-        IsCritical = message.Level >= ReminderLevel.Critical,
-        Items = (items ?? []).Select(i => i.ToEmailDto()).ToList()
-    };
 }

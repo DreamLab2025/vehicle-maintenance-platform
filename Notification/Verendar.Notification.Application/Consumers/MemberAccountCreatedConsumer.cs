@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Verendar.Notification.Application.Constants;
+using Verendar.Notification.Application.Mapping;
 using Verendar.Notification.Application.Options;
 using Verendar.Notification.Application.Services.Interfaces;
 using Verender.Identity.Contracts.Events;
@@ -32,12 +34,12 @@ public class MemberAccountCreatedConsumer(
         try
         {
             var loginUrl = appOptions.Value.LoginAbsoluteUrl();
+            var emailModel = message.ToMemberAccountCreatedEmailModel(
+                loginUrl,
+                NotificationConstants.ConsumerCopy.LoginCta);
             var sent = await emailNotificationService.SendMemberAccountCreatedEmailAsync(
                 message.Email,
-                message.FullName,
-                message.TempPassword,
-                message.Role,
-                loginUrl,
+                emailModel,
                 context.CancellationToken);
 
             if (!sent)

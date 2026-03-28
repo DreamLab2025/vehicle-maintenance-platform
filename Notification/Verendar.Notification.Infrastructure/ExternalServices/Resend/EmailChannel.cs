@@ -22,19 +22,21 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend
                     return ChannelDeliveryResult.Failed("Email người nhận không hợp lệ");
                 }
 
+                var recipientEmail = context.RecipientEmail;
+
                 _logger.LogInformation("Sending email to {Email}, NotificationId: {NotificationId}",
-                    context.RecipientEmail, context.NotificationId);
+                    recipientEmail, context.NotificationId);
 
                 var templateKey = context.Metadata?.GetValueOrDefault("TemplateKey")?.ToString() ?? "Notification";
                 var model = context.TemplateModel ?? new NotificationEmailModel
                 {
                     Title = context.Title,
                     Message = context.Message,
-                    UserName = context.Metadata?.GetValueOrDefault("UserName")?.ToString() ?? "User"
+                    UserName = recipientEmail
                 };
 
                 var result = await _emailService.SendTemplatedEmailAsync(
-                    context.RecipientEmail,
+                    recipientEmail,
                     templateKey,
                     context.Title,
                     model,

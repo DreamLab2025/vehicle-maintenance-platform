@@ -61,7 +61,6 @@ public class BookingConfirmedEventConsumer(
                     content,
                     actionAbsolute,
                     NotificationConstants.ConsumerCopy.EmailCtaViewBooking,
-                    null,
                     context.CancellationToken);
                 await ConsumerNotificationFlow.FinalizeEmailDeliveryAsync(
                     unitOfWork, emailDelivery, ok, context.CancellationToken);

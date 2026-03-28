@@ -18,7 +18,6 @@ public class EmailNotificationService(
         string email,
         string otpCode,
         DateTime expiresAt,
-        string otpType,
         CancellationToken cancellationToken = default)
     {
         var expiryMinutes = CalculateExpiryMinutes(expiresAt);
@@ -38,8 +37,7 @@ public class EmailNotificationService(
                 UserName = email,
                 OtpCode = otpCode,
                 ExpiryMinutes = (int)Math.Ceiling(expiryMinutes),
-                ExpiryTime = expiresAt,
-                OtpType = otpType
+                ExpiryTime = expiresAt
             },
             Metadata = new Dictionary<string, object>
             {
@@ -51,27 +49,29 @@ public class EmailNotificationService(
     }
 
     public Task<bool> SendMemberAccountCreatedEmailAsync(
-        string email,
-        string displayName,
-        string tempPassword,
-        string role,
-        string loginUrl,
+        string recipientEmail,
+        MemberAccountCreatedEmailModel model,
         CancellationToken cancellationToken = default)
     {
-        var title = NotificationConstants.Titles.MemberAccountCreated;
-        var message =
-            $"Tài khoản Garage của <strong>{displayName}</strong> đã được tạo. "
-            + $"Vai trò: <strong>{role}</strong>. Mật khẩu tạm: <strong>{tempPassword}</strong>. "
-            + "Vui lòng đổi mật khẩu sau lần đăng nhập đầu tiên.";
+        var plainSummary =
+            $"Tài khoản Garage của {model.DisplayName} đã được tạo. Vai trò: {model.Role}. "
+            + "Mật khẩu tạm được gửi trong email.";
 
-        return SendNotificationEmailAsync(
-            email,
-            title,
-            message,
-            loginUrl,
-            NotificationConstants.ConsumerCopy.LoginCta,
-            displayName,
-            cancellationToken);
+        var ctx = new NotificationDeliveryContext
+        {
+            NotificationId = Guid.Empty,
+            RecipientEmail = recipientEmail,
+            Title = model.Title,
+            Message = plainSummary,
+            NotificationType = NotificationType.User,
+            TemplateModel = model,
+            Metadata = new Dictionary<string, object>
+            {
+                { NotificationConstants.MetadataKeys.TemplateKey, NotificationConstants.TemplateKeys.MemberAccountCreated }
+            }
+        };
+
+        return SendEmailOnlyAsync(ctx, cancellationToken);
     }
 
     public Task<bool> SendNotificationEmailAsync(
@@ -80,7 +80,6 @@ public class EmailNotificationService(
         string message,
         string ctaUrl,
         string ctaText,
-        string? userName,
         CancellationToken cancellationToken = default)
     {
         var ctx = new NotificationDeliveryContext
@@ -92,11 +91,11 @@ public class EmailNotificationService(
             NotificationType = NotificationType.User,
             TemplateModel = new NotificationEmailModel
             {
-                UserName = userName ?? email,
+                UserName = email,
                 Title = title,
                 Message = message,
-                ActionUrl = ctaUrl,
-                ActionText = ctaText
+                CtaUrl = ctaUrl,
+                CtaText = ctaText
             },
             Metadata = new Dictionary<string, object>
             {

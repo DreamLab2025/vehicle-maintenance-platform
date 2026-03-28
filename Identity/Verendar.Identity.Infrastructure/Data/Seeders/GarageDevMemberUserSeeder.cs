@@ -8,7 +8,8 @@ public static class GarageDevMemberUserSeeder
 {
     private const string DevPassword = "12345@Abc";
 
-    private static readonly Guid SeedActorId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    /// <summary>Audit CreatedBy — dev chủ garage (<see cref="GarageOwnerDevUserSeeder"/>).</summary>
+    private static readonly Guid SeedActorId = GarageOwnerDevUserSeeder.UserId;
 
     public static async Task SeedAsync(UserDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
     {

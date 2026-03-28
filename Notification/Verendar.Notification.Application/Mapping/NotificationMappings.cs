@@ -61,25 +61,4 @@ public static class NotificationMappings
             CreatedAt = n.CreatedAt
         };
     }
-
-    public static NotificationDetailDto ToDetailDto(this NotificationEntity n)
-    {
-        return new NotificationDetailDto
-        {
-            Id = n.Id,
-            Title = n.Title,
-            Message = n.Message,
-            NotificationType = n.NotificationType,
-            Priority = n.Priority,
-            Status = n.Status,
-            EntityType = n.EntityType,
-            EntityId = n.EntityId,
-            ActionUrl = n.ActionUrl,
-            IsRead = n.IsRead,
-            ReadAt = n.ReadAt,
-            CreatedAt = n.CreatedAt,
-            Metadata = null,
-            MaintenanceReminderFreshness = null
-        };
-    }
 }

@@ -7,7 +7,7 @@ namespace Verendar.Notification.Application.Services.Interfaces
             PaginationRequest request,
             CancellationToken cancellationToken = default);
 
-        Task<ApiResponse<NotificationDetailDto>> GetNotificationDetailForUserAsync(
+        Task<ApiResponse<NotificationListItemDto>> GetNotificationDetailForUserAsync(
             Guid userId,
             Guid notificationId,
             CancellationToken cancellationToken = default);

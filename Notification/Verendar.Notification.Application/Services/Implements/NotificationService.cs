@@ -9,7 +9,7 @@ public class NotificationService(
 {
     private readonly ILogger<NotificationService> _logger = logger;
 
-    public async Task<ApiResponse<NotificationDetailDto>> GetNotificationDetailForUserAsync(
+    public async Task<ApiResponse<NotificationListItemDto>> GetNotificationDetailForUserAsync(
         Guid userId,
         Guid notificationId,
         CancellationToken cancellationToken = default)
@@ -18,19 +18,11 @@ public class NotificationService(
         if (notification == null)
         {
             _logger.LogWarning("GetNotificationDetail: not found {NotificationId} for user {UserId}", notificationId, userId);
-            return ApiResponse<NotificationDetailDto>.NotFoundResponse("Không tìm thấy thông báo.");
+            return ApiResponse<NotificationListItemDto>.NotFoundResponse("Không tìm thấy thông báo.");
         }
 
-        var hasInApp = await unitOfWork.NotificationDeliveries.FindOneAsync(d =>
-            d.NotificationId == notificationId && d.Channel == NotificationChannel.InApp) != null;
-        if (!hasInApp)
-        {
-            _logger.LogWarning("GetNotificationDetail: no in-app delivery {NotificationId} user {UserId}", notificationId, userId);
-            return ApiResponse<NotificationDetailDto>.FailureResponse("Thông báo không có trong app.");
-        }
-
-        var dto = notification.ToDetailDto();
-        return ApiResponse<NotificationDetailDto>.SuccessResponse(dto);
+        var dto = notification.ToListItemDto();
+        return ApiResponse<NotificationListItemDto>.SuccessResponse(dto);
     }
 
     public async Task<ApiResponse<List<NotificationListItemDto>>> GetInAppNotificationsForUserAsync(
@@ -39,7 +31,7 @@ public class NotificationService(
         CancellationToken cancellationToken = default)
     {
         request.Normalize();
-        var (items, totalCount) = await unitOfWork.Notifications.GetByUserIdWithInAppChannelPagedAsync(
+        var (items, totalCount) = await unitOfWork.Notifications.GetByUserIdPagedAsync(
             userId, request.PageNumber, request.PageSize, cancellationToken);
 
         var dtos = items.Select(n => n.ToListItemDto()).ToList();
@@ -55,7 +47,7 @@ public class NotificationService(
 
     public async Task<ApiResponse<int>> MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var unread = await unitOfWork.Notifications.GetUnreadByUserIdWithInAppAsync(userId, cancellationToken);
+        var unread = await unitOfWork.Notifications.GetUnreadByUserIdAsync(userId, cancellationToken);
         var readAt = DateTime.UtcNow;
         foreach (var n in unread)
         {
