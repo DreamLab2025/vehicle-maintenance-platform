@@ -473,7 +473,7 @@ public class BookingService(
             var req = requests[i];
             var setCount = (req.ProductId.HasValue ? 1 : 0) + (req.ServiceId.HasValue ? 1 : 0) + (req.BundleId.HasValue ? 1 : 0);
             if (setCount != 1)
-                return new ResolvedLineItems(null, $"Mục #{i + 1}: phải chỉ định đúng một trong ProductId, ServiceId hoặc BundleId.");
+                return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.SpecifyOneFkFormat, i + 1));
 
             decimal itemPrice;
 
@@ -481,15 +481,15 @@ public class BookingService(
             {
                 var product = await _unitOfWork.GarageProducts.GetByIdWithInstallationAsync(req.ProductId.Value, ct);
                 if (product is null || product.GarageBranchId != branchId || product.DeletedAt != null)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: sản phẩm không tồn tại hoặc không thuộc chi nhánh này.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.ProductNotInBranchFormat, i + 1));
                 if (product.Status != ProductStatus.Active)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: sản phẩm '{product.Name}' không khả dụng.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.ProductUnavailableFormat, i + 1, product.Name));
 
                 itemPrice = product.MaterialPrice.Amount;
                 if (req.IncludeInstallation)
                 {
                     if (product.InstallationService is null)
-                        return new ResolvedLineItems(null, $"Mục #{i + 1}: sản phẩm '{product.Name}' không có dịch vụ lắp đặt.");
+                        return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.ProductNoInstallationFormat, i + 1, product.Name));
                     itemPrice += product.InstallationService.LaborPrice.Amount;
                 }
             }
@@ -498,9 +498,9 @@ public class BookingService(
                 var service = await _unitOfWork.GarageServices.FindOneAsync(
                     s => s.Id == req.ServiceId.Value && s.GarageBranchId == branchId && s.DeletedAt == null);
                 if (service is null)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: dịch vụ không tồn tại hoặc không thuộc chi nhánh này.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.ServiceNotInBranchFormat, i + 1));
                 if (service.Status != ProductStatus.Active)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: dịch vụ '{service.Name}' không khả dụng.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.ServiceUnavailableFormat, i + 1, service.Name));
 
                 itemPrice = service.LaborPrice.Amount;
             }
@@ -508,9 +508,9 @@ public class BookingService(
             {
                 var bundle = await _unitOfWork.GarageBundles.GetByIdWithItemsAsync(req.BundleId!.Value, ct);
                 if (bundle is null || bundle.GarageBranchId != branchId || bundle.DeletedAt != null)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: combo không tồn tại hoặc không thuộc chi nhánh này.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.BundleNotInBranchFormat, i + 1));
                 if (bundle.Status != ProductStatus.Active)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: combo '{bundle.Name}' không khả dụng.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.BundleUnavailableFormat, i + 1, bundle.Name));
 
                 var subTotal = GarageBundleMappings.CalculateSubTotal(bundle);
                 itemPrice = GarageBundleMappings.CalculateFinalPrice(bundle, subTotal);

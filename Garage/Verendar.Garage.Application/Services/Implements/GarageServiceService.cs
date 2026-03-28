@@ -1,3 +1,4 @@
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
@@ -20,7 +21,7 @@ public class GarageServiceService(
             b => b.Id == branchId && b.DeletedAt == null);
         if (branch is null)
             return ApiResponse<List<GarageServiceListItemResponse>>.NotFoundResponse(
-                $"Không tìm thấy chi nhánh với id '{branchId}'.");
+                string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
 
         var (items, totalCount) = await _unitOfWork.GarageServices.GetPagedByBranchIdAsync(
             branchId, activeOnly, pagination.PageNumber, pagination.PageSize, ct);
@@ -30,7 +31,7 @@ public class GarageServiceService(
             totalCount,
             pagination.PageNumber,
             pagination.PageSize,
-            "Lấy danh sách dịch vụ thành công");
+            EndpointMessages.OfferedServices.ListSuccess);
     }
 
     public async Task<ApiResponse<GarageServiceResponse>> GetServiceByIdAsync(
@@ -39,10 +40,10 @@ public class GarageServiceService(
         var service = await _unitOfWork.GarageServices.GetByIdWithCategoryAsync(id, ct);
         if (service is null)
             return ApiResponse<GarageServiceResponse>.NotFoundResponse(
-                $"Không tìm thấy dịch vụ với id '{id}'.");
+                string.Format(EndpointMessages.OfferedServices.NotFoundByIdFormat, id));
 
         return ApiResponse<GarageServiceResponse>.SuccessResponse(
-            service.ToResponse(), "Lấy thông tin dịch vụ thành công");
+            service.ToResponse(), EndpointMessages.OfferedServices.GetSuccess);
     }
 
     public async Task<ApiResponse<GarageServiceResponse>> CreateServiceAsync(
@@ -57,7 +58,7 @@ public class GarageServiceService(
                 c => c.Id == request.ServiceCategoryId.Value && c.DeletedAt == null);
             if (cat is null)
                 return ApiResponse<GarageServiceResponse>.FailureResponse(
-                    "Danh mục dịch vụ không tồn tại.", 422);
+                    EndpointMessages.OfferedServices.CategoryNotFound, 422);
         }
 
         var service = request.ToEntity(branchId);
@@ -68,7 +69,7 @@ public class GarageServiceService(
 
         var result = await _unitOfWork.GarageServices.GetByIdWithCategoryAsync(service.Id, ct);
         return ApiResponse<GarageServiceResponse>.CreatedResponse(
-            result!.ToResponse(), "Tạo dịch vụ thành công");
+            result!.ToResponse(), EndpointMessages.OfferedServices.CreateSuccess);
     }
 
     public async Task<ApiResponse<GarageServiceResponse>> UpdateServiceAsync(
@@ -77,7 +78,7 @@ public class GarageServiceService(
         var service = await _unitOfWork.GarageServices.GetByIdWithCategoryAsync(id, ct);
         if (service is null)
             return ApiResponse<GarageServiceResponse>.NotFoundResponse(
-                $"Không tìm thấy dịch vụ với id '{id}'.");
+                string.Format(EndpointMessages.OfferedServices.NotFoundByIdFormat, id));
 
         var (ok, errMsg, statusCode) = await CheckBranchAccessAsync(service.GarageBranchId, requestingUserId);
         if (!ok) return ApiResponse<GarageServiceResponse>.FailureResponse(errMsg, statusCode);
@@ -88,7 +89,7 @@ public class GarageServiceService(
                 c => c.Id == request.ServiceCategoryId.Value && c.DeletedAt == null);
             if (cat is null)
                 return ApiResponse<GarageServiceResponse>.FailureResponse(
-                    "Danh mục dịch vụ không tồn tại.", 422);
+                    EndpointMessages.OfferedServices.CategoryNotFound, 422);
         }
 
         service.UpdateFromRequest(request);
@@ -98,7 +99,7 @@ public class GarageServiceService(
 
         var updated = await _unitOfWork.GarageServices.GetByIdWithCategoryAsync(id, ct);
         return ApiResponse<GarageServiceResponse>.SuccessResponse(
-            updated!.ToResponse(), "Cập nhật dịch vụ thành công");
+            updated!.ToResponse(), EndpointMessages.OfferedServices.UpdateSuccess);
     }
 
     public async Task<ApiResponse<GarageServiceResponse>> UpdateServiceStatusAsync(
@@ -108,7 +109,7 @@ public class GarageServiceService(
             s => s.Id == id && s.DeletedAt == null);
         if (service is null)
             return ApiResponse<GarageServiceResponse>.NotFoundResponse(
-                $"Không tìm thấy dịch vụ với id '{id}'.");
+                string.Format(EndpointMessages.OfferedServices.NotFoundByIdFormat, id));
 
         var (ok, errMsg, statusCode) = await CheckBranchAccessAsync(service.GarageBranchId, requestingUserId);
         if (!ok) return ApiResponse<GarageServiceResponse>.FailureResponse(errMsg, statusCode);
@@ -121,7 +122,7 @@ public class GarageServiceService(
 
         var updated = await _unitOfWork.GarageServices.GetByIdWithCategoryAsync(id, ct);
         return ApiResponse<GarageServiceResponse>.SuccessResponse(
-            updated!.ToResponse(), "Cập nhật trạng thái dịch vụ thành công");
+            updated!.ToResponse(), EndpointMessages.OfferedServices.UpdateStatusSuccess);
     }
 
     public async Task<ApiResponse<bool>> DeleteServiceAsync(
@@ -131,7 +132,7 @@ public class GarageServiceService(
             s => s.Id == id && s.DeletedAt == null);
         if (service is null)
             return ApiResponse<bool>.NotFoundResponse(
-                $"Không tìm thấy dịch vụ với id '{id}'.");
+                string.Format(EndpointMessages.OfferedServices.NotFoundByIdFormat, id));
 
         var (ok, errMsg, statusCode) = await CheckBranchAccessAsync(service.GarageBranchId, requestingUserId);
         if (!ok) return ApiResponse<bool>.FailureResponse(errMsg, statusCode);
@@ -141,7 +142,7 @@ public class GarageServiceService(
 
         _logger.LogInformation("DeleteGarageService: soft deleted {ServiceId}", id);
 
-        return ApiResponse<bool>.SuccessResponse(true, "Xóa dịch vụ thành công");
+        return ApiResponse<bool>.SuccessResponse(true, EndpointMessages.OfferedServices.DeleteSuccess);
     }
 
     private async Task<(bool Ok, string Message, int StatusCode)> CheckBranchAccessAsync(
@@ -150,12 +151,12 @@ public class GarageServiceService(
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(
             b => b.Id == branchId && b.DeletedAt == null);
         if (branch is null)
-            return (false, $"Không tìm thấy chi nhánh với id '{branchId}'.", 404);
+            return (false, string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId), 404);
 
         var garage = await _unitOfWork.Garages.FindOneAsync(
             g => g.Id == branch.GarageId && g.DeletedAt == null);
         if (garage is null)
-            return (false, "Không tìm thấy garage.", 404);
+            return (false, EndpointMessages.Stats.GarageNotFound, 404);
 
         if (garage.OwnerId == userId) return (true, string.Empty, 0);
 
@@ -166,7 +167,7 @@ public class GarageServiceService(
               && m.DeletedAt == null);
 
         if (isMember is null)
-            return (false, "Bạn không có quyền quản lý dịch vụ của chi nhánh này.", 403);
+            return (false, EndpointMessages.BranchManager.ForbiddenManageServices, 403);
 
         return (true, string.Empty, 0);
     }

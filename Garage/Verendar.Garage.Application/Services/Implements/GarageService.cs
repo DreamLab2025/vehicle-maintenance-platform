@@ -1,6 +1,7 @@
 using MassTransit;
 using Verendar.Common.Shared;
 using Verendar.Garage.Application.Clients;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
@@ -37,7 +38,7 @@ public class GarageService(
             totalCount,
             request.PageNumber,
             request.PageSize,
-            "Lấy danh sách garage thành công");
+            EndpointMessages.OwnerGarage.ListSuccess);
     }
 
     public async Task<ApiResponse<GarageDetailResponse>> GetMyGarageAsync(Guid ownerId, CancellationToken ct = default)
@@ -45,10 +46,10 @@ public class GarageService(
         var garage = await _unitOfWork.Garages.GetWithBranchesAsync(g => g.OwnerId == ownerId, ct);
 
         if (garage is null)
-            return ApiResponse<GarageDetailResponse>.NotFoundResponse("Bạn chưa đăng ký garage.");
+            return ApiResponse<GarageDetailResponse>.NotFoundResponse(EndpointMessages.OwnerGarage.MyGarageNotRegistered);
 
         return ApiResponse<GarageDetailResponse>.SuccessResponse(
-            garage.ToDetailResponse(), "Lấy thông tin garage thành công");
+            garage.ToDetailResponse(), EndpointMessages.OwnerGarage.GetDetailSuccess);
     }
 
     public async Task<ApiResponse<GarageDetailResponse>> GetGarageByIdAsync(Guid garageId, CancellationToken ct = default)
@@ -56,10 +57,10 @@ public class GarageService(
         var garage = await _unitOfWork.Garages.GetWithBranchesAsync(g => g.Id == garageId, ct);
 
         if (garage is null)
-            return ApiResponse<GarageDetailResponse>.NotFoundResponse($"Không tìm thấy garage.");
+            return ApiResponse<GarageDetailResponse>.NotFoundResponse(EndpointMessages.OwnerGarage.GarageNotFoundPlain);
 
         return ApiResponse<GarageDetailResponse>.SuccessResponse(
-            garage.ToDetailResponse(), "Lấy thông tin garage thành công");
+            garage.ToDetailResponse(), EndpointMessages.OwnerGarage.GetDetailSuccess);
     }
 
     public async Task<ApiResponse<GarageResponse>> UpdateGarageStatusAsync(
@@ -68,11 +69,12 @@ public class GarageService(
         var garage = await _unitOfWork.Garages.FindOneAsync(
             g => g.Id == garageId && g.DeletedAt == null);
         if (garage is null)
-            return ApiResponse<GarageResponse>.NotFoundResponse($"Không tìm thấy garage với id '{garageId}'.");
+            return ApiResponse<GarageResponse>.NotFoundResponse(
+                string.Format(EndpointMessages.OwnerGarage.GarageNotFoundByIdFormat, garageId));
 
         if (!IsValidAdminTransition(garage.Status, request.Status))
             return ApiResponse<GarageResponse>.FailureResponse(
-                $"Không thể chuyển trạng thái từ '{garage.Status}' sang '{request.Status}'.", 400);
+                string.Format(EndpointMessages.OwnerGarage.StatusTransitionInvalidFormat, garage.Status, request.Status), 400);
 
         var fromStatus = garage.Status;
         garage.Status = request.Status;
@@ -106,7 +108,7 @@ public class GarageService(
             ChangedAt = DateTime.UtcNow
         }, ct);
 
-        return ApiResponse<GarageResponse>.SuccessResponse(garage.ToResponse(), "Cập nhật trạng thái garage thành công");
+        return ApiResponse<GarageResponse>.SuccessResponse(garage.ToResponse(), EndpointMessages.OwnerGarage.UpdateStatusSuccess);
     }
 
     public async Task<ApiResponse<GarageResponse>> UpdateGarageInfoAsync(
@@ -115,11 +117,11 @@ public class GarageService(
         var garage = await _unitOfWork.Garages.FindOneAsync(
             g => g.Id == garageId && g.OwnerId == ownerId && g.DeletedAt == null);
         if (garage is null)
-            return ApiResponse<GarageResponse>.NotFoundResponse("Không tìm thấy garage.");
+            return ApiResponse<GarageResponse>.NotFoundResponse(EndpointMessages.OwnerGarage.GarageNotFoundPlain);
 
         if (garage.Status == GarageStatus.Active || garage.Status == GarageStatus.Suspended)
             return ApiResponse<GarageResponse>.FailureResponse(
-                "Không thể chỉnh sửa thông tin garage khi đang ở trạng thái Active hoặc Suspended.", 400);
+                EndpointMessages.OwnerGarage.CannotEditWhenActiveOrSuspended, 400);
 
         garage.UpdateFromRequest(request);
         garage.UpdatedAt = DateTime.UtcNow;
@@ -127,7 +129,7 @@ public class GarageService(
 
         _logger.LogInformation("UpdateGarageInfo: garage {GarageId} updated by owner {OwnerId}", garageId, ownerId);
 
-        return ApiResponse<GarageResponse>.SuccessResponse(garage.ToResponse(), "Cập nhật thông tin garage thành công");
+        return ApiResponse<GarageResponse>.SuccessResponse(garage.ToResponse(), EndpointMessages.OwnerGarage.UpdateInfoSuccess);
     }
 
     public async Task<ApiResponse<GarageResponse>> ResubmitGarageAsync(
@@ -136,11 +138,11 @@ public class GarageService(
         var garage = await _unitOfWork.Garages.FindOneAsync(
             g => g.Id == garageId && g.OwnerId == ownerId && g.DeletedAt == null);
         if (garage is null)
-            return ApiResponse<GarageResponse>.NotFoundResponse("Không tìm thấy garage.");
+            return ApiResponse<GarageResponse>.NotFoundResponse(EndpointMessages.OwnerGarage.GarageNotFoundPlain);
 
         if (garage.Status != GarageStatus.Rejected)
             return ApiResponse<GarageResponse>.FailureResponse(
-                "Chỉ có thể nộp lại khi garage đang ở trạng thái Rejected.", 400);
+                EndpointMessages.OwnerGarage.ResubmitOnlyWhenRejected, 400);
 
         garage.Status = GarageStatus.Pending;
         garage.UpdatedAt = DateTime.UtcNow;
@@ -159,7 +161,7 @@ public class GarageService(
 
         _logger.LogInformation("ResubmitGarage: garage {GarageId} resubmitted by owner {OwnerId}", garageId, ownerId);
 
-        return ApiResponse<GarageResponse>.SuccessResponse(garage.ToResponse(), "Nộp lại hồ sơ thành công");
+        return ApiResponse<GarageResponse>.SuccessResponse(garage.ToResponse(), EndpointMessages.OwnerGarage.ResubmitSuccess);
     }
 
     private async Task HandleRoleAndMembersAsync(GarageEntity garage, GarageStatus newStatus, CancellationToken ct)
@@ -223,12 +225,12 @@ public class GarageService(
             {
                 _logger.LogWarning("CreateGarage: owner {OwnerId} already has a garage with status {Status}", ownerId, existing.Status);
                 return ApiResponse<GarageResponse>.ConflictResponse(
-                    "Tài khoản đã có garage đăng ký. Nếu bị từ chối, hãy chỉnh sửa và nộp lại.");
+                    EndpointMessages.OwnerGarage.ConflictExistingGarage);
             }
 
             // Garage bị Rejected — hướng dẫn dùng flow edit + resubmit thay vì tạo mới
             return ApiResponse<GarageResponse>.FailureResponse(
-                "Garage của bạn đã bị từ chối. Hãy chỉnh sửa thông tin qua PUT /api/v1/garages/{id} và nộp lại qua PATCH /api/v1/garages/{id}/resubmit.", 400);
+                EndpointMessages.OwnerGarage.RejectedUseEditResubmitFlow, 400);
         }
 
         var garage = request.ToEntity(ownerId);
@@ -243,6 +245,6 @@ public class GarageService(
 
         _logger.LogInformation("CreateGarage: created garage {GarageId} for owner {OwnerId}", garage.Id, ownerId);
 
-        return ApiResponse<GarageResponse>.CreatedResponse(garage.ToResponse(), "Đăng ký garage thành công");
+        return ApiResponse<GarageResponse>.CreatedResponse(garage.ToResponse(), EndpointMessages.OwnerGarage.RegisterSuccess);
     }
 }

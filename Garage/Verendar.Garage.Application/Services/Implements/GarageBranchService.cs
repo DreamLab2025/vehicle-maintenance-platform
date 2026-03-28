@@ -1,4 +1,5 @@
 using Verendar.Garage.Application.Clients;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
@@ -26,22 +27,22 @@ public class GarageBranchService(
 
         if (garage is null)
             return ApiResponse<GarageBranchResponse>.NotFoundResponse(
-                $"Không tìm thấy garage với id '{garageId}'.");
+                string.Format(EndpointMessages.GarageBranches.GarageNotFoundByIdFormat, garageId));
 
         if (garage.OwnerId != requestingUserId)
             return ApiResponse<GarageBranchResponse>.ForbiddenResponse(
-                "Bạn không có quyền thêm chi nhánh cho garage này.");
+                EndpointMessages.GarageBranches.ForbiddenAddBranch);
 
         if (garage.Status != GarageStatus.Active)
             return ApiResponse<GarageBranchResponse>.FailureResponse(
-                "Garage chưa được duyệt, không thể thêm chi nhánh.", 422);
+                EndpointMessages.GarageBranches.GarageNotApprovedAddBranch, 422);
 
         // Validate province + ward via Location service
         var (isValid, provinceName, wardName) = await _locationClient.ValidateLocationAsync(
             request.Address.ProvinceCode, request.Address.WardCode, ct);
         if (!isValid)
             return ApiResponse<GarageBranchResponse>.FailureResponse(
-                "Mã tỉnh/thành hoặc mã phường/xã không hợp lệ.", 422);
+                EndpointMessages.GarageBranches.InvalidProvinceWard, 422);
 
         var branch = request.ToEntity(garageId);
 
@@ -81,7 +82,7 @@ public class GarageBranchService(
         response.MapLinks = mapLinks;
 
         return ApiResponse<GarageBranchResponse>.CreatedResponse(
-            response, "Tạo chi nhánh thành công");
+            response, EndpointMessages.GarageBranches.CreateSuccess);
     }
 
     public async Task<ApiResponse<GarageBranchResponse>> GetBranchByIdAsync(
@@ -94,7 +95,7 @@ public class GarageBranchService(
 
         if (branch is null)
             return ApiResponse<GarageBranchResponse>.NotFoundResponse(
-                $"Không tìm thấy chi nhánh với id '{branchId}'.");
+                string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
 
         var response = branch.ToResponse();
 
@@ -106,7 +107,7 @@ public class GarageBranchService(
         response.ReviewCount = count;
 
         return ApiResponse<GarageBranchResponse>.SuccessResponse(
-            response, "Lấy thông tin chi nhánh thành công");
+            response, EndpointMessages.GarageBranches.GetDetailSuccess);
     }
 
     public async Task<ApiResponse<List<GarageBranchSummaryResponse>>> GetBranchesAsync(
@@ -120,7 +121,7 @@ public class GarageBranchService(
             g => g.Id == garageId && g.DeletedAt == null);
         if (garageExists is null)
             return ApiResponse<List<GarageBranchSummaryResponse>>.NotFoundResponse(
-                $"Không tìm thấy garage với id '{garageId}'.");
+                string.Format(EndpointMessages.GarageBranches.GarageNotFoundByIdFormat, garageId));
 
         var (items, totalCount) = await _unitOfWork.GarageBranches.GetPagedAsync(
             request.PageNumber,
@@ -133,7 +134,7 @@ public class GarageBranchService(
             totalCount,
             request.PageNumber,
             request.PageSize,
-            "Lấy danh sách chi nhánh thành công");
+            EndpointMessages.GarageBranches.ListSuccess);
     }
 
     public async Task<ApiResponse<GarageBranchResponse>> UpdateBranchAsync(
@@ -147,17 +148,17 @@ public class GarageBranchService(
             g => g.Id == garageId && g.DeletedAt == null);
         if (garage is null)
             return ApiResponse<GarageBranchResponse>.NotFoundResponse(
-                $"Không tìm thấy garage với id '{garageId}'.");
+                string.Format(EndpointMessages.GarageBranches.GarageNotFoundByIdFormat, garageId));
 
         if (garage.OwnerId != requestingUserId)
             return ApiResponse<GarageBranchResponse>.ForbiddenResponse(
-                "Bạn không có quyền cập nhật chi nhánh của garage này.");
+                EndpointMessages.GarageBranches.ForbiddenUpdateBranch);
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(
             b => b.Id == branchId && b.GarageId == garageId && b.DeletedAt == null);
         if (branch is null)
             return ApiResponse<GarageBranchResponse>.NotFoundResponse(
-                $"Không tìm thấy chi nhánh với id '{branchId}'.");
+                string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
 
         bool addressChanged =
             branch.Address.ProvinceCode != request.Address.ProvinceCode ||
@@ -173,7 +174,7 @@ public class GarageBranchService(
                 request.Address.ProvinceCode, request.Address.WardCode, ct);
             if (!isValid)
                 return ApiResponse<GarageBranchResponse>.FailureResponse(
-                    "Mã tỉnh/thành hoặc mã phường/xã không hợp lệ.", 422);
+                    EndpointMessages.GarageBranches.InvalidProvinceWard, 422);
 
             var streetPart = string.IsNullOrWhiteSpace(request.Address.HouseNumber)
                 ? request.Address.StreetDetail
@@ -205,7 +206,7 @@ public class GarageBranchService(
 
         var response = branch.ToResponse();
         response.MapLinks = mapLinks;
-        return ApiResponse<GarageBranchResponse>.SuccessResponse(response, "Cập nhật chi nhánh thành công");
+        return ApiResponse<GarageBranchResponse>.SuccessResponse(response, EndpointMessages.GarageBranches.UpdateSuccess);
     }
 
     public async Task<ApiResponse<bool>> DeleteBranchAsync(
@@ -218,24 +219,24 @@ public class GarageBranchService(
             g => g.Id == garageId && g.DeletedAt == null);
         if (garage is null)
             return ApiResponse<bool>.NotFoundResponse(
-                $"Không tìm thấy garage với id '{garageId}'.");
+                string.Format(EndpointMessages.GarageBranches.GarageNotFoundByIdFormat, garageId));
 
         if (garage.OwnerId != requestingUserId)
             return ApiResponse<bool>.ForbiddenResponse(
-                "Bạn không có quyền xóa chi nhánh của garage này.");
+                EndpointMessages.GarageBranches.ForbiddenDeleteBranch);
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(
             b => b.Id == branchId && b.GarageId == garageId && b.DeletedAt == null);
         if (branch is null)
             return ApiResponse<bool>.NotFoundResponse(
-                $"Không tìm thấy chi nhánh với id '{branchId}'.");
+                string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
 
         branch.DeletedAt = DateTime.UtcNow;
         await _unitOfWork.SaveChangesAsync(ct);
 
         _logger.LogInformation("DeleteBranch: soft deleted branch {BranchId} for garage {GarageId}", branchId, garageId);
 
-        return ApiResponse<bool>.SuccessResponse(true, "Xóa chi nhánh thành công");
+        return ApiResponse<bool>.SuccessResponse(true, EndpointMessages.GarageBranches.DeleteSuccess);
     }
 
     public async Task<ApiResponse<GarageBranchResponse>> UpdateBranchStatusAsync(
@@ -249,21 +250,21 @@ public class GarageBranchService(
             g => g.Id == garageId && g.DeletedAt == null);
         if (garage is null)
             return ApiResponse<GarageBranchResponse>.NotFoundResponse(
-                $"Không tìm thấy garage với id '{garageId}'.");
+                string.Format(EndpointMessages.GarageBranches.GarageNotFoundByIdFormat, garageId));
 
         if (garage.OwnerId != requestingUserId)
             return ApiResponse<GarageBranchResponse>.ForbiddenResponse(
-                "Bạn không có quyền quản lý chi nhánh của garage này.");
+                EndpointMessages.GarageBranches.ForbiddenManageBranchStatus);
 
         if (garage.Status != GarageStatus.Active)
             return ApiResponse<GarageBranchResponse>.FailureResponse(
-                "Garage chưa được duyệt, không thể thay đổi trạng thái chi nhánh.", 422);
+                EndpointMessages.GarageBranches.GarageNotApprovedBranchStatus, 422);
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(
             b => b.Id == branchId && b.GarageId == garageId && b.DeletedAt == null);
         if (branch is null)
             return ApiResponse<GarageBranchResponse>.NotFoundResponse(
-                $"Không tìm thấy chi nhánh với id '{branchId}'.");
+                string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
 
         branch.Status = request.Status;
         branch.UpdatedAt = DateTime.UtcNow;
@@ -275,7 +276,7 @@ public class GarageBranchService(
         if (branch.Latitude != 0 || branch.Longitude != 0)
             response.MapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude, branch.Longitude, ct);
 
-        return ApiResponse<GarageBranchResponse>.SuccessResponse(response, "Cập nhật trạng thái chi nhánh thành công");
+        return ApiResponse<GarageBranchResponse>.SuccessResponse(response, EndpointMessages.GarageBranches.UpdateStatusSuccess);
     }
 
     public async Task<ApiResponse<List<BranchMapItemResponse>>> GetBranchesForMapAsync(
@@ -300,7 +301,7 @@ public class GarageBranchService(
             {
                 _logger.LogWarning("GetBranchesForMap: geocoding failed for address '{Address}'", request.Address);
                 return ApiResponse<List<BranchMapItemResponse>>.SuccessPagedResponse(
-                    new List<BranchMapItemResponse>(), 0, request.PageNumber, request.PageSize, "Không tìm thấy địa chỉ");
+                    new List<BranchMapItemResponse>(), 0, request.PageNumber, request.PageSize, EndpointMessages.GarageBranches.GeocodeAddressNotFound);
             }
         }
 
@@ -342,6 +343,6 @@ public class GarageBranchService(
             totalCount,
             request.PageNumber,
             request.PageSize,
-            "Lấy danh sách chi nhánh thành công");
+            EndpointMessages.GarageBranches.ListSuccess);
     }
 }
