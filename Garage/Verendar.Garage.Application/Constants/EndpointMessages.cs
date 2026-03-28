@@ -37,6 +37,7 @@ public static class EndpointMessages
         public const string CancelStatusInvalid = "Không thể hủy lịch hẹn ở trạng thái hiện tại.";
         public const string CancelForbidden = "Bạn không thể hủy lịch hẹn này.";
         public const string CancelSuccess = "Đã hủy lịch hẹn.";
+        public const string VehicleNotFound = "Không tìm thấy xe này hoặc xe không thuộc tài khoản của bạn.";
     }
 
     public static class Review

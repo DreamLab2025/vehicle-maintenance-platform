@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MassTransit;
 using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Constants;
@@ -16,6 +17,8 @@ public class BookingService(
     IGarageIdentityContactClient identityContactClient,
     IVehicleGarageClient vehicleGarageClient) : IBookingService
 {
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
     private readonly ILogger<BookingService> _logger = logger;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
@@ -43,6 +46,10 @@ public class BookingService(
         if (branch.Status != BranchStatus.Active)
             return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.BranchInactive);
 
+        var vehicleSummary = await _vehicleGarageClient.GetUserVehicleForBookingAsync(userId, request.UserVehicleId, ct);
+        if (vehicleSummary is null)
+            return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.VehicleNotFound);
+
         if (request.Items.Count == 0)
             return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.EmptyItems, 422);
 
@@ -66,7 +73,8 @@ public class BookingService(
             Status = BookingStatus.Pending,
             Note = request.Note,
             BookedTotalPrice = new Money { Amount = totalAmount, Currency = "VND" },
-            PaymentId = null
+            PaymentId = null,
+            VehicleSnapshotJson = JsonSerializer.Serialize(vehicleSummary, JsonOptions)
         };
 
         foreach (var lineItem in resolvedItems.LineItems!)
@@ -130,7 +138,7 @@ public class BookingService(
         if (isAssignedMechanic)
         {
             customer = await _identityContactClient.GetCustomerContactAsync(booking.UserId, ct);
-            vehicle = await _vehicleGarageClient.GetUserVehicleForBookingAsync(booking.UserId, booking.UserVehicleId, ct);
+            vehicle = DeserializeVehicleSnapshot(booking.VehicleSnapshotJson);
         }
 
         return ApiResponse<BookingResponse>.SuccessResponse(
@@ -728,4 +736,18 @@ public class BookingService(
             DateTimeKind.Local => dt.ToUniversalTime(),
             _ => DateTime.SpecifyKind(dt, DateTimeKind.Utc)
         };
+
+    private static BookingVehicleSummary? DeserializeVehicleSnapshot(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+        try
+        {
+            return JsonSerializer.Deserialize<BookingVehicleSummary>(json, JsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
