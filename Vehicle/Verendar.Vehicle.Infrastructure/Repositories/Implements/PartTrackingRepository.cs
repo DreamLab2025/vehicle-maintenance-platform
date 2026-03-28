@@ -65,5 +65,13 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                     .ThenInclude(c => c.Reminders)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<IReadOnlyList<PartTracking>> GetBaselineByUserVehicleIdAsync(Guid userVehicleId, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Include(x => x.PartCategory)
+                .Where(x => x.UserVehicleId == userVehicleId && x.IsBaseline)
+                .ToListAsync(cancellationToken);
+        }
     }
 }

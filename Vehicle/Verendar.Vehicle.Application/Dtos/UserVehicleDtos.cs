@@ -36,6 +36,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateOnly? PredictedNextDate { get; set; }
         public string? AiReasoning { get; set; }
         public double? ConfidenceScore { get; set; }
+        public bool IsBaseline { get; set; } = false;
     }
 
     public class UserVehicleResponse
@@ -148,6 +149,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public int? PredictedNextOdometer { get; set; }
         public DateOnly? PredictedNextDate { get; set; }
         public bool IsDeclared { get; set; }
+        public bool IsBaseline { get; set; }
         public TrackingCycleSummary? ActiveCycle { get; set; }
     }
 

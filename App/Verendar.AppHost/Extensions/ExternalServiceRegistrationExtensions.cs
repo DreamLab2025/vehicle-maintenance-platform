@@ -113,11 +113,13 @@ namespace Verendar.AppHost.Extensions
 
             var aiService = builder.AddProject<Projects.Verendar_Ai>("ai-service")
                 .WithReference(aiDb)
-                .WithReference(rabbitMq);
+                .WithReference(rabbitMq)
+                .WithReference(redis);
             aiService = aiService
                 .WithReference(seq)
                 .WaitFor(postgres)
-                .WaitFor(rabbitMq);
+                .WaitFor(rabbitMq)
+                .WaitFor(redis);
 
             var locationService = builder.AddProject<Projects.Verendar_Location>("location-service")
                 .WithReference(locationDb)

@@ -10,5 +10,19 @@ namespace Verendar.Ai.Application.Clients
             Guid vehicleModelId,
             string partCategorySlug,
             CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<VehicleServiceOdometerSummaryResponse>> GetOdometerSummaryAsync(
+            Guid userVehicleId,
+            CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<List<VehicleServiceBaselinePartItem>>> GetBaselinePartsAsync(
+            Guid userVehicleId,
+            CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<object>> ApplyTrackingInternalAsync(
+            Guid vehicleId,
+            Guid userId,
+            VehicleServiceApplyTrackingRequest request,
+            CancellationToken cancellationToken = default);
     }
 }

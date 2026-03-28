@@ -10,5 +10,6 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
         Task<PartTracking?> GetFirstByUserVehicleAndPartCategoryAsync(Guid userVehicleId, Guid partCategoryId, CancellationToken cancellationToken = default);
         Task<IEnumerable<PartTracking>> GetActiveTrackingsAsync(Guid userVehicleId, CancellationToken cancellationToken = default);
         Task<IReadOnlyList<PartTracking>> GetByIdsWithCyclesAndRemindersAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<PartTracking>> GetBaselineByUserVehicleIdAsync(Guid userVehicleId, CancellationToken cancellationToken = default);
     }
 }
