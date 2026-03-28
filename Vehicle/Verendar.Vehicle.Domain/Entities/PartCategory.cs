@@ -34,7 +34,6 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(1000)]
         public string? ConsequencesIfNotHandled { get; set; }
 
-        public List<PartProduct> Products { get; set; } = [];
         public List<DefaultMaintenanceSchedule> DefaultSchedules { get; set; } = [];
         public List<PartTracking> PartTrackings { get; set; } = [];
         public List<MaintenanceRecordItem> MaintenanceItems { get; set; } = [];

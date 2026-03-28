@@ -8,7 +8,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         {
             return await _dbSet
                 .Include(x => x.PartCategory)
-                .Include(x => x.PartProduct)
                 .Where(x => x.MaintenanceRecordId == maintenanceRecordId)
                 .ToListAsync(cancellationToken);
         }

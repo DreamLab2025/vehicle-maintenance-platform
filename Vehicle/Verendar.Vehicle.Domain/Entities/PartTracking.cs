@@ -9,7 +9,7 @@ namespace Verendar.Vehicle.Domain.Entities
         [Required]
         public Guid PartCategoryId { get; set; }
 
-        public Guid? CurrentPartProductId { get; set; }
+        public Guid? CurrentGarageProductId { get; set; }
 
         [MaxLength(50)]
         public string? InstanceIdentifier { get; set; }
@@ -31,8 +31,6 @@ namespace Verendar.Vehicle.Domain.Entities
         public UserVehicle UserVehicle { get; set; } = null!;
 
         public PartCategory PartCategory { get; set; } = null!;
-
-        public PartProduct? CurrentPartProduct { get; set; }
 
         public List<TrackingCycle> Cycles { get; set; } = [];
     }

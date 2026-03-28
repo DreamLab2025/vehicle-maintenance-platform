@@ -13,7 +13,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 
         // Part Catalog
         private IPartCategoryRepository? _partCategories;
-        private IPartProductRepository? _partProducts;
 
         // Maintenance Schedule
         private IDefaultScheduleRepository? _defaultSchedules;
@@ -48,9 +47,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
         // Part Catalog
         public IPartCategoryRepository PartCategories =>
             _partCategories ??= new PartCategoryRepository(Context);
-
-        public IPartProductRepository PartProducts =>
-            _partProducts ??= new PartProductRepository(Context);
 
         // Maintenance Schedule
         public IDefaultScheduleRepository DefaultSchedules =>

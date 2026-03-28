@@ -43,15 +43,6 @@ namespace Verendar.Vehicle.Application.Services.Implements
             var partCategoriesMap = (await _unitOfWork.PartCategories.GetBySlugsAsync(requestedSlugs))
                 .ToDictionary(pc => pc.Slug, StringComparer.OrdinalIgnoreCase);
 
-            var requestedProductIds = request.Items
-                .Where(i => i.UpdatesTracking && i.PartProductId.HasValue)
-                .Select(i => i.PartProductId!.Value)
-                .Distinct()
-                .ToList();
-            var partProductsMap = requestedProductIds.Count > 0
-                ? (await _unitOfWork.PartProducts.GetByIdsAsync(requestedProductIds)).ToDictionary(p => p.Id)
-                : new Dictionary<Guid, PartProduct>();
-
             if (record.OdometerAtService >= vehicle.CurrentOdometer)
             {
                 var previousOdo = vehicle.CurrentOdometer;
@@ -85,37 +76,13 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     partCategory.Id,
                     itemInput.InstanceIdentifier);
 
-                bool useProductForTracking = itemInput.UpdatesTracking && itemInput.PartProductId.HasValue;
                 int? predictedNextOdo = null;
                 DateOnly? predictedNextDate = null;
                 int? customKm = null;
                 int? customMonths = null;
-                Guid? currentPartProductId = itemInput.PartProductId;
+                Guid? currentGarageProductId = itemInput.GarageProductId;
 
-                if (useProductForTracking)
-                {
-                    if (!partProductsMap.TryGetValue(itemInput.PartProductId!.Value, out var product)
-                        || product.PartCategoryId != partCategory.Id)
-                    {
-                        _logger.LogWarning("CreateMaintenanceRecord: part product invalid {PartProductId} category {PartCategorySlug} vehicle {VehicleId}", itemInput.PartProductId, itemInput.PartCategorySlug, vehicleId);
-                        return ApiResponse<CreateRecordResponse>.NotFoundResponse(
-                            $"Phụ tùng không tồn tại hoặc không thuộc danh mục '{itemInput.PartCategorySlug}'");
-                    }
-
-                    customKm = product.RecommendedKmInterval;
-                    customMonths = product.RecommendedMonthsInterval;
-                    if (customKm.GetValueOrDefault(0) > 0) predictedNextOdo = lastOdo + (customKm ?? 0);
-                    if (customMonths.GetValueOrDefault(0) > 0) predictedNextDate = lastDate.AddMonths(customMonths ?? 0);
-
-                    if (existingTracking != null && !predictedNextOdo.HasValue && !predictedNextDate.HasValue)
-                    {
-                        customKm = existingTracking.CustomKmInterval ?? customKm;
-                        customMonths = existingTracking.CustomMonthsInterval ?? customMonths;
-                        predictedNextOdo = existingTracking.PredictedNextOdometer;
-                        predictedNextDate = existingTracking.PredictedNextDate;
-                    }
-                }
-                else if (itemInput.UpdatesTracking && (!itemInput.PartProductId.HasValue))
+                if (itemInput.UpdatesTracking)
                 {
                     customKm = itemInput.CustomKmInterval;
                     customMonths = itemInput.CustomMonthsInterval;
@@ -137,7 +104,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                     predictedNextDate = existingTracking.PredictedNextDate;
                 }
 
-                var item = itemInput.ToMaintenanceRecordItem(record.Id, partCategory.Id, currentPartProductId);
+                var item = itemInput.ToMaintenanceRecordItem(record.Id, partCategory.Id, currentGarageProductId);
                 await _unitOfWork.MaintenanceRecordItems.AddAsync(item);
 
                 PartTracking tracking;
@@ -153,7 +120,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                         predictedNextDate,
                         customKm,
                         customMonths,
-                        currentPartProductId);
+                        currentGarageProductId);
                     await _unitOfWork.PartTrackings.AddAsync(tracking);
                     tracking.PartCategory = partCategory;
                     trackingIdsForResponse.Add(tracking.Id);
@@ -161,7 +128,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 else
                 {
                     existingTracking.ApplyMaintenanceRecordUpdate(
-                        currentPartProductId,
+                        currentGarageProductId,
                         itemInput.InstanceIdentifier,
                         lastOdo,
                         lastDate,

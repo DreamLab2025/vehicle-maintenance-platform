@@ -9,15 +9,12 @@ namespace Verendar.Vehicle.Domain.Entities
     [Index(nameof(BookingId), IsUnique = true)]
     public class MaintenanceProposal : BaseEntity
     {
-        /// <summary>Cross-service ref to UserVehicle (Vehicle service owns this).</summary>
         [Required]
         public Guid UserVehicleId { get; set; }
 
-        /// <summary>Cross-service ref to Identity user (vehicle owner).</summary>
         [Required]
         public Guid UserId { get; set; }
 
-        /// <summary>Cross-service ref to Garage.Booking — unique constraint prevents duplicate proposals.</summary>
         [Required]
         public Guid BookingId { get; set; }
 
@@ -39,7 +36,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public DateTime? AppliedAt { get; set; }
 
-        /// <summary>Set after apply — references the created MaintenanceRecord.</summary>
         public Guid? ResultMaintenanceRecordId { get; set; }
 
         // Navigation

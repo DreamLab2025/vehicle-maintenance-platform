@@ -20,13 +20,13 @@ namespace Verendar.Vehicle.Application.Mappings
             this RecordItemInput input,
             Guid maintenanceRecordId,
             Guid partCategoryId,
-            Guid? partProductId)
+            Guid? garageProductId)
         {
             return new MaintenanceRecordItem
             {
                 MaintenanceRecordId = maintenanceRecordId,
                 PartCategoryId = partCategoryId,
-                PartProductId = partProductId,
+                GarageProductId = garageProductId,
                 CustomPartName = input.CustomPartName,
                 InstanceIdentifier = input.InstanceIdentifier,
                 Price = input.Price ?? 0,
@@ -45,14 +45,14 @@ namespace Verendar.Vehicle.Application.Mappings
             DateOnly? predictedNextDate,
             int? customKmInterval,
             int? customMonthsInterval,
-            Guid? currentPartProductId)
+            Guid? currentGarageProductId)
         {
             return new PartTracking
             {
                 UserVehicleId = userVehicleId,
                 PartCategoryId = partCategoryId,
                 InstanceIdentifier = instanceIdentifier,
-                CurrentPartProductId = currentPartProductId,
+                CurrentGarageProductId = currentGarageProductId,
                 LastReplacementOdometer = lastOdometer,
                 LastReplacementDate = lastDate,
                 PredictedNextOdometer = predictedNextOdometer,
@@ -65,7 +65,7 @@ namespace Verendar.Vehicle.Application.Mappings
 
         public static void ApplyMaintenanceRecordUpdate(
             this PartTracking tracking,
-            Guid? currentPartProductId,
+            Guid? currentGarageProductId,
             string? instanceIdentifier,
             int lastOdometer,
             DateOnly lastDate,
@@ -74,7 +74,7 @@ namespace Verendar.Vehicle.Application.Mappings
             int? customKmInterval,
             int? customMonthsInterval)
         {
-            tracking.CurrentPartProductId = currentPartProductId;
+            tracking.CurrentGarageProductId = currentGarageProductId;
             if (instanceIdentifier != null)
                 tracking.InstanceIdentifier = instanceIdentifier;
             tracking.LastReplacementOdometer = lastOdometer;
@@ -118,8 +118,7 @@ namespace Verendar.Vehicle.Application.Mappings
                 Id = item.Id,
                 PartCategoryId = item.PartCategoryId,
                 PartCategorySlug = item.PartCategory?.Slug ?? string.Empty,
-                PartProductId = item.PartProductId,
-                PartProductName = item.PartProduct?.Name,
+                GarageProductId = item.GarageProductId,
                 CustomPartName = item.CustomPartName,
                 InstanceIdentifier = item.InstanceIdentifier,
                 Price = item.Price,

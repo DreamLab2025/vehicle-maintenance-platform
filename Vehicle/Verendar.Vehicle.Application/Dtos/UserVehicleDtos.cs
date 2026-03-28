@@ -140,8 +140,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public string PartCategoryName { get; set; } = null!;
         public string PartCategorySlug { get; set; } = null!;
         public string? InstanceIdentifier { get; set; }
-        public Guid? CurrentPartProductId { get; set; }
-        public string? CurrentPartProductName { get; set; }
+        public Guid? CurrentGarageProductId { get; set; }
         public int? LastReplacementOdometer { get; set; }
         public DateOnly? LastReplacementDate { get; set; }
         public int? CustomKmInterval { get; set; }

@@ -6,6 +6,8 @@ namespace Verendar.Vehicle.Application.Dtos
     {
         public Guid Id { get; set; }
         public Guid? PartCategoryId { get; set; }
+        public Guid? GarageProductId { get; set; }
+        public Guid? GarageServiceId { get; set; }
         public string? PartCategoryName { get; set; }
         public string ItemName { get; set; } = string.Empty;
         public bool UpdatesTracking { get; set; }

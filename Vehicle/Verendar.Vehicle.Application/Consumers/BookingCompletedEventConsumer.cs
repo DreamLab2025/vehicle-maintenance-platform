@@ -61,6 +61,8 @@ namespace Verendar.Vehicle.Application.Consumers
                     proposal.Items.Add(new MaintenanceProposalItem
                     {
                         PartCategoryId = lineItem.PartCategoryId,
+                        GarageProductId = lineItem.GarageProductId,
+                        GarageServiceId = lineItem.GarageServiceId,
                         ItemName = lineItem.ItemName,
                         UpdatesTracking = lineItem.UpdatesTracking,
                         RecommendedKmInterval = lineItem.RecommendedKmInterval,

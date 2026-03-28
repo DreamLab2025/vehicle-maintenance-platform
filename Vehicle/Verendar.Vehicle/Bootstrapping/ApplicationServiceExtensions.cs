@@ -70,7 +70,6 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IPartTrackingService, PartTrackingService>();
             builder.Services.AddScoped<IDefaultScheduleService, DefaultScheduleService>();
             builder.Services.AddScoped<IPartCategoryService, PartCategoryService>();
-            builder.Services.AddScoped<IPartProductService, PartProductService>();
             builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
             builder.Services.AddScoped<IMaintenanceExportService, MaintenanceExportService>();
             builder.Services.AddScoped<IMaintenanceProposalService, MaintenanceProposalService>();
@@ -121,7 +120,6 @@ namespace Verendar.Vehicle.Bootstrapping
             app.MapModelScheduleApi();
             app.MapMaintenanceRecordApi();
             app.MapPartCategoryApi();
-            app.MapPartProductApi();
             app.MapMaintenanceProposalApi();
             app.MapInternalVehicleApi();
             app.MapInternalGarageVehicleApi();

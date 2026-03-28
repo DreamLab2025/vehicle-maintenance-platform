@@ -3,7 +3,8 @@ namespace Verendar.Vehicle.Application.Dtos
     public class RecordItemInput
     {
         public string PartCategorySlug { get; set; } = string.Empty;
-        public Guid? PartProductId { get; set; }
+        /// <summary>Tham chiếu sản phẩm garage (cross-service, không FK trong Vehicle DB).</summary>
+        public Guid? GarageProductId { get; set; }
         public string? CustomPartName { get; set; }
         public int? CustomKmInterval { get; set; }
         public int? CustomMonthsInterval { get; set; }
@@ -44,8 +45,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public Guid Id { get; set; }
         public Guid PartCategoryId { get; set; }
         public string PartCategorySlug { get; set; } = null!;
-        public Guid? PartProductId { get; set; }
-        public string? PartProductName { get; set; }
+        public Guid? GarageProductId { get; set; }
         public string? CustomPartName { get; set; }
         public string? InstanceIdentifier { get; set; }
         public decimal Price { get; set; }
