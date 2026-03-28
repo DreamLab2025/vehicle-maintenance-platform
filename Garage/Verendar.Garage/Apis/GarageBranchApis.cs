@@ -105,6 +105,21 @@ public static class GarageBranchApis
 
     public static RouteGroupBuilder MapGarageBranchMapRoutes(this RouteGroupBuilder group)
     {
+        group.MapGet("/me", GetMyBranch)
+            .WithName("GetMyGarageBranch")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Lấy chi nhánh gắn với tài khoản (quản lý/thợ đang hoạt động)";
+                return operation;
+            })
+            .RequireAuthorization(policy => policy.RequireRole(
+                nameof(RoleType.GarageManager),
+                nameof(RoleType.Mechanic)))
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<GarageBranchResponse>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
+
         group.MapGet("/maps", SearchBranchesOnMap)
             .WithName("SearchGarageBranchesOnMap")
             .WithOpenApi(operation =>
@@ -159,6 +174,19 @@ public static class GarageBranchApis
         CancellationToken ct)
     {
         var result = await branchService.UpdateBranchStatusAsync(garageId, branchId, currentUserService.UserId, request, ct);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> GetMyBranch(
+        ICurrentUserService currentUserService,
+        IGarageBranchService branchService,
+        CancellationToken ct)
+    {
+        var userId = currentUserService.UserId;
+        if (userId == Guid.Empty)
+            return Results.Unauthorized();
+
+        var result = await branchService.GetMyBranchAsync(userId, ct);
         return result.ToHttpResult();
     }
 
