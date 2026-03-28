@@ -23,9 +23,6 @@ namespace Verendar.Notification.Domain.Entities
 
         public NotificationStatus Status { get; set; } = NotificationStatus.Pending;
 
-        [Column(TypeName = "jsonb")]
-        public string? MetadataJson { get; set; }
-
         [MaxLength(50)]
         public string? EntityType { get; set; }
 
@@ -36,8 +33,6 @@ namespace Verendar.Notification.Domain.Entities
 
         public bool IsRead { get; set; } = false;
         public DateTime? ReadAt { get; set; }
-
-        public DateTime? ExpiresAt { get; set; }
 
         public ICollection<NotificationDelivery> Deliveries { get; set; } = new List<NotificationDelivery>();
     }

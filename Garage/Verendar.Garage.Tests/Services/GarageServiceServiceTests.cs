@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Verendar.Common.Shared;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Domain.Entities;
@@ -24,7 +25,7 @@ public class GarageServiceServiceTests
         var sut = new GarageServiceService(NullLogger<GarageServiceService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetServicesByBranchAsync(branchId, false, new PaginationRequest());
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, $"Không tìm thấy chi nhánh với id '{branchId}'.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
     }
 
     [Fact]
@@ -63,7 +64,7 @@ public class GarageServiceServiceTests
             ServiceCategoryId = categoryId
         });
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, "Tạo dịch vụ thành công");
+        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.OfferedServices.CreateSuccess);
     }
 
     [Fact]
@@ -77,7 +78,7 @@ public class GarageServiceServiceTests
         var sut = new GarageServiceService(NullLogger<GarageServiceService>.Instance, m.UnitOfWork.Object);
         var result = await sut.GetServiceByIdAsync(id);
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, $"Không tìm thấy dịch vụ với id '{id}'.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.OfferedServices.NotFoundByIdFormat, id));
     }
 
     [Fact]
@@ -110,7 +111,7 @@ public class GarageServiceServiceTests
         var sut = new GarageServiceService(NullLogger<GarageServiceService>.Instance, m.UnitOfWork.Object);
         var result = await sut.UpdateServiceStatusAsync(id, ownerId, new UpdateGarageServiceStatusRequest { Status = ProductStatus.Inactive });
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật trạng thái dịch vụ thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.OfferedServices.UpdateStatusSuccess);
         service.Status.Should().Be(ProductStatus.Inactive);
     }
 
@@ -144,6 +145,6 @@ public class GarageServiceServiceTests
 
         result.IsSuccess.Should().BeFalse();
         result.StatusCode.Should().Be(403);
-        result.Message.Should().Be("Bạn không có quyền quản lý dịch vụ của chi nhánh này.");
+        result.Message.Should().Be(EndpointMessages.BranchManager.ForbiddenManageServices);
     }
 }

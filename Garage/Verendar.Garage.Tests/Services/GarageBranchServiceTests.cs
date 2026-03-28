@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Verendar.Common.Shared;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
@@ -57,7 +58,7 @@ public class GarageBranchServiceTests
         GarageServiceResponseAssert.AssertFailureEnvelope(
             result,
             404,
-            $"Không tìm thấy garage với id '{garageId}'.");
+            string.Format(EndpointMessages.GarageBranches.GarageNotFoundByIdFormat, garageId));
         m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         geo.Verify(l => l.GeocodeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -94,7 +95,7 @@ public class GarageBranchServiceTests
         GarageServiceResponseAssert.AssertFailureEnvelope(
             result,
             403,
-            "Bạn không có quyền thêm chi nhánh cho garage này.");
+            EndpointMessages.GarageBranches.ForbiddenAddBranch);
         m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         geo.Verify(l => l.GeocodeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -139,7 +140,7 @@ public class GarageBranchServiceTests
 
         var result = await sut.CreateBranchAsync(garageId, ownerId, CreateValidRequest());
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, "Tạo chi nhánh thành công");
+        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.GarageBranches.CreateSuccess);
         result.Data.Should().NotBeNull();
         result.Data!.Latitude.Should().Be(10.762622);
         result.Data.Longitude.Should().Be(106.660172);
@@ -184,7 +185,7 @@ public class GarageBranchServiceTests
 
         var result = await sut.CreateBranchAsync(garageId, ownerId, CreateValidRequest());
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, "Tạo chi nhánh thành công");
+        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.GarageBranches.CreateSuccess);
         result.Data.Should().NotBeNull();
         result.Data!.Latitude.Should().Be(0);
         result.Data.Longitude.Should().Be(0);
@@ -220,7 +221,7 @@ public class GarageBranchServiceTests
 
         var result = await sut.GetBranchesAsync(garageId, new PaginationRequest(), CancellationToken.None);
 
-        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, "Lấy danh sách chi nhánh thành công", 1, 1);
+        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.GarageBranches.ListSuccess, 1, 1);
     }
 
     [Fact]
@@ -251,7 +252,7 @@ public class GarageBranchServiceTests
 
         var result = await sut.DeleteBranchAsync(garageId, branchId, ownerId, CancellationToken.None);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Xóa chi nhánh thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.GarageBranches.DeleteSuccess);
         branch.DeletedAt.Should().NotBeNull();
     }
 
@@ -283,7 +284,7 @@ public class GarageBranchServiceTests
 
         var result = await sut.GetBranchByIdAsync(garageId, branchId, CancellationToken.None);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Lấy thông tin chi nhánh thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.GarageBranches.GetDetailSuccess);
         result.Data!.MapLinks.Should().NotBeNull();
     }
 
@@ -318,7 +319,7 @@ public class GarageBranchServiceTests
 
         var result = await sut.UpdateBranchStatusAsync(garageId, branchId, ownerId, new UpdateBranchStatusRequest { Status = BranchStatus.Inactive }, CancellationToken.None);
 
-        GarageServiceResponseAssert.AssertSuccessEnvelope(result, "Cập nhật trạng thái chi nhánh thành công");
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.GarageBranches.UpdateStatusSuccess);
         branch.Status.Should().Be(BranchStatus.Inactive);
     }
 
@@ -338,7 +339,7 @@ public class GarageBranchServiceTests
 
         var result = await sut.GetBranchesForMapAsync(new BranchMapSearchRequest { Address = "abc" }, CancellationToken.None);
 
-        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, "Không tìm thấy địa chỉ", 0, 0);
+        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.GarageBranches.GeocodeAddressNotFound, 0, 0);
     }
 
     [Fact]
@@ -366,6 +367,6 @@ public class GarageBranchServiceTests
 
         var result = await sut.GetBranchesForMapAsync(new BranchMapSearchRequest { Lat = 10, Lng = 106, RadiusKm = 10 }, CancellationToken.None);
 
-        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, "Lấy danh sách chi nhánh thành công", 1, 1);
+        GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.GarageBranches.ListSuccess, 1, 1);
     }
 }

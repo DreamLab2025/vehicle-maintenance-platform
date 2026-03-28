@@ -11,6 +11,8 @@ namespace Verendar.Vehicle.Application.Mappings
         {
             Id = item.Id,
             PartCategoryId = item.PartCategoryId,
+            GarageProductId = item.GarageProductId,
+            GarageServiceId = item.GarageServiceId,
             PartCategoryName = partCategoryName,
             ItemName = item.ItemName,
             UpdatesTracking = item.UpdatesTracking,

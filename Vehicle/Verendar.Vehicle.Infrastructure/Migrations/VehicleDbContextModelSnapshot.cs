@@ -226,6 +226,12 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("GarageProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("GarageServiceId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("ItemName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -340,6 +346,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("GarageProductId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("InstanceIdentifier")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
@@ -352,9 +361,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.Property<Guid>("PartCategoryId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("PartProductId")
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Price")
@@ -374,8 +380,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.HasIndex("MaintenanceRecordId");
 
                     b.HasIndex("PartCategoryId");
-
-                    b.HasIndex("PartProductId");
 
                     b.ToTable("MaintenanceRecordItems");
                 });
@@ -640,67 +644,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.ToTable("PartCategories");
                 });
 
-            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.PartProduct", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Brand")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("ImageUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<Guid>("PartCategoryId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int?>("RecommendedKmInterval")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("RecommendedMonthsInterval")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal?>("ReferencePrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PartCategoryId")
-                        .HasFilter("\"DeletedAt\" IS NULL");
-
-                    b.ToTable("PartProducts");
-                });
-
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.PartTracking", b =>
                 {
                     b.Property<Guid>("Id")
@@ -713,7 +656,7 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Property<Guid>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("CurrentPartProductId")
+                    b.Property<Guid?>("CurrentGarageProductId")
                         .HasColumnType("uuid");
 
                     b.Property<int?>("CustomKmInterval")
@@ -760,8 +703,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrentPartProductId");
 
                     b.HasIndex("PartCategoryId");
 
@@ -1061,15 +1002,9 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Verendar.Vehicle.Domain.Entities.PartProduct", "PartProduct")
-                        .WithMany("MaintenanceItems")
-                        .HasForeignKey("PartProductId");
-
                     b.Navigation("MaintenanceRecord");
 
                     b.Navigation("PartCategory");
-
-                    b.Navigation("PartProduct");
                 });
 
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.MaintenanceReminder", b =>
@@ -1105,23 +1040,8 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                     b.Navigation("UserVehicle");
                 });
 
-            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.PartProduct", b =>
-                {
-                    b.HasOne("Verendar.Vehicle.Domain.Entities.PartCategory", "Category")
-                        .WithMany("Products")
-                        .HasForeignKey("PartCategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-                });
-
             modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.PartTracking", b =>
                 {
-                    b.HasOne("Verendar.Vehicle.Domain.Entities.PartProduct", "CurrentPartProduct")
-                        .WithMany("PartTrackings")
-                        .HasForeignKey("CurrentPartProductId");
-
                     b.HasOne("Verendar.Vehicle.Domain.Entities.PartCategory", "PartCategory")
                         .WithMany("PartTrackings")
                         .HasForeignKey("PartCategoryId")
@@ -1133,8 +1053,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                         .HasForeignKey("UserVehicleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("CurrentPartProduct");
 
                     b.Navigation("PartCategory");
 
@@ -1200,15 +1118,6 @@ namespace Verendar.Vehicle.Infrastructure.Migrations
                 {
                     b.Navigation("DefaultSchedules");
 
-                    b.Navigation("MaintenanceItems");
-
-                    b.Navigation("PartTrackings");
-
-                    b.Navigation("Products");
-                });
-
-            modelBuilder.Entity("Verendar.Vehicle.Domain.Entities.PartProduct", b =>
-                {
                     b.Navigation("MaintenanceItems");
 
                     b.Navigation("PartTrackings");

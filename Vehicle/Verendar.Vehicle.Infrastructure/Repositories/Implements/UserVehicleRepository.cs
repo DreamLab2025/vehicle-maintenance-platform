@@ -16,8 +16,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .Include(v => v.PartTrackings)
                     .ThenInclude(pt => pt.PartCategory)
                 .Include(v => v.PartTrackings)
-                    .ThenInclude(pt => pt.CurrentPartProduct)
-                .Include(v => v.PartTrackings)
                     .ThenInclude(pt => pt.Cycles)
                 .Where(v => v.DeletedAt == null);
         }

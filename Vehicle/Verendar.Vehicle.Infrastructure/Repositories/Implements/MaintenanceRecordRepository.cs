@@ -19,8 +19,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .OrderByDescending(x => x.ServiceDate)
                 .Include(x => x.Items)
                     .ThenInclude(i => i.PartCategory)
-                .Include(x => x.Items)
-                    .ThenInclude(i => i.PartProduct)
                 .ToListAsync(cancellationToken);
         }
 
@@ -29,8 +27,6 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
             return await _dbSet
                 .Include(x => x.Items)
                     .ThenInclude(x => x.PartCategory)
-                .Include(x => x.Items)
-                    .ThenInclude(x => x.PartProduct)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 

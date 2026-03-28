@@ -53,11 +53,11 @@ namespace Verendar.Notification.Apis
                 .WithName("GetNotificationDetailForUser")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Lấy chi tiết thông báo. Với MaintenanceReminder, response có thêm maintenanceReminderFreshness (tra Vehicle) để biết phụ tùng đã cập nhật sau khi gửi.";
+                    operation.Summary = "Lấy chi tiết thông báo của người dùng hiện tại.";
                     return operation;
                 })
-                .Produces<ApiResponse<NotificationDetailDto>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<NotificationDetailDto>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<NotificationListItemDto>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<NotificationListItemDto>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapDelete("/{id:guid}", SoftDeleteNotificationById)

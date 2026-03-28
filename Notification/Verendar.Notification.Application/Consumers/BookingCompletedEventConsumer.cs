@@ -1,10 +1,8 @@
-using MassTransit;
+using Microsoft.Extensions.Options;
 using Verendar.Garage.Contracts.Events;
-using Verendar.Notification.Application.Dtos.InApp;
 using Verendar.Notification.Application.Mapping;
+using Verendar.Notification.Application.Options;
 using Verendar.Notification.Application.Services.Interfaces;
-using Verendar.Notification.Domain.Enums;
-using Verendar.Notification.Domain.Repositories.Interfaces;
 
 namespace Verendar.Notification.Application.Consumers;
 
@@ -12,59 +10,51 @@ public class BookingCompletedEventConsumer(
     ILogger<BookingCompletedEventConsumer> logger,
     IUnitOfWork unitOfWork,
     IInAppNotificationService inAppNotificationService,
-    INotificationService notificationService) : IConsumer<BookingCompletedEvent>
+    INotificationService notificationService,
+    IOptions<NotificationAppOptions> appOptions) : IConsumer<BookingCompletedEvent>
 {
-    private readonly ILogger<BookingCompletedEventConsumer> _logger = logger;
-    private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly IInAppNotificationService _inAppNotificationService = inAppNotificationService;
-    private readonly INotificationService _notificationService = notificationService;
-
     public async Task Consume(ConsumeContext<BookingCompletedEvent> context)
     {
         var message = context.Message;
         var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
+        var routes = appOptions.Value;
 
-        _logger.LogDebug(
+        logger.LogDebug(
             "Processing BookingCompleted — MessageId:{MessageId} BookingId:{BookingId} UserId:{UserId}",
             messageId, message.BookingId, message.UserId);
 
         try
         {
-            var title = "Bảo dưỡng hoàn tất";
-            var content = $"Xe của bạn vừa được bảo dưỡng tại {message.BranchName}. "
-                + "Vui lòng xác nhận để cập nhật lịch sử bảo dưỡng và vòng đời phụ tùng.";
+            var (title, content) = GarageBookingNotificationMappings.BookingCompletedCopy(message);
+            var actionPath = routes.BookingDetailRelativeUrl(message.BookingId);
 
-            var notification = message.BookingCompletedToNotificationEntity(title, content);
-            await _unitOfWork.Notifications.AddAsync(notification);
-            await _unitOfWork.NotificationDeliveries.AddAsync(
-                notification.CreateDelivery(message.UserId.ToString(), NotificationChannel.InApp));
-            await _unitOfWork.SaveChangesAsync(context.CancellationToken);
+            var notification = NotificationMappings.CreateUserNotification(
+                message.UserId,
+                title,
+                content,
+                NotificationPriority.High,
+                "Booking",
+                message.BookingId,
+                actionPath);
 
-            var metadata = new Dictionary<string, object?>
-            {
-                ["bookingId"] = message.BookingId,
-                ["userVehicleId"] = message.UserVehicleId,
-                ["entityType"] = "MaintenanceProposal"
-            };
+            await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
+                unitOfWork, notification, message.UserId, context.CancellationToken);
+            await ConsumerNotificationFlow.PushInAppAndMarkDeliveredAsync(
+                inAppNotificationService,
+                notificationService,
+                message.UserId,
+                title,
+                content,
+                notification.Id,
+                context.CancellationToken);
 
-            var inAppPayload = new InAppNotificationPayload
-            {
-                Title = title,
-                Message = content,
-                Metadata = metadata
-            };
-
-            await _inAppNotificationService.SendAsync(message.UserId, inAppPayload, context.CancellationToken);
-            await _notificationService.MarkInAppDeliveredAsync(
-                notification.Id, message.UserId, inAppPayload.Metadata, context.CancellationToken);
-
-            _logger.LogInformation(
+            logger.LogInformation(
                 "BookingCompleted notification sent — MessageId:{MessageId} BookingId:{BookingId} NotificationId:{NotificationId}",
                 messageId, message.BookingId, notification.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex,
+            logger.LogError(ex,
                 "Error processing BookingCompleted — MessageId:{MessageId} BookingId:{BookingId}",
                 messageId, message.BookingId);
         }

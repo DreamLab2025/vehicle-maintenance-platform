@@ -5,7 +5,8 @@ namespace Verendar.Garage.Infrastructure.Data.Seeders;
 
 public static class GarageBranchDevSeeder
 {
-    public static readonly Guid DevOwnerUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    /// <summary>Phải trùng <c>GarageOwnerDevUserSeeder.UserId</c> (Identity) — <c>garage@gmail.com</c>.</summary>
+    public static readonly Guid DevOwnerUserId = Guid.Parse("11111111-1111-1111-1111-111111111222");
 
     public static readonly Guid DevGarageId = Guid.Parse("22222222-2222-2222-2222-222222222201");
     public static readonly Guid DevBranchHoanKiemId = Guid.Parse("22222222-2222-2222-2222-222222222211");
@@ -13,21 +14,31 @@ public static class GarageBranchDevSeeder
 
     public static readonly Guid DevProductHoanKiemOilFilterId = Guid.Parse("55555555-5555-5555-5555-555555555501");
     public static readonly Guid DevProductBaDinhBrakePadId = Guid.Parse("55555555-5555-5555-5555-555555555502");
+    public static readonly Guid DevProductHoanKiemBatteryId = Guid.Parse("55555555-5555-5555-5555-555555555503");
+    public static readonly Guid DevProductHoanKiemAirFilterId = Guid.Parse("55555555-5555-5555-5555-555555555504");
+    public static readonly Guid DevProductBaDinhTireId = Guid.Parse("55555555-5555-5555-5555-555555555505");
+    public static readonly Guid DevProductBaDinhSparkPlugId = Guid.Parse("55555555-5555-5555-5555-555555555506");
 
-    public static readonly Guid DevPartCategoryOilFilterId = Guid.Parse("66666666-6666-6666-6666-666666666601");
-    public static readonly Guid DevPartCategoryBrakePadId = Guid.Parse("66666666-6666-6666-6666-666666666602");
+    public static readonly Guid DevPartCategoryOilFilterId = Guid.Parse("c0000009-0000-0000-0000-000000000009");
+    public static readonly Guid DevPartCategoryBrakePadId = Guid.Parse("c0000004-0000-0000-0000-000000000004");
+    public static readonly Guid DevPartCategoryBatteryId = Guid.Parse("c0000003-0000-0000-0000-000000000003");
+    public static readonly Guid DevPartCategoryAirFilterId = Guid.Parse("c0000006-0000-0000-0000-000000000006");
+    public static readonly Guid DevPartCategoryTireId = Guid.Parse("c0000002-0000-0000-0000-000000000002");
+    public static readonly Guid DevPartCategorySparkPlugId = Guid.Parse("c0000005-0000-0000-0000-000000000005");
 
-    // ServiceCategory (global catalog)
     public static readonly Guid DevServiceCategoryMaintenanceId = Guid.Parse("77777777-7777-7777-7777-777777777701");
     public static readonly Guid DevServiceCategoryRepairId = Guid.Parse("77777777-7777-7777-7777-777777777702");
+    public static readonly Guid DevServiceCategoryElectricalId = Guid.Parse("77777777-7777-7777-7777-777777777703");
 
-    // GarageService per branch
     public static readonly Guid DevServiceHoanKiemOilLaborId = Guid.Parse("88888888-8888-8888-8888-888888888801");
     public static readonly Guid DevServiceHoanKiemInspectionId = Guid.Parse("88888888-8888-8888-8888-888888888802");
+    public static readonly Guid DevServiceHoanKiemBatteryLaborId = Guid.Parse("88888888-8888-8888-8888-888888888803");
+    public static readonly Guid DevServiceHoanKiemAirFilterLaborId = Guid.Parse("88888888-8888-8888-8888-888888888804");
     public static readonly Guid DevServiceBaDinhBrakeLaborId = Guid.Parse("88888888-8888-8888-8888-888888888811");
     public static readonly Guid DevServiceBaDinhBrakeCheckId = Guid.Parse("88888888-8888-8888-8888-888888888812");
+    public static readonly Guid DevServiceBaDinhTireLaborId = Guid.Parse("88888888-8888-8888-8888-888888888813");
+    public static readonly Guid DevServiceBaDinhSparkLaborId = Guid.Parse("88888888-8888-8888-8888-888888888814");
 
-    // GarageBundle (combo)
     public static readonly Guid DevBundleHoanKiemComboId = Guid.Parse("99999999-9999-9999-9999-999999999901");
     public static readonly Guid DevBundleBaDinhComboId = Guid.Parse("99999999-9999-9999-9999-999999999902");
 
@@ -36,7 +47,6 @@ public static class GarageBranchDevSeeder
     public static readonly Guid DevBundleItemBaDinhProductId = Guid.Parse("99999999-9999-9999-9999-999999999921");
     public static readonly Guid DevBundleItemBaDinhServiceId = Guid.Parse("99999999-9999-9999-9999-999999999922");
 
-    // Member row ids (GarageMembers.Id)
     public static readonly Guid DevMemberHoanKiemManagerId = Guid.Parse("44444444-4444-4444-4444-444444444401");
     public static readonly Guid DevMemberHoanKiemMechanic1Id = Guid.Parse("44444444-4444-4444-4444-444444444402");
     public static readonly Guid DevMemberHoanKiemMechanic2Id = Guid.Parse("44444444-4444-4444-4444-444444444403");
@@ -44,7 +54,8 @@ public static class GarageBranchDevSeeder
     public static readonly Guid DevMemberBaDinhMechanic1Id = Guid.Parse("44444444-4444-4444-4444-444444444412");
     public static readonly Guid DevMemberBaDinhMechanic2Id = Guid.Parse("44444444-4444-4444-4444-444444444413");
 
-    /// <summary>UserId — dev: seed tương ứng trong Identity (<c>GarageDevMemberUserSeeder</c>).</summary>
+    public static readonly Guid DevGarageStatusHistoryActivationId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa01");
+
     public static readonly Guid DevUserHoanKiemManager = Guid.Parse("33333333-3333-3333-3333-333333333301");
     public static readonly Guid DevUserHoanKiemMechanic1 = Guid.Parse("33333333-3333-3333-3333-333333333302");
     public static readonly Guid DevUserHoanKiemMechanic2 = Guid.Parse("33333333-3333-3333-3333-333333333303");
@@ -76,23 +87,21 @@ public static class GarageBranchDevSeeder
                 .IgnoreQueryFilters()
                 .AnyAsync(b => b.Id == DevBundleHoanKiemComboId, cancellationToken);
 
-            if (membersPresent && productsPresent && categoriesPresent && servicesPresent && bundlesPresent)
+            if (!(membersPresent && productsPresent && categoriesPresent && servicesPresent && bundlesPresent))
             {
-                logger?.LogDebug(
-                    "Garage dev seed skipped: garage {GarageId} and full catalog already exist",
-                    DevGarageId);
-                return;
+                await SeedMissingDataAsync(
+                    db,
+                    logger,
+                    seedCategories: !categoriesPresent,
+                    seedServices: !servicesPresent,
+                    seedMembers: !membersPresent,
+                    seedProducts: !productsPresent,
+                    seedBundles: !bundlesPresent,
+                    cancellationToken);
             }
 
-            await SeedMissingDataAsync(
-                db,
-                logger,
-                seedCategories: !categoriesPresent,
-                seedServices: !servicesPresent,
-                seedMembers: !membersPresent,
-                seedProducts: !productsPresent,
-                seedBundles: !bundlesPresent,
-                cancellationToken);
+            await EnsureCatalogExpansionAndPartCategoryAlignmentAsync(db, logger, cancellationToken);
+            await EnsureGarageStatusHistoryAsync(db, logger, cancellationToken);
             return;
         }
 
@@ -107,7 +116,7 @@ public static class GarageBranchDevSeeder
             ShortName = "Demo",
             Slug = "garage-demo-verendar",
             TaxCode = "0123456789",
-            LogoUrl = null,
+            LogoUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/ENGINE-OIL.png",
             Status = GarageStatus.Active,
             CreatedAt = now,
             CreatedBy = DevOwnerUserId
@@ -120,7 +129,7 @@ public static class GarageBranchDevSeeder
             Name = "Chi nhánh Hoàn Kiếm",
             Slug = "chi-nhanh-hoan-kiem-demo",
             Description = "Chi nhánh trung tâm — sửa chữa & bảo dưỡng ô tô.",
-            CoverImageUrl = null,
+            CoverImageUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/BRAKE-PAD.png",
             Address = new Address
             {
                 ProvinceCode = "01",
@@ -132,7 +141,7 @@ public static class GarageBranchDevSeeder
             Longitude = 105.8542,
             WorkingHours = hours,
             PhoneNumber = "0901234567",
-            TaxCode = null,
+            TaxCode = "0312345678",
             Status = BranchStatus.Active,
             CreatedAt = now,
             CreatedBy = DevOwnerUserId
@@ -145,7 +154,7 @@ public static class GarageBranchDevSeeder
             Name = "Chi nhánh Ba Đình",
             Slug = "chi-nhanh-ba-dinh-demo",
             Description = "Chi nhánh phụ — dịch vụ nhanh & đặt lịch online.",
-            CoverImageUrl = null,
+            CoverImageUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/TIRE.png",
             Address = new Address
             {
                 ProvinceCode = "01",
@@ -157,7 +166,7 @@ public static class GarageBranchDevSeeder
             Longitude = 105.8146,
             WorkingHours = hours,
             PhoneNumber = "0907654321",
-            TaxCode = null,
+            TaxCode = "0312345679",
             Status = BranchStatus.Active,
             CreatedAt = now,
             CreatedBy = DevOwnerUserId
@@ -168,6 +177,7 @@ public static class GarageBranchDevSeeder
         var members = BuildDevMembers(now);
         var products = BuildDevProducts(now);
         var bundles = BuildDevBundles(now);
+        var statusHistory = BuildGarageStatusHistories(now);
 
         db.ServiceCategories.AddRange(categories);
         db.Garages.Add(garage);
@@ -176,10 +186,11 @@ public static class GarageBranchDevSeeder
         db.GarageServices.AddRange(services);
         db.GarageProducts.AddRange(products);
         db.GarageBundles.AddRange(bundles);
+        db.GarageStatusHistories.AddRange(statusHistory);
         await db.SaveChangesAsync(cancellationToken);
 
         logger?.LogInformation(
-            "Seeded dev garage {GarageId}, branches {Branch1}/{Branch2}, {MemberCount} members, {ProductCount} products, {ServiceCount} services, {BundleCount} bundles (owner {OwnerId}).",
+            "Seeded dev garage {GarageId}, branches {Branch1}/{Branch2}, {MemberCount} members, {ProductCount} products, {ServiceCount} services, {BundleCount} bundles, status history (owner {OwnerId}).",
             DevGarageId,
             DevBranchHoanKiemId,
             DevBranchBaDinhId,
@@ -188,6 +199,120 @@ public static class GarageBranchDevSeeder
             services.Length,
             bundles.Length,
             DevOwnerUserId);
+    }
+
+    private static async Task EnsureExpandedLaborServicesTrackedAsync(
+        GarageDbContext db,
+        DateTime nowUtc,
+        CancellationToken cancellationToken)
+    {
+        var hasElectrical = await db.ServiceCategories
+            .IgnoreQueryFilters()
+            .AnyAsync(c => c.Id == DevServiceCategoryElectricalId, cancellationToken);
+        if (!hasElectrical)
+            db.ServiceCategories.Add(BuildElectricalServiceCategory(nowUtc));
+
+        foreach (var svc in BuildExpandedServicesOnly(nowUtc))
+        {
+            if (await db.GarageServices.IgnoreQueryFilters().AnyAsync(s => s.Id == svc.Id, cancellationToken))
+                continue;
+            db.GarageServices.Add(svc);
+        }
+    }
+
+    private static async Task EnsureCatalogExpansionAndPartCategoryAlignmentAsync(
+        GarageDbContext db,
+        ILogger? logger,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var added = 0;
+
+        if (!await db.ServiceCategories
+                .IgnoreQueryFilters()
+                .AnyAsync(c => c.Id == DevServiceCategoryElectricalId, cancellationToken))
+        {
+            db.ServiceCategories.Add(BuildElectricalServiceCategory(now));
+            added++;
+        }
+
+        foreach (var svc in BuildExpandedServicesOnly(now))
+        {
+            if (await db.GarageServices.IgnoreQueryFilters().AnyAsync(s => s.Id == svc.Id, cancellationToken))
+                continue;
+            db.GarageServices.Add(svc);
+            added++;
+        }
+
+        foreach (var prd in BuildExpandedProductsOnly(now))
+        {
+            if (await db.GarageProducts.IgnoreQueryFilters().AnyAsync(p => p.Id == prd.Id, cancellationToken))
+                continue;
+            db.GarageProducts.Add(prd);
+            added++;
+        }
+
+        await AlignLegacyProductPartCategoriesAsync(db, cancellationToken);
+
+        if (added > 0)
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            logger?.LogInformation("Expanded garage dev catalog ({Added} new rows) for garage {GarageId}", added, DevGarageId);
+        }
+    }
+
+    private static async Task AlignLegacyProductPartCategoriesAsync(GarageDbContext db, CancellationToken cancellationToken)
+    {
+        var oil = await db.GarageProducts.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.Id == DevProductHoanKiemOilFilterId, cancellationToken);
+        if (oil != null && oil.PartCategoryId != DevPartCategoryOilFilterId)
+            oil.PartCategoryId = DevPartCategoryOilFilterId;
+
+        var brake = await db.GarageProducts.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.Id == DevProductBaDinhBrakePadId, cancellationToken);
+        if (brake != null && brake.PartCategoryId != DevPartCategoryBrakePadId)
+            brake.PartCategoryId = DevPartCategoryBrakePadId;
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private static async Task EnsureGarageStatusHistoryAsync(
+        GarageDbContext db,
+        ILogger? logger,
+        CancellationToken cancellationToken)
+    {
+        if (await db.GarageStatusHistories
+                .IgnoreQueryFilters()
+                .AnyAsync(h => h.Id == DevGarageStatusHistoryActivationId, cancellationToken))
+            return;
+
+        if (!await db.Garages.IgnoreQueryFilters().AnyAsync(g => g.Id == DevGarageId, cancellationToken))
+            return;
+
+        var now = DateTime.UtcNow;
+        db.GarageStatusHistories.Add(BuildGarageStatusHistories(now)[0]);
+        await db.SaveChangesAsync(cancellationToken);
+        logger?.LogInformation("Seeded GarageStatusHistory (activation) for garage {GarageId}", DevGarageId);
+    }
+
+    private static GarageStatusHistory[] BuildGarageStatusHistories(DateTime nowUtc)
+    {
+        var changedAt = nowUtc.AddMonths(-11);
+        return
+        [
+            new GarageStatusHistory
+            {
+                Id = DevGarageStatusHistoryActivationId,
+                GarageId = DevGarageId,
+                FromStatus = GarageStatus.Pending,
+                ToStatus = GarageStatus.Active,
+                ChangedByUserId = DevOwnerUserId,
+                Reason = "Duyệt hồ sơ đăng ký garage (seed demo).",
+                ChangedAt = changedAt,
+                CreatedAt = changedAt,
+                CreatedBy = DevOwnerUserId
+            }
+        ];
     }
 
     private static async Task SeedMissingDataAsync(
@@ -201,8 +326,8 @@ public static class GarageBranchDevSeeder
         CancellationToken cancellationToken)
     {
         var branchOk = await db.GarageBranches
-            .IgnoreQueryFilters()
-            .AnyAsync(b => b.Id == DevBranchHoanKiemId && b.GarageId == DevGarageId, cancellationToken)
+                .IgnoreQueryFilters()
+                .AnyAsync(b => b.Id == DevBranchHoanKiemId && b.GarageId == DevGarageId, cancellationToken)
             && await db.GarageBranches
                 .IgnoreQueryFilters()
                 .AnyAsync(b => b.Id == DevBranchBaDinhId && b.GarageId == DevGarageId, cancellationToken);
@@ -229,24 +354,16 @@ public static class GarageBranchDevSeeder
             .AnyAsync(p => p.Id == DevProductHoanKiemOilFilterId, cancellationToken);
 
         if (seedBundles && !productsExist)
-        {
             seedProducts = true;
-        }
 
         if (seedBundles && !servicesExist)
-        {
             seedServices = true;
-        }
 
         if (seedProducts && !servicesExist)
-        {
             seedServices = true;
-        }
 
         if (seedServices && !categoriesExist)
-        {
             seedCategories = true;
-        }
 
         var bundlesExist = await db.GarageBundles
             .IgnoreQueryFilters()
@@ -260,29 +377,32 @@ public static class GarageBranchDevSeeder
         var bundles = seedBundles && !bundlesExist ? BuildDevBundles(now) : [];
 
         if (categories.Length > 0)
-        {
             db.ServiceCategories.AddRange(categories);
-        }
 
         if (services.Length > 0)
         {
+            var hasElectrical = await db.ServiceCategories
+                .IgnoreQueryFilters()
+                .AnyAsync(c => c.Id == DevServiceCategoryElectricalId, cancellationToken);
+            if (!hasElectrical)
+                db.ServiceCategories.Add(BuildElectricalServiceCategory(now));
+
             db.GarageServices.AddRange(services);
         }
 
         if (members.Length > 0)
-        {
             db.GarageMembers.AddRange(members);
-        }
 
         if (products.Length > 0)
         {
+            if (services.Length == 0)
+                await EnsureExpandedLaborServicesTrackedAsync(db, now, cancellationToken);
+
             db.GarageProducts.AddRange(products);
         }
 
         if (bundles.Length > 0)
-        {
             db.GarageBundles.AddRange(bundles);
-        }
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -314,18 +434,24 @@ public static class GarageBranchDevSeeder
 
     private static GarageProduct[] BuildDevProducts(DateTime nowUtc) =>
     [
+        ..BuildCoreProducts(nowUtc),
+        ..BuildExpandedProductsOnly(nowUtc),
+    ];
+
+    private static GarageProduct[] BuildCoreProducts(DateTime nowUtc) =>
+    [
         new()
         {
             Id = DevProductHoanKiemOilFilterId,
             GarageBranchId = DevBranchHoanKiemId,
             PartCategoryId = DevPartCategoryOilFilterId,
-            Name = "Lọc dầu động cơ - Toyota",
-            Description = "Phụ tùng lọc dầu dùng để test tracking theo PartCategoryId.",
-            MaterialPrice = new Money { Amount = 180000, Currency = "VND" },
+            Name = "Lọc nhớt động cơ (OEM-style)",
+            Description = "Lọc nhớt — PartCategoryId trùng Vehicle catalog (OIL-FILTER).",
+            MaterialPrice = new Money { Amount = 180_000, Currency = "VND" },
             EstimatedDurationMinutes = 30,
-            ImageUrl = null,
+            ImageUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/OIL-FILTER.png",
             CompatibleVehicleTypes = "Sedan,SUV",
-            ManufacturerKmInterval = 10000,
+            ManufacturerKmInterval = 10_000,
             ManufacturerMonthInterval = 6,
             Status = ProductStatus.Active,
             InstallationServiceId = DevServiceHoanKiemOilLaborId,
@@ -337,20 +463,109 @@ public static class GarageBranchDevSeeder
             Id = DevProductBaDinhBrakePadId,
             GarageBranchId = DevBranchBaDinhId,
             PartCategoryId = DevPartCategoryBrakePadId,
-            Name = "Má phanh trước - Honda",
-            Description = "Phụ tùng má phanh để test luồng theo dõi bảo dưỡng.",
-            MaterialPrice = new Money { Amount = 650000, Currency = "VND" },
+            Name = "Má phanh trước — Honda/Toyota phổ biến",
+            Description = "Má phanh — PartCategoryId trùng Vehicle (BRAKE-PAD).",
+            MaterialPrice = new Money { Amount = 650_000, Currency = "VND" },
             EstimatedDurationMinutes = 45,
-            ImageUrl = null,
+            ImageUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/BRAKE-PAD.png",
             CompatibleVehicleTypes = "Sedan,CUV",
-            ManufacturerKmInterval = 40000,
+            ManufacturerKmInterval = 40_000,
             ManufacturerMonthInterval = 24,
             Status = ProductStatus.Active,
             InstallationServiceId = DevServiceBaDinhBrakeLaborId,
             CreatedAt = nowUtc,
             CreatedBy = DevOwnerUserId
-        }
+        },
     ];
+
+    private static GarageProduct[] BuildExpandedProductsOnly(DateTime nowUtc) =>
+    [
+        new()
+        {
+            Id = DevProductHoanKiemBatteryId,
+            GarageBranchId = DevBranchHoanKiemId,
+            PartCategoryId = DevPartCategoryBatteryId,
+            Name = "Ắc quy MF 60Ah",
+            Description = "Ắc quy khô — Vehicle PartCategory BATTERY.",
+            MaterialPrice = new Money { Amount = 1_850_000, Currency = "VND" },
+            EstimatedDurationMinutes = 40,
+            ImageUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/BATTERY.png",
+            CompatibleVehicleTypes = "Sedan,SUV",
+            ManufacturerKmInterval = null,
+            ManufacturerMonthInterval = 24,
+            Status = ProductStatus.Active,
+            InstallationServiceId = DevServiceHoanKiemBatteryLaborId,
+            CreatedAt = nowUtc,
+            CreatedBy = DevOwnerUserId
+        },
+        new()
+        {
+            Id = DevProductHoanKiemAirFilterId,
+            GarageBranchId = DevBranchHoanKiemId,
+            PartCategoryId = DevPartCategoryAirFilterId,
+            Name = "Lọc gió động cơ",
+            Description = "Lọc gió — Vehicle PartCategory AIR-FILTER.",
+            MaterialPrice = new Money { Amount = 220_000, Currency = "VND" },
+            EstimatedDurationMinutes = 25,
+            ImageUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/AIR-FILTER.png",
+            CompatibleVehicleTypes = "Sedan,SUV,CUV",
+            ManufacturerKmInterval = 15_000,
+            ManufacturerMonthInterval = 12,
+            Status = ProductStatus.Active,
+            InstallationServiceId = DevServiceHoanKiemAirFilterLaborId,
+            CreatedAt = nowUtc,
+            CreatedBy = DevOwnerUserId
+        },
+        new()
+        {
+            Id = DevProductBaDinhTireId,
+            GarageBranchId = DevBranchBaDinhId,
+            PartCategoryId = DevPartCategoryTireId,
+            Name = "Lốp 205/55R16 (1 quả)",
+            Description = "Lốp xe — Vehicle PartCategory TIRE.",
+            MaterialPrice = new Money { Amount = 2_400_000, Currency = "VND" },
+            EstimatedDurationMinutes = 50,
+            ImageUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/TIRE.png",
+            CompatibleVehicleTypes = "Sedan",
+            ManufacturerKmInterval = 50_000,
+            ManufacturerMonthInterval = 48,
+            Status = ProductStatus.Active,
+            InstallationServiceId = DevServiceBaDinhTireLaborId,
+            CreatedAt = nowUtc,
+            CreatedBy = DevOwnerUserId
+        },
+        new()
+        {
+            Id = DevProductBaDinhSparkPlugId,
+            GarageBranchId = DevBranchBaDinhId,
+            PartCategoryId = DevPartCategorySparkPlugId,
+            Name = "Bugi iridium (bộ 4)",
+            Description = "Bugi — Vehicle PartCategory SPARK-PLUG.",
+            MaterialPrice = new Money { Amount = 890_000, Currency = "VND" },
+            EstimatedDurationMinutes = 35,
+            ImageUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/SPARK-PLUG.png",
+            CompatibleVehicleTypes = "Sedan,SUV",
+            ManufacturerKmInterval = 40_000,
+            ManufacturerMonthInterval = 24,
+            Status = ProductStatus.Active,
+            InstallationServiceId = DevServiceBaDinhSparkLaborId,
+            CreatedAt = nowUtc,
+            CreatedBy = DevOwnerUserId
+        },
+    ];
+
+    private static ServiceCategory BuildElectricalServiceCategory(DateTime nowUtc) =>
+        new()
+        {
+            Id = DevServiceCategoryElectricalId,
+            Name = "Điện & ắc quy",
+            Slug = "dev-dien-ac-quy",
+            Description = "Ắc quy, điện thân xe (seed dev).",
+            IconUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/BATTERY.png",
+            DisplayOrder = 3,
+            CreatedAt = nowUtc,
+            CreatedBy = DevOwnerUserId
+        };
 
     private static ServiceCategory[] BuildDevServiceCategories(DateTime nowUtc) =>
     [
@@ -360,7 +575,7 @@ public static class GarageBranchDevSeeder
             Name = "Bảo dưỡng định kỳ",
             Slug = "dev-bao-duong-dinh-ky",
             Description = "Danh mục seed dev",
-            IconUrl = null,
+            IconUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/ENGINE-OIL.png",
             DisplayOrder = 1,
             CreatedAt = nowUtc,
             CreatedBy = DevOwnerUserId
@@ -371,14 +586,21 @@ public static class GarageBranchDevSeeder
             Name = "Sửa chữa",
             Slug = "dev-sua-chua",
             Description = "Danh mục seed dev",
-            IconUrl = null,
+            IconUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/BRAKE-PAD.png",
             DisplayOrder = 2,
             CreatedAt = nowUtc,
             CreatedBy = DevOwnerUserId
-        }
+        },
+        BuildElectricalServiceCategory(nowUtc),
     ];
 
     private static GarageService[] BuildDevServices(DateTime nowUtc) =>
+    [
+        ..BuildCoreServices(nowUtc),
+        ..BuildExpandedServicesOnly(nowUtc),
+    ];
+
+    private static GarageService[] BuildCoreServices(DateTime nowUtc) =>
     [
         new()
         {
@@ -388,7 +610,7 @@ public static class GarageBranchDevSeeder
             Name = "Công tháo lắp — thay lọc dầu",
             Description = "Nhân công thay lọc dầu động cơ.",
             ImageUrl = null,
-            LaborPrice = new Money { Amount = 150000, Currency = "VND" },
+            LaborPrice = new Money { Amount = 150_000, Currency = "VND" },
             EstimatedDurationMinutes = 30,
             Status = ProductStatus.Active,
             CreatedAt = nowUtc,
@@ -402,7 +624,7 @@ public static class GarageBranchDevSeeder
             Name = "Kiểm tra tổng quát 21 hạng mục",
             Description = "Kiểm tra nhanh trước / sau bảo dưỡng.",
             ImageUrl = null,
-            LaborPrice = new Money { Amount = 120000, Currency = "VND" },
+            LaborPrice = new Money { Amount = 120_000, Currency = "VND" },
             EstimatedDurationMinutes = 45,
             Status = ProductStatus.Active,
             CreatedAt = nowUtc,
@@ -416,7 +638,7 @@ public static class GarageBranchDevSeeder
             Name = "Công tháo lắp — thay má phanh trước",
             Description = "Nhân công thay má phanh.",
             ImageUrl = null,
-            LaborPrice = new Money { Amount = 250000, Currency = "VND" },
+            LaborPrice = new Money { Amount = 250_000, Currency = "VND" },
             EstimatedDurationMinutes = 60,
             Status = ProductStatus.Active,
             CreatedAt = nowUtc,
@@ -430,12 +652,72 @@ public static class GarageBranchDevSeeder
             Name = "Kiểm tra hệ thống phanh",
             Description = "Đo độ mòn, kiểm tra dầu phanh.",
             ImageUrl = null,
-            LaborPrice = new Money { Amount = 80000, Currency = "VND" },
+            LaborPrice = new Money { Amount = 80_000, Currency = "VND" },
             EstimatedDurationMinutes = 20,
             Status = ProductStatus.Active,
             CreatedAt = nowUtc,
             CreatedBy = DevOwnerUserId
-        }
+        },
+    ];
+
+    private static GarageService[] BuildExpandedServicesOnly(DateTime nowUtc) =>
+    [
+        new()
+        {
+            Id = DevServiceHoanKiemBatteryLaborId,
+            GarageBranchId = DevBranchHoanKiemId,
+            ServiceCategoryId = DevServiceCategoryElectricalId,
+            Name = "Tháo lắp & cân chỉnh ắc quy",
+            Description = "Nhân công thay ắc quy, vệ sinh cực.",
+            ImageUrl = null,
+            LaborPrice = new Money { Amount = 200_000, Currency = "VND" },
+            EstimatedDurationMinutes = 40,
+            Status = ProductStatus.Active,
+            CreatedAt = nowUtc,
+            CreatedBy = DevOwnerUserId
+        },
+        new()
+        {
+            Id = DevServiceHoanKiemAirFilterLaborId,
+            GarageBranchId = DevBranchHoanKiemId,
+            ServiceCategoryId = DevServiceCategoryMaintenanceId,
+            Name = "Thay lọc gió động cơ",
+            Description = "Tháo hộp lọc, thay element, vệ sinh.",
+            ImageUrl = null,
+            LaborPrice = new Money { Amount = 95_000, Currency = "VND" },
+            EstimatedDurationMinutes = 25,
+            Status = ProductStatus.Active,
+            CreatedAt = nowUtc,
+            CreatedBy = DevOwnerUserId
+        },
+        new()
+        {
+            Id = DevServiceBaDinhTireLaborId,
+            GarageBranchId = DevBranchBaDinhId,
+            ServiceCategoryId = DevServiceCategoryRepairId,
+            Name = "Tháo lắp & cân bằng lốp",
+            Description = "Tháo lắp lốp, cân bằng động.",
+            ImageUrl = null,
+            LaborPrice = new Money { Amount = 180_000, Currency = "VND" },
+            EstimatedDurationMinutes = 50,
+            Status = ProductStatus.Active,
+            CreatedAt = nowUtc,
+            CreatedBy = DevOwnerUserId
+        },
+        new()
+        {
+            Id = DevServiceBaDinhSparkLaborId,
+            GarageBranchId = DevBranchBaDinhId,
+            ServiceCategoryId = DevServiceCategoryMaintenanceId,
+            Name = "Thay bugi động cơ",
+            Description = "Tháo nắp máy, thay bugi, chỉnh moment.",
+            ImageUrl = null,
+            LaborPrice = new Money { Amount = 320_000, Currency = "VND" },
+            EstimatedDurationMinutes = 35,
+            Status = ProductStatus.Active,
+            CreatedAt = nowUtc,
+            CreatedBy = DevOwnerUserId
+        },
     ];
 
     private static GarageBundle[] BuildDevBundles(DateTime nowUtc) =>
@@ -446,8 +728,8 @@ public static class GarageBranchDevSeeder
             GarageBranchId = DevBranchHoanKiemId,
             Name = "Combo lọc dầu + kiểm tra",
             Description = "Phụ tùng lọc dầu (có lắp) + gói kiểm tra tổng quát.",
-            ImageUrl = null,
-            DiscountAmount = new Money { Amount = 50000, Currency = "VND" },
+            ImageUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/OIL-FILTER.png",
+            DiscountAmount = new Money { Amount = 50_000, Currency = "VND" },
             DiscountPercent = null,
             Status = ProductStatus.Active,
             CreatedAt = nowUtc,
@@ -475,7 +757,7 @@ public static class GarageBranchDevSeeder
                     SortOrder = 2,
                     CreatedAt = nowUtc,
                     CreatedBy = DevOwnerUserId
-                }
+                },
             ]
         },
         new()
@@ -484,7 +766,7 @@ public static class GarageBranchDevSeeder
             GarageBranchId = DevBranchBaDinhId,
             Name = "Combo má phanh + kiểm tra phanh",
             Description = "Phụ tùng má phanh (có lắp) + kiểm tra hệ thống phanh.",
-            ImageUrl = null,
+            ImageUrl = "https://d3iova6424vljy.cloudfront.net/master/part-categories/BRAKE-PAD.png",
             DiscountAmount = null,
             DiscountPercent = 5m,
             Status = ProductStatus.Active,
@@ -513,9 +795,9 @@ public static class GarageBranchDevSeeder
                     SortOrder = 2,
                     CreatedAt = nowUtc,
                     CreatedBy = DevOwnerUserId
-                }
+                },
             ]
-        }
+        },
     ];
 
     private static GarageMember CreateMember(

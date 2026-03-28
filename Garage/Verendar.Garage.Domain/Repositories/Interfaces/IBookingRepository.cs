@@ -28,6 +28,12 @@ public interface IBookingRepository : IGenericRepository<Booking>
         int pageSize,
         CancellationToken ct = default);
 
+    Task<Booking?> GetByIdForAccessCheckAsync(Guid id, CancellationToken ct = default);
+
+    Task<IReadOnlyDictionary<Guid, string>> GetItemsSummariesForBookingsAsync(
+        IReadOnlyList<Guid> bookingIds,
+        CancellationToken ct = default);
+
     Task<RevenueStats> GetRevenueStatsAsync(
         IReadOnlyList<Guid> branchIds,
         DateTime from,

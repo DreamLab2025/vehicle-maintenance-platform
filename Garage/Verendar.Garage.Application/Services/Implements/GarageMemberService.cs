@@ -1,5 +1,6 @@
 using Verendar.Common.Shared;
 using Verendar.Garage.Application.Clients;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
@@ -23,12 +24,12 @@ public class GarageMemberService(
     {
         var garage = await _unitOfWork.Garages.FindOneAsync(g => g.Id == garageId && g.DeletedAt == null);
         if (garage is null)
-            return ApiResponse<GarageMemberResponse>.NotFoundResponse("Không tìm thấy garage.");
+            return ApiResponse<GarageMemberResponse>.NotFoundResponse(EndpointMessages.Member.GarageNotFound);
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(
             b => b.Id == request.BranchId && b.GarageId == garageId && b.DeletedAt == null);
         if (branch is null)
-            return ApiResponse<GarageMemberResponse>.NotFoundResponse("Không tìm thấy chi nhánh của garage.");
+            return ApiResponse<GarageMemberResponse>.NotFoundResponse(EndpointMessages.Member.BranchNotInGarage);
 
         var isOwner = garage.OwnerId == requestingUserId;
         if (!isOwner)
@@ -41,10 +42,10 @@ public class GarageMemberService(
                 && m.DeletedAt == null);
 
             if (managerMembership is null)
-                return ApiResponse<GarageMemberResponse>.ForbiddenResponse("Bạn không có quyền thêm thành viên.");
+                return ApiResponse<GarageMemberResponse>.ForbiddenResponse(EndpointMessages.Member.ForbiddenAddMember);
 
             if (request.Role != MemberRole.Mechanic)
-                return ApiResponse<GarageMemberResponse>.ForbiddenResponse("Manager chỉ được phép thêm Mechanic.");
+                return ApiResponse<GarageMemberResponse>.ForbiddenResponse(EndpointMessages.Member.ManagerOnlyMechanic);
         }
 
         var createUserRequest = request.ToCreateMemberUserRequest();
@@ -53,14 +54,14 @@ public class GarageMemberService(
             : await _identityClient.CreateMechanicUserAsync(createUserRequest, ct);
 
         if (!userId.HasValue)
-            return ApiResponse<GarageMemberResponse>.FailureResponse("Không thể tạo tài khoản thành viên từ Identity service.");
+            return ApiResponse<GarageMemberResponse>.FailureResponse(EndpointMessages.Member.IdentityCreateFailed);
 
         var exists = await _unitOfWork.Members.FindOneAsync(m =>
             m.UserId == userId.Value
             && m.GarageBranchId == request.BranchId
             && m.DeletedAt == null);
         if (exists is not null)
-            return ApiResponse<GarageMemberResponse>.ConflictResponse("Thành viên đã tồn tại trong chi nhánh.");
+            return ApiResponse<GarageMemberResponse>.ConflictResponse(EndpointMessages.Member.MemberAlreadyInBranch);
 
         var member = request.ToEntity(userId.Value);
 
@@ -69,7 +70,7 @@ public class GarageMemberService(
 
         _logger.LogInformation("AddMember: created {Role} {MemberId} for branch {BranchId}", request.Role, member.Id, request.BranchId);
 
-        return ApiResponse<GarageMemberResponse>.CreatedResponse(member.ToResponse(garageId), "Thêm thành viên thành công");
+        return ApiResponse<GarageMemberResponse>.CreatedResponse(member.ToResponse(garageId), EndpointMessages.Member.AddSuccess);
     }
 
     public async Task<ApiResponse<List<GarageMemberResponse>>> GetMembersAsync(
@@ -83,12 +84,12 @@ public class GarageMemberService(
 
         var garage = await _unitOfWork.Garages.FindOneAsync(g => g.Id == garageId && g.DeletedAt == null);
         if (garage is null)
-            return ApiResponse<List<GarageMemberResponse>>.NotFoundResponse("Không tìm thấy garage.");
+            return ApiResponse<List<GarageMemberResponse>>.NotFoundResponse(EndpointMessages.Member.GarageNotFound);
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(
             b => b.Id == branchId && b.GarageId == garageId && b.DeletedAt == null);
         if (branch is null)
-            return ApiResponse<List<GarageMemberResponse>>.NotFoundResponse("Không tìm thấy chi nhánh của garage.");
+            return ApiResponse<List<GarageMemberResponse>>.NotFoundResponse(EndpointMessages.Member.BranchNotInGarage);
 
         var isOwner = garage.OwnerId == requestingUserId;
         if (!isOwner)
@@ -101,7 +102,7 @@ public class GarageMemberService(
                 && m.DeletedAt == null);
 
             if (managerMembership is null)
-                return ApiResponse<List<GarageMemberResponse>>.ForbiddenResponse("Bạn không có quyền xem danh sách thành viên.");
+                return ApiResponse<List<GarageMemberResponse>>.ForbiddenResponse(EndpointMessages.Member.ForbiddenListMembers);
         }
 
         var (items, totalCount) = await _unitOfWork.Members.GetPagedAsync(
@@ -115,7 +116,7 @@ public class GarageMemberService(
             totalCount,
             request.PageNumber,
             request.PageSize,
-            "Lấy danh sách thành viên thành công");
+            EndpointMessages.Member.ListSuccess);
     }
 
     public async Task<ApiResponse<GarageMemberResponse>> UpdateMemberStatusAsync(
@@ -126,15 +127,15 @@ public class GarageMemberService(
     {
         var member = await _unitOfWork.Members.FindOneAsync(m => m.Id == memberId && m.DeletedAt == null);
         if (member is null)
-            return ApiResponse<GarageMemberResponse>.NotFoundResponse("Không tìm thấy thành viên.");
+            return ApiResponse<GarageMemberResponse>.NotFoundResponse(EndpointMessages.Member.MemberNotFound);
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(b => b.Id == member.GarageBranchId && b.DeletedAt == null);
         if (branch is null)
-            return ApiResponse<GarageMemberResponse>.NotFoundResponse("Không tìm thấy chi nhánh của thành viên.");
+            return ApiResponse<GarageMemberResponse>.NotFoundResponse(EndpointMessages.Member.MemberBranchNotFound);
 
         var garage = await _unitOfWork.Garages.FindOneAsync(g => g.Id == branch.GarageId && g.DeletedAt == null);
         if (garage is null)
-            return ApiResponse<GarageMemberResponse>.NotFoundResponse("Không tìm thấy garage.");
+            return ApiResponse<GarageMemberResponse>.NotFoundResponse(EndpointMessages.Member.GarageNotFound);
 
         var isOwner = garage.OwnerId == requestingUserId;
         if (!isOwner)
@@ -147,10 +148,10 @@ public class GarageMemberService(
                 && m.DeletedAt == null);
 
             if (managerMembership is null)
-                return ApiResponse<GarageMemberResponse>.ForbiddenResponse("Bạn không có quyền cập nhật trạng thái thành viên.");
+                return ApiResponse<GarageMemberResponse>.ForbiddenResponse(EndpointMessages.Member.ForbiddenUpdateMemberStatus);
 
             if (member.Role != MemberRole.Mechanic)
-                return ApiResponse<GarageMemberResponse>.ForbiddenResponse("Manager chỉ được phép cập nhật Mechanic trong chi nhánh của mình.");
+                return ApiResponse<GarageMemberResponse>.ForbiddenResponse(EndpointMessages.Member.ManagerOnlyUpdateMechanic);
         }
 
         member.Status = request.Status;
@@ -159,7 +160,7 @@ public class GarageMemberService(
 
         return ApiResponse<GarageMemberResponse>.SuccessResponse(
             member.ToResponse(garage.Id),
-            "Cập nhật trạng thái thành viên thành công");
+            EndpointMessages.Member.UpdateStatusSuccess);
     }
 
     public async Task<ApiResponse<bool>> RemoveMemberAsync(
@@ -169,15 +170,15 @@ public class GarageMemberService(
     {
         var member = await _unitOfWork.Members.FindOneAsync(m => m.Id == memberId && m.DeletedAt == null);
         if (member is null)
-            return ApiResponse<bool>.NotFoundResponse("Không tìm thấy thành viên.");
+            return ApiResponse<bool>.NotFoundResponse(EndpointMessages.Member.MemberNotFound);
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(b => b.Id == member.GarageBranchId && b.DeletedAt == null);
         if (branch is null)
-            return ApiResponse<bool>.NotFoundResponse("Không tìm thấy chi nhánh của thành viên.");
+            return ApiResponse<bool>.NotFoundResponse(EndpointMessages.Member.MemberBranchNotFound);
 
         var garage = await _unitOfWork.Garages.FindOneAsync(g => g.Id == branch.GarageId && g.DeletedAt == null);
         if (garage is null)
-            return ApiResponse<bool>.NotFoundResponse("Không tìm thấy garage.");
+            return ApiResponse<bool>.NotFoundResponse(EndpointMessages.Member.GarageNotFound);
 
         var isOwner = garage.OwnerId == requestingUserId;
         if (!isOwner)
@@ -190,15 +191,15 @@ public class GarageMemberService(
                 && m.DeletedAt == null);
 
             if (managerMembership is null)
-                return ApiResponse<bool>.ForbiddenResponse("Bạn không có quyền xóa thành viên.");
+                return ApiResponse<bool>.ForbiddenResponse(EndpointMessages.Member.ForbiddenRemoveMember);
 
             if (member.Role != MemberRole.Mechanic)
-                return ApiResponse<bool>.ForbiddenResponse("Manager chỉ được phép xóa Mechanic trong chi nhánh của mình.");
+                return ApiResponse<bool>.ForbiddenResponse(EndpointMessages.Member.ManagerOnlyRemoveMechanic);
         }
 
         member.DeletedAt = DateTime.UtcNow;
         await _unitOfWork.SaveChangesAsync(ct);
 
-        return ApiResponse<bool>.SuccessResponse(true, "Xóa thành viên thành công");
+        return ApiResponse<bool>.SuccessResponse(true, EndpointMessages.Member.RemoveSuccess);
     }
 }

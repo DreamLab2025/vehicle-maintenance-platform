@@ -11,4 +11,8 @@ public class BookingConfirmedEvent : BaseEvent
     public Guid GarageBranchId { get; set; }
     public Guid MechanicMemberId { get; set; }
     public string MechanicDisplayName { get; set; } = string.Empty;
+    public string BranchName { get; set; } = string.Empty;
+    public DateTime ScheduledAt { get; set; }
+    public string ItemsSummary { get; set; } = string.Empty;
+    public string? CustomerEmail { get; set; }
 }

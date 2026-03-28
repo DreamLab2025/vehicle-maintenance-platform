@@ -35,8 +35,11 @@ public static class ReviewApis
 
         group.MapGet("/{id:guid}/review", GetBookingReview)
             .WithName("GetBookingReview")
+            .RequireAuthorization()
             .Produces<ApiResponse<GarageReviewResponse>>(StatusCodes.Status200OK)
-            .Produces<ApiResponse<GarageReviewResponse>>(StatusCodes.Status404NotFound);
+            .Produces<ApiResponse<GarageReviewResponse>>(StatusCodes.Status403Forbidden)
+            .Produces<ApiResponse<GarageReviewResponse>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
 
         return group;
     }
@@ -67,10 +70,15 @@ public static class ReviewApis
 
     private static async Task<IResult> GetBookingReview(
         [FromRoute] Guid id,
+        ICurrentUserService currentUserService,
         IReviewService reviewService,
         CancellationToken ct)
     {
-        var result = await reviewService.GetByBookingAsync(id, ct);
+        var viewerId = currentUserService.UserId;
+        if (viewerId == Guid.Empty)
+            return Results.Unauthorized();
+
+        var result = await reviewService.GetByBookingAsync(id, viewerId, ct);
         return result.ToHttpResult();
     }
 

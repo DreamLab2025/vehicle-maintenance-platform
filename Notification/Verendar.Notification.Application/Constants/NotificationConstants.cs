@@ -7,9 +7,7 @@ namespace Verendar.Notification.Application.Constants
         public static class TemplateKeys
         {
             public const string Otp = "Otp";
-            public const string Welcome = "Welcome";
-            public const string OdometerReminder = "OdometerReminder";
-            public const string MaintenanceReminder = "MaintenanceReminder";
+            public const string Notification = "Notification";
             public const string MemberAccountCreated = "MemberAccountCreated";
         }
 
@@ -57,6 +55,22 @@ namespace Verendar.Notification.Application.Constants
         {
             public const string DateOnly = "dd/MM/yyyy";
             public const string DateTime = "HH:mm dd/MM/yyyy";
+        }
+
+        public static class ConsumerCopy
+        {
+            public const string BookingCreatedTitle = "Đặt lịch thành công";
+            public const string BookingCompletedTitle = "Bảo dưỡng hoàn tất";
+            public const string BookingConfirmedTitle = "Lịch hẹn đã được xác nhận";
+            public const string BookingCancelledTitle = "Lịch hẹn đã bị hủy";
+            public const string BookingStatusChangedTitle = "Cập nhật trạng thái lịch hẹn";
+            public const string MaintenanceTitleUrgent = "Cần bảo dưỡng ngay";
+            public const string MaintenanceTitleNormal = "Nhắc bảo dưỡng xe";
+            public const string MaintenanceVehicleFallbackName = "xe của bạn";
+            public const string EmailCtaViewApp = "Xem chi tiết trong app";
+            public const string EmailCtaViewBooking = "Xem lịch hẹn";
+            public const string EmailCtaViewDetail = "Xem chi tiết";
+            public const string LoginCta = "Đăng nhập Verendar";
         }
     }
 }

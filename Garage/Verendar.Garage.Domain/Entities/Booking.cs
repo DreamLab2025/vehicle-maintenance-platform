@@ -33,6 +33,10 @@ public class Booking : BaseEntity
 
     public Guid? PaymentId { get; set; }
 
+    /// <summary>Snapshot thông tin xe tại thời điểm đặt lịch (JSON). Dùng khi hiển thị để tránh gọi Vehicle service.</summary>
+    [MaxLength(2000)]
+    public string? VehicleSnapshotJson { get; set; }
+
     // Navigation
     public GarageBranch GarageBranch { get; set; } = null!;
     public GarageMember? Mechanic { get; set; }

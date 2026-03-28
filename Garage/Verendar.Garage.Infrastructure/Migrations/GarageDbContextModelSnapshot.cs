@@ -81,6 +81,10 @@ namespace Verendar.Garage.Infrastructure.Migrations
                     b.Property<Guid>("UserVehicleId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("VehicleSnapshotJson")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GarageBranchId");

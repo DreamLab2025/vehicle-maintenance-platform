@@ -1,72 +1,62 @@
-using MassTransit;
+using Microsoft.Extensions.Options;
 using Verendar.Garage.Contracts.Events;
-using Verendar.Notification.Application.Dtos.InApp;
 using Verendar.Notification.Application.Mapping;
+using Verendar.Notification.Application.Options;
 using Verendar.Notification.Application.Services.Interfaces;
-using Verendar.Notification.Domain.Enums;
-using Verendar.Notification.Domain.Repositories.Interfaces;
 
-namespace Verendar.Notification.Application.Consumers
+namespace Verendar.Notification.Application.Consumers;
+
+public class BookingCreatedConsumer(
+    ILogger<BookingCreatedConsumer> logger,
+    IUnitOfWork unitOfWork,
+    IInAppNotificationService inAppNotificationService,
+    INotificationService notificationService,
+    IOptions<NotificationAppOptions> appOptions) : IConsumer<BookingCreatedEvent>
 {
-    public class BookingCreatedConsumer(
-        ILogger<BookingCreatedConsumer> logger,
-        IUnitOfWork unitOfWork,
-        IInAppNotificationService inAppNotificationService,
-        INotificationService notificationService) : IConsumer<BookingCreatedEvent>
+    public async Task Consume(ConsumeContext<BookingCreatedEvent> context)
     {
-        private readonly ILogger<BookingCreatedConsumer> _logger = logger;
-        private readonly IUnitOfWork _unitOfWork = unitOfWork;
-        private readonly IInAppNotificationService _inAppNotificationService = inAppNotificationService;
-        private readonly INotificationService _notificationService = notificationService;
+        var message = context.Message;
+        var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
+        var routes = appOptions.Value;
 
-        public async Task Consume(ConsumeContext<BookingCreatedEvent> context)
+        logger.LogDebug(
+            "Processing BookingCreated — MessageId: {MessageId}, BookingId: {BookingId}, UserId: {UserId}",
+            messageId, message.BookingId, message.UserId);
+
+        try
         {
-            var message = context.Message;
-            var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
+            var (title, content) = GarageBookingNotificationMappings.BookingCreatedCopy(message);
+            var actionPath = routes.BookingDetailRelativeUrl(message.BookingId);
 
-            _logger.LogDebug(
-                "Processing BookingCreated — MessageId: {MessageId}, BookingId: {BookingId}, UserId: {UserId}",
-                messageId, message.BookingId, message.UserId);
+            var notification = NotificationMappings.CreateUserNotification(
+                message.UserId,
+                title,
+                content,
+                NotificationPriority.Medium,
+                "Booking",
+                message.BookingId,
+                actionPath);
 
-            try
-            {
-                var title = "Đặt lịch thành công";
-                var content =
-                    $"Bạn đã đặt lịch tại {message.BranchName} — {message.ItemsSummary}. "
-                    + $"Lịch: {message.ScheduledAt:dd/MM/yyyy HH:mm} (UTC).";
+            await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
+                unitOfWork, notification, message.UserId, context.CancellationToken);
+            await ConsumerNotificationFlow.PushInAppAndMarkDeliveredAsync(
+                inAppNotificationService,
+                notificationService,
+                message.UserId,
+                title,
+                content,
+                notification.Id,
+                context.CancellationToken);
 
-                var notification = message.BookingCreatedToNotificationEntity(title, content);
-                await _unitOfWork.Notifications.AddAsync(notification);
-                await _unitOfWork.NotificationDeliveries.AddAsync(
-                    notification.CreateDelivery(message.UserId.ToString(), NotificationChannel.InApp));
-                await _unitOfWork.SaveChangesAsync(context.CancellationToken);
-
-                var metadata = new Dictionary<string, object?>
-                {
-                    ["bookingId"] = message.BookingId,
-                    ["entityType"] = "Booking"
-                };
-
-                var inAppPayload = new InAppNotificationPayload
-                {
-                    Title = title,
-                    Message = content,
-                    Metadata = metadata
-                };
-
-                await _inAppNotificationService.SendAsync(message.UserId, inAppPayload, context.CancellationToken);
-                await _notificationService.MarkInAppDeliveredAsync(
-                    notification.Id, message.UserId, inAppPayload.Metadata, context.CancellationToken);
-
-                _logger.LogInformation(
-                    "BookingCreated processed — MessageId: {MessageId}, BookingId: {BookingId}, NotificationId: {NotificationId}",
-                    messageId, message.BookingId, notification.Id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing BookingCreated — MessageId: {MessageId}, BookingId: {BookingId}",
-                    messageId, message.BookingId);
-            }
+            logger.LogInformation(
+                "BookingCreated processed — MessageId: {MessageId}, BookingId: {BookingId}, NotificationId: {NotificationId}",
+                messageId, message.BookingId, notification.Id);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Error processing BookingCreated — MessageId: {MessageId}, BookingId: {BookingId}",
+                messageId, message.BookingId);
         }
     }
 }

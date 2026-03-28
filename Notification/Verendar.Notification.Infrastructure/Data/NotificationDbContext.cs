@@ -1,39 +1,30 @@
 using Verendar.Common.Databases.Base;
 using Verendar.Common.Jwt;
-namespace Verendar.Notification.Infrastructure.Data
+using NotificationEntity = Verendar.Notification.Domain.Entities.Notification;
+
+namespace Verendar.Notification.Infrastructure.Data;
+
+public class NotificationDbContext(DbContextOptions<NotificationDbContext> options, ICurrentUserService? currentUserService = null) : BaseDbContext(options, currentUserService)
 {
-    public class NotificationDbContext(DbContextOptions<NotificationDbContext> options, ICurrentUserService? currentUserService = null) : BaseDbContext(options, currentUserService)
+    public DbSet<NotificationEntity> Notifications { get; set; } = null!;
+    public DbSet<NotificationDelivery> NotificationDeliveries { get; set; } = null!;
+    public DbSet<NotificationPreference> NotificationPreferences { get; set; } = null!;
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public DbSet<Domain.Entities.Notification> Notifications { get; set; } = null!;
-        public DbSet<NotificationDelivery> NotificationDeliveries { get; set; } = null!;
-        public DbSet<NotificationPreference> NotificationPreferences { get; set; } = null!;
-        public DbSet<NotificationTemplate> NotificationTemplates { get; set; } = null!;
-        public DbSet<NotificationTemplateChannel> NotificationTemplateChannels { get; set; } = null!;
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        modelBuilder.Entity<NotificationEntity>(entity =>
         {
-            modelBuilder.Entity<Domain.Entities.Notification>(entity =>
-            {
-                entity.HasQueryFilter(e => e.DeletedAt == null);
-            });
-            modelBuilder.Entity<NotificationDelivery>(entity =>
-            {
-                entity.HasQueryFilter(e => e.DeletedAt == null);
-            });
-            modelBuilder.Entity<NotificationPreference>(entity =>
-            {
-                entity.HasQueryFilter(e => e.DeletedAt == null);
-            });
-            modelBuilder.Entity<NotificationTemplate>(entity =>
-            {
-                entity.HasQueryFilter(e => e.DeletedAt == null);
-            });
-            modelBuilder.Entity<NotificationTemplateChannel>(entity =>
-            {
-                entity.HasQueryFilter(e => e.DeletedAt == null);
-            });
+            entity.HasQueryFilter(e => e.DeletedAt == null);
+        });
+        modelBuilder.Entity<NotificationDelivery>(entity =>
+        {
+            entity.HasQueryFilter(e => e.DeletedAt == null);
+        });
+        modelBuilder.Entity<NotificationPreference>(entity =>
+        {
+            entity.HasQueryFilter(e => e.DeletedAt == null);
+        });
 
-            base.OnModelCreating(modelBuilder);
-        }
+        base.OnModelCreating(modelBuilder);
     }
 }

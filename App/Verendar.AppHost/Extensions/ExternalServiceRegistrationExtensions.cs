@@ -160,7 +160,6 @@ namespace Verendar.AppHost.Extensions
                     yarp.AddRoute("/api/v1/vehicle-models/{**catch-all}", vehicleCluster);
                     yarp.AddRoute("/api/v1/odometer-history/{**catch-all}", vehicleCluster);
                     yarp.AddRoute("/api/v1/part-categories/{**catch-all}", vehicleCluster);
-                    yarp.AddRoute("/api/v1/part-products/{**catch-all}", vehicleCluster);
                     yarp.AddRoute("/api/v1/types/{**catch-all}", vehicleCluster);
                     yarp.AddRoute("/api/v1/brands/{**catch-all}", vehicleCluster);
 
@@ -181,6 +180,7 @@ namespace Verendar.AppHost.Extensions
                     yarp.AddRoute("/api/v1/garage-services/{**catch-all}", garageCluster);
                     yarp.AddRoute("/api/v1/garage-bundles/{**catch-all}", garageCluster);
                     yarp.AddRoute("/api/v1/service-categories/{**catch-all}", garageCluster);
+                    yarp.AddRoute("/api/v1/garage-catalog/{**catch-all}", garageCluster);
                 })
                 .WaitFor(identityService)
                 .WaitFor(vehicleService)

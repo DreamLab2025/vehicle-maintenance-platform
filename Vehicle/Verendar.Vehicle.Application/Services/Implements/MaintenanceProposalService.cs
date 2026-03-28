@@ -137,6 +137,7 @@ namespace Verendar.Vehicle.Application.Services.Implements
                 recordItems.Add(new RecordItemInput
                 {
                     PartCategorySlug = category.Slug,
+                    GarageProductId = item.GarageProductId,
                     CustomPartName = item.ItemName,
                     CustomKmInterval = item.RecommendedKmInterval,
                     CustomMonthsInterval = item.RecommendedMonthsInterval,

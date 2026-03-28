@@ -9,7 +9,7 @@ public interface IReviewService
         Guid userId, Guid bookingId, CreateReviewRequest request, CancellationToken ct = default);
 
     Task<ApiResponse<GarageReviewResponse>> GetByBookingAsync(
-        Guid bookingId, CancellationToken ct = default);
+        Guid bookingId, Guid viewerId, CancellationToken ct = default);
 
     Task<ApiResponse<List<GarageReviewResponse>>> GetByBranchAsync(
         Guid branchId, PaginationRequest pagination, CancellationToken ct = default);

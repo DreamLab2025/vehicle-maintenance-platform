@@ -3,6 +3,7 @@ using MassTransit;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Verendar.Common.Shared;
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
@@ -24,7 +25,7 @@ public class BookingServiceTests
         var sut = CreateSut(m);
         var result = await sut.CreateBookingAsync(Guid.NewGuid(), new CreateBookingRequest { GarageBranchId = Guid.NewGuid() });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, "Không tìm thấy chi nhánh. Vui lòng kiểm tra lại thông tin.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, "Không tìm thấy chi nhánh. Bạn vui lòng kiểm tra lại hoặc chọn chi nhánh khác.");
     }
 
     [Fact]
@@ -40,7 +41,7 @@ public class BookingServiceTests
         var sut = CreateSut(m);
         var result = await sut.CreateBookingAsync(Guid.NewGuid(), new CreateBookingRequest { GarageBranchId = branch.Id });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, "Không tìm thấy garage của chi nhánh này.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, EndpointMessages.Booking.GarageNotFound);
     }
 
     [Fact]
@@ -57,7 +58,7 @@ public class BookingServiceTests
         var sut = CreateSut(m);
         var result = await sut.CreateBookingAsync(Guid.NewGuid(), new CreateBookingRequest { GarageBranchId = branch.Id });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, "Garage hiện chưa hoạt động, vui lòng thử lại sau.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, EndpointMessages.Booking.GarageInactive);
     }
 
     [Fact]
@@ -74,7 +75,7 @@ public class BookingServiceTests
         var sut = CreateSut(m);
         var result = await sut.CreateBookingAsync(Guid.NewGuid(), new CreateBookingRequest { GarageBranchId = branch.Id });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, "Chi nhánh hiện chưa hoạt động, vui lòng chọn chi nhánh khác.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, EndpointMessages.Booking.BranchInactive);
     }
 
     [Fact]
@@ -95,7 +96,7 @@ public class BookingServiceTests
             ScheduledAt = DateTime.UtcNow.AddHours(2)
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, "Vui lòng chọn ít nhất một sản phẩm, dịch vụ hoặc combo.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, EndpointMessages.Booking.EmptyItems);
     }
 
     [Fact]
@@ -117,7 +118,7 @@ public class BookingServiceTests
             Items = [new CreateBookingLineItemRequest { ProductId = Guid.NewGuid(), ServiceId = Guid.NewGuid() }]
         });
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, "Thời gian đặt lịch phải ở tương lai.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, EndpointMessages.Booking.ScheduleMustBeFuture);
     }
 
     [Fact]
@@ -133,7 +134,7 @@ public class BookingServiceTests
             userId: null,
             pagination: new PaginationRequest());
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, "Không thể kết hợp assignedToMe với branchId hoặc userId.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, EndpointMessages.Booking.AssignedToMeConflict);
     }
 
     [Fact]
@@ -149,7 +150,7 @@ public class BookingServiceTests
             userId: Guid.NewGuid(),
             pagination: new PaginationRequest());
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, "Bạn chỉ có thể xem danh sách booking của chính mình.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, EndpointMessages.Booking.UserMismatchForbidden);
     }
 
     [Fact]
@@ -167,7 +168,7 @@ public class BookingServiceTests
             userId: null,
             pagination: new PaginationRequest());
 
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, "Tài khoản chưa là thợ máy đang hoạt động.");
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, EndpointMessages.Booking.NotMechanicForbidden);
     }
 
     [Fact]
@@ -182,7 +183,7 @@ public class BookingServiceTests
 
         result.IsSuccess.Should().BeFalse();
         result.StatusCode.Should().Be(404);
-        result.Message.Should().Be("Không tìm thấy booking.");
+        result.Message.Should().Be(EndpointMessages.Booking.BookingNotFound);
     }
 
     private static BookingService CreateSut(GarageUnitOfWorkMock mock)

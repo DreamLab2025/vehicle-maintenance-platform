@@ -6,146 +6,61 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 .NET 9 · Aspire 9.5 · PostgreSQL · RabbitMQ · Redis · YARP · Hangfire
 
-## Services
-
-| Service      | Purpose                                                    |
-| ------------ | ---------------------------------------------------------- |
-| Identity     | Auth, JWT, OTP, user management                            |
-| Vehicle      | Vehicle tracking, maintenance, scheduling                  |
-| Media        | File upload, storage, asset serving                        |
-| Notification | Email/SMS, SignalR hubs, event-driven                      |
-| Ai           | Gemini analysis, onboarding questionnaire                  |
-| Garage       | Garage accounts, branches, products, bookings, mechanics   |
-| Payment      | VNPay integration, payment lifecycle, webhook handling     |
-| Location     | Vietnamese administrative regions, provinces, wards lookup |
-
-Each service: 4 projects — `Verendar.{Service}` (Host), `.Application`, `.Domain`, `.Infrastructure`.
-Location additionally has `Verendar.Location.Tests` (unit tests — see testing patterns below).
-Special: `Verendar.Identity.Contracts` and `Verendar.Vehicle.Contracts` hold shared MassTransit event contracts.
-
-Shared projects (in `App/`):
-- `Verendar.Common` — `ApiResponse<T>`, `BaseEntity`, `ICacheService`, `ICurrentUserService`, `AddCommonService()`, `UseCommonService()`, `AddPostgresDatabase<T>()`, `AddRabbitMqEventBus()`
-- `Verendar.ServiceDefaults` — `AddServiceDefaults()`, OpenTelemetry, health check endpoints (`/health`, `/alive`)
-
 ## Commands
 
 ```bash
-task run   # run all services + infra via Aspire
-task build # build all services and infrastructure
-task clean # clean all services and infrastructure
-task clear # remove Aspire containers and volumes
-
-# EF Core migration
-task migrate:add NAME={MIGRATION_NAME} PROJECT={PROJECT} STARTUP={STARTUP}
-task migrate:remove PROJECT={PROJECT} STARTUP={STARTUP}
-
-# Docker Compose (alternative to Aspire)
-task docker:dev:up      # start dev stack
-task docker:dev:down    # stop dev stack (keeps volumes)
-task docker:dev:down:v  # stop dev stack and delete volumes
-
-# Tests
+task run              # start all services + infra via Aspire
+task build            # build solution
+task test:all         # run all tests
 task test PROJECT=Location/Verendar.Location.Tests
-task test:all # run all tests
-task test:coverage PROJECT=Location/Verendar.Location.Tests
+task clear            # remove Aspire containers and volumes
 
-# Other
-task pull br={branch}  # pull from remote
+task migrate:add NAME=<MigrationName> PROJECT=<Service>/Verendar.<Service>.Infrastructure STARTUP=<Service>/Verendar.<Service>
+task migrate:remove PROJECT=<Service>/Verendar.<Service>.Infrastructure STARTUP=<Service>/Verendar.<Service>
 ```
 
-Prerequisites: .NET 9 SDK, Docker.
+## System Structure
 
-## Gateway Routing (port 8080)
+Each service is a 4-project group: `Verendar.{Service}` (Host) · `.Application` · `.Domain` · `.Infrastructure`.
+Shared code: `App/Verendar.Common` (ApiResponse, BaseEntity, ICacheService, IUnitOfWork helpers, middleware) and `App/Verendar.ServiceDefaults` (OpenTelemetry, health checks).
 
-| Service      | Routes                                                                                                                                                                                                                                                                           |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Identity     | `/api/v1/auth/**` · `/api/v1/users/**` · `/api/v1/subscriptions/**`                                                                                                                                                                                                              |
-| Ai           | `/api/v1/ai/**`                                                                                                                                                                                                                                                                  |
-| Vehicle      | `/api/v1/brands/**` · `/api/v1/types/**` · `/api/v1/models/**` · `/api/v1/variants/**` · `/api/v1/vehicle-models/**` · `/api/v1/user-vehicles/**` · `/api/v1/maintenance-records/**` · `/api/v1/odometer-history/**` · `/api/v1/part-categories/**` · `/api/v1/part-products/**` |
-| Media        | `/api/v1/media-files/**`                                                                                                                                                                                                                                                         |
-| Notification | `/api/v1/notifications/**` · `/hubs/**`                                                                                                                                                                                                                                          |
-| Garage       | `/api/v1/garages/**` · `/api/v1/bookings/**` · `/api/v1/mechanics/**`                                                                                                                                                                                                            |
-| Payment      | `/api/v1/payments/**`                                                                                                                                                                                                                                                            |
-| Location     | `/api/v1/locations/**`                                                                                                                                                                                                                                                           |
+Services: **Identity** · **Vehicle** · **Media** · **Notification** · **Ai** · **Garage** · **Payment** · **Location**
 
-## Non-Negotiable Patterns
+MassTransit event contracts live in dedicated `Verendar.{Service}.Contracts` projects. All events extend `BaseEvent`. Consumers are auto-discovered from referenced assemblies — no manual registration needed.
 
-| Rule           | Detail                                                                                                   |
-| -------------- | -------------------------------------------------------------------------------------------------------- |
-| No Controllers | Minimal API: `{Module}Apis.cs` · `MapXxxApi()` → `MapXxxRoutes()` → private static handlers             |
-| No AutoMapper  | Static extensions: `ToEntity()`, `ToResponse()`, `UpdateFromRequest()`                                   |
-| No MediatR     | Services call `IUnitOfWork` repositories directly                                                        |
-| Response       | `ApiResponse<T>` on all endpoints; FluentValidation/500s → RFC 7807                                      |
-| Validation     | Endpoint filter `ValidationEndpointFilter.Validate<T>()` for structural rules; business rules in service |
-| Soft delete    | `DeletedAt = DateTime.UtcNow` — never `DbContext.Remove()`                                               |
-| Entities       | Always inherit `BaseEntity` (provides `Id`, audit + soft-delete fields) — never re-declare them          |
-| Lists          | `PaginationRequest` + `GetPagedAsync` — never unbounded (read-only reference data may return full lists) |
-| Secrets        | User Secrets only — never `appsettings.json`                                                             |
-| Constructor    | Primary constructor + private readonly fields (project convention)                                       |
-| Async          | `async/await` throughout — never `.Result` or `.Wait()`                                                  |
+## Implementation Patterns
 
-## Service Bootstrap Pattern
+**API layer** — Minimal API only. Route groups defined in `{Module}Apis.cs`, handlers are private static methods. Structural validation via `ValidationEndpointFilter.Validate<T>()` as an endpoint filter; business rules stay in the service layer. All responses use `ApiResponse<T>`; errors map to RFC 7807.
 
-Every service host follows this pattern:
+**Domain** — All entities inherit `BaseEntity` (provides `Id` as UUID v7, `CreatedAt/By`, `UpdatedAt/By`, `DeletedAt/By`). Soft delete by setting `DeletedAt = DateTime.UtcNow`. `BaseDbContext` automatically applies a global query filter (`DeletedAt == null`) and populates audit fields on `SaveChangesAsync`. Lists go through `PaginationRequest` + `GetPagedAsync`.
 
-```csharp
-// Bootstrapping/ApplicationServiceExtensions.cs
-builder.AddServiceDefaults();          // OpenTelemetry, health checks
-builder.AddCommonService();            // CORS, JWT, MassTransit, Swagger, rate limiting
-builder.AddPostgresDatabase<{Service}DbContext>(Const.{Service}Database);  // e.g. "garage-db"
-// optional: builder.AddServiceRedis("garage-service", connectionName: Const.Redis);
+**Application services** — Call `IUnitOfWork` repositories directly, return `ApiResponse<T>`. DTO mapping via static extensions: `ToEntity()`, `ToResponse()`, `UpdateFromRequest()`.
 
-// Program.cs
-await app.MigrateDbContextAsync<{Service}DbContext>();  // runs EF migrations on startup
-app.UseApplicationServices();          // middleware pipeline + MapDefaultEndpoints()
-app.Map{Module}Api();                  // register route groups
-```
+**Inter-service communication** — Two channels:
+- **Async (MassTransit/RabbitMQ)**: publish/consume events; exponential retry (5× , 2–30 s)
+- **Sync (typed HTTP clients)**: `ILocationClient`, `IPaymentClient`, `IIdentityClient`, etc., registered in each service's `Bootstrapping/`. Aspire service discovery: `https+http://service-name`; override via `Configuration["Services:{Name}:BaseUrl"]`. Internal endpoints (`/api/internal/...`) skip `ApiResponse<T>` and authenticate via `IServiceTokenProvider`.
 
-DbContext naming: `{ServiceName}DbContext` (e.g. `GarageDbContext`, `LocationDbContext`).
+**Service bootstrap** — every Host follows: `AddServiceDefaults()` → `AddCommonService()` → `AddPostgresDatabase<TDbContext>()` → (optional) `AddServiceRedis()`. Then `Program.cs`: migrate → seed (dev only) → `UseApplicationServices()` → map route groups.
 
-## Key Exceptions
+## Constraints
 
-- **Identity service implementations** live in `Infrastructure/Services/` (not Application) — they depend on `PasswordHasher<User>` and MassTransit `IPublishEndpoint`.
-- **Hangfire dashboard** and **test user seeding** are guarded by `IsDevelopment()`.
-- **AI health check** (`GET /api/v1/ai/health`) returns raw `HealthCheckResponse`, not `ApiResponse<T>`.
-- **Location service** does not use `PaginationRequest` for its list endpoints — data is static reference data with Redis caching (24h TTL). Unbounded lists are acceptable here.
-- **Internal endpoints** (`/api/internal/...`) skip `ApiResponse<T>` and return domain-specific shapes for service-to-service calls (e.g., `LocationValidationResult`).
-- **Payment service** owns `IPaymentGateway` / `VNPayGateway` — Garage and Identity call Payment via `IPaymentClient` (HTTP) and consume `PaymentSucceededEvent` / `PaymentRefundedEvent` via MassTransit. Never implement VNPay directly in Garage or Identity.
+- No controllers, no AutoMapper, no MediatR
+- `ApiResponse<T>` on every public endpoint
+- Soft delete only — never `DbContext.Remove()`
+- Secrets in User Secrets only — never `appsettings.json`
+- Paginate all lists (`PaginationRequest`) — exception: Location service uses unbounded lists with 24 h Redis cache
+- Payment (VNPay) logic lives exclusively in the Payment service; other services call it via `IPaymentClient` + consume `PaymentSucceededEvent` / `PaymentRefundedEvent`
 
-## AI-Assisted Onboarding Flow
+## References
 
-1. `POST /api/v1/user-vehicles` — create vehicle (`NeedsOnboarding = true`)
-2. `GET /api/v1/vehicle-models/{id}/part-categories/{code}/default-schedule` — manufacturer schedule
-3. `POST /api/v1/ai/vehicle-questionnaire/analyze` — AI analyzes one part → estimates + confidence
-4. `POST /api/v1/user-vehicles/{id}/apply-tracking` — write `VehiclePartTracking` with AI result
-5. Repeat 2–4 per part
-6. `PATCH /api/v1/user-vehicles/{id}/complete-onboarding` — `NeedsOnboarding = false`
+`.claude/skills/backend-development/references/` — load when needed:
 
-AI reasoning stored in `VehiclePartTracking.AiAnalysisResult` (JSON). Vietnamese prompts for Gemini (token cost).
-
-## Testing
-
-The **Location service** is the reference implementation for unit tests (`Location/Verendar.Location.Tests`).
-Use xUnit + Moq + FluentAssertions. See `.claude/skills/backend-development/references/testing.md` for full patterns.
-
-Key conventions:
-
-- Test naming: `MethodName_WhenCondition_ExpectedBehavior`
-- `XxxUnitOfWorkMock` helper wires up `Mock<IUnitOfWork>` + individual `Mock<IXxxRepository>(MockBehavior.Strict)`
-- `Mock<ICacheService>(MockBehavior.Strict)` — must declare all cache interactions explicitly
-- `XxxServiceResponseAssert` static helper validates `ApiResponse<T>` envelope fields
-- Cover: cache hit (skip repo), cache miss (load + set cache), not found (404), exception → failure envelope
-
-## Skills
-
-Load `.claude/skills/backend-development/` for detailed patterns and code examples:
-
-| Need                                               | File                           |
-| -------------------------------------------------- | ------------------------------ |
-| API structure, routes, handlers, pagination        | `references/api-design.md`     |
-| Layer responsibilities, what goes where, checklist | `references/architecture.md`   |
-| SOLID, clean code, refactoring                     | `references/code-quality.md`   |
-| N+1, caching, query hygiene                        | `references/performance.md`    |
-| Tests (xUnit + Moq + FluentAssertions)             | `references/testing.md`        |
-| Aspire orchestration, AppHost, DB/Redis wiring     | `references/aspire.md`         |
-| HTTP clients, MassTransit events/consumers         | `references/communication.md`  |
+| Need | File |
+|---|---|
+| API structure, routes, pagination | `api-design.md` |
+| Layer responsibilities, checklist | `architecture.md` |
+| SOLID, clean code | `code-quality.md` |
+| N+1, caching, query hygiene | `performance.md` |
+| Tests (xUnit + Moq + FluentAssertions) | `testing.md` |
+| Aspire orchestration, DB/Redis wiring | `aspire.md` |
+| HTTP clients, MassTransit events | `communication.md` |

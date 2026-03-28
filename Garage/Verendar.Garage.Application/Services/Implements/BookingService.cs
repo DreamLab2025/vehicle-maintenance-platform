@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MassTransit;
 using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Constants;
@@ -16,6 +17,8 @@ public class BookingService(
     IGarageIdentityContactClient identityContactClient,
     IVehicleGarageClient vehicleGarageClient) : IBookingService
 {
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
     private readonly ILogger<BookingService> _logger = logger;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
@@ -43,6 +46,10 @@ public class BookingService(
         if (branch.Status != BranchStatus.Active)
             return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.BranchInactive);
 
+        var vehicleSummary = await _vehicleGarageClient.GetUserVehicleForBookingAsync(userId, request.UserVehicleId, ct);
+        if (vehicleSummary is null)
+            return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.VehicleNotFound);
+
         if (request.Items.Count == 0)
             return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.EmptyItems, 422);
 
@@ -66,7 +73,8 @@ public class BookingService(
             Status = BookingStatus.Pending,
             Note = request.Note,
             BookedTotalPrice = new Money { Amount = totalAmount, Currency = "VND" },
-            PaymentId = null
+            PaymentId = null,
+            VehicleSnapshotJson = JsonSerializer.Serialize(vehicleSummary, JsonOptions)
         };
 
         foreach (var lineItem in resolvedItems.LineItems!)
@@ -130,12 +138,20 @@ public class BookingService(
         if (isAssignedMechanic)
         {
             customer = await _identityContactClient.GetCustomerContactAsync(booking.UserId, ct);
-            vehicle = await _vehicleGarageClient.GetUserVehicleForBookingAsync(booking.UserId, booking.UserVehicleId, ct);
+            vehicle = DeserializeVehicleSnapshot(booking.VehicleSnapshotJson);
         }
 
         return ApiResponse<BookingResponse>.SuccessResponse(
             booking.ToResponse(customer, vehicle),
             EndpointMessages.Booking.BookingDetailSuccess);
+    }
+
+    public async Task<bool> CanViewBookingAsync(Guid bookingId, Guid viewerId, CancellationToken ct = default)
+    {
+        var booking = await _unitOfWork.Bookings.GetByIdForAccessCheckAsync(bookingId, ct);
+        if (booking is null)
+            return false;
+        return await CanViewerAccessBookingAsync(booking, viewerId, ct);
     }
 
     public async Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsAsync(
@@ -185,8 +201,11 @@ public class BookingService(
             request.PageSize,
             ct);
 
+        var summaries = await _unitOfWork.Bookings.GetItemsSummariesForBookingsAsync(
+            items.Select(b => b.Id).ToList(), ct);
+
         return ApiResponse<List<BookingListItemResponse>>.SuccessPagedResponse(
-            items.Select(b => b.ToListItemResponse()).ToList(),
+            items.Select(b => b.ToListItemResponse(summaries[b.Id])).ToList(),
             totalCount,
             request.PageNumber,
             request.PageSize,
@@ -229,8 +248,11 @@ public class BookingService(
             request.PageSize,
             ct);
 
+        var summariesB = await _unitOfWork.Bookings.GetItemsSummariesForBookingsAsync(
+            items.Select(b => b.Id).ToList(), ct);
+
         return ApiResponse<List<BookingListItemResponse>>.SuccessPagedResponse(
-            items.Select(b => b.ToListItemResponse()).ToList(),
+            items.Select(b => b.ToListItemResponse(summariesB[b.Id])).ToList(),
             totalCount,
             request.PageNumber,
             request.PageSize,
@@ -255,8 +277,11 @@ public class BookingService(
             request.PageSize,
             ct);
 
+        var summariesM = await _unitOfWork.Bookings.GetItemsSummariesForBookingsAsync(
+            items.Select(b => b.Id).ToList(), ct);
+
         return ApiResponse<List<BookingListItemResponse>>.SuccessPagedResponse(
-            items.Select(b => b.ToListItemResponse()).ToList(),
+            items.Select(b => b.ToListItemResponse(summariesM[b.Id])).ToList(),
             totalCount,
             request.PageNumber,
             request.PageSize,
@@ -301,13 +326,21 @@ public class BookingService(
 
         try
         {
+            var customerContact = await _identityContactClient.GetCustomerContactAsync(booking.UserId, ct);
+            var customerEmail = string.IsNullOrWhiteSpace(customerContact?.Email) ? null : customerContact.Email.Trim();
+
             await _publishEndpoint.Publish(new BookingConfirmedEvent
             {
                 BookingId = booking.Id,
                 CustomerUserId = booking.UserId,
                 GarageBranchId = booking.GarageBranchId,
                 MechanicMemberId = mechanic.Id,
-                MechanicDisplayName = mechanic.DisplayName
+                MechanicDisplayName = mechanic.DisplayName,
+                BranchName = booking.GarageBranch.Name,
+                ScheduledAt = booking.ScheduledAt,
+                ItemsSummary = BookingMappings.BuildItemsSummaryFromLineItems(
+                    booking.LineItems.OrderBy(i => i.SortOrder).ToList()),
+                CustomerEmail = customerEmail
             }, ct);
         }
         catch (Exception ex)
@@ -436,13 +469,18 @@ public class BookingService(
 
         try
         {
+            var customerContact = await _identityContactClient.GetCustomerContactAsync(booking.UserId, ct);
+            var customerEmail = string.IsNullOrWhiteSpace(customerContact?.Email) ? null : customerContact.Email.Trim();
+
             await _publishEndpoint.Publish(new BookingCancelledEvent
             {
                 BookingId = booking.Id,
                 CustomerUserId = booking.UserId,
                 GarageBranchId = booking.GarageBranchId,
+                BranchName = booking.GarageBranch.Name,
                 Reason = reason,
-                CancelledAt = DateTime.UtcNow
+                CancelledAt = DateTime.UtcNow,
+                CustomerEmail = customerEmail
             }, ct);
         }
         catch (Exception ex)
@@ -457,10 +495,6 @@ public class BookingService(
 
     private record ResolvedLineItems(List<BookingLineItem>? LineItems, string? Error);
 
-    /// <summary>
-    /// Resolve CreateBookingLineItemRequest list → BookingLineItem entities with prices.
-    /// Validates items belong to the branch and are Active.
-    /// </summary>
     private async Task<ResolvedLineItems> ResolveCreateLineItemsAsync(
         List<CreateBookingLineItemRequest> requests,
         Guid branchId,
@@ -473,7 +507,7 @@ public class BookingService(
             var req = requests[i];
             var setCount = (req.ProductId.HasValue ? 1 : 0) + (req.ServiceId.HasValue ? 1 : 0) + (req.BundleId.HasValue ? 1 : 0);
             if (setCount != 1)
-                return new ResolvedLineItems(null, $"Mục #{i + 1}: phải chỉ định đúng một trong ProductId, ServiceId hoặc BundleId.");
+                return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.SpecifyOneFkFormat, i + 1));
 
             decimal itemPrice;
 
@@ -481,15 +515,15 @@ public class BookingService(
             {
                 var product = await _unitOfWork.GarageProducts.GetByIdWithInstallationAsync(req.ProductId.Value, ct);
                 if (product is null || product.GarageBranchId != branchId || product.DeletedAt != null)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: sản phẩm không tồn tại hoặc không thuộc chi nhánh này.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.ProductNotInBranchFormat, i + 1));
                 if (product.Status != ProductStatus.Active)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: sản phẩm '{product.Name}' không khả dụng.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.ProductUnavailableFormat, i + 1, product.Name));
 
                 itemPrice = product.MaterialPrice.Amount;
                 if (req.IncludeInstallation)
                 {
                     if (product.InstallationService is null)
-                        return new ResolvedLineItems(null, $"Mục #{i + 1}: sản phẩm '{product.Name}' không có dịch vụ lắp đặt.");
+                        return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.ProductNoInstallationFormat, i + 1, product.Name));
                     itemPrice += product.InstallationService.LaborPrice.Amount;
                 }
             }
@@ -498,9 +532,9 @@ public class BookingService(
                 var service = await _unitOfWork.GarageServices.FindOneAsync(
                     s => s.Id == req.ServiceId.Value && s.GarageBranchId == branchId && s.DeletedAt == null);
                 if (service is null)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: dịch vụ không tồn tại hoặc không thuộc chi nhánh này.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.ServiceNotInBranchFormat, i + 1));
                 if (service.Status != ProductStatus.Active)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: dịch vụ '{service.Name}' không khả dụng.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.ServiceUnavailableFormat, i + 1, service.Name));
 
                 itemPrice = service.LaborPrice.Amount;
             }
@@ -508,9 +542,9 @@ public class BookingService(
             {
                 var bundle = await _unitOfWork.GarageBundles.GetByIdWithItemsAsync(req.BundleId!.Value, ct);
                 if (bundle is null || bundle.GarageBranchId != branchId || bundle.DeletedAt != null)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: combo không tồn tại hoặc không thuộc chi nhánh này.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.BundleNotInBranchFormat, i + 1));
                 if (bundle.Status != ProductStatus.Active)
-                    return new ResolvedLineItems(null, $"Mục #{i + 1}: combo '{bundle.Name}' không khả dụng.");
+                    return new ResolvedLineItems(null, string.Format(EndpointMessages.BookingLineItem.BundleUnavailableFormat, i + 1, bundle.Name));
 
                 var subTotal = GarageBundleMappings.CalculateSubTotal(bundle);
                 itemPrice = GarageBundleMappings.CalculateFinalPrice(bundle, subTotal);
@@ -530,10 +564,6 @@ public class BookingService(
         return new ResolvedLineItems(result, null);
     }
 
-    /// <summary>
-    /// Flatten booking line items at completion time for the BookingCompletedEvent.
-    /// Bundles are expanded into individual items so Vehicle service can update PartTracking.
-    /// </summary>
     private async Task<List<BookingCompletedLineItem>> ResolveCompletedLineItemsAsync(
         Booking booking,
         CancellationToken ct)
@@ -706,4 +736,18 @@ public class BookingService(
             DateTimeKind.Local => dt.ToUniversalTime(),
             _ => DateTime.SpecifyKind(dt, DateTimeKind.Utc)
         };
+
+    private static BookingVehicleSummary? DeserializeVehicleSnapshot(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+        try
+        {
+            return JsonSerializer.Deserialize<BookingVehicleSummary>(json, JsonOptions);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

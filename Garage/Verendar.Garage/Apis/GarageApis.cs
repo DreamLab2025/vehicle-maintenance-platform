@@ -1,3 +1,4 @@
+using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.ExternalServices;
 using Verendar.Garage.Application.Services.Interfaces;
@@ -159,7 +160,8 @@ public static class GarageApis
         var info = await businessLookupService.LookupBusinessAsync(taxCode.Trim(), ct);
 
         if (info is null)
-            return ApiResponse<BusinessInfoDto>.NotFoundResponse($"Không tìm thấy doanh nghiệp với MST '{taxCode}'.").ToHttpResult();
+            return ApiResponse<BusinessInfoDto>.NotFoundResponse(
+                string.Format(EndpointMessages.OwnerGarage.TaxLookupNotFoundFormat, taxCode)).ToHttpResult();
 
         return ApiResponse<BusinessInfoDto>.SuccessResponse(info).ToHttpResult();
     }

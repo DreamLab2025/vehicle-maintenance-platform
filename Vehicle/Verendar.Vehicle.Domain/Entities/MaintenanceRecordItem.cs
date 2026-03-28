@@ -8,7 +8,7 @@ namespace Verendar.Vehicle.Domain.Entities
         [Required]
         public Guid PartCategoryId { get; set; }
 
-        public Guid? PartProductId { get; set; }
+        public Guid? GarageProductId { get; set; }
 
         [MaxLength(200)]
         public string? CustomPartName { get; set; }
@@ -26,7 +26,5 @@ namespace Verendar.Vehicle.Domain.Entities
         public MaintenanceRecord MaintenanceRecord { get; set; } = null!;
 
         public PartCategory PartCategory { get; set; } = null!;
-
-        public PartProduct? PartProduct { get; set; }
     }
 }
