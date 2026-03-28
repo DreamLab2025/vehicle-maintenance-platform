@@ -14,9 +14,7 @@ namespace Verendar.Notification.Application.Mapping
                 PhoneNumberVerified = message.PhoneNumberVerified,
                 Email = message.Email,
                 EmailVerified = message.EmailVerified,
-                InAppEnabled = isEnabled,
-                SmsEnabled = isEnabled,
-                SmsForHighPriorityOnly = isEnabled
+                InAppEnabled = isEnabled
             };
         }
     }

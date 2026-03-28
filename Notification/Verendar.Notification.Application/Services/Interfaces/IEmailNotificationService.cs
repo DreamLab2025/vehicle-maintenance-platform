@@ -1,18 +1,28 @@
-using Verender.Identity.Contracts.Events;
-using Verendar.Vehicle.Contracts.Events;
+namespace Verendar.Notification.Application.Services.Interfaces;
 
-namespace Verendar.Notification.Application.Services.Interfaces
+public interface IEmailNotificationService
 {
-    public interface IEmailNotificationService
-    {
-        Task<bool> SendOtpEmailAsync(OtpRequestedEvent message, CancellationToken cancellationToken = default);
+    Task<bool> SendOtpEmailAsync(
+        string email,
+        string otpCode,
+        DateTime expiresAt,
+        string otpType,
+        CancellationToken cancellationToken = default);
 
-        Task<bool> SendWelcomeEmailAsync(UserRegisteredEvent message, CancellationToken cancellationToken = default);
+    Task<bool> SendMemberAccountCreatedEmailAsync(
+        string email,
+        string displayName,
+        string tempPassword,
+        string role,
+        string loginUrl,
+        CancellationToken cancellationToken = default);
 
-        Task<(bool EmailSent, Guid? NotificationId)> SendOdometerReminderAsync(OdometerReminderEvent message, CancellationToken cancellationToken = default);
-
-        Task<(bool EmailSent, IReadOnlyList<Guid> NotificationIds)> SendMaintenanceReminderAsync(MaintenanceReminderEvent message, CancellationToken cancellationToken = default);
-
-        Task<bool> SendMemberAccountCreatedEmailAsync(MemberAccountCreatedEvent message, CancellationToken cancellationToken = default);
-    }
+    Task<bool> SendNotificationEmailAsync(
+        string email,
+        string title,
+        string message,
+        string ctaUrl,
+        string ctaText,
+        string? userName,
+        CancellationToken cancellationToken = default);
 }

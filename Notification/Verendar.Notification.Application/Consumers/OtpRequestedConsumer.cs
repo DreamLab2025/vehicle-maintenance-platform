@@ -1,72 +1,73 @@
 using Verender.Identity.Contracts.Events;
 
-namespace Verendar.Notification.Application.Consumers
+namespace Verendar.Notification.Application.Consumers;
+
+public class OtpRequestedConsumer(
+    ILogger<OtpRequestedConsumer> logger,
+    IEmailNotificationService emailNotificationService) : IConsumer<OtpRequestedEvent>
 {
-    public class OtpRequestedConsumer(
-        ILogger<OtpRequestedConsumer> logger,
-        IEmailNotificationService emailNotificationService) : IConsumer<OtpRequestedEvent>
+    public async Task Consume(ConsumeContext<OtpRequestedEvent> context)
     {
-        private readonly ILogger<OtpRequestedConsumer> _logger = logger;
-        private readonly IEmailNotificationService _emailNotificationService = emailNotificationService;
+        var message = context.Message;
+        var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
 
-        public async Task Consume(ConsumeContext<OtpRequestedEvent> context)
+        logger.LogDebug("Processing OTP email request — MessageId: {MessageId}, UserId: {UserId}, Email: {Email}",
+            messageId, message.UserId, MaskEmail(message.TargetValue));
+
+        try
         {
-            var message = context.Message;
-            var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
-
-            _logger.LogDebug("Processing OTP email request - MessageId: {MessageId}, UserId: {UserId}, Email: {Email}",
-                messageId, message.UserId, MaskEmail(message.TargetValue));
-
-            try
+            if (!ValidateMessage(message))
             {
-                if (!ValidateMessage(message))
-                {
-                    _logger.LogWarning("Invalid OTP request message - MessageId: {MessageId}, UserId: {UserId}",
-                        messageId, message.UserId);
-                    return;
-                }
-
-                var success = await _emailNotificationService.SendOtpEmailAsync(message);
-
-                if (success)
-                {
-                    _logger.LogInformation(
-                        "OTP Email processed successfully - MessageId: {MessageId}, UserId: {UserId}, Target: {Target}",
-                        messageId, message.UserId, MaskEmail(message.TargetValue));
-                }
-                else
-                {
-                    _logger.LogWarning("OTP email send failed - MessageId: {MessageId}, UserId: {UserId}",
-                        messageId, message.UserId);
-                }
+                logger.LogWarning("Invalid OTP request message — MessageId: {MessageId}, UserId: {UserId}",
+                    messageId, message.UserId);
+                return;
             }
-            catch (Exception ex)
+
+            var success = await emailNotificationService.SendOtpEmailAsync(
+                message.TargetValue!,
+                message.Otp,
+                message.ExpiryTime,
+                message.Type.ToString(),
+                context.CancellationToken);
+
+            if (success)
             {
-                _logger.LogError(ex, "Error sending OTP email - MessageId: {MessageId}, UserId: {UserId}",
+                logger.LogInformation(
+                    "OTP email sent — MessageId: {MessageId}, UserId: {UserId}, Target: {Target}",
+                    messageId, message.UserId, MaskEmail(message.TargetValue));
+            }
+            else
+            {
+                logger.LogWarning("OTP email send failed — MessageId: {MessageId}, UserId: {UserId}",
                     messageId, message.UserId);
             }
         }
-
-        private static string? MaskEmail(string? email)
+        catch (Exception ex)
         {
-            if (string.IsNullOrEmpty(email)) return "N/A";
-            if (!email.Contains("@")) return "****";
-            var parts = email.Split('@');
-            if (parts.Length != 2) return "****";
-            var username = parts[0];
-            var domain = parts[1];
-            if (username.Length <= 2) return $"**@{domain}";
-            return $"{username[..2]}***@{domain}";
+            logger.LogError(ex, "Error sending OTP email — MessageId: {MessageId}, UserId: {UserId}",
+                messageId, message.UserId);
         }
+    }
 
-        private static bool ValidateMessage(OtpRequestedEvent message)
-        {
-            if (message.Type != OtpType.Email) return false;
-            if (string.IsNullOrEmpty(message.TargetValue)) return false;
-            if (message.ExpiryTime < DateTime.UtcNow) return false;
+    private static string? MaskEmail(string? email)
+    {
+        if (string.IsNullOrEmpty(email)) return "N/A";
+        if (!email.Contains("@")) return "****";
+        var parts = email.Split('@');
+        if (parts.Length != 2) return "****";
+        var username = parts[0];
+        var domain = parts[1];
+        if (username.Length <= 2) return $"**@{domain}";
+        return $"{username[..2]}***@{domain}";
+    }
 
-            return message.TargetValue.Contains("@", StringComparison.Ordinal) &&
-                   message.TargetValue.Contains(".", StringComparison.Ordinal);
-        }
+    private static bool ValidateMessage(OtpRequestedEvent message)
+    {
+        if (message.Type != OtpType.Email) return false;
+        if (string.IsNullOrEmpty(message.TargetValue)) return false;
+        if (message.ExpiryTime < DateTime.UtcNow) return false;
+
+        return message.TargetValue.Contains('@', StringComparison.Ordinal) &&
+               message.TargetValue.Contains('.', StringComparison.Ordinal);
     }
 }

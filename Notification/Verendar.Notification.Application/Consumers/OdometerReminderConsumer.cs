@@ -1,48 +1,73 @@
+using Microsoft.Extensions.Options;
+using Verendar.Notification.Application.Constants;
 using Verendar.Notification.Application.Mapping;
+using Verendar.Notification.Application.Options;
+using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Vehicle.Contracts.Events;
 
-namespace Verendar.Notification.Application.Consumers
+namespace Verendar.Notification.Application.Consumers;
+
+public class OdometerReminderConsumer(
+    ILogger<OdometerReminderConsumer> logger,
+    IUnitOfWork unitOfWork,
+    IInAppNotificationService inAppNotificationService,
+    INotificationService notificationService,
+    IOptions<NotificationAppOptions> appOptions) : IConsumer<OdometerReminderEvent>
 {
-    public class OdometerReminderConsumer(
-        ILogger<OdometerReminderConsumer> logger,
-        IEmailNotificationService emailNotificationService,
-        IInAppNotificationService inAppNotificationService,
-        INotificationService notificationService) : IConsumer<OdometerReminderEvent>
+    public async Task Consume(ConsumeContext<OdometerReminderEvent> context)
     {
-        private readonly ILogger<OdometerReminderConsumer> _logger = logger;
-        private readonly IEmailNotificationService _emailNotificationService = emailNotificationService;
-        private readonly IInAppNotificationService _inAppNotificationService = inAppNotificationService;
-        private readonly INotificationService _notificationService = notificationService;
+        var message = context.Message;
+        var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
+        var routes = appOptions.Value;
 
-        public async Task Consume(ConsumeContext<OdometerReminderEvent> context)
+        logger.LogDebug("Processing OdometerReminder — MessageId: {MessageId}, UserId: {UserId}",
+            messageId, message.UserId);
+
+        try
         {
-            var message = context.Message;
-            var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
+            var days = message.StaleOdometerDays > 0
+                ? message.StaleOdometerDays
+                : NotificationConstants.Defaults.StaleOdometerDays;
+            var title = NotificationConstants.Titles.OdometerReminder;
+            var content =
+                $"Bạn đã không cập nhật số km (odo) trong {days} ngày qua. "
+                + "Vui lòng cập nhật số km của xe để Verendar có thể theo dõi bảo dưỡng chính xác hơn.";
+            var firstVehicle = message.Vehicles?.FirstOrDefault();
+            var entityId = firstVehicle?.UserVehicleId;
+            var actionPath = entityId.HasValue
+                ? routes.UserVehicleOdometerRelativeUrl(entityId.Value)
+                : routes.UserVehiclesFallbackPath;
 
-            _logger.LogDebug("Processing OdometerReminder - MessageId: {MessageId}, UserId: {UserId}",
+            var notification = NotificationMappings.CreateUserNotification(
+                message.UserId,
+                title,
+                content,
+                NotificationPriority.Medium,
+                "OdometerReminder",
+                entityId,
+                actionPath);
+
+            await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
+                unitOfWork, notification, message.UserId, context.CancellationToken);
+            await ConsumerNotificationFlow.PushInAppAndMarkDeliveredAsync(
+                inAppNotificationService,
+                notificationService,
+                message.UserId,
+                title,
+                content,
+                notification.Id,
+                context.CancellationToken);
+
+            logger.LogInformation(
+                "OdometerReminder processed — MessageId: {MessageId}, UserId: {UserId}, NotificationId: {NotificationId}",
+                messageId, message.UserId, notification.Id);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Error processing OdometerReminder — MessageId: {MessageId}, UserId: {UserId}",
                 messageId, message.UserId);
-
-            try
-            {
-                var (emailSent, notificationId) = await _emailNotificationService.SendOdometerReminderAsync(message, context.CancellationToken);
-
-                if (emailSent)
-                    _logger.LogInformation("OdometerReminder email sent - MessageId: {MessageId}, UserId: {UserId}", messageId, message.UserId);
-                else if (!string.IsNullOrWhiteSpace(message.TargetValue))
-                    _logger.LogWarning("OdometerReminder email send failed - MessageId: {MessageId}, UserId: {UserId}", messageId, message.UserId);
-
-                var inAppPayload = message.ToInAppPayload();
-                await _inAppNotificationService.SendAsync(message.UserId, inAppPayload, context.CancellationToken);
-
-                if (notificationId.HasValue)
-                    await _notificationService.MarkInAppDeliveredAsync(notificationId.Value, message.UserId, inAppPayload.Metadata, context.CancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing OdometerReminder - MessageId: {MessageId}, UserId: {UserId}",
-                    messageId, message.UserId);
-                throw;
-            }
+            throw;
         }
     }
 }

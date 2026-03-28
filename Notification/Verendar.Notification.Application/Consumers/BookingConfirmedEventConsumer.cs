@@ -1,16 +1,90 @@
-using MassTransit;
+using Microsoft.Extensions.Options;
 using Verendar.Garage.Contracts.Events;
+using Verendar.Notification.Application.Constants;
+using Verendar.Notification.Application.Mapping;
+using Verendar.Notification.Application.Options;
+using Verendar.Notification.Application.Services.Interfaces;
 
 namespace Verendar.Notification.Application.Consumers;
 
-public class BookingConfirmedEventConsumer(ILogger<BookingConfirmedEventConsumer> logger) : IConsumer<BookingConfirmedEvent>
+public class BookingConfirmedEventConsumer(
+    ILogger<BookingConfirmedEventConsumer> logger,
+    IUnitOfWork unitOfWork,
+    IEmailNotificationService emailNotificationService,
+    IInAppNotificationService inAppNotificationService,
+    INotificationService notificationService,
+    IOptions<NotificationAppOptions> appOptions) : IConsumer<BookingConfirmedEvent>
 {
-    public Task Consume(ConsumeContext<BookingConfirmedEvent> context)
+    public async Task Consume(ConsumeContext<BookingConfirmedEvent> context)
     {
         var m = context.Message;
-        logger.LogInformation(
-            "BookingConfirmed: BookingId={BookingId} Customer={Customer} MechanicMember={MechanicMemberId}",
-            m.BookingId, m.CustomerUserId, m.MechanicMemberId);
-        return Task.CompletedTask;
+        var messageId = context.MessageId?.ToString() ?? Guid.NewGuid().ToString();
+        var routes = appOptions.Value;
+
+        logger.LogDebug(
+            "Processing BookingConfirmed — MessageId:{MessageId} BookingId:{BookingId} Customer:{Customer}",
+            messageId, m.BookingId, m.CustomerUserId);
+
+        try
+        {
+            var (title, content) = GarageBookingNotificationMappings.BookingConfirmedCopy(m);
+            var actionPath = routes.BookingDetailRelativeUrl(m.BookingId);
+            var actionAbsolute = routes.ToAbsoluteUrl(actionPath);
+
+            var notification = NotificationMappings.CreateUserNotification(
+                m.CustomerUserId,
+                title,
+                content,
+                NotificationPriority.High,
+                "Booking",
+                m.BookingId,
+                actionPath);
+
+            await unitOfWork.Notifications.AddAsync(notification);
+            await unitOfWork.NotificationDeliveries.AddAsync(
+                notification.CreateDelivery(m.CustomerUserId.ToString(), NotificationChannel.InApp));
+
+            NotificationDelivery? emailDelivery = null;
+            if (!string.IsNullOrWhiteSpace(m.CustomerEmail))
+            {
+                emailDelivery = notification.CreateDelivery(m.CustomerEmail, NotificationChannel.EMAIL);
+                await unitOfWork.NotificationDeliveries.AddAsync(emailDelivery);
+            }
+
+            await unitOfWork.SaveChangesAsync(context.CancellationToken);
+
+            if (emailDelivery != null && !string.IsNullOrWhiteSpace(m.CustomerEmail))
+            {
+                var ok = await emailNotificationService.SendNotificationEmailAsync(
+                    m.CustomerEmail,
+                    title,
+                    content,
+                    actionAbsolute,
+                    NotificationConstants.ConsumerCopy.EmailCtaViewBooking,
+                    null,
+                    context.CancellationToken);
+                await ConsumerNotificationFlow.FinalizeEmailDeliveryAsync(
+                    unitOfWork, emailDelivery, ok, context.CancellationToken);
+            }
+
+            await ConsumerNotificationFlow.PushInAppAndMarkDeliveredAsync(
+                inAppNotificationService,
+                notificationService,
+                m.CustomerUserId,
+                title,
+                content,
+                notification.Id,
+                context.CancellationToken);
+
+            logger.LogInformation(
+                "BookingConfirmed processed — BookingId:{BookingId} NotificationId:{NotificationId}",
+                m.BookingId, notification.Id);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Error processing BookingConfirmed — MessageId:{MessageId} BookingId:{BookingId}",
+                messageId, m.BookingId);
+        }
     }
 }

@@ -18,13 +18,8 @@ namespace Verendar.Notification.Domain.Entities
         public DateTime? SentAt { get; set; }
         public DateTime? DeliveredAt { get; set; }
 
-        public int RetryCount { get; set; } = 0;
-        public int MaxRetries { get; set; } = 3;
-
         [MaxLength(1000)]
         public string? ErrorMessage { get; set; }
-
-        public DateTime? NextRetryAt { get; set; }
 
         [MaxLength(200)]
         public string? ExternalId { get; set; }

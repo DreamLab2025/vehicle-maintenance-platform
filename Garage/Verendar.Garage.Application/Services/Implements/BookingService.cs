@@ -318,13 +318,21 @@ public class BookingService(
 
         try
         {
+            var customerContact = await _identityContactClient.GetCustomerContactAsync(booking.UserId, ct);
+            var customerEmail = string.IsNullOrWhiteSpace(customerContact?.Email) ? null : customerContact.Email.Trim();
+
             await _publishEndpoint.Publish(new BookingConfirmedEvent
             {
                 BookingId = booking.Id,
                 CustomerUserId = booking.UserId,
                 GarageBranchId = booking.GarageBranchId,
                 MechanicMemberId = mechanic.Id,
-                MechanicDisplayName = mechanic.DisplayName
+                MechanicDisplayName = mechanic.DisplayName,
+                BranchName = booking.GarageBranch.Name,
+                ScheduledAt = booking.ScheduledAt,
+                ItemsSummary = BookingMappings.BuildItemsSummaryFromLineItems(
+                    booking.LineItems.OrderBy(i => i.SortOrder).ToList()),
+                CustomerEmail = customerEmail
             }, ct);
         }
         catch (Exception ex)
@@ -453,13 +461,18 @@ public class BookingService(
 
         try
         {
+            var customerContact = await _identityContactClient.GetCustomerContactAsync(booking.UserId, ct);
+            var customerEmail = string.IsNullOrWhiteSpace(customerContact?.Email) ? null : customerContact.Email.Trim();
+
             await _publishEndpoint.Publish(new BookingCancelledEvent
             {
                 BookingId = booking.Id,
                 CustomerUserId = booking.UserId,
                 GarageBranchId = booking.GarageBranchId,
+                BranchName = booking.GarageBranch.Name,
                 Reason = reason,
-                CancelledAt = DateTime.UtcNow
+                CancelledAt = DateTime.UtcNow,
+                CustomerEmail = customerEmail
             }, ct);
         }
         catch (Exception ex)
@@ -474,10 +487,6 @@ public class BookingService(
 
     private record ResolvedLineItems(List<BookingLineItem>? LineItems, string? Error);
 
-    /// <summary>
-    /// Resolve CreateBookingLineItemRequest list → BookingLineItem entities with prices.
-    /// Validates items belong to the branch and are Active.
-    /// </summary>
     private async Task<ResolvedLineItems> ResolveCreateLineItemsAsync(
         List<CreateBookingLineItemRequest> requests,
         Guid branchId,
@@ -547,10 +556,6 @@ public class BookingService(
         return new ResolvedLineItems(result, null);
     }
 
-    /// <summary>
-    /// Flatten booking line items at completion time for the BookingCompletedEvent.
-    /// Bundles are expanded into individual items so Vehicle service can update PartTracking.
-    /// </summary>
     private async Task<List<BookingCompletedLineItem>> ResolveCompletedLineItemsAsync(
         Booking booking,
         CancellationToken ct)
