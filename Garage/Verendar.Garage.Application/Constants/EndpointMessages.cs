@@ -179,6 +179,12 @@ public static class EndpointMessages
         public const string ItemServiceUnavailableFormat = "Mục #{0}: Dịch vụ «{1}» hiện không khả dụng.";
     }
 
+    public static class Catalog
+    {
+        public const string BranchNotFoundByIdFormat = "Không tìm thấy chi nhánh (mã: {0}) hoặc chi nhánh hiện không hoạt động.";
+        public const string ListSuccess = "Đã tải danh mục dịch vụ và sản phẩm.";
+    }
+
     public static class BookingLineItem
     {
         public const string SpecifyOneFkFormat = "Mục #{0}: Chỉ chọn một trong sản phẩm, dịch vụ hoặc gói combo.";

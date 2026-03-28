@@ -4,7 +4,6 @@ using Verendar.Identity.Application.Shared.Helpers;
 
 namespace Verendar.Identity.Infrastructure.Data.Seeders
 {
-    /// <summary>Khách hàng / user demo — không phải chủ garage (xem <see cref="GarageOwnerDevUserSeeder"/>).</summary>
     public static class TestUserSeeder
     {
         private static readonly Guid TestUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");

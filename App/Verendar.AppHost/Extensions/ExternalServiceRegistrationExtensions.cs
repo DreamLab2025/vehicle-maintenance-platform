@@ -180,6 +180,7 @@ namespace Verendar.AppHost.Extensions
                     yarp.AddRoute("/api/v1/garage-services/{**catch-all}", garageCluster);
                     yarp.AddRoute("/api/v1/garage-bundles/{**catch-all}", garageCluster);
                     yarp.AddRoute("/api/v1/service-categories/{**catch-all}", garageCluster);
+                    yarp.AddRoute("/api/v1/garage-catalog/{**catch-all}", garageCluster);
                 })
                 .WaitFor(identityService)
                 .WaitFor(vehicleService)
