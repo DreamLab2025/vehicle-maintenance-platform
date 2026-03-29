@@ -4,7 +4,6 @@ using System.Text.Json;
 using Verendar.Common.Shared;
 using Verendar.Location.Application.Dtos;
 
-/// <summary>Contract check: JSON shape clients see (camelCase) matches <see cref="ApiResponse{T}"/> + DTOs.</summary>
 public class LocationApiResponseJsonTests
 {
     private static readonly JsonSerializerOptions CamelCaseJson = new()

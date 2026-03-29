@@ -4,10 +4,6 @@ using Verendar.Payment.Contracts.Events;
 
 namespace Verendar.Garage.Application.Consumers;
 
-/// <summary>
-/// Handles PaymentSucceededEvent — full logic implemented in Task 8.
-/// Transitions the booking from Pending to AwaitingConfirmation.
-/// </summary>
 public class PaymentSucceededEventConsumer(ILogger<PaymentSucceededEventConsumer> logger)
     : IConsumer<PaymentSucceededEvent>
 {

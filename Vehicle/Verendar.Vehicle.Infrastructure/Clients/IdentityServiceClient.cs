@@ -45,9 +45,6 @@ namespace Verendar.Vehicle.Infrastructure.Clients
             }
         }
 
-        /// <summary>
-        /// Identity returns <c>ApiResponse&lt;UserEmailResponse&gt;</c>; read <c>data.email</c>.
-        /// </summary>
         private static string? TryReadEmailFromApiEnvelope(string json)
         {
             try

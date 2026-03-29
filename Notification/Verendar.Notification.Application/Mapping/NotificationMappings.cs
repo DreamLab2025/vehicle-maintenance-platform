@@ -11,7 +11,8 @@ public static class NotificationMappings
         NotificationPriority priority,
         string entityType,
         Guid? entityId,
-        string? actionUrl)
+        string? actionUrl,
+        string? extendedPayloadJson = null)
     {
         return new NotificationEntity
         {
@@ -24,7 +25,8 @@ public static class NotificationMappings
             CreatedAt = DateTime.UtcNow,
             EntityType = entityType,
             EntityId = entityId,
-            ActionUrl = actionUrl
+            ActionUrl = actionUrl,
+            ExtendedPayloadJson = extendedPayloadJson
         };
     }
 
@@ -58,7 +60,8 @@ public static class NotificationMappings
             ActionUrl = n.ActionUrl,
             IsRead = n.IsRead,
             ReadAt = n.ReadAt,
-            CreatedAt = n.CreatedAt
+            CreatedAt = n.CreatedAt,
+            MaintenanceItems = MaintenanceNotificationPayloadSerializer.TryDeserializeItems(n.ExtendedPayloadJson)
         };
     }
 }

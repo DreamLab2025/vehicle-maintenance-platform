@@ -8,10 +8,8 @@ public class PaymentSucceededEvent : BaseEvent
 
     public Guid PaymentId { get; set; }
 
-    /// <summary>The business entity this payment is for (e.g. BookingId).</summary>
     public Guid ReferenceId { get; set; }
 
-    /// <summary>The type of reference entity (e.g. "Booking").</summary>
     public string ReferenceType { get; set; } = string.Empty;
 
     public decimal Amount { get; set; }

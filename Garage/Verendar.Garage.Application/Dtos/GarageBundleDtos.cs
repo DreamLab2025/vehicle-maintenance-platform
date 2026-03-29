@@ -4,10 +4,8 @@ namespace Verendar.Garage.Application.Dtos;
 
 public class BundleItemRequest
 {
-    /// <summary>Exactly one of ProductId / ServiceId must be non-null.</summary>
     public Guid? ProductId { get; set; }
     public Guid? ServiceId { get; set; }
-    /// <summary>Chỉ có nghĩa khi ProductId != null và product có InstallationServiceId.</summary>
     public bool IncludeInstallation { get; set; }
     public int SortOrder { get; set; }
 }
@@ -19,7 +17,6 @@ public class BundleItemResponse
     public Guid? ServiceId { get; set; }
     public bool IncludeInstallation { get; set; }
     public int SortOrder { get; set; }
-    /// <summary>Tên phụ tùng hoặc dịch vụ (denormalized).</summary>
     public string ItemName { get; set; } = null!;
     public MoneyDto? MaterialPrice { get; set; }
     public MoneyDto? LaborPrice { get; set; }
@@ -32,9 +29,7 @@ public class CreateGarageBundleRequest
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
-    /// <summary>Giảm giá cố định (VND). Chỉ set một trong DiscountAmount hoặc DiscountPercent.</summary>
     public decimal? DiscountAmount { get; set; }
-    /// <summary>Giảm giá theo phần trăm (0–100). Chỉ set một trong DiscountAmount hoặc DiscountPercent.</summary>
     public decimal? DiscountPercent { get; set; }
     public List<BundleItemRequest> Items { get; set; } = [];
 }
@@ -65,9 +60,7 @@ public class GarageBundleListItemResponse
     public string? ImageUrl { get; set; }
     public decimal? DiscountAmount { get; set; }
     public decimal? DiscountPercent { get; set; }
-    /// <summary>Tổng giá các items trước discount.</summary>
     public decimal SubTotal { get; set; }
-    /// <summary>Giá cuối sau discount.</summary>
     public decimal FinalPrice { get; set; }
     public string Currency { get; set; } = "VND";
     public int ItemCount { get; set; }

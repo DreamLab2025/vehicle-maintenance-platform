@@ -1,6 +1,5 @@
 namespace Verendar.Vehicle.Contracts.Dtos.Internal;
 
-/// <summary>Minimal xe — Garage (mechanic) xem qua internal API.</summary>
 public record GaragePartnerUserVehicleDto
 {
     public Guid Id { get; init; }

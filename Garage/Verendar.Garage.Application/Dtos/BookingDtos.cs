@@ -13,11 +13,9 @@ public record CreateBookingRequest
 
 public record CreateBookingLineItemRequest
 {
-    /// <summary>Exactly one of ProductId / ServiceId / BundleId must be non-null.</summary>
     public Guid? ProductId { get; init; }
     public Guid? ServiceId { get; init; }
     public Guid? BundleId { get; init; }
-    /// <summary>Chỉ có nghĩa khi ProductId != null và product có InstallationServiceId.</summary>
     public bool IncludeInstallation { get; init; }
     public int SortOrder { get; init; }
 }
@@ -55,7 +53,6 @@ public record BookingLineItemResponse
     public decimal BookedItemAmount { get; init; }
     public string BookedItemCurrency { get; init; } = "VND";
     public int SortOrder { get; init; }
-    /// <summary>Chi tiết bundle — chỉ có khi BundleId != null.</summary>
     public BookingBundleSummary? BundleDetails { get; init; }
 }
 
@@ -138,7 +135,6 @@ public record BookingListItemResponse
     public DateTime ScheduledAt { get; init; }
     public Guid GarageBranchId { get; init; }
     public string BranchName { get; init; } = string.Empty;
-    /// <summary>Tên item đầu tiên (hoặc tóm tắt "X sản phẩm/dịch vụ").</summary>
     public string ItemsSummary { get; init; } = string.Empty;
     public decimal BookedTotalAmount { get; init; }
     public string BookedCurrency { get; init; } = "VND";

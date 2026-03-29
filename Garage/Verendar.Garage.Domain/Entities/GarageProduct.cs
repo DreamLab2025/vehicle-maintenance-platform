@@ -7,7 +7,6 @@ public class GarageProduct : BaseEntity
 {
     public Guid GarageBranchId { get; set; }
 
-    /// <summary>Liên kết với PartCategory trong Vehicle service để trigger PartTracking khi hoàn thành.</summary>
     public Guid? PartCategoryId { get; set; }
 
     [Required, MaxLength(200)]
@@ -31,10 +30,6 @@ public class GarageProduct : BaseEntity
 
     public ProductStatus Status { get; set; } = ProductStatus.Active;
 
-    /// <summary>
-    /// Dịch vụ thay/lắp đặt kèm theo (optional). Khi có, user có thể chọn mua phụ tùng kèm thay hoặc chỉ mua phụ tùng.
-    /// InstallationService phải thuộc cùng GarageBranchId.
-    /// </summary>
     public Guid? InstallationServiceId { get; set; }
 
     // Navigation

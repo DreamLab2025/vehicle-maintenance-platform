@@ -5,7 +5,6 @@ namespace Verendar.Garage.Infrastructure.Data.Seeders;
 
 public static class GarageBranchDevSeeder
 {
-    /// <summary>Phải trùng <c>GarageOwnerDevUserSeeder.UserId</c> (Identity) — <c>garage@gmail.com</c>.</summary>
     public static readonly Guid DevOwnerUserId = Guid.Parse("11111111-1111-1111-1111-111111111222");
 
     public static readonly Guid DevGarageId = Guid.Parse("22222222-2222-2222-2222-222222222201");

@@ -72,9 +72,6 @@ namespace Verendar.Vehicle.Application.Dtos
         public int? EngineDisplacement { get; set; }
         public int? ManufactureYear { get; set; }
 
-        /// <summary>
-        /// Chuẩn hóa pagination và trim search string (ModelName).
-        /// </summary>
         public override void Normalize()
         {
             base.Normalize();

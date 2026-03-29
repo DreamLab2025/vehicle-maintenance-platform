@@ -7,10 +7,8 @@ public class GarageReview : BaseEntity
 
     public Guid BookingId { get; set; }
 
-    /// <summary>Cross-service reference to Identity User (ID only, no join).</summary>
     public Guid UserId { get; set; }
 
-    /// <summary>Rating 1–5.</summary>
     public int Rating { get; set; }
 
     [MaxLength(2000)]

@@ -1,6 +1,5 @@
 namespace Verendar.Ai.Domain.QueryResults;
 
-/// <summary>Aggregated AI usage for a single model id (grouped row).</summary>
 public sealed class AiUsageByModelSummary
 {
     public string Model { get; set; } = null!;

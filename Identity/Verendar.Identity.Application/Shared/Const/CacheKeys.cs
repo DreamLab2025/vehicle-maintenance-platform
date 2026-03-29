@@ -1,6 +1,5 @@
 namespace Verendar.Identity.Application.Shared.Const;
 
-/// <summary>Logical cache keys; Redis full key is <c>Identity:</c> + these segments (see host <c>AddServiceRedis</c>).</summary>
 public static class CacheKeys
 {
     private const string OtpRegisterSegment = "otp_register";

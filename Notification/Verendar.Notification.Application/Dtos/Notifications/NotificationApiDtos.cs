@@ -14,6 +14,7 @@ namespace Verendar.Notification.Application.Dtos.Notifications
         public bool IsRead { get; init; }
         public DateTime? ReadAt { get; init; }
         public DateTime CreatedAt { get; init; }
+        public IReadOnlyList<MaintenanceNotificationItemDto>? MaintenanceItems { get; init; }
     }
 
     public record NotificationStatusDto

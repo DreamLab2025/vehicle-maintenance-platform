@@ -50,6 +50,9 @@ public class MaintenanceReminderConsumer(
                 var actionPath = routes.UserVehicleMaintenanceRelativeUrl(vehicleId);
                 var actionAbsolute = routes.ToAbsoluteUrl(actionPath);
 
+                var groupItems = group.ToList();
+                var payloadJson = MaintenanceNotificationPayloadSerializer.SerializeFromEventItems(groupItems);
+
                 var notification = NotificationMappings.CreateUserNotification(
                     message.UserId,
                     title,
@@ -57,7 +60,8 @@ public class MaintenanceReminderConsumer(
                     message.Level.ToNotificationPriority(),
                     "UserVehicle",
                     vehicleId,
-                    actionPath);
+                    actionPath,
+                    payloadJson);
 
                 await unitOfWork.Notifications.AddAsync(notification);
                 await unitOfWork.NotificationDeliveries.AddAsync(

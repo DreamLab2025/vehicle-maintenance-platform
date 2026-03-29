@@ -38,13 +38,9 @@ public class GarageBranchRequest
 
 public class BranchMapSearchRequest : PaginationRequest
 {
-    /// <summary>Text address — will be geocoded if lat/lng not provided.</summary>
     public string? Address { get; set; }
-    /// <summary>Center latitude. Skip location filter if both lat and lng are omitted.</summary>
     public double? Lat { get; set; }
-    /// <summary>Center longitude.</summary>
     public double? Lng { get; set; }
-    /// <summary>Search radius in km. Default 10.</summary>
     public double RadiusKm { get; set; } = 10;
 }
 

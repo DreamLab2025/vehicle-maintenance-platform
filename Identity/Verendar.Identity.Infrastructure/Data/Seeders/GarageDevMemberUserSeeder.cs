@@ -8,7 +8,6 @@ public static class GarageDevMemberUserSeeder
 {
     private const string DevPassword = "12345@Abc";
 
-    /// <summary>Audit CreatedBy — dev chủ garage (<see cref="GarageOwnerDevUserSeeder"/>).</summary>
     private static readonly Guid SeedActorId = GarageOwnerDevUserSeeder.UserId;
 
     public static async Task SeedAsync(UserDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
@@ -71,7 +70,6 @@ public static class GarageDevMemberUserSeeder
         string? Phone,
         UserRole Role);
 
-    /// <summary>Ids phải trùng <c>GarageBranchDevSeeder.DevUser*</c>.</summary>
     private static readonly MemberDef[] DevMembers =
     [
         new(
