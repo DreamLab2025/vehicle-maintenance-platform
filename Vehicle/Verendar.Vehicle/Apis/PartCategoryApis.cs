@@ -26,6 +26,14 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<PartCategoryResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<PartCategoryResponse>>(StatusCodes.Status404NotFound);
 
+            group.MapGet("/{partCategorySlug}/questionnaire", GetPartQuestionnaire)
+                .WithName("GetPartCategoryQuestionnaire")
+                .WithOpenApi(op => { op.Summary = "Lấy bộ câu hỏi chẩn đoán theo slug danh mục phụ tùng"; return op; })
+                .RequireAuthorization()
+                .Produces<ApiResponse<PartQuestionnaireResponse>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<PartQuestionnaireResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<PartQuestionnaireResponse>>(StatusCodes.Status404NotFound);
+
             group.MapGet("/{partCategorySlug}/reminders", GetRemindersByCategorySlug)
                 .WithName("GetRemindersByCategorySlug")
                 .WithOpenApi(op => { op.Summary = "Lấy toàn bộ reminder theo part category code"; return op; })
@@ -83,6 +91,14 @@ namespace Verendar.Vehicle.Apis
         private static async Task<IResult> GetCategoryById(Guid id, IPartCategoryService service)
         {
             var result = await service.GetCategoryByIdAsync(id);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> GetPartQuestionnaire(
+            string partCategorySlug,
+            IPartQuestionnaireService questionnaireService)
+        {
+            var result = await questionnaireService.GetQuestionnaireByPartCategorySlugAsync(partCategorySlug);
             return result.ToHttpResult();
         }
 
