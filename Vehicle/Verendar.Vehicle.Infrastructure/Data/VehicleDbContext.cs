@@ -14,6 +14,10 @@ namespace Verendar.Vehicle.Infrastructure.Data
 
         // Part Catalog
         public DbSet<PartCategory> PartCategories { get; set; } = null!;
+        public DbSet<MaintenanceQuestionGroup> MaintenanceQuestionGroups { get; set; } = null!;
+        public DbSet<MaintenanceQuestion> MaintenanceQuestions { get; set; } = null!;
+        public DbSet<MaintenanceQuestionOption> MaintenanceQuestionOptions { get; set; } = null!;
+        public DbSet<MaintenanceQuestionPartCategory> MaintenanceQuestionPartCategories { get; set; } = null!;
 
         // Maintenance Schedule
         public DbSet<DefaultMaintenanceSchedule> DefaultMaintenanceSchedules { get; set; } = null!;

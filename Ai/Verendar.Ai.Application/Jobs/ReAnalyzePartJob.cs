@@ -1,8 +1,3 @@
-using Verendar.Ai.Application.Clients;
-using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
-using Verendar.Ai.Application.Dtos.VehicleService;
-using Verendar.Ai.Application.Services.Interfaces;
-
 namespace Verendar.Ai.Application.Jobs
 {
     public class ReAnalyzePartJob(

@@ -1,0 +1,12 @@
+You are given an image of a vehicle speedometer / odometer. Read the total distance (km) shown on the odometer display.
+
+Return JSON only (no markdown, no extra text) with this exact shape:
+{
+  "detectedOdometer": <integer km, or null if unreadable>,
+  "confidence": "<high|medium|low>",
+  "message": "<short explanation in Vietnamese for the end user>"
+}
+
+Rules:
+- If the reading is unclear or missing, set detectedOdometer to null and explain why in message (Vietnamese).
+- The message field must always be Vietnamese, concise, and user-facing.

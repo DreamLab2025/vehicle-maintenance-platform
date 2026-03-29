@@ -10,13 +10,13 @@ public static class AiPromptSeeder
     [
         (AiOperation.ReadOdometerFromImage, AiProvider.Gemini,
             "Odometer Scan Prompt",
-            "Prompt hướng dẫn AI đọc số km từ ảnh đồng hồ công-tơ-mét",
-            "Verendar.Ai.Infrastructure.Prompts.odometer-scan.txt"),
+            "English instructions; user-facing message in JSON must be Vietnamese.",
+            "Verendar.Ai.Infrastructure.Data.Prompts.odometer-scan.txt"),
 
         (AiOperation.AnalyzeMaintenanceQuestionnaire, AiProvider.Gemini,
             "Vehicle Maintenance Analysis Prompt",
-            "Prompt phân tích câu hỏi bảo dưỡng xe và đưa ra khuyến nghị dựa trên Q&A và lịch hãng",
-            "Verendar.Ai.Infrastructure.Prompts.analyze-maintenance-questionnaire.txt"),
+            "English instructions; reasoning and warnings in JSON must be Vietnamese.",
+            "Verendar.Ai.Infrastructure.Data.Prompts.analyze-maintenance-questionnaire.txt"),
     ];
 
     public static async Task SeedAsync(AiDbContext context)

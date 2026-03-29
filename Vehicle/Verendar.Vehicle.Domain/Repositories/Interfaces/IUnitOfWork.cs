@@ -12,6 +12,7 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
 
         // Part Catalog
         IPartCategoryRepository PartCategories { get; }
+        IMaintenanceQuestionRepository MaintenanceQuestions { get; }
 
         // Maintenance Schedule
         IDefaultScheduleRepository DefaultSchedules { get; }

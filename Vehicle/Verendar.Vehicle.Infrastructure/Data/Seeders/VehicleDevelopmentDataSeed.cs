@@ -3,8 +3,7 @@ using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Infrastructure.Seeders;
 
-
-public static class MaintenanceReminderTestDataSeeder
+public static class VehicleDevelopmentDataSeed
 {
     private static readonly Guid TestUserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid WaveAlphaRedVariantId = Guid.Parse("e0000001-0000-0000-0000-000000000001");

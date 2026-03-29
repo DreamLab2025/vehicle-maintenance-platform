@@ -16,8 +16,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Prompts\odometer-scan.txt" />
-    <EmbeddedResource Include="Prompts\analyze-maintenance-questionnaire.txt" />
+    <EmbeddedResource Include="Data\Prompts\odometer-scan.txt" />
+    <EmbeddedResource Include="Data\Prompts\analyze-maintenance-questionnaire.txt" />
   </ItemGroup>
 
   <ItemGroup>

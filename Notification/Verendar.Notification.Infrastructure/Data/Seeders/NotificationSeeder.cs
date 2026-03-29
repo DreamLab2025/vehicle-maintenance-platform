@@ -76,7 +76,6 @@ public static class NotificationSeeder
             return;
         }
 
-        // Same string shape as Vehicle MaintenanceReminderEventMappings.ToEventItem (Wave Alpha + plate from MaintenanceReminderTestDataSeeder).
         var vehicleDisplayName = "Wave Alpha - 59-TEST-01";
         var totalSeeded = 0;
 

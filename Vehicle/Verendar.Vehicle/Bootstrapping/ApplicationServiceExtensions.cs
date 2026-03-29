@@ -70,6 +70,7 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IPartTrackingService, PartTrackingService>();
             builder.Services.AddScoped<IDefaultScheduleService, DefaultScheduleService>();
             builder.Services.AddScoped<IPartCategoryService, PartCategoryService>();
+            builder.Services.AddScoped<IPartQuestionnaireService, PartQuestionnaireService>();
             builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
             builder.Services.AddScoped<IMaintenanceExportService, MaintenanceExportService>();
             builder.Services.AddScoped<IMaintenanceProposalService, MaintenanceProposalService>();

@@ -26,9 +26,9 @@ public static class VehicleMaintenanceAnalysisPrompt
         var vehicleName = $"{vehicleInfo.Brand} {vehicleInfo.Model}".Trim();
 
         var basePredictionBlock =
-            $"- Odometer dự kiến: {predictionBase.ExpectedNextOdometer} km\n" +
-            $"- Ngày dự kiến: {predictionBase.ExpectedNextDate:yyyy-MM-dd}\n" +
-            $"- Nguồn dữ liệu: {predictionBase.DataSource}";
+            $"- Expected next service odometer (km): {predictionBase.ExpectedNextOdometer}\n" +
+            $"- Expected next service date: {predictionBase.ExpectedNextDate:yyyy-MM-dd}\n" +
+            $"- Data source: {predictionBase.DataSource}";
 
         var drivingPatternBlock = BuildDrivingPatternBlock(odometerSummary);
 
@@ -47,9 +47,9 @@ public static class VehicleMaintenanceAnalysisPrompt
     private static string BuildDrivingPatternBlock(VehicleServiceOdometerSummaryResponse? summary)
     {
         if (summary == null || summary.EntryCount < 2)
-            return "Người dùng chưa có lịch sử odometer đủ. Đây là phân tích baseline.";
+            return "Insufficient odometer history for personalized rate; using baseline analysis.";
 
         var kmPerMonth = summary.KmPerMonthLast3Months ?? summary.KmPerMonthAvg;
-        return $"Tốc độ lái thực tế: {kmPerMonth:F0} km/tháng ({summary.EntryCount} lần cập nhật).";
+        return $"Observed driving rate: {kmPerMonth:F0} km/month ({summary.EntryCount} odometer updates).";
     }
 }

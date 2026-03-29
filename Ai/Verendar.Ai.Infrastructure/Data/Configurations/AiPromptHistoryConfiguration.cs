@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Verendar.Ai.Domain.Entities;
 
-namespace Verendar.Ai.Infrastructure.Configurations;
+namespace Verendar.Ai.Infrastructure.Data.Configurations;
 
 public class AiPromptHistoryConfiguration : IEntityTypeConfiguration<AiPromptHistory>
 {

@@ -37,5 +37,6 @@ namespace Verendar.Vehicle.Domain.Entities
         public List<DefaultMaintenanceSchedule> DefaultSchedules { get; set; } = [];
         public List<PartTracking> PartTrackings { get; set; } = [];
         public List<MaintenanceRecordItem> MaintenanceItems { get; set; } = [];
+        public List<MaintenanceQuestionPartCategory> MaintenanceQuestionLinks { get; set; } = [];
     }
 }

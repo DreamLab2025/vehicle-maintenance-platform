@@ -39,7 +39,6 @@ namespace Verendar.Ai.Infrastructure.Services
             if (p.Equals("Bedrock", StringComparison.OrdinalIgnoreCase))
                 return AiProvider.Bedrock;
 
-            // Legacy: any other value falls back to Gemini (same as previous DI lambda).
             return AiProvider.Gemini;
         }
     }
