@@ -17,12 +17,21 @@ public static class MaintenanceReminderMappings
 
     public static NotificationPriority ToNotificationPriority(this ReminderLevel level) => level switch
     {
-        ReminderLevel.Critical => NotificationPriority.Critical,
-        ReminderLevel.High => NotificationPriority.High,
+        ReminderLevel.Normal or ReminderLevel.Low => NotificationPriority.Low,
         ReminderLevel.Medium => NotificationPriority.Medium,
-        ReminderLevel.Low => NotificationPriority.Low,
+        ReminderLevel.High or ReminderLevel.Critical => NotificationPriority.High,
         _ => NotificationPriority.Medium
     };
+
+    public static ReminderLevel AggregateReminderLevel(
+        ReminderLevel envelopeLevel,
+        IReadOnlyCollection<MaintenanceReminderItemDto> items)
+    {
+        if (items == null || items.Count == 0)
+            return envelopeLevel;
+        var maxItem = items.Max(i => (int)i.Level);
+        return (ReminderLevel)Math.Max((int)envelopeLevel, maxItem);
+    }
 
     public static (string Title, string Body) ToVehicleGroupCopy(
         ReminderLevel level,
@@ -47,11 +56,12 @@ public static class MaintenanceReminderMappings
     public static (string Title, string Message) BuildContent(this MaintenanceReminderEvent message)
     {
         var items = message.Items ?? [];
+        var effectiveLevel = AggregateReminderLevel(message.Level, items);
         var partList = items.Count > 0
             ? string.Join("\n", items.Select(i => string.Format(PartLineFormat, i.PartCategoryName, i.CurrentOdometer, i.TargetOdometer)))
             : PartListEmpty;
 
-        if (message.Level >= ReminderLevel.Critical)
+        if (effectiveLevel >= ReminderLevel.Critical)
         {
             var title = NotificationConstants.Titles.MaintenanceCritical;
             var body = CriticalIntro + "\n\n" + PartListHeader + "\n" + partList + CtaUpdateApp;
@@ -61,7 +71,7 @@ public static class MaintenanceReminderMappings
         var partNames = items.Count > 0
             ? string.Join(", ", items.Select(i => i.PartCategoryName))
             : string.Empty;
-        var levelLabel = NotificationConstants.MaintenanceLevelLabels.GetLabel(message.Level);
+        var levelLabel = NotificationConstants.MaintenanceLevelLabels.GetLabel(effectiveLevel);
         var normalTitle = string.IsNullOrEmpty(partNames)
             ? $"{levelLabel}: {NotificationConstants.Titles.MaintenanceNormalPrefix}"
             : $"{levelLabel}: {NotificationConstants.Titles.MaintenanceNormalPrefix} {partNames}";
@@ -76,7 +86,7 @@ public static class MaintenanceReminderMappings
             UserId = message.UserId,
             TargetValue = message.TargetValue,
             UserName = message.UserName,
-            Level = message.Level,
+            Level = AggregateReminderLevel(message.Level, [item]),
             Items = [item]
         };
     }

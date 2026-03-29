@@ -1,3 +1,5 @@
+using Verendar.Vehicle.Contracts.Enums;
+
 namespace Verendar.Notification.Application.Dtos.Notifications;
 
 public record MaintenanceNotificationPayload
@@ -13,4 +15,5 @@ public record MaintenanceNotificationItemDto
     public int TargetOdometer { get; init; }
     public decimal PercentageRemaining { get; init; }
     public DateTime? EstimatedNextReplacementDate { get; init; }
+    public ReminderLevel Level { get; init; }
 }

@@ -12,7 +12,8 @@ namespace Verendar.Notification.Apis
                 .WithName("GetAllNotificationsForUser")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Lấy danh sách thông báo của người dùng (có phân trang)";
+                    operation.Summary =
+                        "Lấy danh sách thông báo.";
                     return operation;
                 })
                 .Produces<ApiResponse<List<NotificationListItemDto>>>(StatusCodes.Status200OK)
@@ -53,7 +54,8 @@ namespace Verendar.Notification.Apis
                 .WithName("GetNotificationDetailForUser")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Lấy chi tiết thông báo của người dùng hiện tại.";
+                    operation.Summary =
+                        "Lấy chi tiết thông báo.";
                     return operation;
                 })
                 .Produces<ApiResponse<NotificationListItemDto>>(StatusCodes.Status200OK)

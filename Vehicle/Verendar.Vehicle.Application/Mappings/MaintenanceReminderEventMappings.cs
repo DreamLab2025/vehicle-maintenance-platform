@@ -1,4 +1,5 @@
 using Verendar.Vehicle.Contracts.Events;
+using ContractsReminderLevel = Verendar.Vehicle.Contracts.Enums.ReminderLevel;
 
 namespace Verendar.Vehicle.Application.Mappings
 {
@@ -29,7 +30,8 @@ namespace Verendar.Vehicle.Application.Mappings
                 InitialOdometer = pt?.LastReplacementOdometer,
                 PercentageRemaining = r.PercentageRemaining,
                 VehicleDisplayName = vehicleDisplay,
-                EstimatedNextReplacementDate = estimatedNextDate
+                EstimatedNextReplacementDate = estimatedNextDate,
+                Level = (ContractsReminderLevel)(int)r.Level
             };
         }
     }

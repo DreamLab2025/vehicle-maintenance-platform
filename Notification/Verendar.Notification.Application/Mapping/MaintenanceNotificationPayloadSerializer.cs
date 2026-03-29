@@ -27,7 +27,8 @@ public static class MaintenanceNotificationPayloadSerializer
                 CurrentOdometer = i.CurrentOdometer,
                 TargetOdometer = i.TargetOdometer,
                 PercentageRemaining = i.PercentageRemaining,
-                EstimatedNextReplacementDate = i.EstimatedNextReplacementDate
+                EstimatedNextReplacementDate = i.EstimatedNextReplacementDate,
+                Level = i.Level
             }).ToList()
         };
         return Serialize(payload);

@@ -60,15 +60,18 @@ namespace Verendar.Notification.Application.Mapping
                 ["initialOdometer"] = item.InitialOdometer,
                 ["percentageRemaining"] = item.PercentageRemaining,
                 ["vehicleDisplayName"] = item.VehicleDisplayName,
-                ["estimatedNextReplacementDate"] = item.EstimatedNextReplacementDate
+                ["estimatedNextReplacementDate"] = item.EstimatedNextReplacementDate,
+                ["level"] = (int)item.Level,
+                ["levelName"] = item.Level.ToString()
             };
+            var singleEffective = MaintenanceReminderMappings.AggregateReminderLevel(message.Level, [item]);
             var metadata = new Dictionary<string, object?>
             {
                 ["type"] = EntityTypeMaintenanceReminder,
                 ["entityType"] = EntityTypeMaintenanceReminder,
                 ["entityId"] = item.ReminderId,
-                ["level"] = message.Level,
-                ["levelName"] = message.Level.ToString(),
+                ["level"] = (int)singleEffective,
+                ["levelName"] = singleEffective.ToString(),
                 ["items"] = new List<Dictionary<string, object?>> { itemData }
             };
             return new InAppNotificationPayload
@@ -83,7 +86,9 @@ namespace Verendar.Notification.Application.Mapping
         {
             var (title, messageContent) = message.BuildContent();
             var firstItem = message.Items?.FirstOrDefault();
-            var itemsData = (message.Items ?? []).Select(i => new Dictionary<string, object?>
+            var list = message.Items ?? [];
+            var bundleLevel = MaintenanceReminderMappings.AggregateReminderLevel(message.Level, list);
+            var itemsData = list.Select(i => new Dictionary<string, object?>
             {
                 ["partCategoryName"] = i.PartCategoryName,
                 ["description"] = i.Description,
@@ -94,7 +99,9 @@ namespace Verendar.Notification.Application.Mapping
                 ["initialOdometer"] = i.InitialOdometer,
                 ["percentageRemaining"] = i.PercentageRemaining,
                 ["vehicleDisplayName"] = i.VehicleDisplayName,
-                ["estimatedNextReplacementDate"] = i.EstimatedNextReplacementDate
+                ["estimatedNextReplacementDate"] = i.EstimatedNextReplacementDate,
+                ["level"] = (int)i.Level,
+                ["levelName"] = i.Level.ToString()
             }).ToList();
 
             var metadata = new Dictionary<string, object?>
@@ -102,8 +109,8 @@ namespace Verendar.Notification.Application.Mapping
                 ["type"] = EntityTypeMaintenanceReminder,
                 ["entityType"] = EntityTypeMaintenanceReminder,
                 ["entityId"] = firstItem?.ReminderId,
-                ["level"] = message.Level,
-                ["levelName"] = message.Level.ToString(),
+                ["level"] = (int)bundleLevel,
+                ["levelName"] = bundleLevel.ToString(),
                 ["items"] = itemsData
             };
 

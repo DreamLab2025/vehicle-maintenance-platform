@@ -34,7 +34,7 @@ public class NotificationService(
         var (items, totalCount) = await unitOfWork.Notifications.GetByUserIdPagedAsync(
             userId, request.PageNumber, request.PageSize, cancellationToken);
 
-        var dtos = items.Select(n => n.ToListItemDto()).ToList();
+        var dtos = items.Select(n => n.ToSummaryListItemDto()).ToList();
         return ApiResponse<List<NotificationListItemDto>>.SuccessPagedResponse(
             dtos, totalCount, request.PageNumber, request.PageSize);
     }

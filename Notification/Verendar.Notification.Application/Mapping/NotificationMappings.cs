@@ -45,9 +45,18 @@ public static class NotificationMappings
         };
     }
 
-    public static NotificationListItemDto ToListItemDto(this NotificationEntity n)
-    {
-        return new NotificationListItemDto
+    public static NotificationListItemDto ToSummaryListItemDto(this NotificationEntity n) =>
+        ToListItemDtoCore(n, maintenanceItems: null);
+
+    public static NotificationListItemDto ToListItemDto(this NotificationEntity n) =>
+        ToListItemDtoCore(
+            n,
+            MaintenanceNotificationPayloadSerializer.TryDeserializeItems(n.ExtendedPayloadJson));
+
+    private static NotificationListItemDto ToListItemDtoCore(
+        NotificationEntity n,
+        IReadOnlyList<MaintenanceNotificationItemDto>? maintenanceItems) =>
+        new()
         {
             Id = n.Id,
             Title = n.Title,
@@ -61,7 +70,6 @@ public static class NotificationMappings
             IsRead = n.IsRead,
             ReadAt = n.ReadAt,
             CreatedAt = n.CreatedAt,
-            MaintenanceItems = MaintenanceNotificationPayloadSerializer.TryDeserializeItems(n.ExtendedPayloadJson)
+            MaintenanceItems = maintenanceItems
         };
-    }
 }
