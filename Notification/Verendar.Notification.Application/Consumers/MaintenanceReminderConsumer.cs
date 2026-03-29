@@ -33,8 +33,7 @@ public class MaintenanceReminderConsumer(
             return;
         }
 
-        var sendEmail = message.Level >= ReminderLevel.High
-                        && !string.IsNullOrWhiteSpace(message.TargetValue);
+        var canSendEmail = !string.IsNullOrWhiteSpace(message.TargetValue);
         var groups = items.GroupBy(i => i.UserVehicleId).ToList();
 
         try
@@ -42,22 +41,23 @@ public class MaintenanceReminderConsumer(
             foreach (var group in groups)
             {
                 var vehicleId = group.Key;
+                var groupItems = group.ToList();
+                var groupLevel = MaintenanceReminderMappings.AggregateReminderLevel(message.Level, groupItems);
                 var vehicleDisplayName = group.First().VehicleDisplayName
                     ?? NotificationConstants.ConsumerCopy.MaintenanceVehicleFallbackName;
-                var count = group.Count();
+                var count = groupItems.Count;
                 var (title, body) = MaintenanceReminderMappings.ToVehicleGroupCopy(
-                    message.Level, vehicleDisplayName, count);
+                    groupLevel, vehicleDisplayName, count);
                 var actionPath = routes.UserVehicleMaintenanceRelativeUrl(vehicleId);
                 var actionAbsolute = routes.ToAbsoluteUrl(actionPath);
 
-                var groupItems = group.ToList();
                 var payloadJson = MaintenanceNotificationPayloadSerializer.SerializeFromEventItems(groupItems);
 
                 var notification = NotificationMappings.CreateUserNotification(
                     message.UserId,
                     title,
                     body,
-                    message.Level.ToNotificationPriority(),
+                    groupLevel.ToNotificationPriority(),
                     "UserVehicle",
                     vehicleId,
                     actionPath,
@@ -68,7 +68,7 @@ public class MaintenanceReminderConsumer(
                     notification.CreateDelivery(message.UserId.ToString(), NotificationChannel.InApp));
 
                 NotificationDelivery? emailDelivery = null;
-                if (sendEmail)
+                if (canSendEmail && groupLevel >= ReminderLevel.High)
                 {
                     emailDelivery = notification.CreateDelivery(message.TargetValue!, NotificationChannel.EMAIL);
                     await unitOfWork.NotificationDeliveries.AddAsync(emailDelivery);

@@ -32,5 +32,6 @@ namespace Verendar.Vehicle.Contracts.Events
         public decimal PercentageRemaining { get; set; }
         public string? VehicleDisplayName { get; set; }
         public DateTime? EstimatedNextReplacementDate { get; set; }
+        public ReminderLevel Level { get; set; }
     }
 }

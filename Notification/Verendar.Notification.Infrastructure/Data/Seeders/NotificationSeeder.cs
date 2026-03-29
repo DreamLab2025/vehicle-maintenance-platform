@@ -92,7 +92,7 @@ public static class NotificationSeeder
         {
             var (title, body) = MaintenanceReminderMappings.ToVehicleGroupCopy(level, vehicleDisplayName, itemCount);
             var payloadJson = MaintenanceNotificationPayloadSerializer.Serialize(
-                BuildSampleMaintenancePayload(itemCount));
+                BuildSampleMaintenancePayload(itemCount, level));
             AddSentInAppNotification(
                 db,
                 TestUserId,
@@ -129,7 +129,7 @@ public static class NotificationSeeder
             SeedUserVehicleId);
     }
 
-    private static MaintenanceNotificationPayload BuildSampleMaintenancePayload(int itemCount)
+    private static MaintenanceNotificationPayload BuildSampleMaintenancePayload(int itemCount, ReminderLevel level)
     {
         string[] names = ["Dầu máy", "Lốp trước", "Phanh", "Ắc quy", "Dây curoa"];
         var items = Enumerable.Range(0, itemCount).Select(i => new MaintenanceNotificationItemDto
@@ -139,7 +139,8 @@ public static class NotificationSeeder
             CurrentOdometer = 12_000 + i * 500,
             TargetOdometer = 15_000,
             PercentageRemaining = Math.Max(0, 25m - i * 8m),
-            EstimatedNextReplacementDate = DateTime.UtcNow.AddDays(14 + i * 7)
+            EstimatedNextReplacementDate = DateTime.UtcNow.AddDays(14 + i * 7),
+            Level = level
         }).ToList();
         return new MaintenanceNotificationPayload { Items = items };
     }

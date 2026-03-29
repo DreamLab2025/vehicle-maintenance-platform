@@ -60,8 +60,8 @@ namespace Verendar.Common.Shared
         public static ApiResponse<T> ForbiddenResponse(string message) =>
             FailureResponse(message, 403);
 
-        public static ApiResponse<List<T>> SuccessPagedResponse<T>(
-            List<T> items,
+        public static ApiResponse<List<TItem>> SuccessPagedResponse<TItem>(
+            List<TItem> items,
             int totalItems,
             int pageNumber,
             int pageSize,
@@ -69,7 +69,7 @@ namespace Verendar.Common.Shared
         {
             var pagingMetadata = new PagingMetadata(totalItems, pageNumber, pageSize);
 
-            return new ApiResponse<List<T>>
+            return new ApiResponse<List<TItem>>
             {
                 IsSuccess = true,
                 StatusCode = 200,
