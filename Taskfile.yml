@@ -107,3 +107,9 @@ tasks:
       vars: [br]
     cmds:
       - git pull origin {{.br}}
+
+  .:
+    desc: Run the cursor . command
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - cursor .

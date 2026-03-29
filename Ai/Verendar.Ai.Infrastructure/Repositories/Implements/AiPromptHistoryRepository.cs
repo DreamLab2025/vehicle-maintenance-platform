@@ -20,4 +20,22 @@ public class AiPromptHistoryRepository(AiDbContext context) : PostgresRepository
         return await _dbSet
             .FirstOrDefaultAsync(h => h.AiPromptId == aiPromptId && h.VersionNumber == versionNumber, cancellationToken);
     }
+
+    public async Task<int> RemoveExcessVersionsAsync(
+        Guid aiPromptId,
+        int maxVersionsToKeep,
+        CancellationToken cancellationToken = default)
+    {
+        var expired = await _dbSet
+            .Where(h => h.AiPromptId == aiPromptId)
+            .OrderByDescending(h => h.VersionNumber)
+            .Skip(maxVersionsToKeep)
+            .ToListAsync(cancellationToken);
+
+        if (expired.Count == 0)
+            return 0;
+
+        _dbSet.RemoveRange(expired);
+        return expired.Count;
+    }
 }

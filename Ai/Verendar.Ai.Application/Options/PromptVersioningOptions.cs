@@ -1,4 +1,4 @@
-namespace Verendar.Ai.Infrastructure.Configuration;
+namespace Verendar.Ai.Application.Options;
 
 public class PromptVersioningOptions
 {
