@@ -15,6 +15,7 @@ public class NotificationDbContext(DbContextOptions<NotificationDbContext> optio
         modelBuilder.Entity<NotificationEntity>(entity =>
         {
             entity.HasQueryFilter(e => e.DeletedAt == null);
+            entity.Property(e => e.ExtendedPayloadJson).HasColumnType("jsonb");
         });
         modelBuilder.Entity<NotificationDelivery>(entity =>
         {

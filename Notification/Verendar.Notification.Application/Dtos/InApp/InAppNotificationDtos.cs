@@ -7,7 +7,6 @@ public record InAppNotificationPayload
     public IReadOnlyDictionary<string, object?> Metadata { get; init; } = new Dictionary<string, object?>();
 }
 
-/// <summary>Thin in-app payloads (no metadata) for SignalR.</summary>
 public static class InAppNotificationPayloadFactory
 {
     private static readonly IReadOnlyDictionary<string, object?> Empty =

@@ -1,4 +1,5 @@
 using Amazon.GeoPlaces;
+using Amazon.Runtime;
 using Verendar.Location.Application.ExternalServices;
 using Verendar.Location.Infrastructure.Configuration;
 using Verendar.Location.Infrastructure.ExternalServices.Geocoding;
@@ -32,7 +33,12 @@ public static class ApplicationServiceExtensions
             var awsGeoEnabled = builder.Configuration.GetValue("Geocoding:AWS:Enabled", true);
             if (awsGeoEnabled)
             {
-                builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions("Geocoding:AWS"));
+                var awsOptions = builder.Configuration.GetAWSOptions("Geocoding:AWS");
+                var accessKey = builder.Configuration["Geocoding:AWS:AccessKey"];
+                var secretKey = builder.Configuration["Geocoding:AWS:SecretKey"];
+                if (!string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey))
+                    awsOptions.Credentials = new BasicAWSCredentials(accessKey, secretKey);
+                builder.Services.AddDefaultAWSOptions(awsOptions);
                 builder.Services.AddAWSService<IAmazonGeoPlaces>();
                 builder.Services.AddScoped<IGeocodingService, AwsGeocodingService>();
             }

@@ -19,7 +19,6 @@ namespace Verendar.Ai.Application.Services.Interfaces
         public int LatestNextOdometer { get; set; }
         public int KmIntervalUsed { get; set; }
 
-        /// <summary>"manufacturer" | "actual_history"</summary>
         public string DataSource { get; set; } = "manufacturer";
     }
 }

@@ -31,6 +31,8 @@ namespace Verendar.Notification.Domain.Entities
         [MaxLength(500)]
         public string? ActionUrl { get; set; }
 
+        public string? ExtendedPayloadJson { get; set; }
+
         public bool IsRead { get; set; } = false;
         public DateTime? ReadAt { get; set; }
 

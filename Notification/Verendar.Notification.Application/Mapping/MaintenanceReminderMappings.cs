@@ -24,7 +24,6 @@ public static class MaintenanceReminderMappings
         _ => NotificationPriority.Medium
     };
 
-    /// <summary>Per-vehicle grouped copy for thin notification consumers.</summary>
     public static (string Title, string Body) ToVehicleGroupCopy(
         ReminderLevel level,
         string vehicleDisplayName,

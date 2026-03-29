@@ -4,21 +4,14 @@ using Verendar.Media.Domain.Entities;
 
 namespace Verendar.Media.Application.Storage
 {
-    /// <summary>
-    /// Builds S3 object keys with a stable hierarchy and safe characters (AWS: UTF-8 key length, avoid reserved patterns).
-    /// </summary>
     public static class S3KeyBuilder
     {
-        /// <summary>Aligned with <see cref="MediaFile.FilePath"/> max length and S3 key limits.</summary>
         public const int MaxKeyUtf8ByteLength = 1000;
 
         private static readonly Regex SegmentNonSlug = new(@"[^a-z0-9_-]", RegexOptions.Compiled);
 
         private static readonly Regex RepeatedUnderscores = new(@"_+", RegexOptions.Compiled);
 
-        /// <summary>
-        /// Layout: <c>{env}/media/{context}/{entityId}/{objectId}{ext}</c> — environment and segments are slug-safe; filename is bounded by UTF-8 byte budget.
-        /// </summary>
         public static string BuildMediaUploadKey(
             string? environmentName,
             FileType fileType,

@@ -21,7 +21,6 @@ public class Booking : BaseEntity
     [MaxLength(1000)]
     public string? Note { get; set; }
 
-    /// <summary>Snapshot tổng giá tại thời điểm đặt lịch.</summary>
     public Money BookedTotalPrice { get; set; } = null!;
 
     public DateTime? CompletedAt { get; set; }
@@ -33,7 +32,6 @@ public class Booking : BaseEntity
 
     public Guid? PaymentId { get; set; }
 
-    /// <summary>Snapshot thông tin xe tại thời điểm đặt lịch (JSON). Dùng khi hiển thị để tránh gọi Vehicle service.</summary>
     [MaxLength(2000)]
     public string? VehicleSnapshotJson { get; set; }
 

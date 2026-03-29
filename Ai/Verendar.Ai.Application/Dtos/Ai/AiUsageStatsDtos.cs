@@ -4,13 +4,10 @@ namespace Verendar.Ai.Application.Dtos.Ai;
 
 public class AiUsageStatsQueryRequest : PaginationRequest
 {
-    /// <summary>Optional substring match on model id (case-insensitive).</summary>
     public string? ModelSearch { get; set; }
 
-    /// <summary>Inclusive lower bound on usage CreatedAt (UTC).</summary>
     public DateTime? FromUtc { get; set; }
 
-    /// <summary>Inclusive upper bound on usage CreatedAt (UTC).</summary>
     public DateTime? ToUtc { get; set; }
 
     public override void Normalize()

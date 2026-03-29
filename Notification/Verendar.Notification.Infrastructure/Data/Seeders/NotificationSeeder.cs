@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Verendar.Notification.Application.Constants;
+using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Mapping;
 using Verendar.Vehicle.Contracts.Enums;
 using NotificationEntity = Verendar.Notification.Domain.Entities.Notification;
@@ -90,6 +91,8 @@ public static class NotificationSeeder
         foreach (var (level, itemCount) in maintenanceSamples)
         {
             var (title, body) = MaintenanceReminderMappings.ToVehicleGroupCopy(level, vehicleDisplayName, itemCount);
+            var payloadJson = MaintenanceNotificationPayloadSerializer.Serialize(
+                BuildSampleMaintenancePayload(itemCount));
             AddSentInAppNotification(
                 db,
                 TestUserId,
@@ -98,7 +101,8 @@ public static class NotificationSeeder
                 level.ToNotificationPriority(),
                 "UserVehicle",
                 SeedUserVehicleId,
-                MaintenanceActionPath(SeedUserVehicleId));
+                MaintenanceActionPath(SeedUserVehicleId),
+                payloadJson);
             totalSeeded++;
         }
 
@@ -125,7 +129,21 @@ public static class NotificationSeeder
             SeedUserVehicleId);
     }
 
-    /// <summary>In-app delivery only, marked sent — mirrors consumer payloads without email channel.</summary>
+    private static MaintenanceNotificationPayload BuildSampleMaintenancePayload(int itemCount)
+    {
+        string[] names = ["Dầu máy", "Lốp trước", "Phanh", "Ắc quy", "Dây curoa"];
+        var items = Enumerable.Range(0, itemCount).Select(i => new MaintenanceNotificationItemDto
+        {
+            PartCategoryName = i < names.Length ? names[i] : $"Hạng mục mẫu {i + 1}",
+            Description = "Dữ liệu seed — ví dụ hạng mục bảo dưỡng",
+            CurrentOdometer = 12_000 + i * 500,
+            TargetOdometer = 15_000,
+            PercentageRemaining = Math.Max(0, 25m - i * 8m),
+            EstimatedNextReplacementDate = DateTime.UtcNow.AddDays(14 + i * 7)
+        }).ToList();
+        return new MaintenanceNotificationPayload { Items = items };
+    }
+
     private static void AddSentInAppNotification(
         NotificationDbContext db,
         Guid userId,
@@ -134,7 +152,8 @@ public static class NotificationSeeder
         NotificationPriority priority,
         string entityType,
         Guid entityId,
-        string actionUrl)
+        string actionUrl,
+        string? extendedPayloadJson = null)
     {
         var notification = NotificationMappings.CreateUserNotification(
             userId,
@@ -143,7 +162,8 @@ public static class NotificationSeeder
             priority,
             entityType,
             entityId,
-            actionUrl);
+            actionUrl,
+            extendedPayloadJson);
         notification.CreatedBy = SystemUserId;
         notification.Status = NotificationStatus.Sent;
         db.Notifications.Add(notification);

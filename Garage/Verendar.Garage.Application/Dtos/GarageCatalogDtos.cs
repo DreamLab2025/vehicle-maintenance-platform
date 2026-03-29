@@ -30,7 +30,6 @@ public class CatalogItemResponse
     public string Name { get; set; } = null!;
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
-    /// <summary>Giá chính để hiển thị: laborPrice (dịch vụ), materialPrice (sản phẩm), finalPrice (combo).</summary>
     public MoneyDto Price { get; set; } = null!;
     public int? EstimatedDurationMinutes { get; set; }
     public ProductStatus Status { get; set; }

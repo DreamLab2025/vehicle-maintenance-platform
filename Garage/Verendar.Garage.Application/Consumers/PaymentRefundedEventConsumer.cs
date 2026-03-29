@@ -4,10 +4,6 @@ using Verendar.Payment.Contracts.Events;
 
 namespace Verendar.Garage.Application.Consumers;
 
-/// <summary>
-/// Handles PaymentRefundedEvent — full logic implemented in Task 8.
-/// Confirms booking cancellation and publishes BookingCancelledEvent.
-/// </summary>
 public class PaymentRefundedEventConsumer(ILogger<PaymentRefundedEventConsumer> logger)
     : IConsumer<PaymentRefundedEvent>
 {

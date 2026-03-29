@@ -4,10 +4,6 @@ using Verendar.Identity.Application.Shared.Helpers;
 
 namespace Verendar.Identity.Infrastructure.Data.Seeders;
 
-/// <summary>
-/// Dev chủ garage — phải trùng <c>GarageBranchDevSeeder.DevOwnerUserId</c> (Garage service).
-/// Khách hàng demo vẫn là <c>TestUserSeeder</c> (<c>user@gmail.com</c>).
-/// </summary>
 public static class GarageOwnerDevUserSeeder
 {
     public static readonly Guid UserId = Guid.Parse("11111111-1111-1111-1111-111111111222");

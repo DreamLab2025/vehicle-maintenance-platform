@@ -144,7 +144,6 @@ public class GarageBundleService(
         return ApiResponse<bool>.SuccessResponse(true, EndpointMessages.Bundle.DeleteSuccess);
     }
 
-    /// <summary>Validate items: exactly one FK per item, items belong to the branch, status Active.</summary>
     private async Task<string?> ValidateBundleItemsAsync(List<BundleItemRequest> items, Guid branchId)
     {
         if (items.Count == 0)

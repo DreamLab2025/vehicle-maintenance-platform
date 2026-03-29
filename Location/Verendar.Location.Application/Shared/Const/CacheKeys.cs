@@ -4,7 +4,6 @@ public static class CacheKeys
 {
     private const string LocationPrefix = "location";
 
-    /// <summary>Increment when cached JSON shape changes so stale Redis entries are not deserialized.</summary>
     private const string SchemaVersion = "v2";
 
     public const string ProvincesAll = $"{LocationPrefix}:provinces:{SchemaVersion}";

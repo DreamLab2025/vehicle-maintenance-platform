@@ -3,7 +3,6 @@ namespace Verendar.Vehicle.Application.Dtos
     public class RecordItemInput
     {
         public string PartCategorySlug { get; set; } = string.Empty;
-        /// <summary>Tham chiếu sản phẩm garage (cross-service, không FK trong Vehicle DB).</summary>
         public Guid? GarageProductId { get; set; }
         public string? CustomPartName { get; set; }
         public int? CustomKmInterval { get; set; }
