@@ -46,10 +46,6 @@ public class GarageBranchRequestValidator : AbstractValidator<GarageBranchReques
                 .NotEmpty().WithMessage("Mã phường/xã không được để trống")
                 .MaximumLength(20).WithMessage("Mã phường/xã tối đa 20 ký tự");
 
-            RuleFor(x => x.Address.HouseNumber)
-                .MaximumLength(20).WithMessage("Số nhà tối đa 20 ký tự")
-                .When(x => x.Address.HouseNumber != null);
-
             RuleFor(x => x.Address.StreetDetail)
                 .NotEmpty().WithMessage("Địa chỉ chi tiết không được để trống")
                 .MaximumLength(500).WithMessage("Địa chỉ chi tiết tối đa 500 ký tự");

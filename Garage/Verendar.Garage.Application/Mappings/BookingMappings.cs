@@ -135,14 +135,6 @@ public static class BookingMappings
         return BuildItemsSummaryFromLineItems(items);
     }
 
-    private static string FormatAddressLine(GarageBranch branch)
-    {
-        var a = branch.Address;
-        var parts = new List<string>();
-        if (!string.IsNullOrWhiteSpace(a.HouseNumber))
-            parts.Add(a.HouseNumber.Trim());
-        if (!string.IsNullOrWhiteSpace(a.StreetDetail))
-            parts.Add(a.StreetDetail.Trim());
-        return string.Join(", ", parts);
-    }
+    private static string FormatAddressLine(GarageBranch branch) =>
+        branch.Address.StreetDetail.Trim();
 }

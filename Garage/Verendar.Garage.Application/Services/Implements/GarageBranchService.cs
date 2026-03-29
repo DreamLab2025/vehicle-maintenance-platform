@@ -54,10 +54,7 @@ public class GarageBranchService(
             cancellationToken: ct);
 
         // Assemble full address for geocoding using ward/province names from Location service
-        var streetPart = string.IsNullOrWhiteSpace(request.Address.HouseNumber)
-            ? request.Address.StreetDetail
-            : $"{request.Address.HouseNumber} {request.Address.StreetDetail}";
-        var geocodeQuery = $"{streetPart}, {wardName}, {provinceName}";
+        var geocodeQuery = $"{request.Address.StreetDetail}, {wardName}, {provinceName}";
         var coords = await _locationClient.GeocodeAsync(geocodeQuery, ct);
         MapLinksDto? mapLinks = null;
         if (coords.HasValue)
@@ -169,7 +166,6 @@ public class GarageBranchService(
         bool addressChanged =
             branch.Address.ProvinceCode != request.Address.ProvinceCode ||
             branch.Address.WardCode != request.Address.WardCode ||
-            branch.Address.HouseNumber != request.Address.HouseNumber ||
             branch.Address.StreetDetail != request.Address.StreetDetail;
 
         MapLinksDto? mapLinks = null;
@@ -182,10 +178,7 @@ public class GarageBranchService(
                 return ApiResponse<GarageBranchResponse>.FailureResponse(
                     EndpointMessages.GarageBranches.InvalidProvinceWard, 422);
 
-            var streetPart = string.IsNullOrWhiteSpace(request.Address.HouseNumber)
-                ? request.Address.StreetDetail
-                : $"{request.Address.HouseNumber} {request.Address.StreetDetail}";
-            var geocodeQuery = $"{streetPart}, {wardName}, {provinceName}";
+            var geocodeQuery = $"{request.Address.StreetDetail}, {wardName}, {provinceName}";
             var coords = await _locationClient.GeocodeAsync(geocodeQuery, ct);
             if (coords.HasValue)
             {

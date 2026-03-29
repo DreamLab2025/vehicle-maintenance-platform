@@ -1,6 +1,9 @@
 $ErrorActionPreference = 'Continue'
 
-$known = @(
+$MaxVolumePasses = 3
+$SleepBetweenVolumePassesMs = 400
+
+$KnownContainers = @(
     'verendar-aspire-postgres',
     'verendar-aspire-rabbitmq',
     'verendar-aspire-redis',
@@ -12,7 +15,8 @@ $known = @(
     'ApiGateway',
     'PgAdmin'
 )
-foreach ($c in $known) {
+
+foreach ($c in $KnownContainers) {
     docker rm -fv $c 2>$null | Out-Null
 }
 
@@ -22,12 +26,11 @@ docker ps -a --format '{{.Names}}' | ForEach-Object {
     }
 }
 
-# Named Aspire volumes (repeat: Docker can briefly hold locks after rm)
-for ($i = 0; $i -lt 3; $i++) {
+for ($i = 0; $i -lt $MaxVolumePasses; $i++) {
     docker volume ls -q | Where-Object { $_ -match 'verendar\.apphost' } | ForEach-Object {
         docker volume rm -f $_ 2>$null | Out-Null
     }
-    Start-Sleep -Milliseconds 400
+    Start-Sleep -Milliseconds $SleepBetweenVolumePassesMs
 }
 
 Write-Host 'App cleanup finished. If something remains, stop AppHost and run again.'

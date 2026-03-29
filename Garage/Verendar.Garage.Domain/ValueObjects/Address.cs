@@ -8,9 +8,6 @@ public class Address
     [Required, MaxLength(20)]
     public string WardCode { get; set; } = string.Empty;
 
-    [MaxLength(20)]
-    public string? HouseNumber { get; set; }
-
     [Required, MaxLength(500)]
     public string StreetDetail { get; set; } = string.Empty;
 }
