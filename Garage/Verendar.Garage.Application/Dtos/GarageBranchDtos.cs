@@ -6,7 +6,6 @@ public class AddressDto
 {
     public string ProvinceCode { get; set; } = null!;
     public string WardCode { get; set; } = null!;
-    public string? HouseNumber { get; set; }
     public string StreetDetail { get; set; } = null!;
 }
 

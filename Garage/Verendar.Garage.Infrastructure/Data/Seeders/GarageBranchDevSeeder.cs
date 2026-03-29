@@ -134,8 +134,7 @@ public static class GarageBranchDevSeeder
             {
                 ProvinceCode = "01",
                 WardCode = "00070",
-                HouseNumber = "36",
-                StreetDetail = "Phố Hàng Bạc"
+                StreetDetail = "36 Phố Hàng Bạc"
             },
             Latitude = 21.0285,
             Longitude = 105.8542,
@@ -159,8 +158,7 @@ public static class GarageBranchDevSeeder
             {
                 ProvinceCode = "01",
                 WardCode = "00004",
-                HouseNumber = "123",
-                StreetDetail = "Đường Đội Cấn"
+                StreetDetail = "123 Đường Đội Cấn"
             },
             Latitude = 21.0345,
             Longitude = 105.8146,
