@@ -31,4 +31,11 @@ public class ProvinceRepository(LocationDbContext context) : IProvinceRepository
             .Where(p => p.AdministrativeRegionId == regionId)
             .ToListAsync();
     }
+
+    public async Task UpdateBoundaryUrlAsync(string code, string url)
+    {
+        await _context.Provinces
+            .Where(p => p.Code == code)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.BoundaryUrl, url));
+    }
 }

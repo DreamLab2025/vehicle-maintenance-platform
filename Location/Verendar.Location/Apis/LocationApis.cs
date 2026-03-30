@@ -34,6 +34,14 @@ public static class LocationApis
             .Produces<ApiResponse<ProvinceResponse>>(200)
             .Produces<ApiResponse<ProvinceResponse>>(404);
 
+        group.MapGet("/provinces/{code}/boundary", GetProvinceBoundary)
+            .WithName("GetProvinceBoundary")
+            .WithOpenApi()
+            .WithDescription("Lấy CloudFront URL chứa file GeoJSON boundary của tỉnh/thành phố")
+            .WithSummary("Boundary URL tỉnh/thành phố")
+            .Produces<ApiResponse<ProvinceBoundaryResponse>>(200)
+            .Produces<ApiResponse<ProvinceBoundaryResponse>>(404);
+
         group.MapGet("/provinces/{code}/wards", GetWardsByProvince)
             .WithName("GetWardsByProvince")
             .WithOpenApi()
@@ -76,6 +84,12 @@ public static class LocationApis
     private static async Task<IResult> GetProvinceByCode(string code, IProvinceService service)
     {
         var result = await service.GetProvinceByCodeAsync(code);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> GetProvinceBoundary(string code, IProvinceService service)
+    {
+        var result = await service.GetProvinceBoundaryAsync(code);
         return result.ToHttpResult();
     }
 
