@@ -17,6 +17,10 @@ namespace Verendar.Identity.Domain.Entities
 
         public bool PhoneNumberVerified { get; set; } = false;
 
+        public DateOnly? DateOfBirth { get; set; }
+
+        public Gender? Gender { get; set; }
+
         [Required]
         public string PasswordHash { get; set; } = string.Empty;
 
@@ -35,5 +39,12 @@ namespace Verendar.Identity.Domain.Entities
         GarageOwner = 3,
         Mechanic = 4,
         GarageManager = 5
+    }
+
+    public enum Gender
+    {
+        Male = 1,
+        Female = 2,
+        Other = 3
     }
 }
