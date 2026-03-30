@@ -5,11 +5,13 @@ Follow the same exploration steps as `/plan`, then present exactly two approache
 ## Structure each approach as
 
 ### Approach A — [Short Name]
+
 **Summary**: One sentence description of the approach.
 
 **Implementation steps**: Layer-by-layer breakdown (Domain → Application → Infrastructure → Api)
 
 **Tradeoffs**:
+
 - Pros: what this makes easier
 - Cons: what this complicates or costs
 - Best when: the condition under which this approach is preferable
@@ -17,6 +19,7 @@ Follow the same exploration steps as `/plan`, then present exactly two approache
 ---
 
 ### Approach B — [Short Name]
+
 (same structure)
 
 ---

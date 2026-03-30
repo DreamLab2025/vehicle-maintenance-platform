@@ -60,8 +60,8 @@ public class BranchMapItemResponse
     public string Slug { get; set; } = null!;
     public string? CoverImageUrl { get; set; }
     public AddressDto Address { get; set; } = null!;
-    public double Latitude { get; set; }
-    public double Longitude { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public MapLinksDto? MapLinks { get; set; }
     public string? PhoneNumber { get; set; }
     public BranchStatus Status { get; set; }
@@ -91,8 +91,8 @@ public class GarageBranchResponse
     public string? Description { get; set; }
     public string? CoverImageUrl { get; set; }
     public AddressDto Address { get; set; } = null!;
-    public double Latitude { get; set; }
-    public double Longitude { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public MapLinksDto? MapLinks { get; set; }
     public WorkingHoursDto WorkingHours { get; set; } = null!;
     public string? PhoneNumber { get; set; }

@@ -1,36 +1,71 @@
-Research and create an implementation plan for: $ARGUMENTS
+Create detailed implementation plan for: $ARGUMENTS
 
-Explore the relevant parts of the codebase first — read existing patterns, similar endpoints, domain entities, and infrastructure before proposing anything.
+Flags: `--auto` · `--fast` · `--hard` · `--parallel` · `--no-tasks`
 
-Reference the project documentation in `docs/` for design decisions:
-- `docs/requirements/` — vision, scope, user stories, constraints
-- `docs/architecture/` — domain model, layers, integrations, ADRs
+---
 
-Structure your plan as:
+## Stage 1 — Research
 
-## Context
-- Which service/module owns this (Identity: User/Auth; Vehicle: Vehicle/Brand/Model/Variant/Type/PartCategory/PartProduct; Garage: Garage/Branch/Mechanic/Booking; Media: MediaFile; Payment; Location; Ai)
-- Which existing entities/tables are involved
-- Current state (what exists vs what's missing)
+Use `/ck:scout` to locate relevant files before reading — it's faster than manual glob/grep and surfaces patterns across layers in one pass. Scout the entity, service, repository, and route handler for the affected module, then read what's relevant.
 
-## API Contract
-- Route, method, request shape, response shape
-- HTTP status codes for success and each failure case
-- Required permissions (which roles can access)
+**Always read:**
+- `docs/requirements/` — vision, user stories, constraints
+- `docs/architecture/` — domain model, ADRs, layer map
+- Relevant entity (Domain), service/repository (Application + Infrastructure), and route handler (Api) for the affected module
 
-## Implementation Steps
-Layer-by-layer breakdown (Domain → Application → Infrastructure → Api), with specific file names and what changes in each.
+**`--fast`:** scout + read only direct matches — entity file, service file, route file.
 
-## Validation Rules
-- Structural (FluentValidation at boundary)
-- Business (inside service — ownership check, permission check, data integrity)
+**`--hard`:** also read EF Core migrations, existing tests, cross-service contracts (MassTransit events, typed HTTP clients), and relevant ADRs.
 
-## Edge Cases & Risks
-- What can go wrong
-- Migration impact (new table, column, or just logic)
-- Permission/ownership edge cases
+**`--parallel`:** scout and probe Domain + Infrastructure + Api concurrently.
 
-## Alternatives Considered
-If there are meaningful tradeoffs, list them briefly.
+Service ownership:
+- Identity: User / Auth / OTP
+- Vehicle: Vehicle / Brand / Model / Variant / Type / PartCategory / PartProduct / Odometer
+- Garage: Garage / GarageBranch / Mechanic / Booking
+- Media: MediaFile · Payment: VNPay · Location: Province / Ward / District
+- Ai: Gemini / Questionnaire / Prediction · Notification: Email / SMS / SignalR
 
-Do not write implementation code — only the plan. Flag any assumptions that need confirmation.
+Unless `--auto`, confirm key findings before continuing.
+
+---
+
+## Stage 2 — Plan
+
+Use sequential thinking to work through the plan step by step — reason through each layer in order (Domain → Application → Infrastructure → Api), revise if a later layer reveals a conflict with an earlier decision, and branch when a genuine tradeoff requires comparing two paths before committing.
+
+#### Context
+- Service/module owner, entities and tables involved
+- Current state: what exists vs. what's missing
+
+#### API Contract
+- Route, method, request/response shape, status codes, required roles
+
+#### Implementation Steps
+Domain → Application → Infrastructure → Api, with specific file names and the change in each.
+
+#### Validation Rules
+- Structural: FluentValidation at the request boundary
+- Business: ownership checks, permission checks, data integrity inside the service
+
+#### Edge Cases & Risks
+- What can go wrong, migration impact, permission/ownership edge cases
+
+#### Alternatives Considered
+Brief note on dismissed tradeoffs (if any).
+
+---
+
+## Stage 3 — Tasks
+
+Unless `--no-tasks`, create a TodoWrite task list — one item per layer. Example:
+
+- [ ] Domain: add `X` to `Entity`
+- [ ] Infrastructure: migration `AddX`
+- [ ] Infrastructure: implement `GetXAsync` in repository
+- [ ] Application: update service + DTOs
+- [ ] Api: add `POST /x` route
+
+---
+
+Do not write implementation code — only the plan. Flag any assumption that needs confirmation.
