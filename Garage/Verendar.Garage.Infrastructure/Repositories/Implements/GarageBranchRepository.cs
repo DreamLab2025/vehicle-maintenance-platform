@@ -18,7 +18,9 @@ public class GarageBranchRepository(GarageDbContext context)
             .Include(b => b.Garage)
             .Where(b => b.DeletedAt == null
                      && b.Garage.DeletedAt == null
-                     && b.Status == BranchStatus.Active);
+                     && b.Status == BranchStatus.Active
+                     && b.Latitude != null
+                     && b.Longitude != null);
 
         if (minLat.HasValue) query = query.Where(b => b.Latitude >= minLat.Value);
         if (maxLat.HasValue) query = query.Where(b => b.Latitude <= maxLat.Value);

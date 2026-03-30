@@ -151,11 +151,11 @@ public static class GarageBranchMappings
         };
     }
 
-    private static MapLinksDto? BuildMapLinks(double lat, double lng)
+    private static MapLinksDto? BuildMapLinks(double? lat, double? lng)
     {
-        if (lat == 0 && lng == 0) return null;
-        var latStr = lat.ToString(CultureInfo.InvariantCulture);
-        var lngStr = lng.ToString(CultureInfo.InvariantCulture);
+        if (!lat.HasValue || !lng.HasValue) return null;
+        var latStr = lat.Value.ToString(CultureInfo.InvariantCulture);
+        var lngStr = lng.Value.ToString(CultureInfo.InvariantCulture);
         return new MapLinksDto
         {
             GoogleMaps = $"https://www.google.com/maps?q={latStr},{lngStr}",

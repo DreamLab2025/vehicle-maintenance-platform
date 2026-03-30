@@ -48,8 +48,8 @@ public class GarageBranchSummaryResponse
     public string Slug { get; set; } = null!;
     public AddressDto Address { get; set; } = null!;
     public string? PhoneNumber { get; set; }
-    public double Latitude { get; set; }
-    public double Longitude { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public BranchStatus Status { get; set; }
 }
 

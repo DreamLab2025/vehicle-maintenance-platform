@@ -22,9 +22,9 @@ public class GarageBranch : BaseEntity
 
     public Address Address { get; set; } = null!;
 
-    public double Latitude { get; set; }
+    public double? Latitude { get; set; }
 
-    public double Longitude { get; set; }
+    public double? Longitude { get; set; }
 
     public WorkingHours WorkingHours { get; set; } = null!;
 
