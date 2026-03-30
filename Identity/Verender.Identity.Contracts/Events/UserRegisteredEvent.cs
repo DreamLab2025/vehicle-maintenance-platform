@@ -11,6 +11,8 @@ namespace Verender.Identity.Contracts.Events
         public bool PhoneNumberVerified { get; set; } = false;
         public string? Email { get; set; }
         public bool EmailVerified { get; set; } = false;
+        public DateOnly? DateOfBirth { get; set; }
+        public string? Gender { get; set; }
         public DateTime RegistrationDate { get; set; }
     }
 }
