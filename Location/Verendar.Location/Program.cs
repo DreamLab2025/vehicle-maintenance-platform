@@ -12,6 +12,7 @@ using (var scope = app.Services.CreateScope())
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     await LocationCatalogSeeder.SeedAsync(db, logger);
     await ProvinceBoundaryUrlSeeder.SeedAsync(db, logger);
+    await WardBoundaryUrlSeeder.SeedAsync(db, logger);
 }
 
 app.UseApplicationServices();

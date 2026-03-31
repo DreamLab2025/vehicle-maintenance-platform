@@ -34,4 +34,30 @@ public class WardService(ILogger<WardService> logger, IUnitOfWork unitOfWork, IC
             return ApiResponse<WardResponse>.FailureResponse("Lỗi khi lấy thông tin phường/xã");
         }
     }
+
+    public async Task<ApiResponse<WardBoundaryResponse>> GetWardBoundaryAsync(string code)
+    {
+        try
+        {
+            var ward = await unitOfWork.Wards.GetByCodeAsync(code);
+            if (ward == null)
+            {
+                logger.LogWarning("GetWardBoundary: not found {Code}", code);
+                return ApiResponse<WardBoundaryResponse>.NotFoundResponse("Phường/xã không tồn tại");
+            }
+
+            var response = new WardBoundaryResponse
+            {
+                Code = ward.Code,
+                Name = ward.Name,
+                BoundaryUrl = ward.BoundaryUrl
+            };
+            return ApiResponse<WardBoundaryResponse>.SuccessResponse(response, "Lấy boundary URL thành công");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "GetWardBoundary: failed for {Code}", code);
+            return ApiResponse<WardBoundaryResponse>.FailureResponse("Lỗi khi lấy boundary URL");
+        }
+    }
 }

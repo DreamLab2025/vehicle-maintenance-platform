@@ -2,6 +2,8 @@ namespace Verendar.Location.Application.Dtos;
 
 public record GeocodeResponse(double? Latitude, double? Longitude);
 
+public record ReverseGeocodeResponse(string? Address);
+
 public record MapLinksResponse(
     string GoogleMaps,
     string AppleMaps,

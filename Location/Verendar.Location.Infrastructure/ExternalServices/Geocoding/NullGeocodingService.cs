@@ -6,4 +6,7 @@ public sealed class NullGeocodingService : IGeocodingService
 {
     public Task<(double Latitude, double Longitude)?> GeocodeAsync(string address, CancellationToken ct = default) =>
         Task.FromResult<(double Latitude, double Longitude)?>(null);
+
+    public Task<string?> ReverseGeocodeAsync(double latitude, double longitude, CancellationToken ct = default) =>
+        Task.FromResult<string?>(null);
 }

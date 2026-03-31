@@ -68,4 +68,42 @@ public class AwsGeocodingService(
             return null;
         }
     }
+
+    public async Task<string?> ReverseGeocodeAsync(double latitude, double longitude, CancellationToken ct = default)
+    {
+        try
+        {
+            var request = new ReverseGeocodeRequest
+            {
+                // AWS expects [lng, lat]
+                QueryPosition = [longitude, latitude],
+                Language = "vi",
+                MaxResults = 1
+            };
+
+            var response = await _geoPlacesClient.ReverseGeocodeAsync(request, ct);
+
+            if (response.ResultItems is null || response.ResultItems.Count == 0)
+            {
+                _logger.LogWarning("AWS GeoPlaces: no reverse geocode results for ({Lat},{Lng})", latitude, longitude);
+                return null;
+            }
+
+            return response.ResultItems[0].Address?.Label;
+        }
+        catch (AmazonServiceException ex) when (
+            ex.Message.Contains("IAM security credentials", StringComparison.OrdinalIgnoreCase)
+            || ex.Message.Contains("Unable to get IAM", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning(
+                "AWS GeoPlaces: unable to get IAM credentials. Coordinates: ({Lat},{Lng})",
+                latitude, longitude);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AWS GeoPlaces reverse geocoding error for ({Lat},{Lng})", latitude, longitude);
+            return null;
+        }
+    }
 }
