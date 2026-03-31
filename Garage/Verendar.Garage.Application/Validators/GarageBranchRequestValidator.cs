@@ -51,6 +51,22 @@ public class GarageBranchRequestValidator : AbstractValidator<GarageBranchReques
                 .MaximumLength(500).WithMessage("Địa chỉ chi tiết tối đa 500 ký tự");
         });
 
+        // ── Coordinates (optional, flow 2: map pin) ───────────────────────────
+
+        RuleFor(x => x)
+            .Must(x => (x.Latitude.HasValue) == (x.Longitude.HasValue))
+            .WithMessage("Latitude và Longitude phải cùng được cung cấp hoặc cùng để trống")
+            .When(x => x.Latitude.HasValue || x.Longitude.HasValue);
+
+        When(x => x.Latitude.HasValue, () =>
+        {
+            RuleFor(x => x.Latitude!.Value)
+                .InclusiveBetween(-90, 90).WithMessage("Latitude phải trong khoảng -90 đến 90");
+
+            RuleFor(x => x.Longitude!.Value)
+                .InclusiveBetween(-180, 180).WithMessage("Longitude phải trong khoảng -180 đến 180");
+        });
+
         // ── WorkingHours ──────────────────────────────────────────────────────
 
         RuleFor(x => x.WorkingHours)

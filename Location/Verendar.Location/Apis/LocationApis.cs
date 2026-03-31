@@ -87,6 +87,14 @@ public static class LocationApis
             .WithSummary("Danh sách vùng miền hành chính")
             .Produces<ApiResponse<List<AdministrativeRegionResponse>>>(200);
 
+        group.MapGet("/reverse-geocode", ReverseGeocode)
+            .WithName("ReverseGeocode")
+            .WithOpenApi()
+            .WithDescription("Chuyển đổi tọa độ (lat, lng) thành địa chỉ văn bản")
+            .WithSummary("Reverse geocode tọa độ → địa chỉ")
+            .Produces<ApiResponse<ReverseGeocodeResponse>>(200)
+            .Produces<ApiResponse<ReverseGeocodeResponse>>(400);
+
         group.MapGet("/search", SearchPlaces)
             .WithName("SearchPlaces")
             .WithOpenApi()
@@ -153,6 +161,21 @@ public static class LocationApis
     {
         var result = await service.GetAllAsync();
         return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> ReverseGeocode(
+        double? lat,
+        double? lng,
+        IGeocodingService geocodingService,
+        CancellationToken ct)
+    {
+        if (lat is null || lng is null)
+            return Results.BadRequest(ApiResponse<ReverseGeocodeResponse>.FailureResponse("lat và lng là bắt buộc"));
+
+        var address = await geocodingService.ReverseGeocodeAsync(lat.Value, lng.Value, ct);
+        return Results.Ok(ApiResponse<ReverseGeocodeResponse>.SuccessResponse(
+            new ReverseGeocodeResponse(address),
+            "Reverse geocode thành công"));
     }
 
     private static async Task<IResult> SearchPlaces(

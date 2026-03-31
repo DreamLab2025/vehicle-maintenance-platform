@@ -29,6 +29,7 @@ public class AwsPlaceSearchService(
             var request = new SuggestRequest
             {
                 QueryText = input,
+                BiasPosition = [108.0, 16.5],
                 Filter = new SuggestFilter { IncludeCountries = ["VNM"] },
                 Language = "vi",
                 MaxResults = 5,

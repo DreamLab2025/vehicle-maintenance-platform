@@ -32,6 +32,8 @@ public class GarageBranchRequest
     public string? TaxCode { get; set; }
     public AddressDto Address { get; set; } = null!;
     public WorkingHoursDto WorkingHours { get; set; } = null!;
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 }
 
 // ── Map Search ────────────────────────────────────────────────────────────────

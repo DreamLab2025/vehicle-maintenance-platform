@@ -53,16 +53,27 @@ public class GarageBranchService(
             maxLength: 120,
             cancellationToken: ct);
 
-        // Assemble full address for geocoding using ward/province names from Location service
-        var geocodeQuery = $"{request.Address.StreetDetail}, {wardName}, {provinceName}";
-        var coords = await _locationClient.GeocodeAsync(geocodeQuery, ct);
-        if (!coords.HasValue)
-            return ApiResponse<GarageBranchResponse>.FailureResponse(
-                EndpointMessages.GarageBranches.GeocodeBranchAddressFailed, 422);
+        MapLinksDto? mapLinks = null;
+        if (request.Latitude.HasValue && request.Longitude.HasValue)
+        {
+            // Flow 2: coordinates provided by frontend (map pin) — skip geocoding
+            branch.Latitude = request.Latitude.Value;
+            branch.Longitude = request.Longitude.Value;
+            mapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude!.Value, branch.Longitude!.Value, ct);
+        }
+        else
+        {
+            // Flow 1: geocode from address text
+            var geocodeQuery = $"{request.Address.StreetDetail}, {wardName}, {provinceName}";
+            var coords = await _locationClient.GeocodeAsync(geocodeQuery, ct);
+            if (!coords.HasValue)
+                return ApiResponse<GarageBranchResponse>.FailureResponse(
+                    EndpointMessages.GarageBranches.GeocodeBranchAddressFailed, 422);
 
-        branch.Latitude = coords.Value.Latitude;
-        branch.Longitude = coords.Value.Longitude;
-        var mapLinks = await _locationClient.GetMapLinksAsync(coords.Value.Latitude, coords.Value.Longitude, ct);
+            branch.Latitude = coords.Value.Latitude;
+            branch.Longitude = coords.Value.Longitude;
+            mapLinks = await _locationClient.GetMapLinksAsync(coords.Value.Latitude, coords.Value.Longitude, ct);
+        }
 
         await _unitOfWork.GarageBranches.AddAsync(branch);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -165,8 +176,25 @@ public class GarageBranchService(
 
         MapLinksDto? mapLinks = null;
 
-        if (addressChanged)
+        if (request.Latitude.HasValue && request.Longitude.HasValue)
         {
+            // Flow 2: coordinates provided by frontend (map pin) — use directly
+            if (addressChanged)
+            {
+                // Still validate codes even though we have coords
+                var (isValid, _, _) = await _locationClient.ValidateLocationAsync(
+                    request.Address.ProvinceCode, request.Address.WardCode, ct);
+                if (!isValid)
+                    return ApiResponse<GarageBranchResponse>.FailureResponse(
+                        EndpointMessages.GarageBranches.InvalidProvinceWard, 422);
+            }
+            branch.Latitude = request.Latitude.Value;
+            branch.Longitude = request.Longitude.Value;
+            mapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude!.Value, branch.Longitude!.Value, ct);
+        }
+        else if (addressChanged)
+        {
+            // Flow 1: address changed, no explicit coords → validate + geocode
             var (isValid, provinceName, wardName) = await _locationClient.ValidateLocationAsync(
                 request.Address.ProvinceCode, request.Address.WardCode, ct);
             if (!isValid)
@@ -185,6 +213,7 @@ public class GarageBranchService(
         }
         else if (branch.Latitude.HasValue && branch.Longitude.HasValue)
         {
+            // No change — refresh map links from existing coordinates
             mapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude.Value, branch.Longitude.Value, ct);
         }
 
