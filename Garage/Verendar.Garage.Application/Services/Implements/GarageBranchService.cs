@@ -56,18 +56,13 @@ public class GarageBranchService(
         // Assemble full address for geocoding using ward/province names from Location service
         var geocodeQuery = $"{request.Address.StreetDetail}, {wardName}, {provinceName}";
         var coords = await _locationClient.GeocodeAsync(geocodeQuery, ct);
-        MapLinksDto? mapLinks = null;
-        if (coords.HasValue)
-        {
-            branch.Latitude = coords.Value.Latitude;
-            branch.Longitude = coords.Value.Longitude;
-            mapLinks = await _locationClient.GetMapLinksAsync(coords.Value.Latitude, coords.Value.Longitude, ct);
-        }
-        else
-        {
-            _logger.LogWarning("CreateBranch: geocoding failed for '{Address}', branch saved without coordinates",
-                geocodeQuery);
-        }
+        if (!coords.HasValue)
+            return ApiResponse<GarageBranchResponse>.FailureResponse(
+                EndpointMessages.GarageBranches.GeocodeBranchAddressFailed, 422);
+
+        branch.Latitude = coords.Value.Latitude;
+        branch.Longitude = coords.Value.Longitude;
+        var mapLinks = await _locationClient.GetMapLinksAsync(coords.Value.Latitude, coords.Value.Longitude, ct);
 
         await _unitOfWork.GarageBranches.AddAsync(branch);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -180,20 +175,17 @@ public class GarageBranchService(
 
             var geocodeQuery = $"{request.Address.StreetDetail}, {wardName}, {provinceName}";
             var coords = await _locationClient.GeocodeAsync(geocodeQuery, ct);
-            if (coords.HasValue)
-            {
-                branch.Latitude = coords.Value.Latitude;
-                branch.Longitude = coords.Value.Longitude;
-                mapLinks = await _locationClient.GetMapLinksAsync(coords.Value.Latitude, coords.Value.Longitude, ct);
-            }
-            else
-            {
-                _logger.LogWarning("UpdateBranch: geocoding failed for '{Address}', keeping old coordinates", geocodeQuery);
-            }
+            if (!coords.HasValue)
+                return ApiResponse<GarageBranchResponse>.FailureResponse(
+                    EndpointMessages.GarageBranches.GeocodeBranchAddressFailed, 422);
+
+            branch.Latitude = coords.Value.Latitude;
+            branch.Longitude = coords.Value.Longitude;
+            mapLinks = await _locationClient.GetMapLinksAsync(coords.Value.Latitude, coords.Value.Longitude, ct);
         }
-        else if (branch.Latitude != 0 || branch.Longitude != 0)
+        else if (branch.Latitude.HasValue && branch.Longitude.HasValue)
         {
-            mapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude, branch.Longitude, ct);
+            mapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude.Value, branch.Longitude.Value, ct);
         }
 
         branch.UpdateFromRequest(request);
@@ -272,8 +264,8 @@ public class GarageBranchService(
         _logger.LogInformation("UpdateBranchStatus: branch {BranchId} → {Status}", branchId, request.Status);
 
         var response = branch.ToResponse();
-        if (branch.Latitude != 0 || branch.Longitude != 0)
-            response.MapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude, branch.Longitude, ct);
+        if (branch.Latitude.HasValue && branch.Longitude.HasValue)
+            response.MapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude.Value, branch.Longitude.Value, ct);
 
         return ApiResponse<GarageBranchResponse>.SuccessResponse(response, EndpointMessages.GarageBranches.UpdateStatusSuccess);
     }
@@ -349,8 +341,8 @@ public class GarageBranchService(
     {
         var response = branch.ToResponse();
 
-        if (branch.Latitude != 0 || branch.Longitude != 0)
-            response.MapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude, branch.Longitude, ct);
+        if (branch.Latitude.HasValue && branch.Longitude.HasValue)
+            response.MapLinks = await _locationClient.GetMapLinksAsync(branch.Latitude.Value, branch.Longitude.Value, ct);
 
         var (avg, count) = await _unitOfWork.Reviews.GetRatingSummaryAsync(branch.Id, ct);
         response.AverageRating = count > 0 ? Math.Round(avg, 1) : null;

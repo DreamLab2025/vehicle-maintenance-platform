@@ -396,3 +396,5 @@ hangfire.db-wal
 
 docs/*
 .claude/settings.local.json
+
+scripts/boundaries/*

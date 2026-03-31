@@ -4,7 +4,7 @@ public static class CacheKeys
 {
     private const string LocationPrefix = "location";
 
-    private const string SchemaVersion = "v2";
+    private const string SchemaVersion = "v4";
 
     public const string ProvincesAll = $"{LocationPrefix}:provinces:{SchemaVersion}";
     public static string ProvinceByCode(string code) => $"{LocationPrefix}:provinces:{code}:{SchemaVersion}";

@@ -14,5 +14,7 @@ public class Province
 
     public AdministrativeUnit? AdministrativeUnit { get; set; }
 
+    public string? BoundaryUrl { get; set; }
+
     public ICollection<Ward> Wards { get; set; } = new List<Ward>();
 }

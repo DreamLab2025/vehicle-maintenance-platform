@@ -19,6 +19,11 @@ public static class InternalLocationApis
             .Produces<GeocodeResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest);
 
+        group.MapGet("/reverse-geocode", ReverseGeocodeCoordinates)
+            .WithName("ReverseGeocodeCoordinates")
+            .Produces<ReverseGeocodeResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest);
+
         group.MapGet("/map-links", GetMapLinks)
             .WithName("GetMapLinks")
             .Produces<MapLinksResponse>(StatusCodes.Status200OK)
@@ -96,6 +101,19 @@ public static class InternalLocationApis
         }
 
         return Results.Ok(new { isValid = true, provinceName = province.Data.Name });
+    }
+
+    private static async Task<IResult> ReverseGeocodeCoordinates(
+        double? lat,
+        double? lng,
+        IGeocodingService geocodingService,
+        CancellationToken ct)
+    {
+        if (lat is null || lng is null)
+            return Results.BadRequest(new { error = "lat and lng are required" });
+
+        var address = await geocodingService.ReverseGeocodeAsync(lat.Value, lng.Value, ct);
+        return Results.Ok(new ReverseGeocodeResponse(address));
     }
 
     private static IResult GetMapLinks(double? lat, double? lng)

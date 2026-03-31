@@ -12,6 +12,8 @@ namespace Verendar.Identity.Application.Mappings
                 PhoneNumber = user.PhoneNumber ?? string.Empty,
                 EmailVerified = user.EmailVerified,
                 PhoneNumberVerified = user.PhoneNumberVerified,
+                DateOfBirth = user.DateOfBirth,
+                Gender = user.Gender?.ToString(),
                 Roles = user.Roles.Select(r => r.ToString()).ToList(),
                 CreatedAt = user.CreatedAt
             };
@@ -24,9 +26,12 @@ namespace Verendar.Identity.Application.Mappings
             return new User
             {
                 Id = userId,
+                FullName = request.FullName.Trim(),
                 Email = normalizedEmail,
                 PasswordHash = passwordHash,
-                FullName = normalizedEmail,
+                PhoneNumber = request.PhoneNumber,
+                DateOfBirth = request.DateOfBirth,
+                Gender = request.Gender,
                 Roles = new List<UserRole> { UserRole.User },
                 PhoneNumberVerified = false,
                 EmailVerified = false,

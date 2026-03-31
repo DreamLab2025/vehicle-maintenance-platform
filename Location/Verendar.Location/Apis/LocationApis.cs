@@ -41,6 +41,14 @@ public static class LocationApis
             .Produces<ApiResponse<ProvinceResponse>>(200)
             .Produces<ApiResponse<ProvinceResponse>>(404);
 
+        group.MapGet("/provinces/{code}/boundary", GetProvinceBoundary)
+            .WithName("GetProvinceBoundary")
+            .WithOpenApi()
+            .WithDescription("Lấy CloudFront URL chứa file GeoJSON boundary của tỉnh/thành phố")
+            .WithSummary("Boundary URL tỉnh/thành phố")
+            .Produces<ApiResponse<ProvinceBoundaryResponse>>(200)
+            .Produces<ApiResponse<ProvinceBoundaryResponse>>(404);
+
         group.MapGet("/provinces/{code}/wards", GetWardsByProvince)
             .WithName("GetWardsByProvince")
             .WithOpenApi()
@@ -48,6 +56,14 @@ public static class LocationApis
             .WithSummary("Danh sách phường/xã theo tỉnh")
             .Produces<ApiResponse<List<WardResponse>>>(200)
             .Produces<ApiResponse<List<WardResponse>>>(404);
+
+        group.MapGet("/wards/{code}/boundary", GetWardBoundary)
+            .WithName("GetWardBoundary")
+            .WithOpenApi()
+            .WithDescription("Lấy CloudFront URL chứa file GeoJSON boundary của phường/xã")
+            .WithSummary("Boundary URL phường/xã")
+            .Produces<ApiResponse<WardBoundaryResponse>>(200)
+            .Produces<ApiResponse<WardBoundaryResponse>>(404);
 
         group.MapGet("/wards/{code}", GetWardByCode)
             .WithName("GetWardByCode")
@@ -103,9 +119,21 @@ public static class LocationApis
         return result.ToHttpResult();
     }
 
+    private static async Task<IResult> GetProvinceBoundary(string code, IProvinceService service)
+    {
+        var result = await service.GetProvinceBoundaryAsync(code);
+        return result.ToHttpResult();
+    }
+
     private static async Task<IResult> GetWardsByProvince(string code, IProvinceService service)
     {
         var result = await service.GetWardsByProvinceAsync(code);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> GetWardBoundary(string code, IWardService service)
+    {
+        var result = await service.GetWardBoundaryAsync(code);
         return result.ToHttpResult();
     }
 

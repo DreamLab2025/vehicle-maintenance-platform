@@ -55,11 +55,47 @@ public class GoogleMapsGeocodingService(
         }
     }
 
+    public async Task<string?> ReverseGeocodeAsync(double latitude, double longitude, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(_settings.ApiKey))
+        {
+            _logger.LogWarning("Google Maps reverse geocoding: ApiKey is not configured");
+            return null;
+        }
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            var latStr = latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var lngStr = longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var url =
+                $"https://maps.googleapis.com/maps/api/geocode/json?latlng={latStr},{lngStr}&language=vi&key={Uri.EscapeDataString(_settings.ApiKey)}";
+
+            var result = await client.GetFromJsonAsync<GoogleGeocodeResponse>(url, ct);
+
+            if (result is null || result.Status != "OK" || result.Results is null || result.Results.Length == 0)
+            {
+                _logger.LogWarning(
+                    "Google Maps reverse geocoding: no results for ({Lat},{Lng}). Status={Status}",
+                    latitude, longitude, result?.Status);
+                return null;
+            }
+
+            return result.Results[0].FormattedAddress;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Google Maps reverse geocoding error for ({Lat},{Lng})", latitude, longitude);
+            return null;
+        }
+    }
+
     private sealed record GoogleGeocodeResponse(
         [property: JsonPropertyName("status")] string? Status,
         [property: JsonPropertyName("results")] GoogleGeocodeResult[]? Results);
 
     private sealed record GoogleGeocodeResult(
+        [property: JsonPropertyName("formatted_address")] string? FormattedAddress,
         [property: JsonPropertyName("geometry")] GoogleGeometry? Geometry);
 
     private sealed record GoogleGeometry(

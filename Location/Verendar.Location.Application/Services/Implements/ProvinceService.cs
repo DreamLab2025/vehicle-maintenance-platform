@@ -84,4 +84,30 @@ public class ProvinceService(ILogger<ProvinceService> logger, IUnitOfWork unitOf
             return ApiResponse<List<WardResponse>>.FailureResponse("Lỗi khi lấy danh sách phường/xã");
         }
     }
+
+    public async Task<ApiResponse<ProvinceBoundaryResponse>> GetProvinceBoundaryAsync(string code)
+    {
+        try
+        {
+            var province = await unitOfWork.Provinces.GetByCodeAsync(code);
+            if (province == null)
+            {
+                logger.LogWarning("GetProvinceBoundary: not found {Code}", code);
+                return ApiResponse<ProvinceBoundaryResponse>.NotFoundResponse("Tỉnh không tồn tại");
+            }
+
+            var response = new ProvinceBoundaryResponse
+            {
+                Code = province.Code,
+                Name = province.Name,
+                BoundaryUrl = province.BoundaryUrl
+            };
+            return ApiResponse<ProvinceBoundaryResponse>.SuccessResponse(response, "Lấy boundary URL thành công");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "GetProvinceBoundary: failed for {Code}", code);
+            return ApiResponse<ProvinceBoundaryResponse>.FailureResponse("Lỗi khi lấy boundary URL");
+        }
+    }
 }

@@ -229,6 +229,8 @@ namespace Verendar.Identity.Application.Services.Implements
                 PhoneNumberVerified = user.PhoneNumberVerified,
                 Email = user.Email,
                 EmailVerified = user.EmailVerified,
+                DateOfBirth = user.DateOfBirth,
+                Gender = user.Gender?.ToString(),
                 RegistrationDate = user.CreatedAt
             });
             return ApiResponse<bool>.SuccessResponse(true, "Kích hoạt tài khoản thành công. Bạn có thể đăng nhập ngay bây giờ.");
