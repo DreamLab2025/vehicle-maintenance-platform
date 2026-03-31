@@ -3,6 +3,7 @@ using Amazon.Runtime;
 using Verendar.Location.Application.ExternalServices;
 using Verendar.Location.Infrastructure.Configuration;
 using Verendar.Location.Infrastructure.ExternalServices.Geocoding;
+using Verendar.Location.Infrastructure.ExternalServices.PlaceSearch;
 
 namespace Verendar.Location.Bootstrapping;
 
@@ -41,10 +42,12 @@ public static class ApplicationServiceExtensions
                 builder.Services.AddDefaultAWSOptions(awsOptions);
                 builder.Services.AddAWSService<IAmazonGeoPlaces>();
                 builder.Services.AddScoped<IGeocodingService, AwsGeocodingService>();
+                builder.Services.AddScoped<IPlaceSearchService, AwsPlaceSearchService>();
             }
             else
             {
                 builder.Services.AddScoped<IGeocodingService, NullGeocodingService>();
+                builder.Services.AddScoped<IPlaceSearchService, NullPlaceSearchService>();
             }
         }
         else
@@ -54,6 +57,7 @@ public static class ApplicationServiceExtensions
                 builder.Configuration.GetSection(GoogleGeocodingSettings.SectionName));
             builder.Services.AddHttpClient();
             builder.Services.AddScoped<IGeocodingService, GoogleMapsGeocodingService>();
+            builder.Services.AddScoped<IPlaceSearchService, NullPlaceSearchService>();
         }
 
         return builder;
