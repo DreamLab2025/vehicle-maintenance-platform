@@ -12,6 +12,7 @@ public class WardConfiguration : IEntityTypeConfiguration<Ward>
         builder.Property(e => e.Code).HasMaxLength(10);
         builder.Property(e => e.Name).HasMaxLength(500).IsRequired();
         builder.Property(e => e.ProvinceCode).HasMaxLength(10);
+        builder.Property(e => e.BoundaryUrl).HasMaxLength(500).IsRequired(false);
 
         // Foreign key to Province (by code)
         builder.HasOne(e => e.Province)
