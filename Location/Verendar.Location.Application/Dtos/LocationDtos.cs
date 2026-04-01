@@ -45,4 +45,16 @@ public class WardBoundaryResponse
     public string Code { get; set; } = null!;
     public string Name { get; set; } = null!;
     public string? BoundaryUrl { get; set; }
+
+    /// <summary>
+    /// File GeoJSON tại <see cref="BoundaryUrl"/> là một FeatureCollection <strong>shard</strong> dùng chung cho nhiều phường/xã (cùng tỉnh),
+    /// không phải một polygon đơn lẻ. Khi vẽ bản đồ, chỉ giữ feature có
+    /// <c>properties[BoundaryShardMatchProperty]</c> (chuỗi) bằng <see cref="BoundaryShardMatchValue"/>.
+    /// </summary>
+    public string BoundaryShardMatchProperty { get; init; } = "ma_xa";
+
+    /// <summary>
+    /// Mã phường/xã khớp với GeoJSON (5 ký tự, số 0 đầu). Đồng bộ với script <c>build-ward-boundary-urls.js</c>.
+    /// </summary>
+    public string BoundaryShardMatchValue { get; init; } = null!;
 }
