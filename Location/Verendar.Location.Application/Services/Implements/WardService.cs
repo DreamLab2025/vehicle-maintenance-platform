@@ -50,7 +50,8 @@ public class WardService(ILogger<WardService> logger, IUnitOfWork unitOfWork, IC
             {
                 Code = ward.Code,
                 Name = ward.Name,
-                BoundaryUrl = ward.BoundaryUrl
+                BoundaryUrl = ward.BoundaryUrl,
+                BoundaryShardMatchValue = ward.Code.PadLeft(5, '0')
             };
             return ApiResponse<WardBoundaryResponse>.SuccessResponse(response, "Lấy boundary URL thành công");
         }

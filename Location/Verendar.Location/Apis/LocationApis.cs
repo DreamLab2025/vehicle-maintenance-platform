@@ -60,8 +60,11 @@ public static class LocationApis
         group.MapGet("/wards/{code}/boundary", GetWardBoundary)
             .WithName("GetWardBoundary")
             .WithOpenApi()
-            .WithDescription("Lấy CloudFront URL chứa file GeoJSON boundary của phường/xã")
-            .WithSummary("Boundary URL phường/xã")
+            .WithDescription(
+                "URL GeoJSON (shard): một file có thể chứa nhiều phường/xã. Sau khi tải, lọc feature theo " +
+                "properties[boundaryShardMatchProperty] === boundaryShardMatchValue (mặc định ma_xa, 5 chữ số). " +
+                "Các trường boundaryShard* trong body giải thích cách lọc.")
+            .WithSummary("Boundary URL phường/xã (GeoJSON shard)")
             .Produces<ApiResponse<WardBoundaryResponse>>(200)
             .Produces<ApiResponse<WardBoundaryResponse>>(404);
 
