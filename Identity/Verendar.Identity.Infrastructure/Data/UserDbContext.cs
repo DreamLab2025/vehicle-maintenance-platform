@@ -7,6 +7,7 @@ namespace Verendar.Identity.Infrastructure.Data
     public class UserDbContext(DbContextOptions<UserDbContext> options, ICurrentUserService? currentUserService = null) : BaseDbContext(options, currentUserService)
     {
         public DbSet<User> Users { get; set; } = null!;
+        public DbSet<Feedback> Feedbacks { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

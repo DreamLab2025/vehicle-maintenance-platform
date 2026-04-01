@@ -5,6 +5,7 @@ using Verendar.Identity.Application.Validators;
 using Verendar.Identity.Infrastructure.Data;
 using Verendar.Identity.Infrastructure.Repositories.Implements;
 using Verendar.Identity.Application.Services.Implements;
+using Verendar.Identity.Application.Services.Interfaces;
 using Verendar.Identity.Domain.Repositories.Interfaces;
 using Verendar.ServiceDefaults;
 
@@ -27,6 +28,7 @@ namespace Verendar.Identity.Bootstrapping
             builder.Services.AddScoped<IIdentityTokenService, IdentityTokenService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 
             builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
@@ -49,6 +51,7 @@ namespace Verendar.Identity.Bootstrapping
             app.MapAuthApi();
             app.MapUserApi();
             app.MapInternalUserApi();
+            app.MapFeedbackApi();
 
             return app;
         }
