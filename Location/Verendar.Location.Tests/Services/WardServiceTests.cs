@@ -96,4 +96,28 @@ public class WardServiceTests
 
         LocationServiceResponseAssert.AssertFailureEnvelope(result, 400, "Lỗi khi lấy thông tin phường/xã");
     }
+
+    [Fact]
+    public async Task GetWardBoundaryAsync_WhenFound_ReturnsShardFilterHints()
+    {
+        var m = new LocationUnitOfWorkMock();
+        var ward = new Ward
+        {
+            Code = "283",
+            Name = "Vĩnh Tuy",
+            ProvinceCode = "01",
+            BoundaryUrl = "https://example/79_part_009.json"
+        };
+        m.Wards.Setup(w => w.GetByCodeAsync("283")).ReturnsAsync(ward);
+
+        var cache = new Mock<ICacheService>(MockBehavior.Strict);
+        var sut = new WardService(NullLogger<WardService>.Instance, m.UnitOfWork.Object, cache.Object);
+
+        var result = await sut.GetWardBoundaryAsync("283");
+
+        LocationServiceResponseAssert.AssertSuccessEnvelope(result, "Lấy boundary URL thành công");
+        result.Data!.BoundaryShardMatchProperty.Should().Be("ma_xa");
+        result.Data.BoundaryShardMatchValue.Should().Be("00283");
+        result.Data.BoundaryUrl.Should().Be(ward.BoundaryUrl);
+    }
 }
