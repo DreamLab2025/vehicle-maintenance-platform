@@ -63,6 +63,18 @@ public class GarageService(
             garage.ToDetailResponse(), EndpointMessages.OwnerGarage.GetDetailSuccess);
     }
 
+    public async Task<ApiResponse<GarageDetailResponse>> GetGarageBySlugAsync(string slug, CancellationToken ct = default)
+    {
+        var garage = await _unitOfWork.Garages.GetWithBranchesAsync(g => g.Slug == slug, ct);
+
+        if (garage is null)
+            return ApiResponse<GarageDetailResponse>.NotFoundResponse(
+                string.Format(EndpointMessages.OwnerGarage.GarageNotFoundBySlugFormat, slug));
+
+        return ApiResponse<GarageDetailResponse>.SuccessResponse(
+            garage.ToDetailResponse(), EndpointMessages.OwnerGarage.GetDetailSuccess);
+    }
+
     public async Task<ApiResponse<GarageResponse>> UpdateGarageStatusAsync(
         Guid garageId, UpdateGarageStatusRequest request, Guid adminUserId, CancellationToken ct = default)
     {

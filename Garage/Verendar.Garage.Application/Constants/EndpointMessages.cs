@@ -107,6 +107,7 @@ public static class EndpointMessages
         public const string RejectedUseEditResubmitFlow = "Hồ sơ garage đã bị từ chối. Vui lòng cập nhật thông tin garage rồi dùng chức năng gửi lại hồ sơ.";
         public const string RegisterSuccess = "Đã gửi đăng ký garage.";
         public const string TaxLookupNotFoundFormat = "Không tìm thấy doanh nghiệp với MST '{0}'. Vui lòng kiểm tra lại.";
+        public const string GarageNotFoundBySlugFormat = "Không tìm thấy garage với slug '{0}'. Vui lòng kiểm tra lại.";
     }
 
     public static class Member

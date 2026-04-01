@@ -53,6 +53,16 @@ public static class GarageApis
             .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status404NotFound);
 
+        group.MapGet("/slug/{slug}", GetGarageBySlug)
+            .WithName("GetGarageBySlug")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Xem chi tiết garage theo slug";
+                return operation;
+            })
+            .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status404NotFound);
+
         group.MapGet("/business-lookup/{taxCode}", LookupBusiness)
             .WithName("LookupBusiness")
             .WithOpenApi(operation =>
@@ -149,6 +159,15 @@ public static class GarageApis
         CancellationToken ct)
     {
         var result = await garageService.GetGarageByIdAsync(id, ct);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> GetGarageBySlug(
+        string slug,
+        IGarageService garageService,
+        CancellationToken ct)
+    {
+        var result = await garageService.GetGarageBySlugAsync(slug, ct);
         return result.ToHttpResult();
     }
 
