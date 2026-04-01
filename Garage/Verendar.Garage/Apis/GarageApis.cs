@@ -34,14 +34,13 @@ public static class GarageApis
             .WithName("GetMyGarage")
             .WithOpenApi(operation =>
             {
-                operation.Summary = "Xem thông tin garage của tôi kèm danh sách chi nhánh";
+                operation.Summary = "Xem trạng thái đơn đăng ký / thông tin garage của tôi kèm danh sách chi nhánh";
                 return operation;
             })
-            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner)))
+            .RequireAuthorization()
             .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageDetailResponse>>(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status401Unauthorized)
-            .Produces(StatusCodes.Status403Forbidden);
+            .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapGet("/{id:guid}", GetGarageById)
             .WithName("GetGarageById")
