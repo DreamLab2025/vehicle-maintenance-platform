@@ -67,14 +67,14 @@ public static class ApplicationServiceExtensions
     {
         app.MapDefaultEndpoints();
 
+        app.UseHttpsRedirection();
+
         app.UseCommonService();
 
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
         }
-
-        app.UseHttpsRedirection();
 
         app.MapLocationApi();
         app.MapInternalLocationApi();

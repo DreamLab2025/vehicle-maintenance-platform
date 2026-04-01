@@ -85,6 +85,8 @@ namespace Verendar.Vehicle.Bootstrapping
         {
             app.MapDefaultEndpoints();
 
+            app.UseHttpsRedirection();
+
             app.UseCommonService();
 
             if (app.Environment.IsDevelopment())
@@ -109,8 +111,6 @@ namespace Verendar.Vehicle.Bootstrapping
             {
                 app.MapOpenApi();
             }
-
-            app.UseHttpsRedirection();
 
             app.MapBrandApi();
             app.MapTypeApi();

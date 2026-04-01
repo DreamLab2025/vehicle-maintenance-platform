@@ -114,6 +114,9 @@ namespace Verendar.Ai.Bootstrapping
         public static WebApplication UseApplicationServices(this WebApplication app)
         {
             app.MapDefaultEndpoints();
+
+            app.UseHttpsRedirection();
+
             app.UseCommonService();
 
             if (app.Environment.IsDevelopment())
@@ -128,8 +131,6 @@ namespace Verendar.Ai.Bootstrapping
                 "ai-prompt-retention",
                 job => job.ExecuteAsync(CancellationToken.None),
                 Cron.Daily);
-
-            app.UseHttpsRedirection();
             app.MapAiApi();
             app.MapAiPromptApi();
 

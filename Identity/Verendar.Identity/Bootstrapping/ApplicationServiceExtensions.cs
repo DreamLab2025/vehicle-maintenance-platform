@@ -37,14 +37,14 @@ namespace Verendar.Identity.Bootstrapping
         {
             app.MapDefaultEndpoints();
 
+            app.UseHttpsRedirection();
+
             app.UseCommonService();
 
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
             }
-
-            app.UseHttpsRedirection();
 
             app.MapAuthApi();
             app.MapUserApi();

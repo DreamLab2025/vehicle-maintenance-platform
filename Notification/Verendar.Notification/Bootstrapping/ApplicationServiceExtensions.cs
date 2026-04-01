@@ -72,14 +72,14 @@ public static class ApplicationServiceExtensions
     {
         app.MapDefaultEndpoints();
 
+        app.UseHttpsRedirection();
+
         app.UseCommonService();
 
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
         }
-
-        app.UseHttpsRedirection();
 
         app.MapHub<NotificationHub>("/hubs/notifications");
         app.MapNotificationApi();
