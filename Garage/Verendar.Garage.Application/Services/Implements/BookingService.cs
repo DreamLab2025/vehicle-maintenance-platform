@@ -294,35 +294,39 @@ public class BookingService(
         AssignBookingRequest request,
         CancellationToken ct = default)
     {
-        var booking = await _unitOfWork.Bookings.GetByIdTrackedWithDetailsAsync(bookingId, ct);
+        var booking = await _unitOfWork.Bookings.GetAssignmentSnapshotAsync(bookingId, ct);
         if (booking is null)
             return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.BookingNotFound);
 
         if (booking.Status is not (BookingStatus.Pending or BookingStatus.AwaitingConfirmation))
             return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.AssignStatusInvalid);
 
-        var garage = booking.GarageBranch.Garage;
-        if (!await CanOwnerOrManagerBranchAsync(garage.OwnerId, booking.GarageBranchId, actorId))
+        var garageOwnerId = await _unitOfWork.GarageBranches.GetGarageOwnerIdByBranchIdAsync(booking.GarageBranchId, ct);
+        if (garageOwnerId is null)
+            return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.BranchNotFound);
+
+        if (!await CanOwnerOrManagerBranchAsync(garageOwnerId.Value, booking.GarageBranchId, actorId, ct))
             return ApiResponse<BookingResponse>.ForbiddenResponse(EndpointMessages.Booking.AssignForbidden);
 
-        var mechanic = await _unitOfWork.Members.FindOneAsync(m =>
-            m.Id == request.GarageMemberId
-            && m.GarageBranchId == booking.GarageBranchId
-            && m.Role == MemberRole.Mechanic
-            && m.Status == MemberStatus.Active
-            && m.DeletedAt == null);
+        var mechanic = await _unitOfWork.Members.GetActiveMechanicForAssignmentAsync(
+            request.GarageMemberId,
+            booking.GarageBranchId,
+            ct);
 
         if (mechanic is null)
             return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.MechanicNotFound);
 
-        var from = booking.Status;
-        booking.MechanicId = mechanic.Id;
-        booking.Status = BookingStatus.Confirmed;
-        booking.UpdatedAt = DateTime.UtcNow;
+        var persisted = await _unitOfWork.Bookings.TryAssignMechanicPersistAsync(
+            bookingId,
+            mechanic.Value.Id,
+            booking.Status,
+            actorId,
+            ct);
 
-        AddHistory(booking, from, BookingStatus.Confirmed, actorId);
+        if (!persisted)
+            return ApiResponse<BookingResponse>.ConflictResponse(EndpointMessages.Booking.AssignConcurrentlyModified);
 
-        await _unitOfWork.SaveChangesAsync(ct);
+        var reloaded = await _unitOfWork.Bookings.GetByIdWithDetailsAsync(bookingId, ct);
 
         try
         {
@@ -334,12 +338,12 @@ public class BookingService(
                 BookingId = booking.Id,
                 CustomerUserId = booking.UserId,
                 GarageBranchId = booking.GarageBranchId,
-                MechanicMemberId = mechanic.Id,
-                MechanicDisplayName = mechanic.DisplayName,
-                BranchName = booking.GarageBranch.Name,
+                MechanicMemberId = mechanic.Value.Id,
+                MechanicDisplayName = mechanic.Value.DisplayName,
+                BranchName = reloaded!.GarageBranch.Name,
                 ScheduledAt = booking.ScheduledAt,
                 ItemsSummary = BookingMappings.BuildItemsSummaryFromLineItems(
-                    booking.LineItems.OrderBy(i => i.SortOrder).ToList()),
+                    reloaded.LineItems.OrderBy(i => i.SortOrder).ToList()),
                 CustomerEmail = customerEmail
             }, ct);
         }
@@ -348,7 +352,6 @@ public class BookingService(
             _logger.LogWarning(ex, "Failed to publish BookingConfirmedEvent for booking {BookingId}", booking.Id);
         }
 
-        var reloaded = await _unitOfWork.Bookings.GetByIdWithDetailsAsync(bookingId, ct);
         return ApiResponse<BookingResponse>.SuccessResponse(
             reloaded!.ToResponse(),
             EndpointMessages.Booking.AssignSuccess);
@@ -448,15 +451,21 @@ public class BookingService(
         string? reason,
         CancellationToken ct = default)
     {
-        var booking = await _unitOfWork.Bookings.GetByIdTrackedWithDetailsAsync(bookingId, ct);
+        var booking = await _unitOfWork.Bookings.GetByIdTrackedForMutationAsync(bookingId, ct);
         if (booking is null)
             return ApiResponse<bool>.NotFoundResponse(EndpointMessages.Booking.BookingNotFound);
 
         if (booking.Status is BookingStatus.Completed or BookingStatus.Cancelled)
             return ApiResponse<bool>.FailureResponse(EndpointMessages.Booking.CancelStatusInvalid);
 
-        if (!await CanCancelBookingAsync(booking, actorId))
-            return ApiResponse<bool>.ForbiddenResponse(EndpointMessages.Booking.CancelForbidden);
+        if (booking.UserId != actorId)
+        {
+            var cancelGarageOwnerId = await _unitOfWork.GarageBranches.GetGarageOwnerIdByBranchIdAsync(booking.GarageBranchId, ct);
+            if (cancelGarageOwnerId is null)
+                return ApiResponse<bool>.NotFoundResponse(EndpointMessages.Booking.BranchNotFound);
+            if (!await CanOwnerOrManagerBranchAsync(cancelGarageOwnerId.Value, booking.GarageBranchId, actorId, ct))
+                return ApiResponse<bool>.ForbiddenResponse(EndpointMessages.Booking.CancelForbidden);
+        }
 
         var from = booking.Status;
         booking.Status = BookingStatus.Cancelled;
@@ -666,28 +675,10 @@ public class BookingService(
         });
     }
 
-    private async Task<bool> CanCancelBookingAsync(Booking booking, Guid actorId)
-    {
-        if (booking.UserId == actorId)
-            return true;
-        var garage = booking.GarageBranch.Garage;
-        return await CanOwnerOrManagerBranchAsync(garage.OwnerId, booking.GarageBranchId, actorId);
-    }
-
-    private async Task<bool> CanOwnerOrManagerBranchAsync(Guid garageOwnerId, Guid branchId, Guid actorId)
-    {
-        if (garageOwnerId == actorId)
-            return true;
-
-        var manager = await _unitOfWork.Members.FindOneAsync(m =>
-            m.UserId == actorId
-            && m.GarageBranchId == branchId
-            && m.Role == MemberRole.Manager
-            && m.Status == MemberStatus.Active
-            && m.DeletedAt == null);
-
-        return manager is not null;
-    }
+    private Task<bool> CanOwnerOrManagerBranchAsync(Guid garageOwnerId, Guid branchId, Guid actorId, CancellationToken ct) =>
+        garageOwnerId == actorId
+            ? Task.FromResult(true)
+            : _unitOfWork.Members.IsActiveManagerOfBranchAsync(branchId, actorId, ct);
 
     private async Task<List<Guid>> GetActiveMechanicMemberIdsAsync(Guid userId, CancellationToken ct)
     {

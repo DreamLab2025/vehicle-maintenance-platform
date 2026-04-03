@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace Verendar.Garage.Infrastructure.Repositories.Implements;
 
 public class GarageMemberRepository(GarageDbContext context)
@@ -26,6 +28,25 @@ public class GarageMemberRepository(GarageDbContext context)
                  && m.Status == MemberStatus.Active
                  && m.DeletedAt == null,
             ct);
+
+    public async Task<(Guid Id, string DisplayName)?> GetActiveMechanicForAssignmentAsync(
+        Guid memberId,
+        Guid branchId,
+        CancellationToken ct = default)
+    {
+        var row = await context.GarageMembers
+            .AsNoTracking()
+            .Where(m =>
+                m.Id == memberId
+                && m.GarageBranchId == branchId
+                && m.Role == MemberRole.Mechanic
+                && m.Status == MemberStatus.Active
+                && m.DeletedAt == null)
+            .Select(m => new { m.Id, m.DisplayName })
+            .FirstOrDefaultAsync(ct);
+
+        return row is null ? null : (row.Id, row.DisplayName);
+    }
 
     public Task<List<GarageMember>> GetActiveByGarageIdAsync(Guid garageId, CancellationToken ct = default) =>
         context.GarageMembers

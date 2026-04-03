@@ -27,6 +27,7 @@ public static class EndpointMessages
         public const string AssignStatusInvalid = "Chỉ có thể gán thợ khi lịch hẹn đang chờ xử lý hoặc chờ xác nhận.";
         public const string AssignForbidden = "Bạn không thể gán thợ cho lịch hẹn này.";
         public const string MechanicNotFound = "Không tìm thấy thợ máy đang hoạt động tại chi nhánh này.";
+        public const string AssignConcurrentlyModified = "Lịch hẹn đã được cập nhật. Vui lòng tải lại và thử lại.";
         public const string AssignSuccess = "Đã gán thợ và xác nhận lịch hẹn.";
         public const string NotAssignedYet = "Lịch hẹn này chưa được gán thợ.";
         public const string MechanicForbidden = "Bạn không phải thợ được gán cho lịch hẹn này.";
