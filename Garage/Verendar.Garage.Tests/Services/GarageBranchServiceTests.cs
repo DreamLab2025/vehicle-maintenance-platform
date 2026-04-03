@@ -148,7 +148,7 @@ public class GarageBranchServiceTests
     }
 
     [Fact]
-    public async Task CreateBranchAsync_WhenGeocodingFails_StillCreatesBranchWithZeroCoordinates()
+    public async Task CreateBranchAsync_WhenGeocodingFails_Returns422()
     {
         var garageId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
@@ -172,8 +172,6 @@ public class GarageBranchServiceTests
         m.GarageBranches.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageBranch, bool>>>()))
             .ReturnsAsync((Expression<Func<GarageBranch, bool>> expr) =>
                 branchStore.FirstOrDefault(b => expr.Compile()(b)));
-        m.GarageBranches.Setup(r => r.AddAsync(It.IsAny<GarageBranch>()))
-            .ReturnsAsync((GarageBranch b) => b);
 
         var geo = new Mock<ILocationClient>(MockBehavior.Strict);
         geo.Setup(l => l.ValidateLocationAsync("01", "00001", It.IsAny<CancellationToken>()))
@@ -185,11 +183,8 @@ public class GarageBranchServiceTests
 
         var result = await sut.CreateBranchAsync(garageId, ownerId, CreateValidRequest());
 
-        GarageServiceResponseAssert.AssertCreatedEnvelope(result, EndpointMessages.GarageBranches.CreateSuccess);
-        result.Data.Should().NotBeNull();
-        result.Data!.Latitude.Should().Be(0);
-        result.Data.Longitude.Should().Be(0);
-        m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 422, EndpointMessages.GarageBranches.GeocodeBranchAddressFailed);
+        m.UnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

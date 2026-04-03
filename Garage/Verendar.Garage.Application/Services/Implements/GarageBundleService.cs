@@ -70,7 +70,7 @@ public class GarageBundleService(
     public async Task<ApiResponse<GarageBundleResponse>> UpdateBundleAsync(
         Guid id, Guid requestingUserId, UpdateGarageBundleRequest request, CancellationToken ct = default)
     {
-        var bundle = await _unitOfWork.GarageBundles.GetByIdWithItemsAsync(id, ct);
+        var bundle = await _unitOfWork.GarageBundles.GetByIdWithItemsForUpdateAsync(id, ct);
         if (bundle is null)
             return ApiResponse<GarageBundleResponse>.NotFoundResponse(
                 string.Format(EndpointMessages.Bundle.NotFoundByIdFormat, id));

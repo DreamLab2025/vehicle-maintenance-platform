@@ -82,6 +82,48 @@ public class GarageServiceServiceTests
     }
 
     [Fact]
+    public async Task UpdateServiceAsync_WhenOwner_Returns200()
+    {
+        var id = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var branchId = Guid.NewGuid();
+        var branch = new GarageBranch { Id = branchId, GarageId = Guid.NewGuid(), Name = "B", Slug = "b", Address = new(), WorkingHours = new() };
+        var garage = new GarageEntity { Id = branch.GarageId, OwnerId = ownerId, BusinessName = "G", Slug = "g" };
+        var service = new Domain.Entities.GarageService
+        {
+            Id = id,
+            GarageBranchId = branchId,
+            Name = "Old",
+            LaborPrice = new Money { Amount = 100, Currency = "VND" }
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.GarageServices.Setup(r => r.GetByIdWithCategoryForUpdateAsync(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(service);
+        m.GarageServices.Setup(r => r.GetByIdWithCategoryAsync(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Domain.Entities.GarageService
+            {
+                Id = id,
+                GarageBranchId = branchId,
+                Name = "New",
+                LaborPrice = new Money { Amount = 200, Currency = "VND" }
+            });
+        m.GarageBranches.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageBranch, bool>>>()))
+            .ReturnsAsync(branch);
+        m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
+            .ReturnsAsync(garage);
+
+        var sut = new GarageServiceService(NullLogger<GarageServiceService>.Instance, m.UnitOfWork.Object);
+        var result = await sut.UpdateServiceAsync(id, ownerId, new UpdateGarageServiceRequest
+        {
+            Name = "New",
+            LaborPrice = new MoneyDto { Amount = 200, Currency = "VND" }
+        });
+
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.OfferedServices.UpdateSuccess);
+    }
+
+    [Fact]
     public async Task UpdateServiceStatusAsync_WhenOwner_Returns200()
     {
         var id = Guid.NewGuid();
