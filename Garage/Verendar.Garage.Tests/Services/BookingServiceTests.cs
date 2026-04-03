@@ -9,6 +9,7 @@ using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Domain.Entities;
 using Verendar.Garage.Domain.Enums;
+using Verendar.Garage.Domain.ValueObjects;
 using GarageEntity = Verendar.Garage.Domain.Entities.Garage;
 
 namespace Verendar.Garage.Tests.Services;
@@ -93,6 +94,7 @@ public class BookingServiceTests
         var result = await sut.CreateBookingAsync(Guid.NewGuid(), new CreateBookingRequest
         {
             GarageBranchId = branch.Id,
+            UserVehicleId = Guid.NewGuid(),
             ScheduledAt = DateTime.UtcNow.AddHours(2)
         });
 
@@ -104,18 +106,29 @@ public class BookingServiceTests
     {
         var branch = new GarageBranch { Id = Guid.NewGuid(), GarageId = Guid.NewGuid(), Name = "B", Slug = "b", Address = new(), WorkingHours = new(), Status = BranchStatus.Active };
         var garage = new GarageEntity { Id = branch.GarageId, OwnerId = Guid.NewGuid(), BusinessName = "G", Slug = "g", Status = GarageStatus.Active };
+        var productId = Guid.NewGuid();
         var m = new GarageUnitOfWorkMock();
         m.GarageBranches.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageBranch, bool>>>()))
             .ReturnsAsync(branch);
         m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
             .ReturnsAsync(garage);
+        m.GarageProducts.Setup(r => r.GetByIdWithInstallationAsync(productId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GarageProduct
+            {
+                Id = productId,
+                GarageBranchId = branch.Id,
+                Name = "Oil",
+                Status = ProductStatus.Active,
+                MaterialPrice = new Money { Amount = 100, Currency = "VND" }
+            });
 
         var sut = CreateSut(m);
         var result = await sut.CreateBookingAsync(Guid.NewGuid(), new CreateBookingRequest
         {
             GarageBranchId = branch.Id,
+            UserVehicleId = Guid.NewGuid(),
             ScheduledAt = DateTime.UtcNow.AddMinutes(-5),
-            Items = [new CreateBookingLineItemRequest { ProductId = Guid.NewGuid(), ServiceId = Guid.NewGuid() }]
+            Items = [new CreateBookingLineItemRequest { ProductId = productId }]
         });
 
         GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, EndpointMessages.Booking.ScheduleMustBeFuture);
@@ -188,11 +201,21 @@ public class BookingServiceTests
 
     private static BookingService CreateSut(GarageUnitOfWorkMock mock)
     {
+        var vehicleClient = new Mock<IVehicleGarageClient>();
+        vehicleClient
+            .Setup(c => c.GetUserVehicleForBookingAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BookingVehicleSummary
+            {
+                UserVehicleId = Guid.NewGuid(),
+                ModelName = "Model",
+                BrandName = "Brand"
+            });
+
         return new BookingService(
             NullLogger<BookingService>.Instance,
             mock.UnitOfWork.Object,
             Mock.Of<IPublishEndpoint>(),
             Mock.Of<IGarageIdentityContactClient>(),
-            Mock.Of<IVehicleGarageClient>());
+            vehicleClient.Object);
     }
 }

@@ -317,8 +317,9 @@ public class GarageBundleServiceTests
         var branch = new GarageBranch { Id = branchId, GarageId = Guid.NewGuid(), Name = "B", Slug = "b", Address = new(), WorkingHours = new() };
         var garage = new GarageEntity { Id = branch.GarageId, OwnerId = ownerId, BusinessName = "G", Slug = "g" };
         var m = new GarageUnitOfWorkMock();
-        m.GarageBundles.SetupSequence(r => r.GetByIdWithItemsAsync(bundleId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(bundle)
+        m.GarageBundles.Setup(r => r.GetByIdWithItemsForUpdateAsync(bundleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(bundle);
+        m.GarageBundles.Setup(r => r.GetByIdWithItemsAsync(bundleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GarageBundle { Id = bundleId, GarageBranchId = branchId, Name = "New", Items = [] });
         m.GarageBranches.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageBranch, bool>>>()))
             .ReturnsAsync(branch);
@@ -349,7 +350,7 @@ public class GarageBundleServiceTests
     {
         var id = Guid.NewGuid();
         var m = new GarageUnitOfWorkMock();
-        m.GarageBundles.Setup(r => r.GetByIdWithItemsAsync(id, It.IsAny<CancellationToken>()))
+        m.GarageBundles.Setup(r => r.GetByIdWithItemsForUpdateAsync(id, It.IsAny<CancellationToken>()))
             .ReturnsAsync((GarageBundle?)null);
 
         var sut = new GarageBundleService(NullLogger<GarageBundleService>.Instance, m.UnitOfWork.Object);
