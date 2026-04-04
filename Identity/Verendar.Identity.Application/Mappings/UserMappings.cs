@@ -39,5 +39,25 @@ namespace Verendar.Identity.Application.Mappings
                 RefreshTokenExpiryTime = null
             };
         }
+
+        public static User ToNewUser(this UserCreateRequest request, string passwordHash)
+        {
+            var normalizedEmail = EmailHelper.Normalize(request.Email);
+            return new User
+            {
+                Id = Guid.CreateVersion7(),
+                FullName = request.FullName.Trim(),
+                Email = normalizedEmail,
+                PasswordHash = passwordHash,
+                PhoneNumber = request.PhoneNumber,
+                DateOfBirth = request.DateOfBirth,
+                Gender = request.Gender,
+                Roles = request.Roles.Distinct().ToList(),
+                PhoneNumberVerified = false,
+                EmailVerified = false,
+                RefreshToken = string.Empty,
+                RefreshTokenExpiryTime = null
+            };
+        }
     }
 }
