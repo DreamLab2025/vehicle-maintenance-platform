@@ -10,6 +10,17 @@ public interface IBookingRepository : IGenericRepository<Booking>
 
     Task<Booking?> GetByIdTrackedWithDetailsAsync(Guid id, CancellationToken ct = default);
 
+    Task<Booking?> GetByIdTrackedForMutationAsync(Guid id, CancellationToken ct = default);
+
+    Task<BookingAssignmentSnapshot?> GetAssignmentSnapshotAsync(Guid id, CancellationToken ct = default);
+
+    Task<bool> TryAssignMechanicPersistAsync(
+        Guid bookingId,
+        Guid mechanicMemberId,
+        BookingStatus fromStatus,
+        Guid actorId,
+        CancellationToken ct = default);
+
     Task<(List<Booking> Items, int TotalCount)> GetPagedByUserIdAsync(
         Guid userId,
         int pageNumber,
