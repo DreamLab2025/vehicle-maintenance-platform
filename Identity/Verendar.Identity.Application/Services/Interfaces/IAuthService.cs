@@ -4,7 +4,7 @@ namespace Verendar.Identity.Application.Services.Interfaces
     {
         Task<ApiResponse<UserDto>> RegisterUserAsync(RegisterRequest request);
         Task<ApiResponse<TokenResponse>> LoginUserAsync(LoginRequest request);
-        Task<ApiResponse<TokenResponse>> RefreshTokenAsync(Guid userId, string refreshToken);
+        Task<ApiResponse<TokenResponse>> RefreshTokenAsync(string refreshToken);
         Task<ApiResponse<UserDto>> ChangePasswordAsync(Guid userId, ChangePasswordRequest request);
         Task<ApiResponse<bool>> VerifyRegisterOtpAsync(VerifyOtpRequest request);
         Task<ApiResponse<bool>> ResendRegisterOtpAsync(ResendOtpRequest request);
