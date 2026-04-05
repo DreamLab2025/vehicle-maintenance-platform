@@ -58,6 +58,15 @@ namespace Verendar.Media.Domain.Entities
         VehicleBrand = 3,
         VehicleVariant = 4,
         PartCategory = 5,
+
+        // Garage
+        GarageLogo = 10,
+        GarageBranchCover = 11,
+        GarageServiceImage = 12,
+        GarageProductImage = 13,
+        GarageBundleImage = 14,
+        ServiceCategoryIcon = 15,
+
         Other = 99
     }
 }

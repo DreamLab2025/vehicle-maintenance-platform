@@ -56,6 +56,12 @@ namespace Verendar.Media.Application.Storage
                 FileType.VehicleBrand => "vehicle_brand",
                 FileType.VehicleVariant => "vehicle_variant",
                 FileType.PartCategory => "part_category",
+                FileType.GarageLogo => "garage/logo",
+                FileType.GarageBranchCover => "garage/branch_cover",
+                FileType.GarageServiceImage => "garage/service",
+                FileType.GarageProductImage => "garage/product",
+                FileType.GarageBundleImage => "garage/bundle",
+                FileType.ServiceCategoryIcon => "garage/service_category",
                 FileType.Other => "misc_other",
                 _ => "misc_unknown"
             };
