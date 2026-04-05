@@ -74,6 +74,7 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
             builder.Services.AddScoped<IMaintenanceExportService, MaintenanceExportService>();
             builder.Services.AddScoped<IMaintenanceProposalService, MaintenanceProposalService>();
+            builder.Services.AddScoped<IVehicleStatsService, VehicleStatsService>();
 
             // FluentValidation
             builder.Services.AddValidatorsFromAssemblyContaining<UserVehicleRequestValidator>();
@@ -125,6 +126,7 @@ namespace Verendar.Vehicle.Bootstrapping
             app.MapInternalVehicleApi();
             app.MapInternalGarageVehicleApi();
             app.MapInternalMaintenanceReminderApi();
+            app.MapVehicleStatsApi();
 
             return app;
         }

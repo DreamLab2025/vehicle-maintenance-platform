@@ -16,5 +16,7 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
             IReadOnlyList<Guid> reminderIds,
             Guid userId,
             CancellationToken cancellationToken = default);
+
+        Task<Dictionary<ReminderLevel, int>> GetActiveCountByLevelAsync(CancellationToken ct = default);
     }
 }

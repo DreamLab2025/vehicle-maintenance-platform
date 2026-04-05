@@ -93,5 +93,16 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                     x.TrackingCycle.PartTracking.UserVehicle.UserId == userId)
                 .ToListAsync(cancellationToken);
         }
+
+        public async Task<Dictionary<ReminderLevel, int>> GetActiveCountByLevelAsync(CancellationToken ct = default)
+        {
+            var result = await _dbSet
+                .Where(x => x.Status == ReminderStatus.Active)
+                .GroupBy(x => x.Level)
+                .Select(g => new { Level = g.Key, Count = g.Count() })
+                .ToListAsync(ct);
+
+            return result.ToDictionary(x => x.Level, x => x.Count);
+        }
     }
 }
