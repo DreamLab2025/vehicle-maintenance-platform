@@ -68,12 +68,24 @@ namespace Verendar.Identity.Apis
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/verify-otp", VerifyOtp)
+            group.MapPost("/verify-otp/register", VerifyRegisterOtp)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<VerifyOtpRequest>())
-                .WithName("VerifyOtp")
+                .WithName("VerifyRegisterOtp")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Xác thực OTP đăng ký";
+                    operation.Summary = "Xác thực OTP đăng ký tài khoản";
+                    return operation;
+                })
+                .AllowAnonymous()
+                .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status400BadRequest);
+
+            group.MapPost("/verify-otp/reset-password", VerifyResetPasswordOtp)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<VerifyResetPasswordOtpRequest>())
+                .WithName("VerifyResetPasswordOtp")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Xác thực OTP lấy lại mật khẩu";
                     return operation;
                 })
                 .AllowAnonymous()
@@ -136,9 +148,15 @@ namespace Verendar.Identity.Apis
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> VerifyOtp(VerifyOtpRequest request, IAuthService authService)
+        private static async Task<IResult> VerifyRegisterOtp(VerifyOtpRequest request, IAuthService authService)
         {
             var result = await authService.VerifyRegisterOtpAsync(request);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> VerifyResetPasswordOtp(VerifyResetPasswordOtpRequest request, IAuthService authService)
+        {
+            var result = await authService.VerifyResetPasswordOtpAsync(request);
             return result.ToHttpResult();
         }
 

@@ -309,19 +309,43 @@ namespace Verendar.Identity.Application.Services.Implements
             return ApiResponse<bool>.SuccessResponse(true, "Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra email để tiếp tục quá trình đặt lại mật khẩu.");
         }
 
-        public async Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordRequest request)
+        public async Task<ApiResponse<bool>> VerifyResetPasswordOtpAsync(VerifyResetPasswordOtpRequest request)
         {
             var email = EmailHelper.Normalize(request.Email);
             var cacheKey = CacheKeys.OtpForgot(email);
             var storedOtp = await _cacheService.GetAsync<string>(cacheKey);
 
-            if (string.IsNullOrEmpty(storedOtp) || storedOtp != request.OtpCode)
+            if (string.IsNullOrEmpty(storedOtp))
             {
-                _logger.LogWarning("Reset password: invalid or expired OTP {Email}", email);
-                return ApiResponse<bool>.FailureResponse("Mã OTP không hợp lệ hoặc đã hết hạn.");
+                _logger.LogWarning("Verify reset password OTP: missing or expired cache entry {Email}", email);
+                return ApiResponse<bool>.FailureResponse("Mã OTP đã hết hạn hoặc không tồn tại.");
+            }
+
+            if (storedOtp != request.OtpCode)
+            {
+                _logger.LogWarning("Verify reset password OTP: code mismatch {Email}", email);
+                return ApiResponse<bool>.FailureResponse("Mã OTP không chính xác.");
             }
 
             await _cacheService.RemoveAsync(cacheKey);
+            await _cacheService.SetAsync(CacheKeys.OtpForgotVerified(email), true, CacheKeys.OtpForgotVerifiedTtl);
+
+            return ApiResponse<bool>.SuccessResponse(true, "Xác thực OTP thành công. Vui lòng đặt lại mật khẩu trong 10 phút.");
+        }
+
+        public async Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordRequest request)
+        {
+            var email = EmailHelper.Normalize(request.Email);
+            var verifiedKey = CacheKeys.OtpForgotVerified(email);
+            var isVerified = await _cacheService.GetAsync<bool>(verifiedKey);
+
+            if (!isVerified)
+            {
+                _logger.LogWarning("Reset password: OTP not verified for {Email}", email);
+                return ApiResponse<bool>.FailureResponse("Vui lòng xác thực OTP trước khi đặt lại mật khẩu.");
+            }
+
+            await _cacheService.RemoveAsync(verifiedKey);
 
             var user = await _unitOfWork.Users.FindOneAsync(u => u.Email == email);
             if (user == null)

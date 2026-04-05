@@ -12,12 +12,6 @@ namespace Verendar.Identity.Application.Validators
                 .MaximumLength(256)
                 .WithMessage("Email tối đa 256 ký tự");
 
-            RuleFor(x => x.OtpCode)
-                .NotEmpty()
-                .WithMessage("Mã OTP không được để trống")
-                .Length(6, 6)
-                .WithMessage("Mã OTP phải gồm 6 chữ số");
-
             RuleFor(x => x.NewPassword)
                 .NotEmpty()
                 .WithMessage("Mật khẩu mới không được để trống")

@@ -9,6 +9,7 @@ namespace Verendar.Identity.Application.Services.Interfaces
         Task<ApiResponse<bool>> VerifyRegisterOtpAsync(VerifyOtpRequest request);
         Task<ApiResponse<bool>> ResendRegisterOtpAsync(ResendOtpRequest request);
         Task<ApiResponse<bool>> ForgotPasswordAsync(ForgotPasswordRequest request);
+        Task<ApiResponse<bool>> VerifyResetPasswordOtpAsync(VerifyResetPasswordOtpRequest request);
         Task<ApiResponse<bool>> ResetPasswordAsync(ResetPasswordRequest request);
     }
 }
