@@ -14,4 +14,6 @@ public class BookingCreatedEvent : BaseEvent
     public string ItemsSummary { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }
     public DateTime ScheduledAt { get; set; }
+    public Guid OwnerUserId { get; set; }
+    public List<Guid> ManagerUserIds { get; set; } = [];
 }

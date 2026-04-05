@@ -94,6 +94,8 @@ public class BookingService(
                 ? resolvedItems.LineItems[0].Product?.Name ?? resolvedItems.LineItems[0].Service?.Name ?? resolvedItems.LineItems[0].Bundle?.Name ?? string.Empty
                 : string.Empty;
 
+            var managerUserIds = await _unitOfWork.Members.GetActiveManagerUserIdsByBranchIdAsync(branch.Id, ct);
+
             await _publishEndpoint.Publish(new BookingCreatedEvent
             {
                 BookingId = booking.Id,
@@ -105,7 +107,9 @@ public class BookingService(
                     ? firstItemName
                     : $"{firstItemName} và {resolvedItems.LineItems.Count - 1} mục khác",
                 TotalAmount = totalAmount,
-                ScheduledAt = booking.ScheduledAt
+                ScheduledAt = booking.ScheduledAt,
+                OwnerUserId = garage.OwnerId,
+                ManagerUserIds = managerUserIds
             }, ct);
         }
         catch (Exception ex)

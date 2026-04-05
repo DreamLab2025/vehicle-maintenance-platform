@@ -46,4 +46,14 @@ public static class GarageBookingNotificationMappings
         var body = $"Lịch hẹn của bạn đã chuyển sang trạng thái {m.ToStatus}.";
         return (title, body);
     }
+
+    public static (string Title, string Body) BookingCreatedForStaffCopy(BookingCreatedEvent m)
+    {
+        var title = NotificationConstants.ConsumerCopy.BookingNewStaffTitle;
+        var body =
+            $"Chi nhánh {m.BranchName} có lịch đặt mới: {m.ItemsSummary}. "
+            + $"Thời gian: {m.ScheduledAt:dd/MM/yyyy HH:mm} (UTC). "
+            + "Vui lòng xác nhận và phân công thợ.";
+        return (title, body);
+    }
 }

@@ -64,6 +64,7 @@ namespace Verendar.Notification.Application.Constants
             public const string BookingConfirmedTitle = "Lịch hẹn đã được xác nhận";
             public const string BookingCancelledTitle = "Lịch hẹn đã bị hủy";
             public const string BookingStatusChangedTitle = "Cập nhật trạng thái lịch hẹn";
+            public const string BookingNewStaffTitle = "Có lịch đặt mới";
             public const string MaintenanceTitleUrgent = "Cần bảo dưỡng ngay";
             public const string MaintenanceTitleNormal = "Nhắc bảo dưỡng xe";
             public const string MaintenanceVehicleFallbackName = "xe của bạn";

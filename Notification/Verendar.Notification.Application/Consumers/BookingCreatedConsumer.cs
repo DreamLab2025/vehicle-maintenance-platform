@@ -58,5 +58,56 @@ public class BookingCreatedConsumer(
                 "Error processing BookingCreated — MessageId: {MessageId}, BookingId: {BookingId}",
                 messageId, message.BookingId);
         }
+
+        await NotifyStaffAsync(message, messageId, actionPath: routes.BookingDetailRelativeUrl(message.BookingId), context.CancellationToken);
+    }
+
+    private async Task NotifyStaffAsync(BookingCreatedEvent message, string messageId, string actionPath, CancellationToken ct)
+    {
+        var recipients = message.ManagerUserIds.Count > 0
+            ? message.ManagerUserIds
+            : message.OwnerUserId != Guid.Empty ? [message.OwnerUserId] : [];
+
+        if (recipients.Count == 0)
+        {
+            logger.LogWarning(
+                "BookingCreated — no staff recipient found for branch {BranchId}, BookingId: {BookingId}",
+                message.GarageBranchId, message.BookingId);
+            return;
+        }
+
+        var (title, content) = GarageBookingNotificationMappings.BookingCreatedForStaffCopy(message);
+
+        foreach (var staffUserId in recipients)
+        {
+            try
+            {
+                var notification = NotificationMappings.CreateUserNotification(
+                    staffUserId,
+                    title,
+                    content,
+                    NotificationPriority.High,
+                    "Booking",
+                    message.BookingId,
+                    actionPath);
+
+                await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
+                    unitOfWork, notification, staffUserId, ct);
+                await ConsumerNotificationFlow.PushInAppAndMarkDeliveredAsync(
+                    inAppNotificationService,
+                    notificationService,
+                    staffUserId,
+                    title,
+                    content,
+                    notification.Id,
+                    ct);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,
+                    "Failed to notify staff {StaffUserId} for BookingCreated — MessageId: {MessageId}, BookingId: {BookingId}",
+                    staffUserId, messageId, message.BookingId);
+            }
+        }
     }
 }

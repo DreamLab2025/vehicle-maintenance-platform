@@ -55,6 +55,16 @@ public class GarageMemberRepository(GarageDbContext context)
                         && m.DeletedAt == null)
             .ToListAsync(ct);
 
+    public Task<List<Guid>> GetActiveManagerUserIdsByBranchIdAsync(Guid branchId, CancellationToken ct = default) =>
+        context.GarageMembers
+            .AsNoTracking()
+            .Where(m => m.GarageBranchId == branchId
+                        && m.Role == MemberRole.Manager
+                        && m.Status == MemberStatus.Active
+                        && m.DeletedAt == null)
+            .Select(m => m.UserId)
+            .ToListAsync(ct);
+
     public Task<GarageMember?> GetLatestActiveMembershipWithBranchAsync(Guid userId, CancellationToken ct = default) =>
         context.GarageMembers
             .AsNoTracking()
