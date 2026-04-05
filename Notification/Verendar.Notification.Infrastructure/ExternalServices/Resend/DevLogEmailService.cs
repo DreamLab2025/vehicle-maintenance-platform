@@ -6,6 +6,8 @@ namespace Verendar.Notification.Infrastructure.ExternalServices.Resend;
 
 public class DevLogEmailService(ILogger<DevLogEmailService> logger) : IResendEmailService
 {
+    private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = false };
+
     public Task<ResendEmailResponse> SendTemplatedEmailAsync<TModel>(
         string to,
         string templateKey,
@@ -15,11 +17,7 @@ public class DevLogEmailService(ILogger<DevLogEmailService> logger) : IResendEma
         string? replyTo = null,
         CancellationToken cancellationToken = default) where TModel : class
     {
-        logger.LogDebug(
-            "[DEV EMAIL] To={To} | Subject={Subject} | Template={Template} | Model={Model}",
-            to, subject, templateKey,
-            JsonSerializer.Serialize(model));
-
+        LogEmail(to, templateKey, subject, JsonSerializer.Serialize(model, _jsonOptions));
         return Task.FromResult(new ResendEmailResponse { IsSuccess = true, MessageId = "dev-log" });
     }
 
@@ -32,11 +30,36 @@ public class DevLogEmailService(ILogger<DevLogEmailService> logger) : IResendEma
         string? replyTo = null,
         CancellationToken cancellationToken = default)
     {
-        logger.LogDebug(
-            "[DEV EMAIL] To={To} | Subject={Subject} | Template={Template} | Model={Model}",
-            to, subject, templateKey,
-            model is null ? "null" : JsonSerializer.Serialize(model));
-
+        LogEmail(to, templateKey, subject,
+            model is null ? "null" : JsonSerializer.Serialize(model, _jsonOptions));
         return Task.FromResult(new ResendEmailResponse { IsSuccess = true, MessageId = "dev-log" });
+    }
+
+    private void LogEmail(string to, string templateKey, string subject, string modelJson)
+    {
+        logger.LogDebug(
+            "[DEV EMAIL] To={To} | Template={Template} | Subject={Subject} | Model={Model}",
+            to, templateKey, subject, modelJson);
+
+        if (templateKey == "Otp")
+            LogOtp(to, modelJson);
+    }
+
+    private void LogOtp(string to, string modelJson)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(modelJson);
+            var root = doc.RootElement;
+            var code = root.TryGetProperty("OtpCode", out var c) ? c.GetString() : "?";
+            var expires = root.TryGetProperty("ExpiryMinutes", out var e) ? e.GetInt32() : 0;
+
+            logger.LogDebug(">>> [DEV OTP] To={To} | Code={Code} | ExpiresIn={Expires} min <<<",
+                to, code, expires);
+        }
+        catch
+        {
+            // ignore parse errors in dev helper
+        }
     }
 }
