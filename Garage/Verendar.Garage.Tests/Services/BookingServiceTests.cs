@@ -9,6 +9,8 @@ using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Domain.Entities;
 using Verendar.Garage.Domain.Enums;
+using Verendar.Garage.Domain.Models;
+using Verendar.Garage.Domain.ValueObjects;
 using GarageEntity = Verendar.Garage.Domain.Entities.Garage;
 
 namespace Verendar.Garage.Tests.Services;
@@ -93,6 +95,7 @@ public class BookingServiceTests
         var result = await sut.CreateBookingAsync(Guid.NewGuid(), new CreateBookingRequest
         {
             GarageBranchId = branch.Id,
+            UserVehicleId = Guid.NewGuid(),
             ScheduledAt = DateTime.UtcNow.AddHours(2)
         });
 
@@ -104,18 +107,29 @@ public class BookingServiceTests
     {
         var branch = new GarageBranch { Id = Guid.NewGuid(), GarageId = Guid.NewGuid(), Name = "B", Slug = "b", Address = new(), WorkingHours = new(), Status = BranchStatus.Active };
         var garage = new GarageEntity { Id = branch.GarageId, OwnerId = Guid.NewGuid(), BusinessName = "G", Slug = "g", Status = GarageStatus.Active };
+        var productId = Guid.NewGuid();
         var m = new GarageUnitOfWorkMock();
         m.GarageBranches.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageBranch, bool>>>()))
             .ReturnsAsync(branch);
         m.Garages.Setup(r => r.FindOneAsync(It.IsAny<Expression<Func<GarageEntity, bool>>>()))
             .ReturnsAsync(garage);
+        m.GarageProducts.Setup(r => r.GetByIdWithInstallationAsync(productId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new GarageProduct
+            {
+                Id = productId,
+                GarageBranchId = branch.Id,
+                Name = "Oil",
+                Status = ProductStatus.Active,
+                MaterialPrice = new Money { Amount = 100, Currency = "VND" }
+            });
 
         var sut = CreateSut(m);
         var result = await sut.CreateBookingAsync(Guid.NewGuid(), new CreateBookingRequest
         {
             GarageBranchId = branch.Id,
+            UserVehicleId = Guid.NewGuid(),
             ScheduledAt = DateTime.UtcNow.AddMinutes(-5),
-            Items = [new CreateBookingLineItemRequest { ProductId = Guid.NewGuid(), ServiceId = Guid.NewGuid() }]
+            Items = [new CreateBookingLineItemRequest { ProductId = productId }]
         });
 
         GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, EndpointMessages.Booking.ScheduleMustBeFuture);
@@ -175,7 +189,7 @@ public class BookingServiceTests
     public async Task CancelBookingAsync_WhenBookingNotFound_Returns404()
     {
         var m = new GarageUnitOfWorkMock();
-        m.Bookings.Setup(r => r.GetByIdTrackedWithDetailsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        m.Bookings.Setup(r => r.GetByIdTrackedForMutationAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Booking?)null);
 
         var sut = CreateSut(m);
@@ -186,13 +200,155 @@ public class BookingServiceTests
         result.Message.Should().Be(EndpointMessages.Booking.BookingNotFound);
     }
 
+    [Fact]
+    public async Task CancelBookingAsync_WhenActorNotCustomerAndBranchMissing_Returns404()
+    {
+        var bookingId = Guid.NewGuid();
+        var branchId = Guid.NewGuid();
+        var customerId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+
+        var booking = new Booking
+        {
+            Id = bookingId,
+            GarageBranchId = branchId,
+            UserId = customerId,
+            Status = BookingStatus.Pending,
+            BookedTotalPrice = new Money { Amount = 0, Currency = "VND" }
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.Bookings.Setup(r => r.GetByIdTrackedForMutationAsync(bookingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(booking);
+        m.GarageBranches.Setup(r => r.GetGarageOwnerIdByBranchIdAsync(branchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid?)null);
+
+        var sut = CreateSut(m);
+        var result = await sut.CancelBookingAsync(bookingId, actorId, null);
+
+        result.IsSuccess.Should().BeFalse();
+        result.StatusCode.Should().Be(404);
+        result.Message.Should().Be(EndpointMessages.Booking.BranchNotFound);
+    }
+
+    [Fact]
+    public async Task AssignMechanicAsync_WhenTryAssignReturnsFalse_Returns409()
+    {
+        var bookingId = Guid.NewGuid();
+        var branchId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var mechanicMemberId = Guid.NewGuid();
+
+        var m = new GarageUnitOfWorkMock();
+        m.Bookings.Setup(r => r.GetAssignmentSnapshotAsync(bookingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BookingAssignmentSnapshot(bookingId, BookingStatus.Pending, branchId, userId, DateTime.UtcNow));
+        m.GarageBranches.Setup(r => r.GetGarageOwnerIdByBranchIdAsync(branchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ownerId);
+        m.Members.Setup(r => r.GetActiveMechanicForAssignmentAsync(mechanicMemberId, branchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((mechanicMemberId, "Thợ A"));
+        m.Bookings.Setup(r => r.TryAssignMechanicPersistAsync(
+                bookingId,
+                mechanicMemberId,
+                BookingStatus.Pending,
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var sut = CreateSut(m);
+        var result = await sut.AssignMechanicAsync(bookingId, ownerId, new AssignBookingRequest { GarageMemberId = mechanicMemberId });
+
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 409, EndpointMessages.Booking.AssignConcurrentlyModified);
+        m.Bookings.Verify(
+            r => r.GetByIdWithDetailsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AssignMechanicAsync_WhenOwnerAssignsSuccess_Returns200()
+    {
+        var bookingId = Guid.NewGuid();
+        var branchId = Guid.NewGuid();
+        var garageId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var mechanicMemberId = Guid.NewGuid();
+
+        var garage = new GarageEntity
+        {
+            Id = garageId,
+            OwnerId = ownerId,
+            BusinessName = "G",
+            Slug = "g",
+            Status = GarageStatus.Active
+        };
+        var branch = new GarageBranch
+        {
+            Id = branchId,
+            GarageId = garageId,
+            Name = "Chi nhánh",
+            Slug = "cn",
+            Address = new(),
+            WorkingHours = new(),
+            Garage = garage
+        };
+        var reloaded = new Booking
+        {
+            Id = bookingId,
+            GarageBranchId = branchId,
+            UserId = userId,
+            UserVehicleId = Guid.NewGuid(),
+            MechanicId = mechanicMemberId,
+            Status = BookingStatus.Confirmed,
+            ScheduledAt = DateTime.UtcNow.AddDays(1),
+            BookedTotalPrice = new Money { Amount = 100_000, Currency = "VND" },
+            GarageBranch = branch,
+            LineItems = [],
+            StatusHistory = []
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.Bookings.Setup(r => r.GetAssignmentSnapshotAsync(bookingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BookingAssignmentSnapshot(bookingId, BookingStatus.Pending, branchId, userId, reloaded.ScheduledAt));
+        m.GarageBranches.Setup(r => r.GetGarageOwnerIdByBranchIdAsync(branchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(ownerId);
+        m.Members.Setup(r => r.GetActiveMechanicForAssignmentAsync(mechanicMemberId, branchId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((mechanicMemberId, "Thợ A"));
+        m.Bookings.Setup(r => r.TryAssignMechanicPersistAsync(
+                bookingId,
+                mechanicMemberId,
+                BookingStatus.Pending,
+                ownerId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        m.Bookings.Setup(r => r.GetByIdWithDetailsAsync(bookingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reloaded);
+
+        var sut = CreateSut(m);
+        var result = await sut.AssignMechanicAsync(bookingId, ownerId, new AssignBookingRequest { GarageMemberId = mechanicMemberId });
+
+        GarageServiceResponseAssert.AssertSuccessEnvelope(result, EndpointMessages.Booking.AssignSuccess);
+        result.Data!.Id.Should().Be(bookingId);
+        result.Data.Status.Should().Be(BookingStatus.Confirmed);
+    }
+
     private static BookingService CreateSut(GarageUnitOfWorkMock mock)
     {
+        var vehicleClient = new Mock<IVehicleGarageClient>();
+        vehicleClient
+            .Setup(c => c.GetUserVehicleForBookingAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new BookingVehicleSummary
+            {
+                UserVehicleId = Guid.NewGuid(),
+                ModelName = "Model",
+                BrandName = "Brand"
+            });
+
         return new BookingService(
             NullLogger<BookingService>.Instance,
             mock.UnitOfWork.Object,
             Mock.Of<IPublishEndpoint>(),
             Mock.Of<IGarageIdentityContactClient>(),
-            Mock.Of<IVehicleGarageClient>());
+            vehicleClient.Object);
     }
 }

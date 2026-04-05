@@ -35,4 +35,28 @@ namespace Verendar.Identity.Application.Dtos
     public record AssignRoleRequest(string Role);
 
     public record BulkDeactivateRequest(IEnumerable<Guid> UserIds);
+
+    public class UserCreateRequest
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
+        public Gender? Gender { get; set; }
+        public List<UserRole> Roles { get; set; } = [];
+    }
+
+    public class UserUpdateRequest
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
+        public Gender? Gender { get; set; }
+        public bool EmailVerified { get; set; }
+        public bool PhoneNumberVerified { get; set; }
+        public string? Password { get; set; }
+        public List<UserRole> Roles { get; set; } = [];
+    }
 }

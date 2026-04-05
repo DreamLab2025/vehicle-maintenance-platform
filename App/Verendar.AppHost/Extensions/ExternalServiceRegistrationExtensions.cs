@@ -150,6 +150,7 @@ namespace Verendar.AppHost.Extensions
                     var identityCluster = yarp.AddProjectCluster(identityService);
                     yarp.AddRoute("/api/v1/auth/{**catch-all}", identityCluster);
                     yarp.AddRoute("/api/v1/users/{**catch-all}", identityCluster);
+                    yarp.AddRoute("/api/v1/feedback/{**catch-all}", identityCluster);
 
                     var aiCluster = yarp.AddProjectCluster(aiService);
                     yarp.AddRoute("/api/v1/ai/{**catch-all}", aiCluster);
@@ -183,6 +184,8 @@ namespace Verendar.AppHost.Extensions
                     yarp.AddRoute("/api/v1/garage-bundles/{**catch-all}", garageCluster);
                     yarp.AddRoute("/api/v1/service-categories/{**catch-all}", garageCluster);
                     yarp.AddRoute("/api/v1/garage-catalog/{**catch-all}", garageCluster);
+                    yarp.AddRoute("/api/v1/members/{**catch-all}", garageCluster);
+                    yarp.AddRoute("/api/v1/branches/{**catch-all}", garageCluster);
                 })
                 .WaitFor(identityService)
                 .WaitFor(vehicleService)

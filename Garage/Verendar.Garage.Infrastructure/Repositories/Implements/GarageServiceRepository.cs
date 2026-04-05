@@ -11,6 +11,11 @@ public class GarageServiceRepository(GarageDbContext context)
             .Include(s => s.ServiceCategory)
             .FirstOrDefaultAsync(s => s.Id == id && s.DeletedAt == null, ct);
 
+    public async Task<GarageService?> GetByIdWithCategoryForUpdateAsync(Guid id, CancellationToken ct = default) =>
+        await _db.Set<GarageService>()
+            .Include(s => s.ServiceCategory)
+            .FirstOrDefaultAsync(s => s.Id == id && s.DeletedAt == null, ct);
+
     public async Task<(List<GarageService> Items, int TotalCount)> GetPagedByBranchIdAsync(
         Guid branchId,
         bool activeOnly,

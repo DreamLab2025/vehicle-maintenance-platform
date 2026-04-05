@@ -5,6 +5,13 @@ namespace Verendar.Garage.Infrastructure.Repositories.Implements;
 public class GarageBranchRepository(GarageDbContext context)
     : PostgresRepository<GarageBranch>(context), IGarageBranchRepository
 {
+    public async Task<Guid?> GetGarageOwnerIdByBranchIdAsync(Guid branchId, CancellationToken ct = default) =>
+        await context.Set<GarageBranch>()
+            .AsNoTracking()
+            .Where(b => b.Id == branchId && b.DeletedAt == null)
+            .Select(b => (Guid?)b.Garage.OwnerId)
+            .FirstOrDefaultAsync(ct);
+
     public async Task<(List<GarageBranch> Items, int TotalCount)> GetBranchesForMapAsync(
         int pageNumber,
         int pageSize,

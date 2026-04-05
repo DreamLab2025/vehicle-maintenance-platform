@@ -16,6 +16,16 @@ public class GarageBundleRepository(GarageDbContext context)
                 .ThenInclude(i => i.Service)
             .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null, ct);
 
+    public async Task<GarageBundle?> GetByIdWithItemsForUpdateAsync(Guid id, CancellationToken ct = default) =>
+        await _db.Set<GarageBundle>()
+            .AsSplitQuery()
+            .Include(b => b.Items.Where(i => i.DeletedAt == null).OrderBy(i => i.SortOrder))
+                .ThenInclude(i => i.Product)
+                    .ThenInclude(p => p!.InstallationService)
+            .Include(b => b.Items.Where(i => i.DeletedAt == null).OrderBy(i => i.SortOrder))
+                .ThenInclude(i => i.Service)
+            .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null, ct);
+
     public async Task<(List<GarageBundle> Items, int TotalCount)> GetPagedByBranchIdAsync(
         Guid branchId,
         bool activeOnly,

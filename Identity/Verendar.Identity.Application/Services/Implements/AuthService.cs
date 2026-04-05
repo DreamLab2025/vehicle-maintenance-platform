@@ -105,32 +105,25 @@ namespace Verendar.Identity.Application.Services.Implements
                 "Đăng nhập thành công");
         }
 
-        public async Task<ApiResponse<TokenResponse>> RefreshTokenAsync(Guid userId, string refreshToken)
+        public async Task<ApiResponse<TokenResponse>> RefreshTokenAsync(string refreshToken)
         {
-            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            var user = await _unitOfWork.Users.FindOneAsync(u => u.RefreshToken == refreshToken);
             if (user == null)
             {
-                _logger.LogWarning("Refresh token: user not found {UserId}", userId);
-                return ApiResponse<TokenResponse>.NotFoundResponse("Không tìm thấy người dùng");
+                _logger.LogWarning("Refresh token: no matching user");
+                return ApiResponse<TokenResponse>.FailureResponse("Refresh token không hợp lệ");
             }
 
             if (!user.EmailVerified)
             {
-                _logger.LogWarning("Refresh token: account not activated {UserId}", userId);
+                _logger.LogWarning("Refresh token: account not activated {UserId}", user.Id);
                 return ApiResponse<TokenResponse>.ForbiddenResponse("Tài khoản người dùng chưa được kích hoạt");
-            }
-
-            if (string.IsNullOrWhiteSpace(user.RefreshToken) ||
-                user.RefreshToken != refreshToken)
-            {
-                _logger.LogWarning("Refresh token: token mismatch {UserId}", userId);
-                return ApiResponse<TokenResponse>.FailureResponse("Refresh token không hợp lệ");
             }
 
             if (user.RefreshTokenExpiryTime == null ||
                 user.RefreshTokenExpiryTime <= DateTime.UtcNow)
             {
-                _logger.LogWarning("Refresh token: expired {UserId}", userId);
+                _logger.LogWarning("Refresh token: expired {UserId}", user.Id);
                 return ApiResponse<TokenResponse>.FailureResponse("Refresh token đã hết hạn");
             }
 
@@ -150,7 +143,7 @@ namespace Verendar.Identity.Application.Services.Implements
             }
             else
             {
-                tokenResponse.RefreshToken = user.RefreshToken;
+                tokenResponse.RefreshToken = user.RefreshToken ?? refreshToken;
             }
 
             return ApiResponse<TokenResponse>.SuccessResponse(

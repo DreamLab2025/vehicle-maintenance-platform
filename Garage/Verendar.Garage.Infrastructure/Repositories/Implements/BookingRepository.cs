@@ -48,6 +48,73 @@ public class BookingRepository(GarageDbContext context)
             .Include(b => b.StatusHistory)
             .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null, ct);
 
+    public async Task<Booking?> GetByIdTrackedForMutationAsync(Guid id, CancellationToken ct = default) =>
+        await _db.Set<Booking>()
+            .Include(b => b.GarageBranch)
+                .ThenInclude(br => br.Garage)
+            .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null, ct);
+
+    public async Task<BookingAssignmentSnapshot?> GetAssignmentSnapshotAsync(Guid id, CancellationToken ct = default) =>
+        await _db.Set<Booking>()
+            .AsNoTracking()
+            .Where(b => b.Id == id && b.DeletedAt == null)
+            .Select(b => new BookingAssignmentSnapshot(b.Id, b.Status, b.GarageBranchId, b.UserId, b.ScheduledAt))
+            .FirstOrDefaultAsync(ct);
+
+    public async Task<bool> TryAssignMechanicPersistAsync(
+        Guid bookingId,
+        Guid mechanicMemberId,
+        BookingStatus fromStatus,
+        Guid actorId,
+        CancellationToken ct = default)
+    {
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(
+            async cancellationToken =>
+            {
+                await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    var now = DateTime.UtcNow;
+                    var rows = await _db.Set<Booking>()
+                        .Where(b => b.Id == bookingId && b.DeletedAt == null && b.Status == fromStatus)
+                        .ExecuteUpdateAsync(s => s
+                            .SetProperty(b => b.MechanicId, mechanicMemberId)
+                            .SetProperty(b => b.Status, BookingStatus.Confirmed)
+                            .SetProperty(b => b.UpdatedAt, now)
+                            .SetProperty(b => b.UpdatedBy, actorId),
+                            cancellationToken);
+
+                    if (rows == 0)
+                    {
+                        await tx.RollbackAsync(cancellationToken);
+                        return false;
+                    }
+
+                    await _db.Set<BookingStatusHistory>().AddAsync(
+                        new BookingStatusHistory
+                        {
+                            BookingId = bookingId,
+                            FromStatus = fromStatus,
+                            ToStatus = BookingStatus.Confirmed,
+                            ChangedByUserId = actorId,
+                            ChangedAt = now
+                        },
+                        cancellationToken);
+
+                    await _db.SaveChangesAsync(cancellationToken);
+                    await tx.CommitAsync(cancellationToken);
+                    return true;
+                }
+                catch
+                {
+                    await tx.RollbackAsync(cancellationToken);
+                    throw;
+                }
+            },
+            ct);
+    }
+
     public async Task<(List<Booking> Items, int TotalCount)> GetPagedByUserIdAsync(
         Guid userId, int pageNumber, int pageSize, CancellationToken ct = default)
     {

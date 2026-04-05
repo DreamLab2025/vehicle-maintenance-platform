@@ -256,5 +256,128 @@ namespace Verendar.Identity.Application.Services.Implements
 
             return ApiResponse<bool>.SuccessResponse(true, $"Đã vô hiệu hóa {users.Count()} tài khoản.");
         }
+
+        public async Task<ApiResponse<UserDto>> CreateUserAsync(UserCreateRequest request, CancellationToken ct = default)
+        {
+            var normalizedEmail = EmailHelper.Normalize(request.Email);
+            var existing = await _unitOfWork.Users.FindOneAsync(u => u.Email == normalizedEmail);
+            if (existing != null)
+            {
+                _logger.LogWarning("CreateUser: email already registered {Email}", normalizedEmail);
+                return ApiResponse<UserDto>.ConflictResponse("Email đã được đăng ký.");
+            }
+
+            var user = request.ToNewUser(string.Empty);
+            user.PasswordHash = _passwordHasher.HashPassword(user, request.Password);
+
+            await _unitOfWork.Users.AddAsync(user);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            _logger.LogInformation("CreateUser: created user {UserId} for email {Email}", user.Id, normalizedEmail);
+
+            return ApiResponse<UserDto>.CreatedResponse(user.ToDto(), "Tạo người dùng thành công.");
+        }
+
+        public async Task<ApiResponse<UserDto>> UpdateUserAsync(Guid userId, UserUpdateRequest request, CancellationToken ct = default)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("UpdateUser: user not found {UserId}", userId);
+                return ApiResponse<UserDto>.NotFoundResponse("Người dùng không tồn tại.");
+            }
+
+            var normalizedEmail = EmailHelper.Normalize(request.Email);
+            var duplicate = await _unitOfWork.Users.FindOneAsync(u => u.Email == normalizedEmail && u.Id != userId);
+            if (duplicate != null)
+            {
+                _logger.LogWarning("UpdateUser: email already in use {Email}", normalizedEmail);
+                return ApiResponse<UserDto>.ConflictResponse("Email đã được sử dụng bởi tài khoản khác.");
+            }
+
+            var oldEmail = user.Email;
+            var oldRoles = user.Roles.OrderBy(r => r).ToList();
+            var passwordChanged = !string.IsNullOrWhiteSpace(request.Password);
+
+            user.FullName = request.FullName.Trim();
+            user.Email = normalizedEmail;
+            user.PhoneNumber = request.PhoneNumber;
+            user.DateOfBirth = request.DateOfBirth;
+            user.Gender = request.Gender;
+            user.EmailVerified = request.EmailVerified;
+            user.PhoneNumberVerified = request.PhoneNumberVerified;
+            user.Roles = request.Roles.Distinct().ToList();
+
+            if (passwordChanged)
+                user.PasswordHash = _passwordHasher.HashPassword(user, request.Password!.Trim());
+
+            var newRolesOrdered = user.Roles.OrderBy(r => r).ToList();
+            var shouldInvalidateSessions = passwordChanged
+                || oldEmail != normalizedEmail
+                || !oldRoles.SequenceEqual(newRolesOrdered);
+
+            if (shouldInvalidateSessions)
+            {
+                user.RefreshToken = string.Empty;
+                user.RefreshTokenExpiryTime = DateTime.MinValue;
+                try
+                {
+                    await _publishEndpoint.Publish(new ForceTokenRefreshEvent
+                    {
+                        UserId = userId,
+                        Reason = "User profile updated"
+                    }, ct);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to publish ForceTokenRefreshEvent for user {UserId}", userId);
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            _logger.LogInformation("UpdateUser: updated user {UserId}", userId);
+
+            return ApiResponse<UserDto>.SuccessResponse(user.ToDto(), "Cập nhật người dùng thành công.");
+        }
+
+        public async Task<ApiResponse<bool>> DeleteUserAsync(Guid userId, Guid actingUserId, CancellationToken ct = default)
+        {
+            if (userId == actingUserId)
+            {
+                _logger.LogWarning("DeleteUser: attempted self-delete {UserId}", userId);
+                return ApiResponse<bool>.FailureResponse("Không thể xóa tài khoản của chính bạn.");
+            }
+
+            var user = await _unitOfWork.Users.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning("DeleteUser: user not found {UserId}", userId);
+                return ApiResponse<bool>.NotFoundResponse("Người dùng không tồn tại.");
+            }
+
+            user.DeletedAt = DateTime.UtcNow;
+            user.RefreshToken = string.Empty;
+            user.RefreshTokenExpiryTime = DateTime.MinValue;
+
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            _logger.LogInformation("DeleteUser: soft-deleted user {UserId}", userId);
+
+            try
+            {
+                await _publishEndpoint.Publish(new ForceTokenRefreshEvent
+                {
+                    UserId = userId,
+                    Reason = "User deleted"
+                }, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to publish ForceTokenRefreshEvent for deleted user {UserId}", userId);
+            }
+
+            return ApiResponse<bool>.SuccessResponse(true, "Xóa người dùng thành công.");
+        }
     }
 }

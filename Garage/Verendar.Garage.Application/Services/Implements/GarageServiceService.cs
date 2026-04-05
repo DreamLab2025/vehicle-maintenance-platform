@@ -75,7 +75,7 @@ public class GarageServiceService(
     public async Task<ApiResponse<GarageServiceResponse>> UpdateServiceAsync(
         Guid id, Guid requestingUserId, UpdateGarageServiceRequest request, CancellationToken ct = default)
     {
-        var service = await _unitOfWork.GarageServices.GetByIdWithCategoryAsync(id, ct);
+        var service = await _unitOfWork.GarageServices.GetByIdWithCategoryForUpdateAsync(id, ct);
         if (service is null)
             return ApiResponse<GarageServiceResponse>.NotFoundResponse(
                 string.Format(EndpointMessages.OfferedServices.NotFoundByIdFormat, id));

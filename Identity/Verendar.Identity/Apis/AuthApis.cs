@@ -50,10 +50,10 @@ namespace Verendar.Identity.Apis
                     operation.Summary = "Làm mới access token";
                     return operation;
                 })
-                .RequireAuthorization()
+                .AllowAnonymous()
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status400BadRequest)
-                .Produces(StatusCodes.Status401Unauthorized);
+                .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status403Forbidden);
 
             group.MapPut("/change-password", ChangePassword)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<ChangePasswordRequest>())
@@ -166,9 +166,9 @@ namespace Verendar.Identity.Apis
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> RefreshToken(RefreshTokenRequest request, ICurrentUserService currentUser, IAuthService authService)
+        private static async Task<IResult> RefreshToken(RefreshTokenRequest request, IAuthService authService)
         {
-            var result = await authService.RefreshTokenAsync(currentUser.UserId, request.RefreshToken);
+            var result = await authService.RefreshTokenAsync(request.RefreshToken);
             return result.ToHttpResult();
         }
 
