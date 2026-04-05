@@ -1,3 +1,4 @@
+using Verendar.Common.Stats;
 using Verendar.Garage.Domain.Entities;
 using Verendar.Garage.Domain.Enums;
 using Verendar.Garage.Domain.Models;
@@ -75,5 +76,50 @@ public interface IBookingRepository : IGenericRepository<Booking>
         IReadOnlyList<Guid> branchIds,
         DateTime from,
         DateTime to,
+        CancellationToken ct = default);
+
+    // ─── Admin / chart queries ────────────────────────────────────────────
+
+    Task<BookingCountByStatus> GetAllBookingCountsByStatusAsync(
+        DateTime? from,
+        DateTime? to,
+        CancellationToken ct = default);
+
+    Task<decimal> GetCompletedRevenueAsync(
+        IReadOnlyList<Guid>? branchIds,
+        DateTime? from,
+        DateTime? to,
+        CancellationToken ct = default);
+
+    Task<List<ChartPoint>> GetBookingTrafficChartAsync(
+        DateTime from,
+        DateTime to,
+        string groupBy,
+        CancellationToken ct = default);
+
+    Task<(List<string> Labels, List<decimal> CompletedData, List<decimal> CancelledData)> GetBookingOutcomesChartAsync(
+        DateTime from,
+        DateTime to,
+        string groupBy,
+        CancellationToken ct = default);
+
+    Task<List<ChartPoint>> GetRevenueChartAsync(
+        IReadOnlyList<Guid> branchIds,
+        DateTime from,
+        DateTime to,
+        string groupBy,
+        CancellationToken ct = default);
+
+    Task<List<TopServiceStats>> GetTopServicesAsync(
+        IReadOnlyList<Guid> branchIds,
+        DateTime? from,
+        DateTime? to,
+        int limit,
+        CancellationToken ct = default);
+
+    Task<List<BranchBookingCount>> GetBranchBookingCountsAsync(
+        IReadOnlyList<Guid> branchIds,
+        DateTime? from,
+        DateTime? to,
         CancellationToken ct = default);
 }

@@ -9,4 +9,10 @@ public interface IReviewRepository : IGenericRepository<GarageReview>
 
     Task<Dictionary<Guid, (double AverageRating, int ReviewCount)>> GetBulkRatingSummaryAsync(
         IEnumerable<Guid> branchIds, CancellationToken ct = default);
+
+    Task<(double AvgRating, int TotalCount)> GetGlobalRatingSummaryAsync(
+        DateTime? from, DateTime? to, CancellationToken ct = default);
+
+    Task<Dictionary<int, int>> GetRatingDistributionAsync(
+        IEnumerable<Guid> branchIds, CancellationToken ct = default);
 }

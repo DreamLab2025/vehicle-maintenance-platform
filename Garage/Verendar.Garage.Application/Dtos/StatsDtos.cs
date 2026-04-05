@@ -1,3 +1,5 @@
+using Verendar.Common.Stats;
+
 namespace Verendar.Garage.Application.Dtos;
 
 // ─── Request ───────────────────────────────────────────────────────────────
@@ -78,3 +80,58 @@ public record BranchStatsResponse(
     ReviewSummaryDto Reviews,
     List<TopItemDto> TopItems,
     List<MechanicStatDto> Mechanics);
+
+// ─── Admin platform overview ─────────────────────────────────────────────────
+
+public record GarageOverviewStatsResponse(
+    GaragesStatsSummaryDto Garages,
+    BranchesStatsSummaryDto Branches,
+    BookingsOverviewDto Bookings,
+    RevenueOverviewDto Revenue,
+    ReviewsOverviewDto Reviews);
+
+public record GarageStatusCountsDto(int Pending, int Active, int Suspended, int Rejected);
+
+public record GaragesStatsSummaryDto(int Total, GarageStatusCountsDto ByStatus);
+
+public record BranchesStatsSummaryDto(int Total, int Active, int Inactive);
+
+public record BookingsOverviewDto(
+    int Total,
+    BookingStatusCountDto ByStatus,
+    decimal CompletionRate,
+    decimal CancellationRate);
+
+public record RevenueOverviewDto(decimal Total, string Currency);
+
+public record ReviewsOverviewDto(double AvgRating, int TotalCount);
+
+// ─── Garage detail stats (Owner | Admin) ────────────────────────────────────
+
+public record GarageDetailStatsResponse(
+    Guid GarageId,
+    string BusinessName,
+    int TotalBranches,
+    BookingsOverviewDto Bookings,
+    RevenueOverviewDto Revenue,
+    GarageDetailReviewsDto Reviews,
+    List<TopBranchDto> TopBranches,
+    List<TopServiceDto> TopServices);
+
+public record GarageDetailReviewsDto(
+    double AvgRating,
+    int TotalCount,
+    Dictionary<int, int> ByRating);
+
+public record TopBranchDto(Guid BranchId, string Name, int BookingCount, decimal Revenue);
+
+public record TopServiceDto(Guid ServiceId, string Name, int BookingCount);
+
+// ─── Revenue chart (with currency) ──────────────────────────────────────────
+
+public record RevenueChartResponse(
+    string GroupBy,
+    DateOnly From,
+    DateOnly To,
+    string Currency,
+    List<ChartPoint> Points);

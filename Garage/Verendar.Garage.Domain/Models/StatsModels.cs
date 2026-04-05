@@ -33,3 +33,13 @@ public record BookingCountByStatus(
     int Cancelled);
 
 public record BranchBookingSummary(Guid BranchId, RevenueByStatus Revenue, BookingCountByStatus Counts);
+
+// ─── Admin / chart models ─────────────────────────────────────────────────
+
+public record GarageStatusCounts(int Total, int Pending, int Active, int Suspended, int Rejected);
+
+public record BranchCounts(int Total, int Active, int Inactive);
+
+public record TopServiceStats(Guid ServiceId, string ServiceName, int BookingCount);
+
+public record BranchBookingCount(Guid BranchId, int BookingCount, decimal CompletedRevenue);

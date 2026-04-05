@@ -1,4 +1,5 @@
 using System.Globalization;
+using Verendar.Common.Stats;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Domain.Enums;
 using Verendar.Garage.Domain.Models;
@@ -414,6 +415,210 @@ public class BookingRepository(GarageDbContext context)
 
             return new BranchBookingSummary(branchId, revenue, counts);
         }).ToList();
+    }
+
+    public async Task<BookingCountByStatus> GetAllBookingCountsByStatusAsync(
+        DateTime? from,
+        DateTime? to,
+        CancellationToken ct = default)
+    {
+        var query = _db.Set<Booking>()
+            .AsNoTracking()
+            .Where(b => b.DeletedAt == null);
+
+        if (from.HasValue) query = query.Where(b => b.CreatedAt >= from.Value);
+        if (to.HasValue) query = query.Where(b => b.CreatedAt <= to.Value);
+
+        var counts = await query
+            .GroupBy(b => b.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        return new BookingCountByStatus(
+            Completed: counts.FirstOrDefault(c => c.Status == BookingStatus.Completed)?.Count ?? 0,
+            InProgress: counts.FirstOrDefault(c => c.Status == BookingStatus.InProgress)?.Count ?? 0,
+            Confirmed: counts.FirstOrDefault(c => c.Status == BookingStatus.Confirmed)?.Count ?? 0,
+            AwaitingConfirmation: counts.FirstOrDefault(c => c.Status == BookingStatus.AwaitingConfirmation)?.Count ?? 0,
+            Pending: counts.FirstOrDefault(c => c.Status == BookingStatus.Pending)?.Count ?? 0,
+            Cancelled: counts.FirstOrDefault(c => c.Status == BookingStatus.Cancelled)?.Count ?? 0
+        );
+    }
+
+    public async Task<decimal> GetCompletedRevenueAsync(
+        IReadOnlyList<Guid>? branchIds,
+        DateTime? from,
+        DateTime? to,
+        CancellationToken ct = default)
+    {
+        var query = _db.Set<Booking>()
+            .AsNoTracking()
+            .Where(b => b.DeletedAt == null && b.Status == BookingStatus.Completed);
+
+        if (branchIds is { Count: > 0 })
+            query = query.Where(b => branchIds.Contains(b.GarageBranchId));
+        if (from.HasValue) query = query.Where(b => b.ScheduledAt >= from.Value);
+        if (to.HasValue) query = query.Where(b => b.ScheduledAt <= to.Value);
+
+        return await query.SumAsync(b => (decimal?)b.BookedTotalPrice.Amount, ct) ?? 0;
+    }
+
+    public async Task<List<ChartPoint>> GetBookingTrafficChartAsync(
+        DateTime from,
+        DateTime to,
+        string groupBy,
+        CancellationToken ct = default)
+    {
+        var data = await _db.Set<Booking>()
+            .AsNoTracking()
+            .Where(b => b.CreatedAt >= from && b.CreatedAt <= to && b.DeletedAt == null)
+            .Select(b => new { b.CreatedAt })
+            .ToListAsync(ct);
+
+        var grouped = data
+            .GroupBy(b => GetPeriodLabel(b.CreatedAt, groupBy))
+            .ToDictionary(g => g.Key, g => (decimal)g.Count());
+
+        return GeneratePeriods(from, to, groupBy)
+            .Select(p => new ChartPoint(p, grouped.GetValueOrDefault(p, 0)))
+            .ToList();
+    }
+
+    public async Task<(List<string> Labels, List<decimal> CompletedData, List<decimal> CancelledData)> GetBookingOutcomesChartAsync(
+        DateTime from,
+        DateTime to,
+        string groupBy,
+        CancellationToken ct = default)
+    {
+        var data = await _db.Set<Booking>()
+            .AsNoTracking()
+            .Where(b => b.ScheduledAt >= from && b.ScheduledAt <= to && b.DeletedAt == null
+                     && (b.Status == BookingStatus.Completed || b.Status == BookingStatus.Cancelled))
+            .Select(b => new { b.ScheduledAt, b.Status })
+            .ToListAsync(ct);
+
+        var labels = GeneratePeriods(from, to, groupBy).ToList();
+
+        var completedByPeriod = data
+            .Where(b => b.Status == BookingStatus.Completed)
+            .GroupBy(b => GetPeriodLabel(b.ScheduledAt, groupBy))
+            .ToDictionary(g => g.Key, g => (decimal)g.Count());
+
+        var cancelledByPeriod = data
+            .Where(b => b.Status == BookingStatus.Cancelled)
+            .GroupBy(b => GetPeriodLabel(b.ScheduledAt, groupBy))
+            .ToDictionary(g => g.Key, g => (decimal)g.Count());
+
+        return (
+            labels,
+            labels.Select(l => completedByPeriod.GetValueOrDefault(l, 0)).ToList(),
+            labels.Select(l => cancelledByPeriod.GetValueOrDefault(l, 0)).ToList()
+        );
+    }
+
+    public async Task<List<ChartPoint>> GetRevenueChartAsync(
+        IReadOnlyList<Guid> branchIds,
+        DateTime from,
+        DateTime to,
+        string groupBy,
+        CancellationToken ct = default)
+    {
+        var data = await _db.Set<Booking>()
+            .AsNoTracking()
+            .Where(b => branchIds.Contains(b.GarageBranchId)
+                     && b.ScheduledAt >= from
+                     && b.ScheduledAt <= to
+                     && b.Status == BookingStatus.Completed
+                     && b.DeletedAt == null)
+            .Select(b => new { b.ScheduledAt, Amount = b.BookedTotalPrice.Amount })
+            .ToListAsync(ct);
+
+        var grouped = data
+            .GroupBy(b => GetPeriodLabel(b.ScheduledAt, groupBy))
+            .ToDictionary(g => g.Key, g => g.Sum(b => b.Amount));
+
+        return GeneratePeriods(from, to, groupBy)
+            .Select(p => new ChartPoint(p, grouped.GetValueOrDefault(p, 0)))
+            .ToList();
+    }
+
+    public async Task<List<TopServiceStats>> GetTopServicesAsync(
+        IReadOnlyList<Guid> branchIds,
+        DateTime? from,
+        DateTime? to,
+        int limit,
+        CancellationToken ct = default)
+    {
+        var query = _db.Set<BookingLineItem>()
+            .AsNoTracking()
+            .Where(li => li.ServiceId.HasValue
+                      && branchIds.Contains(li.Booking.GarageBranchId)
+                      && li.Booking.DeletedAt == null
+                      && li.DeletedAt == null);
+
+        if (from.HasValue) query = query.Where(li => li.Booking.ScheduledAt >= from.Value);
+        if (to.HasValue) query = query.Where(li => li.Booking.ScheduledAt <= to.Value);
+
+        var grouped = await query
+            .GroupBy(li => new { li.ServiceId, ServiceName = li.Service!.Name })
+            .Select(g => new { g.Key.ServiceId, g.Key.ServiceName, BookingCount = g.Select(li => li.BookingId).Distinct().Count() })
+            .OrderByDescending(x => x.BookingCount)
+            .Take(limit)
+            .ToListAsync(ct);
+
+        return grouped
+            .Select(x => new TopServiceStats(x.ServiceId!.Value, x.ServiceName, x.BookingCount))
+            .ToList();
+    }
+
+    public async Task<List<BranchBookingCount>> GetBranchBookingCountsAsync(
+        IReadOnlyList<Guid> branchIds,
+        DateTime? from,
+        DateTime? to,
+        CancellationToken ct = default)
+    {
+        var query = _db.Set<Booking>()
+            .AsNoTracking()
+            .Where(b => branchIds.Contains(b.GarageBranchId) && b.DeletedAt == null);
+
+        if (from.HasValue) query = query.Where(b => b.ScheduledAt >= from.Value);
+        if (to.HasValue) query = query.Where(b => b.ScheduledAt <= to.Value);
+
+        var data = await query
+            .GroupBy(b => new { b.GarageBranchId, b.Status })
+            .Select(g => new { g.Key.GarageBranchId, g.Key.Status, Count = g.Count(), Revenue = g.Sum(b => b.BookedTotalPrice.Amount) })
+            .ToListAsync(ct);
+
+        return branchIds.Select(branchId =>
+        {
+            var bd = data.Where(d => d.GarageBranchId == branchId).ToList();
+            var totalCount = bd.Sum(d => d.Count);
+            var completedRevenue = bd.FirstOrDefault(d => d.Status == BookingStatus.Completed)?.Revenue ?? 0;
+            return new BranchBookingCount(branchId, totalCount, completedRevenue);
+        }).ToList();
+    }
+
+    // ─── Period helpers ───────────────────────────────────────────────────────
+
+    private static string GetPeriodLabel(DateTime dt, string groupBy) =>
+        groupBy == "day" ? dt.ToString("yyyy-MM-dd") : dt.ToString("yyyy-MM");
+
+    private static IEnumerable<string> GeneratePeriods(DateTime from, DateTime to, string groupBy)
+    {
+        if (groupBy == "day")
+        {
+            for (var d = from.Date; d <= to.Date; d = d.AddDays(1))
+                yield return d.ToString("yyyy-MM-dd");
+        }
+        else
+        {
+            var current = new DateTime(from.Year, from.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            var end = new DateTime(to.Year, to.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            while (current <= end)
+            {
+                yield return current.ToString("yyyy-MM");
+                current = current.AddMonths(1);
+            }
+        }
     }
 
     private static List<TrendPoint> BuildTrend(

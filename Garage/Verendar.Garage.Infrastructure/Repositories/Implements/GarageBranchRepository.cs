@@ -1,10 +1,26 @@
 using Microsoft.EntityFrameworkCore;
+using Verendar.Garage.Domain.Enums;
+using Verendar.Garage.Domain.Models;
 
 namespace Verendar.Garage.Infrastructure.Repositories.Implements;
 
 public class GarageBranchRepository(GarageDbContext context)
     : PostgresRepository<GarageBranch>(context), IGarageBranchRepository
 {
+    public async Task<BranchCounts> GetBranchCountsAsync(CancellationToken ct = default)
+    {
+        var counts = await context.Set<GarageBranch>()
+            .AsNoTracking()
+            .Where(b => b.DeletedAt == null)
+            .GroupBy(b => b.Status)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        var active = counts.FirstOrDefault(c => c.Status == BranchStatus.Active)?.Count ?? 0;
+        var inactive = counts.FirstOrDefault(c => c.Status == BranchStatus.Inactive)?.Count ?? 0;
+        return new BranchCounts(Total: active + inactive, Active: active, Inactive: inactive);
+    }
+
     public async Task<Guid?> GetGarageOwnerIdByBranchIdAsync(Guid branchId, CancellationToken ct = default) =>
         await context.Set<GarageBranch>()
             .AsNoTracking()

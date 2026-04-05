@@ -60,6 +60,9 @@ public static class EndpointMessages
         public const string Forbidden = "Bạn không thể xem thống kê này.";
         public const string GarageStatsSuccess = "Đã tải thống kê garage.";
         public const string BranchStatsSuccess = "Đã tải thống kê chi nhánh.";
+        public const string PlatformStatsSuccess = "Đã tải thống kê toàn hệ thống.";
+        public const string GarageDetailStatsSuccess = "Đã tải thống kê chi tiết garage.";
+        public const string ChartSuccess = "Đã tải dữ liệu biểu đồ.";
     }
 
     public static class BranchManager
