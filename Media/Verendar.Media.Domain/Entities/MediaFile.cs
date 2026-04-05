@@ -59,6 +59,9 @@ namespace Verendar.Media.Domain.Entities
         VehicleVariant = 4,
         PartCategory = 5,
 
+        // Vehicle
+        MaintenanceInvoice = 6,
+
         // Garage
         GarageLogo = 10,
         GarageBranchCover = 11,
