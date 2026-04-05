@@ -26,37 +26,25 @@ public static class ApplicationServiceExtensions
         builder.Services.AddScoped<IAdministrativeUnitService, AdministrativeUnitService>();
         builder.Services.AddScoped<IAdministrativeRegionService, AdministrativeRegionService>();
 
-        if (builder.Environment.IsDevelopment())
-        {
-            builder.Services.Configure<AwsGeocodingSettings>(
-                builder.Configuration.GetSection(AwsGeocodingSettings.SectionName));
+        builder.Services.Configure<AwsGeocodingSettings>(
+            builder.Configuration.GetSection(AwsGeocodingSettings.SectionName));
 
-            var awsGeoEnabled = builder.Configuration.GetValue("Geocoding:AWS:Enabled", true);
-            if (awsGeoEnabled)
-            {
-                var awsOptions = builder.Configuration.GetAWSOptions("Geocoding:AWS");
-                var accessKey = builder.Configuration["Geocoding:AWS:AccessKey"];
-                var secretKey = builder.Configuration["Geocoding:AWS:SecretKey"];
-                if (!string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey))
-                    awsOptions.Credentials = new BasicAWSCredentials(accessKey, secretKey);
-                builder.Services.AddDefaultAWSOptions(awsOptions);
-                builder.Services.AddAWSService<IAmazonGeoPlaces>();
-                builder.Services.AddScoped<IGeocodingService, AwsGeocodingService>();
-                builder.Services.AddScoped<IPlaceSearchService, AwsPlaceSearchService>();
-            }
-            else
-            {
-                builder.Services.AddScoped<IGeocodingService, NullGeocodingService>();
-                builder.Services.AddScoped<IPlaceSearchService, NullPlaceSearchService>();
-            }
+        var awsGeoEnabled = builder.Configuration.GetValue("Geocoding:AWS:Enabled", true);
+        if (awsGeoEnabled)
+        {
+            var awsOptions = builder.Configuration.GetAWSOptions("Geocoding:AWS");
+            var accessKey = builder.Configuration["Geocoding:AWS:AccessKey"];
+            var secretKey = builder.Configuration["Geocoding:AWS:SecretKey"];
+            if (!string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey))
+                awsOptions.Credentials = new BasicAWSCredentials(accessKey, secretKey);
+            builder.Services.AddDefaultAWSOptions(awsOptions);
+            builder.Services.AddAWSService<IAmazonGeoPlaces>();
+            builder.Services.AddScoped<IGeocodingService, AwsGeocodingService>();
+            builder.Services.AddScoped<IPlaceSearchService, AwsPlaceSearchService>();
         }
         else
         {
-            // Production: Google Maps
-            builder.Services.Configure<GoogleGeocodingSettings>(
-                builder.Configuration.GetSection(GoogleGeocodingSettings.SectionName));
-            builder.Services.AddHttpClient();
-            builder.Services.AddScoped<IGeocodingService, GoogleMapsGeocodingService>();
+            builder.Services.AddScoped<IGeocodingService, NullGeocodingService>();
             builder.Services.AddScoped<IPlaceSearchService, NullPlaceSearchService>();
         }
 

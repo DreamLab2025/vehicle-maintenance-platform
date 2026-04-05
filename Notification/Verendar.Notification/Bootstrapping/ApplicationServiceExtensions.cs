@@ -32,9 +32,16 @@ public static class ApplicationServiceExtensions
 
         builder.Services.AddMemoryCache();
 
-        builder.Services.AddHttpClient<IResendEmailService, ResendEmailService>()
-            .AddPolicyHandler(GetRetryPolicy())
-            .AddPolicyHandler(GetCircuitBreakerPolicy());
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Services.AddScoped<IResendEmailService, DevLogEmailService>();
+        }
+        else
+        {
+            builder.Services.AddHttpClient<IResendEmailService, ResendEmailService>()
+                .AddPolicyHandler(GetRetryPolicy())
+                .AddPolicyHandler(GetCircuitBreakerPolicy());
+        }
 
         builder.Services.AddSingleton<IEmailTemplateService, SimpleEmailTemplateService>();
 
