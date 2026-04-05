@@ -54,12 +54,11 @@ public class DevLogEmailService(ILogger<DevLogEmailService> logger) : IResendEma
             var code = root.TryGetProperty("OtpCode", out var c) ? c.GetString() : "?";
             var expires = root.TryGetProperty("ExpiryMinutes", out var e) ? e.GetInt32() : 0;
 
-            logger.LogDebug(">>> [DEV OTP] To={To} | Code={Code} | ExpiresIn={Expires} min <<<",
+            logger.LogWarning(">>> [DEV OTP] To={To} | Code={Code} | ExpiresIn={Expires} min <<<",
                 to, code, expires);
         }
         catch
         {
-            // ignore parse errors in dev helper
         }
     }
 }
