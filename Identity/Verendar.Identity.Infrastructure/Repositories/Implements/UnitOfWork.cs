@@ -10,11 +10,15 @@ namespace Verendar.Identity.Infrastructure.Repositories.Implements
     {
         private IUserRepository? _users;
         private IGenericRepository<Feedback>? _feedbacks;
+        private IIdentityStatsRepository? _stats;
 
         public IUserRepository Users =>
             _users ??= new UserRepository(Context);
 
         public IGenericRepository<Feedback> Feedbacks =>
             _feedbacks ??= new PostgresRepository<Feedback>(Context);
+
+        public IIdentityStatsRepository Stats =>
+            _stats ??= new IdentityStatsRepository(Context);
     }
 }

@@ -8,5 +8,6 @@ namespace Verendar.Identity.Domain.Repositories.Interfaces
     {
         IUserRepository Users { get; }
         IGenericRepository<Feedback> Feedbacks { get; }
+        IIdentityStatsRepository Stats { get; }
     }
 }

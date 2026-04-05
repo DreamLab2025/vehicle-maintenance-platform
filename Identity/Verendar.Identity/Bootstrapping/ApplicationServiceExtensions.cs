@@ -29,6 +29,7 @@ namespace Verendar.Identity.Bootstrapping
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+            builder.Services.AddScoped<IIdentityStatsService, IdentityStatsService>();
 
             builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
@@ -52,6 +53,7 @@ namespace Verendar.Identity.Bootstrapping
             app.MapUserApi();
             app.MapInternalUserApi();
             app.MapFeedbackApi();
+            app.MapIdentityStatsApi();
 
             return app;
         }
