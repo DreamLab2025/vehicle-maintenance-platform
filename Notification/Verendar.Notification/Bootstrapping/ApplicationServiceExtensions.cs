@@ -32,15 +32,17 @@ public static class ApplicationServiceExtensions
 
         builder.Services.AddMemoryCache();
 
-        if (builder.Environment.IsDevelopment())
-        {
-            builder.Services.AddScoped<IResendEmailService, DevLogEmailService>();
-        }
-        else
+        var enableRealEmail = builder.Configuration.GetValue<bool>("Email:EnableRealSend");
+
+        if (enableRealEmail)
         {
             builder.Services.AddHttpClient<IResendEmailService, ResendEmailService>()
                 .AddPolicyHandler(GetRetryPolicy())
                 .AddPolicyHandler(GetCircuitBreakerPolicy());
+        }
+        else
+        {
+            builder.Services.AddScoped<IResendEmailService, DevLogEmailService>();
         }
 
         builder.Services.AddSingleton<IEmailTemplateService, SimpleEmailTemplateService>();
