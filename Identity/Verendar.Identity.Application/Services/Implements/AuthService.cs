@@ -1,10 +1,7 @@
 using System.Security.Cryptography;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
 using Verendar.Common.Caching;
-using Verendar.Common.Shared;
-using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Mappings;
 using Verendar.Identity.Application.Services.Interfaces;
 using Verendar.Identity.Domain.Repositories.Interfaces;
@@ -49,6 +46,9 @@ namespace Verendar.Identity.Application.Services.Implements
 
             var otpCode = GetOtpCode();
             await _cacheService.SetAsync(CacheKeys.OtpRegister(email), otpCode, CacheKeys.OtpTtl);
+
+            if (!string.IsNullOrWhiteSpace(request.ReferralCode))
+                await _cacheService.SetAsync(CacheKeys.ReferralCode(email), request.ReferralCode.Trim().ToUpperInvariant(), CacheKeys.ReferralCodeTtl);
 
             await _publishEndpoint.Publish(new OtpRequestedEvent
             {
@@ -214,6 +214,11 @@ namespace Verendar.Identity.Application.Services.Implements
             await _unitOfWork.Users.UpdateAsync(user.Id, user);
             await _unitOfWork.SaveChangesAsync();
 
+            var referralCodeKey = CacheKeys.ReferralCode(email);
+            var referralCode = await _cacheService.GetAsync<string>(referralCodeKey);
+            if (referralCode is not null)
+                await _cacheService.RemoveAsync(referralCodeKey);
+
             await _publishEndpoint.Publish(new UserRegisteredEvent
             {
                 UserId = user.Id,
@@ -224,7 +229,8 @@ namespace Verendar.Identity.Application.Services.Implements
                 EmailVerified = user.EmailVerified,
                 DateOfBirth = user.DateOfBirth,
                 Gender = user.Gender?.ToString(),
-                RegistrationDate = user.CreatedAt
+                RegistrationDate = user.CreatedAt,
+                ReferralCode = referralCode
             });
             return ApiResponse<bool>.SuccessResponse(true, "Kích hoạt tài khoản thành công. Bạn có thể đăng nhập ngay bây giờ.");
         }

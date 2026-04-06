@@ -23,4 +23,8 @@ public static class CacheKeys
     public static readonly TimeSpan OtpForgotVerifiedTtl = TimeSpan.FromMinutes(10);
 
     public static readonly TimeSpan OtpActionLockTtl = TimeSpan.FromSeconds(60);
+
+    private const string ReferralCodeSegment = "referral_code";
+    public static string ReferralCode(string email) => $"{ReferralCodeSegment}:{email}";
+    public static readonly TimeSpan ReferralCodeTtl = TimeSpan.FromMinutes(10);
 }

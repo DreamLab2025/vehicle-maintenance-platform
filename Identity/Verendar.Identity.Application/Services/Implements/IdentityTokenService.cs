@@ -5,7 +5,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Verendar.Common.Jwt;
-using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Services.Interfaces;
 
 namespace Verendar.Identity.Application.Services.Implements

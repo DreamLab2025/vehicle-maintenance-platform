@@ -206,4 +206,12 @@ public static class EndpointMessages
         public const string BundleNotInBranchFormat = "Mục #{0}: Gói combo không tồn tại hoặc không thuộc chi nhánh này.";
         public const string BundleUnavailableFormat = "Mục #{0}: Gói combo «{1}» hiện không khả dụng.";
     }
+
+    public static class Referral
+    {
+        public const string ListSuccess = "Đã tải danh sách khách giới thiệu.";
+        public const string StatsSuccess = "Đã tải thống kê giới thiệu.";
+        public const string GarageNotFound = "Không tìm thấy garage.";
+        public const string Forbidden = "Bạn không có quyền xem thông tin này.";
+    }
 }

@@ -20,6 +20,7 @@ public class GarageDbContext(DbContextOptions<GarageDbContext> options, ICurrent
     public DbSet<BookingStatusHistory> BookingStatusHistories { get; set; } = null!;
     public DbSet<GarageStatusHistory> GarageStatusHistories { get; set; } = null!;
     public DbSet<GarageReview> GarageReviews { get; set; } = null!;
+    public DbSet<GarageReferral> GarageReferrals { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

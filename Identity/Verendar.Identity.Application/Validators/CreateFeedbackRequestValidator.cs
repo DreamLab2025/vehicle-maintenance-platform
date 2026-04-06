@@ -1,5 +1,3 @@
-using Verendar.Identity.Domain.Enums;
-
 namespace Verendar.Identity.Application.Validators;
 
 public class CreateFeedbackRequestValidator : AbstractValidator<CreateFeedbackRequest>

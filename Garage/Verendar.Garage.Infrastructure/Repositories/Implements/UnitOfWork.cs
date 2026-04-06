@@ -15,6 +15,7 @@ public class UnitOfWork(GarageDbContext context)
     private IBookingRepository? _bookings;
     private IReviewRepository? _reviews;
     private IGarageStatusHistoryRepository? _statusHistories;
+    private IGarageReferralRepository? _referrals;
 
     public IGarageRepository Garages =>
         _garages ??= new GarageRepository(Context);
@@ -45,4 +46,7 @@ public class UnitOfWork(GarageDbContext context)
 
     public IGarageStatusHistoryRepository StatusHistories =>
         _statusHistories ??= new GarageStatusHistoryRepository(Context);
+
+    public IGarageReferralRepository Referrals =>
+        _referrals ??= new GarageReferralRepository(Context);
 }

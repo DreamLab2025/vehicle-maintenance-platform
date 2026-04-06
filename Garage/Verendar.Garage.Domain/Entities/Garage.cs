@@ -2,6 +2,7 @@ namespace Verendar.Garage.Domain.Entities;
 
 [Index(nameof(OwnerId))]
 [Index(nameof(Slug), IsUnique = true)]
+[Index(nameof(ReferralCode), IsUnique = true)]
 public class Garage : BaseEntity
 {
     public Guid OwnerId { get; set; }
@@ -22,6 +23,11 @@ public class Garage : BaseEntity
     public string? LogoUrl { get; set; }
 
     public GarageStatus Status { get; set; } = GarageStatus.Pending;
+
+    [MaxLength(30)]
+    public string? ReferralCode { get; set; }
+
+    public DateTime? ReferralCodeGeneratedAt { get; set; }
 
     public List<GarageBranch> Branches { get; set; } = [];
 }

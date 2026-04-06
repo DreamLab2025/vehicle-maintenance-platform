@@ -1,14 +1,10 @@
 using System.Security.Cryptography;
 using MassTransit;
 using Microsoft.AspNetCore.Identity;
-using Verendar.Common.Shared;
-using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Mappings;
 using Verendar.Identity.Application.Services.Interfaces;
-using Verendar.Identity.Application.Shared.Helpers;
 using Verendar.Identity.Domain.Repositories.Interfaces;
 using Verender.Identity.Contracts.Events;
-using Verendar.Identity.Domain.Entities;
 
 namespace Verendar.Identity.Application.Services.Implements
 {
@@ -187,7 +183,7 @@ namespace Verendar.Identity.Application.Services.Implements
             }
 
             // Replace list to ensure EF Core change tracking picks up the modification
-            user.Roles = [..user.Roles, role];
+            user.Roles = [.. user.Roles, role];
             user.UpdatedAt = DateTime.UtcNow;
             await _unitOfWork.SaveChangesAsync();
 

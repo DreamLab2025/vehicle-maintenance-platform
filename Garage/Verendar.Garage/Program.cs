@@ -29,5 +29,6 @@ app.MapGarageBundleApi();
 app.MapReviewApi();
 app.MapStatsApi();
 app.MapGarageCatalogApi();
+app.MapReferralApi();
 
 await app.RunAsync();

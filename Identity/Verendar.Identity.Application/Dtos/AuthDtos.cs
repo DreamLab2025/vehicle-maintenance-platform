@@ -14,6 +14,8 @@ namespace Verendar.Identity.Application.Dtos
         public string PhoneNumber { get; set; } = string.Empty;
         public DateOnly? DateOfBirth { get; set; }
         public Gender? Gender { get; set; }
+
+        public string? ReferralCode { get; set; }
     }
 
     public class RefreshTokenRequest

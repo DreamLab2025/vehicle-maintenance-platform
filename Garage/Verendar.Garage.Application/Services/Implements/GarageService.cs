@@ -3,6 +3,7 @@ using Verendar.Common.Shared;
 using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
+using Verendar.Garage.Application.Helpers;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
 using Verendar.Garage.Contracts.Events;
@@ -91,6 +92,24 @@ public class GarageService(
         var fromStatus = garage.Status;
         garage.Status = request.Status;
         garage.UpdatedAt = DateTime.UtcNow;
+
+        if (request.Status == GarageStatus.Active && garage.ReferralCode is null)
+        {
+            var code = await ReferralCodeGenerator.GenerateAsync(
+                garage.Slug,
+                async candidate => await _unitOfWork.Garages.FindOneAsync(g => g.ReferralCode == candidate) is null,
+                ct);
+
+            if (code is not null)
+            {
+                garage.ReferralCode = code;
+                garage.ReferralCodeGeneratedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                _logger.LogWarning("ReferralCodeGenerator: all retries exhausted for garage {GarageId}, skipping", garageId);
+            }
+        }
 
         await _unitOfWork.StatusHistories.AddAsync(new GarageStatusHistory
         {

@@ -1,4 +1,3 @@
-using Verendar.Common.Shared;
 using Verendar.Identity.Application.Mappings;
 using Verendar.Identity.Application.Services.Interfaces;
 using Verendar.Identity.Domain.Enums;
