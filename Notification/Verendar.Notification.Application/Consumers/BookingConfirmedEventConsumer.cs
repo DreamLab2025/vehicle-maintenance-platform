@@ -28,8 +28,7 @@ public class BookingConfirmedEventConsumer(
         try
         {
             var (title, content) = GarageBookingNotificationMappings.BookingConfirmedCopy(m);
-            var actionPath = routes.BookingDetailRelativeUrl(m.BookingId);
-            var actionAbsolute = routes.ToAbsoluteUrl(actionPath);
+            var customerActionUrl = routes.UserBookingHistoryUrl(m.BookingId);
 
             var notification = NotificationMappings.CreateUserNotification(
                 m.CustomerUserId,
@@ -38,7 +37,7 @@ public class BookingConfirmedEventConsumer(
                 NotificationPriority.High,
                 "Booking",
                 m.BookingId,
-                actionPath);
+                customerActionUrl);
 
             await unitOfWork.Notifications.AddAsync(notification);
             await unitOfWork.NotificationDeliveries.AddAsync(
@@ -59,7 +58,7 @@ public class BookingConfirmedEventConsumer(
                     m.CustomerEmail,
                     title,
                     content,
-                    actionAbsolute,
+                    customerActionUrl,
                     NotificationConstants.ConsumerCopy.EmailCtaViewBooking,
                     context.CancellationToken);
                 await ConsumerNotificationFlow.FinalizeEmailDeliveryAsync(
@@ -102,7 +101,7 @@ public class BookingConfirmedEventConsumer(
         try
         {
             var (title, content) = GarageBookingNotificationMappings.BookingAssignedToMechanicCopy(m);
-            var actionPath = appOptions.Value.BookingDetailRelativeUrl(m.BookingId);
+            var mechanicActionUrl = appOptions.Value.GarageDashboardRequiresUrl(m.GarageId, m.GarageBranchId);
 
             var notification = NotificationMappings.CreateUserNotification(
                 m.MechanicUserId,
@@ -111,7 +110,7 @@ public class BookingConfirmedEventConsumer(
                 NotificationPriority.High,
                 "Booking",
                 m.BookingId,
-                actionPath);
+                mechanicActionUrl);
 
             await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
                 unitOfWork, notification, m.MechanicUserId, ct);

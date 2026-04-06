@@ -26,7 +26,7 @@ public class BookingCreatedConsumer(
         try
         {
             var (title, content) = GarageBookingNotificationMappings.BookingCreatedCopy(message);
-            var actionPath = routes.BookingDetailRelativeUrl(message.BookingId);
+            var actionUrl = routes.UserBookingHistoryUrl(message.BookingId);
 
             var notification = NotificationMappings.CreateUserNotification(
                 message.UserId,
@@ -35,7 +35,7 @@ public class BookingCreatedConsumer(
                 NotificationPriority.Medium,
                 "Booking",
                 message.BookingId,
-                actionPath);
+                actionUrl);
 
             await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
                 unitOfWork, notification, message.UserId, context.CancellationToken);
@@ -59,20 +59,20 @@ public class BookingCreatedConsumer(
                 messageId, message.BookingId);
         }
 
-        await NotifyStaffAsync(message, messageId, actionPath: routes.BookingDetailRelativeUrl(message.BookingId), context.CancellationToken);
+        await NotifyStaffAsync(message, messageId, actionUrl: routes.GarageDashboardBookingsUrl(message.GarageId, message.GarageBranchId), context.CancellationToken);
     }
 
-    private async Task NotifyStaffAsync(BookingCreatedEvent message, string messageId, string actionPath, CancellationToken ct)
+    private async Task NotifyStaffAsync(BookingCreatedEvent message, string messageId, string actionUrl, CancellationToken ct)
     {
         var (title, content) = GarageBookingNotificationMappings.BookingCreatedForStaffCopy(message);
 
         // Owner always receives the notification (has visibility across all branches)
         if (message.OwnerUserId != Guid.Empty)
-            await TrySendStaffInAppAsync(message.OwnerUserId, title, content, message, messageId, actionPath, ct);
+            await TrySendStaffInAppAsync(message.OwnerUserId, title, content, message, messageId, actionUrl, ct);
 
         // Each branch manager receives the notification independently
         foreach (var managerId in message.ManagerUserIds)
-            await TrySendStaffInAppAsync(managerId, title, content, message, messageId, actionPath, ct);
+            await TrySendStaffInAppAsync(managerId, title, content, message, messageId, actionUrl, ct);
 
         if (message.OwnerUserId == Guid.Empty && message.ManagerUserIds.Count == 0)
             logger.LogWarning(
@@ -86,7 +86,7 @@ public class BookingCreatedConsumer(
         string content,
         BookingCreatedEvent message,
         string messageId,
-        string actionPath,
+        string actionUrl,
         CancellationToken ct)
     {
         try
@@ -98,7 +98,7 @@ public class BookingCreatedConsumer(
                 NotificationPriority.High,
                 "Booking",
                 message.BookingId,
-                actionPath);
+                actionUrl);
 
             await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
                 unitOfWork, notification, staffUserId, ct);

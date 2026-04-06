@@ -8,6 +8,7 @@ public class BookingCancelledEvent : BaseEvent
 
     public Guid BookingId { get; set; }
     public Guid CustomerUserId { get; set; }
+    public Guid GarageId { get; set; }
     public Guid GarageBranchId { get; set; }
     public string BranchName { get; set; } = string.Empty;
     public string? Reason { get; set; }

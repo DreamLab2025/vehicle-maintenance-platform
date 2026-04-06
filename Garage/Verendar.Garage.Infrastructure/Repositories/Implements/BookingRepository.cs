@@ -198,7 +198,8 @@ public class BookingRepository(GarageDbContext context)
             .Where(b => b.UserId == userId && b.DeletedAt == null)
             .Where(b => status == null || b.Status == status)
             .Include(b => b.GarageBranch)
-            .OrderByDescending(b => b.ScheduledAt);
+            .OrderBy(b => b.Status == BookingStatus.Completed || b.Status == BookingStatus.Cancelled ? 1 : 0)
+            .ThenByDescending(b => b.ScheduledAt);
 
         var totalCount = await query.CountAsync(ct);
         var items = await query
@@ -217,7 +218,8 @@ public class BookingRepository(GarageDbContext context)
             .Where(b => b.GarageBranchId == branchId && b.DeletedAt == null)
             .Where(b => status == null || b.Status == status)
             .Include(b => b.GarageBranch)
-            .OrderByDescending(b => b.ScheduledAt);
+            .OrderBy(b => b.Status == BookingStatus.Completed || b.Status == BookingStatus.Cancelled ? 1 : 0)
+            .ThenByDescending(b => b.ScheduledAt);
 
         var totalCount = await query.CountAsync(ct);
         var items = await query
@@ -242,7 +244,8 @@ public class BookingRepository(GarageDbContext context)
                 && b.DeletedAt == null)
             .Where(b => status == null || b.Status == status)
             .Include(b => b.GarageBranch)
-            .OrderByDescending(b => b.ScheduledAt);
+            .OrderBy(b => b.Status == BookingStatus.Completed || b.Status == BookingStatus.Cancelled ? 1 : 0)
+            .ThenByDescending(b => b.ScheduledAt);
 
         var totalCount = await query.CountAsync(ct);
         var items = await query

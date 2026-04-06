@@ -8,6 +8,7 @@ public class BookingConfirmedEvent : BaseEvent
 
     public Guid BookingId { get; set; }
     public Guid CustomerUserId { get; set; }
+    public Guid GarageId { get; set; }
     public Guid GarageBranchId { get; set; }
     public Guid MechanicMemberId { get; set; }
     public Guid MechanicUserId { get; set; }

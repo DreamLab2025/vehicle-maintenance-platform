@@ -9,6 +9,7 @@ public class BookingCompletedEvent : BaseEvent
     public Guid BookingId { get; set; }
     public Guid UserId { get; set; }
     public Guid UserVehicleId { get; set; }
+    public Guid GarageId { get; set; }
     public Guid GarageBranchId { get; set; }
     public string BranchName { get; set; } = string.Empty;
     public Guid OwnerUserId { get; set; }

@@ -26,7 +26,7 @@ public class BookingStatusChangedEventConsumer(
         try
         {
             var (title, content) = GarageBookingNotificationMappings.BookingStatusChangedCopy(m);
-            var actionPath = routes.BookingDetailRelativeUrl(m.BookingId);
+            var actionUrl = routes.UserBookingHistoryUrl(m.BookingId);
 
             var notification = NotificationMappings.CreateUserNotification(
                 m.CustomerUserId,
@@ -35,7 +35,7 @@ public class BookingStatusChangedEventConsumer(
                 NotificationPriority.Medium,
                 "Booking",
                 m.BookingId,
-                actionPath);
+                actionUrl);
 
             await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
                 unitOfWork, notification, m.CustomerUserId, context.CancellationToken);

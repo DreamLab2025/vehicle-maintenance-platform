@@ -101,6 +101,7 @@ public class BookingService(
                 BookingId = booking.Id,
                 UserId = userId,
                 UserVehicleId = booking.UserVehicleId,
+                GarageId = garage.Id,
                 GarageBranchId = branch.Id,
                 BranchName = branch.Name,
                 ItemsSummary = resolvedItems.LineItems.Count == 1
@@ -334,6 +335,7 @@ public class BookingService(
             {
                 BookingId = booking.Id,
                 CustomerUserId = booking.UserId,
+                GarageId = reloaded!.GarageBranch.GarageId,
                 GarageBranchId = booking.GarageBranchId,
                 MechanicMemberId = mechanic.Value.Id,
                 MechanicUserId = mechanic.Value.UserId,
@@ -408,6 +410,7 @@ public class BookingService(
                 {
                     BookingId = booking.Id,
                     CustomerUserId = booking.UserId,
+                    GarageId = reloaded!.GarageBranch.GarageId,
                     GarageBranchId = booking.GarageBranchId,
                     FromStatus = from.ToString(),
                     ToStatus = request.Status.ToString(),
@@ -424,6 +427,7 @@ public class BookingService(
                     BookingId = reloaded.Id,
                     UserId = reloaded.UserId,
                     UserVehicleId = reloaded.UserVehicleId,
+                    GarageId = reloaded.GarageBranch.GarageId,
                     GarageBranchId = reloaded.GarageBranchId,
                     BranchName = reloaded.GarageBranch.Name,
                     CurrentOdometer = reloaded.CurrentOdometer,
@@ -485,6 +489,7 @@ public class BookingService(
             {
                 BookingId = booking.Id,
                 CustomerUserId = booking.UserId,
+                GarageId = booking.GarageBranch.GarageId,
                 GarageBranchId = booking.GarageBranchId,
                 BranchName = booking.GarageBranch.Name,
                 Reason = reason,

@@ -26,7 +26,7 @@ public class BookingCompletedEventConsumer(
         try
         {
             var (title, content) = GarageBookingNotificationMappings.BookingCompletedCopy(message);
-            var actionPath = routes.BookingDetailRelativeUrl(message.BookingId);
+            var customerActionUrl = routes.UserBookingHistoryUrl(message.BookingId);
 
             var notification = NotificationMappings.CreateUserNotification(
                 message.UserId,
@@ -35,7 +35,7 @@ public class BookingCompletedEventConsumer(
                 NotificationPriority.High,
                 "Booking",
                 message.BookingId,
-                actionPath);
+                customerActionUrl);
 
             await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
                 unitOfWork, notification, message.UserId, context.CancellationToken);
@@ -65,13 +65,13 @@ public class BookingCompletedEventConsumer(
     private async Task NotifyStaffAsync(BookingCompletedEvent message, string messageId, CancellationToken ct)
     {
         var (title, content) = GarageBookingNotificationMappings.BookingCompletedForStaffCopy(message);
-        var actionPath = appOptions.Value.BookingDetailRelativeUrl(message.BookingId);
+        var staffActionUrl = appOptions.Value.GarageDashboardBookingsUrl(message.GarageId, message.GarageBranchId);
 
         if (message.OwnerUserId != Guid.Empty)
-            await TrySendStaffInAppAsync(message.OwnerUserId, title, content, message, messageId, actionPath, ct);
+            await TrySendStaffInAppAsync(message.OwnerUserId, title, content, message, messageId, staffActionUrl, ct);
 
         foreach (var managerId in message.ManagerUserIds)
-            await TrySendStaffInAppAsync(managerId, title, content, message, messageId, actionPath, ct);
+            await TrySendStaffInAppAsync(managerId, title, content, message, messageId, staffActionUrl, ct);
     }
 
     private async Task TrySendStaffInAppAsync(
@@ -80,7 +80,7 @@ public class BookingCompletedEventConsumer(
         string content,
         BookingCompletedEvent message,
         string messageId,
-        string actionPath,
+        string actionUrl,
         CancellationToken ct)
     {
         try
@@ -92,7 +92,7 @@ public class BookingCompletedEventConsumer(
                 NotificationPriority.Medium,
                 "Booking",
                 message.BookingId,
-                actionPath);
+                actionUrl);
 
             await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
                 unitOfWork, notification, staffUserId, ct);

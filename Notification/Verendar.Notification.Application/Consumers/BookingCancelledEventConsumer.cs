@@ -28,8 +28,7 @@ public class BookingCancelledEventConsumer(
         try
         {
             var (title, content) = GarageBookingNotificationMappings.BookingCancelledCopy(m);
-            var actionPath = routes.BookingDetailRelativeUrl(m.BookingId);
-            var actionAbsolute = routes.ToAbsoluteUrl(actionPath);
+            var actionUrl = routes.UserBookingHistoryUrl(m.BookingId);
 
             var notification = NotificationMappings.CreateUserNotification(
                 m.CustomerUserId,
@@ -38,7 +37,7 @@ public class BookingCancelledEventConsumer(
                 NotificationPriority.High,
                 "Booking",
                 m.BookingId,
-                actionPath);
+                actionUrl);
 
             await unitOfWork.Notifications.AddAsync(notification);
             await unitOfWork.NotificationDeliveries.AddAsync(
@@ -59,7 +58,7 @@ public class BookingCancelledEventConsumer(
                     m.CustomerEmail,
                     title,
                     content,
-                    actionAbsolute,
+                    actionUrl,
                     NotificationConstants.ConsumerCopy.EmailCtaViewDetail,
                     context.CancellationToken);
                 await ConsumerNotificationFlow.FinalizeEmailDeliveryAsync(
