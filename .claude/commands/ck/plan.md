@@ -1,108 +1,116 @@
-Research and create an implementation plan for: $ARGUMENTS
-
+---
+description: Restate requirements, assess risks, and create step-by-step implementation plan. WAIT for user CONFIRM before touching any code.
 ---
 
-## Flags
+# Plan Command
 
-| Flag         | Effect |
-| ------------ | ------ |
-| `--fast`     | Shallow scout, skip Steps 5–6. Best for simple CRUD. |
-| `--hard`     | Deep scout across all layers. Force Steps 5 + 6 with more detail. |
-| `--auto`     | No pauses between steps. Default. |
-| `--parallel` | Run Scout + Analyze concurrently. |
-| `--two`      | Fork at Step 3: produce Approach A + Approach B + Recommendation. |
-| `--no-tasks` | Do not emit a TodoWrite block. |
+This command invokes the **planner** agent to create a comprehensive implementation plan before writing any code.
 
-Default (no flags): run Steps 1–4; include Steps 5–6 only when schema or auth changes are present.
+## What This Command Does
 
-Subcommands: `/ck:plan:archive`, `/ck:plan:validate`, `/ck:plan:red-team`
+1. **Restate Requirements** - Clarify what needs to be built
+2. **Identify Risks** - Surface potential issues and blockers
+3. **Create Step Plan** - Break down implementation into phases
+4. **Wait for Confirmation** - MUST receive user approval before proceeding
 
----
+## When to Use
 
-## Step 1 — Scout
+Use `/plan` when:
 
-Invoke `/ck:scout` with the feature name/keywords.
+- Starting a new feature
+- Making significant architectural changes
+- Working on complex refactoring
+- Multiple files/components will be affected
+- Requirements are unclear or ambiguous
 
-Find: closest existing feature, entities/repos/services involved, naming and response shape conventions.
+## How It Works
 
-Also check `docs/requirements/`, `docs/architecture/`, `docs/design/`, `docs/plans/` for documented constraints or prior plans.
+The planner agent will:
 
-**`--fast`**: single targeted query, stop at first match.
-**`--hard`**: full call-chain scout (endpoint → handler → service → repo → DB config → migration).
-**`--parallel`**: launch alongside Step 2.
+1. **Analyze the request** and restate requirements in clear terms
+2. **Break down into phases** with specific, actionable steps
+3. **Identify dependencies** between components
+4. **Assess risks** and potential blockers
+5. **Estimate complexity** (High/Medium/Low)
+6. **Present the plan** and WAIT for your explicit confirmation
 
----
-
-## Step 2 — Analyze
-
-- **Service**: which Verendar microservice owns this? (Identity · Vehicle · Media · Notification · Ai · Garage · Payment · Location)
-- **Entities**: list each entity/table touched — read, written, or new
-- **Current state**: what exists vs. what must be added
-- **Cross-service**: does this require async events (MassTransit) or sync HTTP calls (typed client)?
-- **Assumptions**: call out anything inferred — flag explicitly
-- **Open questions**: anything that blocks design
-
-**`--hard`**: use `sequential-thinking` skill; also identify what adjacent features might break.
-
----
-
-## Step 3 — Design
-
-**API Contract**: route, HTTP method, request/response shapes, status codes per case, required auth/roles.
-
-**Data Flow**:
-```
-Request → Validator → Handler → Service → Repository → DB
-                                        ↓
-                                   Response shape
-```
-Note async side-effects (MassTransit events, cache invalidation, media ops).
-
-**Interfaces**: new repository method signatures, new service method signatures, new/changed DTOs.
-
-**`--two`**: fork here — produce Approach A + Approach B, each with full API Contract / Data Flow / Interfaces, then add a Recommendation section.
-
----
-
-## Step 4 — Plan
-
-Ordered, layer-by-layer steps. Each step names the exact file and what changes.
+## Example Usage
 
 ```
-N. [Layer] File — what to add/change
-   Depends on: (step numbers, or "none")
+User: /plan I need to add real-time notifications when markets resolve
+
+Agent (planner):
+# Implementation Plan: Real-Time Market Resolution Notifications
+
+## Requirements Restatement
+- Send notifications to users when markets they're watching resolve
+- Support multiple notification channels (in-app, email, webhook)
+- Ensure notifications are delivered reliably
+- Include market outcome and user's position result
+
+## Implementation Phases
+
+### Phase 1: Database Schema
+- Add notifications table with columns: id, user_id, market_id, type, status, created_at
+- Add user_notification_preferences table for channel preferences
+- Create indexes on user_id and market_id for performance
+
+### Phase 2: Notification Service
+- Create notification service in lib/notifications.ts
+- Implement notification queue using BullMQ/Redis
+- Add retry logic for failed deliveries
+- Create notification templates
+
+### Phase 3: Integration Points
+- Hook into market resolution logic (when status changes to "resolved")
+- Query all users with positions in market
+- Enqueue notifications for each user
+
+### Phase 4: Frontend Components
+- Create NotificationBell component in header
+- Add NotificationList modal
+- Implement real-time updates via Supabase subscriptions
+- Add notification preferences page
+
+## Dependencies
+- Redis (for queue)
+- Email service (SendGrid/Resend)
+- Supabase real-time subscriptions
+
+## Risks
+- HIGH: Email deliverability (SPF/DKIM required)
+- MEDIUM: Performance with 1000+ users per market
+- MEDIUM: Notification spam if markets resolve frequently
+- LOW: Real-time subscription overhead
+
+## Estimated Complexity: MEDIUM
+- Backend: 4-6 hours
+- Frontend: 3-4 hours
+- Testing: 2-3 hours
+- Total: 9-13 hours
+
+**WAITING FOR CONFIRMATION**: Proceed with this plan? (yes/no/modify)
 ```
 
-Layer order: **Domain → Application → Infrastructure → Api**
+## Important Notes
 
-Include: new entities/fields, repo interface + impl, service method + validator, endpoint handler + route, `GlobalUsings.cs` updates, migration, MassTransit contracts/consumers if needed.
+**CRITICAL**: The planner agent will **NOT** write any code until you explicitly confirm the plan with "yes" or "proceed" or similar affirmative response.
 
-**Without `--no-tasks`**: emit a TodoWrite block with each step as a task.
+If you want changes, respond with:
 
----
+- "modify: [your changes]"
+- "different approach: [alternative]"
+- "skip phase 2 and do phase 3 first"
 
-## Step 5 — Validate _(skip with `--fast`; mandatory with `--hard` or schema/auth changes)_
+## Integration with Other Commands
 
-- Migration safety: NOT NULL columns have defaults or are nullable
-- Auth: endpoint is properly protected; ownership checks are inside the service
-- No N+1 introduced
-- Response shape matches `ApiResponse<T>` contract
-- Pagination used for all list endpoints (except Location unbounded lists)
+After planning:
 
----
+- Use `/code-review` to review completed implementation
 
-## Step 6 — Red-team _(skip with `--fast`; mandatory with `--hard`)_
+## Related Agents
 
-Adversarially challenge the plan. For each: state the failure mode and whether the plan mitigates it.
+This command invokes the `planner` agent provided by ECC.
 
-- Permission/ownership edge cases
-- Concurrent mutation / race conditions
-- Invalid state transitions
-- Migration rollback safety
-- Missing business rule not enforced
-- Cross-service consistency (event vs. sync call tradeoffs)
-
----
-
-Do not write implementation code — only the plan.
-Flag any assumption that needs confirmation before implementation begins.
+For manual installs, the source file lives at:
+`agents/planner.md`
