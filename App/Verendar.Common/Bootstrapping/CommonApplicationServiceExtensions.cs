@@ -175,7 +175,7 @@ namespace Verendar.Common.Bootstrapping
                     var rabbitMqConnectionString = builder.Configuration.GetConnectionString(Const.RabbitMQ)
                         ?? throw new ArgumentNullException(nameof(builder.Configuration), "RabbitMq connection string is empty");
 
-                    cfg.Host(new Uri(rabbitMqConnectionString));
+                    cfg.Host(BuildRabbitMqUri(rabbitMqConnectionString));
 
                     cfg.ConfigureEndpoints(context);
 
@@ -202,6 +202,27 @@ namespace Verendar.Common.Bootstrapping
             builder.AddDefaultSwagger();
 
             return builder;
+        }
+
+        private static Uri BuildRabbitMqUri(string connectionString)
+        {
+            // amqp://user:pass@host:port — passwords with special chars (@, #, %) break new Uri()
+            var match = System.Text.RegularExpressions.Regex.Match(
+                connectionString,
+                @"^(?<scheme>amqps?)://(?<user>[^:]+):(?<pass>.+)@(?<host>[^:/]+)(?::(?<port>\d+))?(?<vhost>/.*)?$"
+            );
+
+            if (!match.Success)
+                return new Uri(connectionString);
+
+            var scheme = match.Groups["scheme"].Value;
+            var user = Uri.EscapeDataString(match.Groups["user"].Value);
+            var pass = Uri.EscapeDataString(match.Groups["pass"].Value);
+            var host = match.Groups["host"].Value;
+            var port = match.Groups["port"].Success ? $":{match.Groups["port"].Value}" : string.Empty;
+            var vhost = match.Groups["vhost"].Success ? match.Groups["vhost"].Value : string.Empty;
+
+            return new Uri($"{scheme}://{user}:{pass}@{host}{port}{vhost}");
         }
 
         public static WebApplication UseCommonService(this WebApplication app)
