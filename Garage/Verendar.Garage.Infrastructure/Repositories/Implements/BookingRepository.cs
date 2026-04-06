@@ -117,11 +117,12 @@ public class BookingRepository(GarageDbContext context)
     }
 
     public async Task<(List<Booking> Items, int TotalCount)> GetPagedByUserIdAsync(
-        Guid userId, int pageNumber, int pageSize, CancellationToken ct = default)
+        Guid userId, int pageNumber, int pageSize, BookingStatus? status = null, CancellationToken ct = default)
     {
         var query = _db.Set<Booking>()
             .AsNoTracking()
             .Where(b => b.UserId == userId && b.DeletedAt == null)
+            .Where(b => status == null || b.Status == status)
             .Include(b => b.GarageBranch)
             .OrderByDescending(b => b.ScheduledAt);
 
@@ -135,11 +136,12 @@ public class BookingRepository(GarageDbContext context)
     }
 
     public async Task<(List<Booking> Items, int TotalCount)> GetPagedByBranchIdAsync(
-        Guid branchId, int pageNumber, int pageSize, CancellationToken ct = default)
+        Guid branchId, int pageNumber, int pageSize, BookingStatus? status = null, CancellationToken ct = default)
     {
         var query = _db.Set<Booking>()
             .AsNoTracking()
             .Where(b => b.GarageBranchId == branchId && b.DeletedAt == null)
+            .Where(b => status == null || b.Status == status)
             .Include(b => b.GarageBranch)
             .OrderByDescending(b => b.ScheduledAt);
 
@@ -153,7 +155,7 @@ public class BookingRepository(GarageDbContext context)
     }
 
     public async Task<(List<Booking> Items, int TotalCount)> GetPagedByMechanicMemberIdsAsync(
-        IReadOnlyList<Guid> mechanicMemberIds, int pageNumber, int pageSize, CancellationToken ct = default)
+        IReadOnlyList<Guid> mechanicMemberIds, int pageNumber, int pageSize, BookingStatus? status = null, CancellationToken ct = default)
     {
         if (mechanicMemberIds.Count == 0)
             return ([], 0);
@@ -164,6 +166,7 @@ public class BookingRepository(GarageDbContext context)
                 b.MechanicId.HasValue
                 && mechanicMemberIds.Contains(b.MechanicId.Value)
                 && b.DeletedAt == null)
+            .Where(b => status == null || b.Status == status)
             .Include(b => b.GarageBranch)
             .OrderByDescending(b => b.ScheduledAt);
 

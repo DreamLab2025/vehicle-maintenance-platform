@@ -1,6 +1,17 @@
+using Verendar.Common.Shared;
+using Verendar.Garage.Domain.Enums;
+
 namespace Verendar.Garage.Application.Dtos;
 
 // ── Requests ──────────────────────────────────────────────────────────────────
+
+public class GetBookingsRequest : PaginationRequest
+{
+    public bool? AssignedToMe { get; set; }
+    public Guid? BranchId { get; set; }
+    public Guid? UserId { get; set; }
+    public BookingStatus? Status { get; set; }
+}
 
 public record CreateBookingRequest
 {

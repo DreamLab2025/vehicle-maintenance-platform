@@ -26,18 +26,21 @@ public interface IBookingRepository : IGenericRepository<Booking>
         Guid userId,
         int pageNumber,
         int pageSize,
+        BookingStatus? status = null,
         CancellationToken ct = default);
 
     Task<(List<Booking> Items, int TotalCount)> GetPagedByBranchIdAsync(
         Guid branchId,
         int pageNumber,
         int pageSize,
+        BookingStatus? status = null,
         CancellationToken ct = default);
 
     Task<(List<Booking> Items, int TotalCount)> GetPagedByMechanicMemberIdsAsync(
         IReadOnlyList<Guid> mechanicMemberIds,
         int pageNumber,
         int pageSize,
+        BookingStatus? status = null,
         CancellationToken ct = default);
 
     Task<Booking?> GetByIdForAccessCheckAsync(Guid id, CancellationToken ct = default);

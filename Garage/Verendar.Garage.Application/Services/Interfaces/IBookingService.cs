@@ -1,4 +1,5 @@
 using Verendar.Garage.Application.Dtos;
+using Verendar.Garage.Domain.Enums;
 
 namespace Verendar.Garage.Application.Services.Interfaces;
 
@@ -21,6 +22,7 @@ public interface IBookingService
         bool assignedToMe,
         Guid? branchId,
         Guid? userId,
+        BookingStatus? status,
         PaginationRequest pagination,
         CancellationToken ct = default);
 

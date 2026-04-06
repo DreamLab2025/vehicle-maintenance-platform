@@ -121,10 +121,7 @@ public static class BookingApis
     }
 
     private static async Task<IResult> GetBookings(
-        [FromQuery] bool? assignedToMe,
-        [FromQuery] Guid? branchId,
-        [FromQuery] Guid? userId,
-        [AsParameters] PaginationRequest pagination,
+        [AsParameters] GetBookingsRequest request,
         ICurrentUserService currentUserService,
         IBookingService bookingService,
         CancellationToken ct)
@@ -134,7 +131,7 @@ public static class BookingApis
             return Results.Unauthorized();
 
         var result = await bookingService.GetBookingsAsync(
-            currentUserId, assignedToMe == true, branchId, userId, pagination, ct);
+            currentUserId, request.AssignedToMe == true, request.BranchId, request.UserId, request.Status, request, ct);
         return result.ToHttpResult();
     }
 

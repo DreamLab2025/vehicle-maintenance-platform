@@ -163,6 +163,7 @@ public class BookingService(
         bool assignedToMe,
         Guid? branchId,
         Guid? userId,
+        BookingStatus? status,
         PaginationRequest pagination,
         CancellationToken ct = default)
     {
@@ -175,13 +176,13 @@ public class BookingService(
                 EndpointMessages.Booking.BranchAndUserConflict);
 
         if (assignedToMe)
-            return await GetBookingsAssignedToMeAsync(currentUserId, pagination, ct);
+            return await GetBookingsAssignedToMeAsync(currentUserId, status, pagination, ct);
 
         if (branchId.HasValue)
-            return await GetBookingsByBranchIdAsync(branchId.Value, currentUserId, pagination, ct);
+            return await GetBookingsByBranchIdAsync(branchId.Value, currentUserId, status, pagination, ct);
 
         if (userId.HasValue)
-            return await GetBookingsByUserIdAsync(userId.Value, currentUserId, pagination, ct);
+            return await GetBookingsByUserIdAsync(userId.Value, currentUserId, status, pagination, ct);
 
         return ApiResponse<List<BookingListItemResponse>>.FailureResponse(
             EndpointMessages.Booking.MissingFilter);
@@ -190,6 +191,7 @@ public class BookingService(
     private async Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsByUserIdAsync(
         Guid requestedUserId,
         Guid currentUserId,
+        BookingStatus? status,
         PaginationRequest request,
         CancellationToken ct = default)
     {
@@ -203,6 +205,7 @@ public class BookingService(
             requestedUserId,
             request.PageNumber,
             request.PageSize,
+            status,
             ct);
 
         var summaries = await _unitOfWork.Bookings.GetItemsSummariesForBookingsAsync(
@@ -219,6 +222,7 @@ public class BookingService(
     private async Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsByBranchIdAsync(
         Guid branchId,
         Guid viewerId,
+        BookingStatus? status,
         PaginationRequest request,
         CancellationToken ct = default)
     {
@@ -250,6 +254,7 @@ public class BookingService(
             branchId,
             request.PageNumber,
             request.PageSize,
+            status,
             ct);
 
         var summariesB = await _unitOfWork.Bookings.GetItemsSummariesForBookingsAsync(
@@ -265,6 +270,7 @@ public class BookingService(
 
     private async Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsAssignedToMeAsync(
         Guid mechanicUserId,
+        BookingStatus? status,
         PaginationRequest request,
         CancellationToken ct = default)
     {
@@ -279,6 +285,7 @@ public class BookingService(
             memberIds,
             request.PageNumber,
             request.PageSize,
+            status,
             ct);
 
         var summariesM = await _unitOfWork.Bookings.GetItemsSummariesForBookingsAsync(
