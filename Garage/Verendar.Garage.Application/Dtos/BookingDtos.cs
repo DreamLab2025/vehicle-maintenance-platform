@@ -110,6 +110,7 @@ public record BookingVehicleSummary
     public string ModelName { get; init; } = string.Empty;
     public string BrandName { get; init; } = string.Empty;
     public string VariantColor { get; init; } = string.Empty;
+    public string? ImageUrl { get; init; }
 }
 
 // ── Booking responses ─────────────────────────────────────────────────────────

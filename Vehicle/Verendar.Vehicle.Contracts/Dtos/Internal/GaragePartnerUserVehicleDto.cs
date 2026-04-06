@@ -10,4 +10,5 @@ public record GaragePartnerUserVehicleDto
     public string ModelName { get; init; } = string.Empty;
     public string BrandName { get; init; } = string.Empty;
     public string VariantColor { get; init; } = string.Empty;
+    public string? ImageUrl { get; init; }
 }

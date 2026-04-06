@@ -52,7 +52,8 @@ public class VehicleGarageHttpClient(
                 CurrentOdometer = d.CurrentOdometer,
                 ModelName = d.ModelName,
                 BrandName = d.BrandName,
-                VariantColor = d.VariantColor
+                VariantColor = d.VariantColor,
+                ImageUrl = d.ImageUrl
             };
         }
         catch (Exception ex)

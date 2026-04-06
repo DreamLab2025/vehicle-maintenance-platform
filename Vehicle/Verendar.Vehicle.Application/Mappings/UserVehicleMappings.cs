@@ -45,7 +45,8 @@ namespace Verendar.Vehicle.Application.Mappings
                 CurrentOdometer = entity.CurrentOdometer,
                 ModelName = model?.Name ?? string.Empty,
                 BrandName = brand?.Name ?? string.Empty,
-                VariantColor = variant?.Color ?? string.Empty
+                VariantColor = variant?.Color ?? string.Empty,
+                ImageUrl = variant?.ImageUrl
             };
         }
 
