@@ -1,3 +1,4 @@
+using System.Buffers;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Json;
@@ -221,6 +222,8 @@ namespace Verendar.Common.Bootstrapping
             return builder;
         }
 
+        private static readonly SearchValues<char> HostSectionDelimiters = SearchValues.Create(['/', '?']);
+
         private static Uri BuildRabbitMqUri(string connectionString)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -309,16 +312,21 @@ namespace Verendar.Common.Bootstrapping
             }
 
             var remainder = connectionString[(schemeSeparatorIndex + 3)..];
-            var authorityEndIndex = remainder.IndexOfAny(new[] { '/', '?', '#' });
-            var authority = authorityEndIndex >= 0 ? remainder[..authorityEndIndex] : remainder;
-            var pathAndQuery = authorityEndIndex >= 0 ? remainder[authorityEndIndex..] : string.Empty;
 
-            var credentialsSeparatorIndex = authority.LastIndexOf('@');
-            if (credentialsSeparatorIndex <= 0 || credentialsSeparatorIndex == authority.Length - 1)
+            // Find the last '@' first — passwords may contain '@' or '#', so we must not split on
+            // URI special characters before we've located the credential boundary.
+            var credentialsSeparatorIndex = remainder.LastIndexOf('@');
+            if (credentialsSeparatorIndex <= 0 || credentialsSeparatorIndex == remainder.Length - 1)
                 return null;
 
-            var userInfo = authority[..credentialsSeparatorIndex];
-            var hostPort = authority[(credentialsSeparatorIndex + 1)..];
+            var userInfo = remainder[..credentialsSeparatorIndex];
+            var afterAt = remainder[(credentialsSeparatorIndex + 1)..];
+
+            // Only '/' and '?' delimit the host section; '#' is excluded because it may appear in
+            // an unescaped password that sits before the '@' we already found above.
+            var hostEndIndex = afterAt.AsSpan().IndexOfAny(HostSectionDelimiters);
+            var hostPort = hostEndIndex >= 0 ? afterAt[..hostEndIndex] : afterAt;
+            var pathAndQuery = hostEndIndex >= 0 ? afterAt[hostEndIndex..] : string.Empty;
             var passwordSeparatorIndex = userInfo.IndexOf(':');
             var username = passwordSeparatorIndex >= 0 ? userInfo[..passwordSeparatorIndex] : userInfo;
             var password = passwordSeparatorIndex >= 0 ? userInfo[(passwordSeparatorIndex + 1)..] : string.Empty;
