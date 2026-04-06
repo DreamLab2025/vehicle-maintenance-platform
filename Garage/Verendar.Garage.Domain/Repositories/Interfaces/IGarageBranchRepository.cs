@@ -1,4 +1,3 @@
-using Verendar.Garage.Domain.Entities;
 using Verendar.Garage.Domain.Models;
 
 namespace Verendar.Garage.Domain.Repositories.Interfaces;

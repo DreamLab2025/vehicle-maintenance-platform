@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Verendar.Vehicle.Infrastructure.Data;
 
 #nullable disable
 

@@ -1,5 +1,4 @@
 using MassTransit;
-using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Vehicle.Contracts.Events;
 
 namespace Verendar.Ai.Application.Consumers

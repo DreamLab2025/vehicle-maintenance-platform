@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Domain.Enums;
-using Verendar.Common.Shared;
 
 namespace Verendar.Ai.Infrastructure.ExternalServices
 {

@@ -1,5 +1,3 @@
-using Verendar.Common.Shared;
-
 namespace Verendar.Garage.Application.Dtos;
 
 public class ReferralListRequest : PaginationRequest

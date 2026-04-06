@@ -1,6 +1,3 @@
-using Verendar.Garage.Domain.ValueObjects;
-
-using Verendar.Garage.Application.Dtos.Clients;
 namespace Verendar.Garage.Application.Clients;
 
 public interface IPaymentClient

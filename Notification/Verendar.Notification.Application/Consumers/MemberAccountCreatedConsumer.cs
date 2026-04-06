@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using Verendar.Notification.Application.Constants;
 using Verendar.Notification.Application.Mapping;
 using Verendar.Notification.Application.Options;
-using Verendar.Notification.Application.Services.Interfaces;
 using Verender.Identity.Contracts.Events;
 
 namespace Verendar.Notification.Application.Consumers;

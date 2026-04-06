@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Contracts.Dtos.Internal;

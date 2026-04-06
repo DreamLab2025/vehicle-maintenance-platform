@@ -1,6 +1,5 @@
 using Verendar.Notification.Application.Dtos.InApp;
 using Verendar.Notification.Application.Mapping;
-using Verendar.Notification.Application.Services.Interfaces;
 
 namespace Verendar.Notification.Application.Consumers;
 

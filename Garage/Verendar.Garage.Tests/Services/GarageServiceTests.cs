@@ -2,11 +2,9 @@ using System.Linq.Expressions;
 using MassTransit;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using Verendar.Common.Shared;
 using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Dtos;
-using Verendar.Garage.Application.Services.Implements;
 using Verendar.Garage.Contracts.Events;
 using Verendar.Garage.Domain.Entities;
 using Verendar.Garage.Domain.Enums;
@@ -107,8 +105,11 @@ public class GarageServiceTests
     {
         var activeGarage = new GarageEntity
         {
-            Id = Guid.NewGuid(), OwnerId = Guid.NewGuid(),
-            BusinessName = "Active Garage", Slug = "active-garage", Status = GarageStatus.Active
+            Id = Guid.NewGuid(),
+            OwnerId = Guid.NewGuid(),
+            BusinessName = "Active Garage",
+            Slug = "active-garage",
+            Status = GarageStatus.Active
         };
 
         var m = new GarageUnitOfWorkMock();

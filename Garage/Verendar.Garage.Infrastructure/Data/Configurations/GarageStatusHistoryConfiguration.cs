@@ -1,6 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace Verendar.Garage.Infrastructure.Data.Configurations;
 
 public class GarageStatusHistoryConfiguration : IEntityTypeConfiguration<GarageStatusHistory>

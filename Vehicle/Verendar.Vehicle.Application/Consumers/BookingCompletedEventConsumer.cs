@@ -1,8 +1,6 @@
 using MassTransit;
 using Verendar.Garage.Contracts.Events;
-using Verendar.Vehicle.Domain.Entities;
 using Verendar.Vehicle.Domain.Enums;
-using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Consumers
 {

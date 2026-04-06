@@ -1,7 +1,6 @@
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -46,7 +45,7 @@ namespace Verendar.Common.Bootstrapping
                               .AllowAnyHeader()
                               .AllowCredentials();
                     else
-                        policy.SetIsOriginAllowed(_ => false); 
+                        policy.SetIsOriginAllowed(_ => false);
                 });
             });
 

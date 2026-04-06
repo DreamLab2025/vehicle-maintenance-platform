@@ -1,5 +1,4 @@
 using FluentValidation;
-using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Infrastructure.Clients;
 using Verendar.Garage.Application.ExternalServices;
 using Verendar.Garage.Application.Services.Implements;

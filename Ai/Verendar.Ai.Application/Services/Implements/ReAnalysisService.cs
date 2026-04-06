@@ -1,7 +1,5 @@
 using Hangfire;
-using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Jobs;
-using Verendar.Ai.Application.Services.Interfaces;
 
 namespace Verendar.Ai.Application.Services.Implements
 {

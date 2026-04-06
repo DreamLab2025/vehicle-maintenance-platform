@@ -2,7 +2,6 @@ using Verendar.Common.Stats;
 using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Interfaces;
-using Verendar.Garage.Domain.Enums;
 using Verendar.Garage.Domain.Models;
 
 namespace Verendar.Garage.Application.Services.Implements;

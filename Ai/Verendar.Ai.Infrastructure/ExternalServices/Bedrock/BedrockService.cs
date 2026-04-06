@@ -1,18 +1,15 @@
 using System.Diagnostics;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using Amazon;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Amazon.Runtime;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Domain.Enums;
 using Verendar.Ai.Infrastructure.Configuration;
-using Verendar.Common.Shared;
 
 namespace Verendar.Ai.Infrastructure.ExternalServices
 {

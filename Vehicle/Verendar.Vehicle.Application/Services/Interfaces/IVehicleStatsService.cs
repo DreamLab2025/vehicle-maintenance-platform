@@ -1,6 +1,4 @@
-using Verendar.Common.Shared;
 using Verendar.Common.Stats;
-using Verendar.Vehicle.Application.Dtos;
 
 namespace Verendar.Vehicle.Application.Services.Interfaces
 {

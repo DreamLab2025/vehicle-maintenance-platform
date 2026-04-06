@@ -1,4 +1,3 @@
-using Verendar.Location.Application.Dtos;
 using Verendar.Location.Application.ExternalServices;
 
 namespace Verendar.Location.Apis;

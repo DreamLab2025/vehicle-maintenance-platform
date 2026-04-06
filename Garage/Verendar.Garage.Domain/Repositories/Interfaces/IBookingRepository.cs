@@ -1,6 +1,4 @@
 using Verendar.Common.Stats;
-using Verendar.Garage.Domain.Entities;
-using Verendar.Garage.Domain.Enums;
 using Verendar.Garage.Domain.Models;
 
 namespace Verendar.Garage.Domain.Repositories.Interfaces;

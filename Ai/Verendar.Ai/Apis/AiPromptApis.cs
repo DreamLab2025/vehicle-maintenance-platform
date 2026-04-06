@@ -1,8 +1,5 @@
-using Verendar.Ai.Application.Dtos.AiPrompt;
-using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Ai.Domain.Enums;
 using Verendar.Common.EndpointFilters;
-using Verendar.Common.Shared;
 
 namespace Verendar.Ai.Apis;
 

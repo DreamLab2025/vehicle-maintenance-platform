@@ -1,6 +1,4 @@
 using MassTransit;
-using Microsoft.Extensions.Logging;
-using Verendar.Vehicle.Application.Clients;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Contracts.Events;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;

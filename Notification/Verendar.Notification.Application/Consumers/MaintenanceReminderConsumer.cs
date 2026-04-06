@@ -2,7 +2,6 @@ using Microsoft.Extensions.Options;
 using Verendar.Notification.Application.Constants;
 using Verendar.Notification.Application.Mapping;
 using Verendar.Notification.Application.Options;
-using Verendar.Notification.Application.Services.Interfaces;
 using Verendar.Vehicle.Contracts.Enums;
 using Verendar.Vehicle.Contracts.Events;
 

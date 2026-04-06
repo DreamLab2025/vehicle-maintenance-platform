@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Infrastructure.Seeders;

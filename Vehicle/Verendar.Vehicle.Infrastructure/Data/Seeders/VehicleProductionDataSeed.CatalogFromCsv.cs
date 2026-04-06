@@ -1,5 +1,4 @@
 using Verendar.Common.Databases.Base;
-using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Seeders;
 

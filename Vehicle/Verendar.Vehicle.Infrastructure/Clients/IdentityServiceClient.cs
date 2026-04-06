@@ -1,6 +1,5 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using Verendar.Common.Http;
 using Verendar.Common.Jwt;
 using Verendar.Vehicle.Application.Clients;

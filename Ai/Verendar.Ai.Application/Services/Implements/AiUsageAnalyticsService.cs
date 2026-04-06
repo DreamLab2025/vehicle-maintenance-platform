@@ -1,8 +1,3 @@
-using Verendar.Ai.Application.Dtos.Ai;
-using Verendar.Ai.Application.Mappings;
-using Verendar.Ai.Application.Services.Interfaces;
-using Verendar.Ai.Domain.Repositories.Interfaces;
-
 namespace Verendar.Ai.Application.Services.Implements;
 
 public class AiUsageAnalyticsService(IUnitOfWork unitOfWork) : IAiUsageAnalyticsService

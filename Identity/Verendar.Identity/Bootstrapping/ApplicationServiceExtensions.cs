@@ -5,7 +5,6 @@ using Verendar.Identity.Application.Validators;
 using Verendar.Identity.Infrastructure.Data;
 using Verendar.Identity.Infrastructure.Repositories.Implements;
 using Verendar.Identity.Application.Services.Implements;
-using Verendar.Identity.Application.Services.Interfaces;
 using Verendar.Identity.Domain.Repositories.Interfaces;
 using Verendar.ServiceDefaults;
 

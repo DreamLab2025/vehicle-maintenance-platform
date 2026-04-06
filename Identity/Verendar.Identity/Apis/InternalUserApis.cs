@@ -1,6 +1,4 @@
 using Verendar.Common.EndpointFilters;
-using Verendar.Common.Shared;
-using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Domain.Entities;
 
 namespace Verendar.Identity.Apis

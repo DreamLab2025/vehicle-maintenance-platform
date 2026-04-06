@@ -1,5 +1,3 @@
-using Verendar.Common.Databases.Interfaces;
-
 namespace Verendar.Ai.Domain.Entities;
 
 [Index(nameof(AiPromptId), nameof(VersionNumber), IsUnique = true)]

@@ -1,4 +1,3 @@
-using FluentValidation;
 using Verendar.Garage.Application.Dtos;
 
 namespace Verendar.Garage.Application.Validators;

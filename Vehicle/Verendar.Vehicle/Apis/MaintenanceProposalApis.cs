@@ -1,9 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Vehicle.Application.Validators;
 
 namespace Verendar.Vehicle.Apis
 {

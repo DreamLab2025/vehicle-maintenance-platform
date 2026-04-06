@@ -1,6 +1,3 @@
-using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
-using Verendar.Ai.Application.Dtos.VehicleService;
-
 namespace Verendar.Ai.Application.Services.Interfaces
 {
     public interface IPredictionComputationService

@@ -1,6 +1,5 @@
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Verender.Identity.Contracts.Events;
 using Verendar.Garage.Contracts.Events;
 

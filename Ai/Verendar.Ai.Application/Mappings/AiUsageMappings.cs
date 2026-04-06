@@ -1,4 +1,3 @@
-using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Domain.QueryResults;
 
 namespace Verendar.Ai.Application.Mappings;

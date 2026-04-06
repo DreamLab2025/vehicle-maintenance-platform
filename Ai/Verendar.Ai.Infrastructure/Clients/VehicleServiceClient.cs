@@ -1,6 +1,4 @@
 using System.Net.Http.Json;
-using System.Text.Json;
-using Verendar.Ai.Application.Clients;
 using Verendar.Common.Http;
 
 namespace Verendar.Ai.Infrastructure.Clients

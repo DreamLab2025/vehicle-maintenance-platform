@@ -1,6 +1,4 @@
 using Verendar.Ai.Application.Dtos.AiPrompt;
-using Verendar.Ai.Domain.Enums;
-using Verendar.Common.Shared;
 
 namespace Verendar.Ai.Application.Services.Interfaces;
 

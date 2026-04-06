@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Verendar.Ai.Domain.Entities;
 
 namespace Verendar.Ai.Infrastructure.Data.Configurations;
 

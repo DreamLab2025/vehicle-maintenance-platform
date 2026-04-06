@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace Verendar.Vehicle.Infrastructure.Seeders;
 
 public static partial class VehicleProductionDataSeed
@@ -92,23 +90,23 @@ public static partial class VehicleProductionDataSeed
     private static class QuestionnaireCatalog
     {
 
-            public sealed record OptionDef(string Key, string Label, string ValueForAi);
+        public sealed record OptionDef(string Key, string Label, string ValueForAi);
 
-            public sealed record QuestionDef(
-        string Code,
-        string GroupCode,
-        string QuestionText,
-        string AiQuestion,
-        string? Hint,
-        int DisplayOrder,
-        bool IsAskOncePerSession,
-        bool AppliesToAllPartCategories,
-        string[]? PartSlugs,
-        OptionDef[] Options);
+        public sealed record QuestionDef(
+    string Code,
+    string GroupCode,
+    string QuestionText,
+    string AiQuestion,
+    string? Hint,
+    int DisplayOrder,
+    bool IsAskOncePerSession,
+    bool AppliesToAllPartCategories,
+    string[]? PartSlugs,
+    OptionDef[] Options);
 
-            public static QuestionDef[] Questions =>
-    [
-        new("SA-1", "General",
+        public static QuestionDef[] Questions =>
+[
+    new("SA-1", "General",
             "Mỗi ngày bạn thường chạy khoảng bao nhiêu km?",
             "What is your typical daily riding distance?",
             null, 1, true, true, null,
@@ -400,7 +398,7 @@ public static partial class VehicleProductionDataSeed
                 new("opt3", "Chưa bao giờ thấy cạn", "Coolant reservoir level has never been noticed to be low"),
                 new("opt4", "Chưa bao giờ kiểm tra", "Has never checked the coolant reservoir level")
             ])
-    ];
+];
 
         public static (string Code, string Name, int DisplayOrder)[] Groups =>
         [

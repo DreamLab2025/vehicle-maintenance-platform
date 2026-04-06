@@ -1,4 +1,3 @@
-using Verendar.Common.Shared;
 using Verendar.Vehicle.Contracts.Dtos.Internal;
 
 namespace Verendar.Vehicle.Application.Services.Interfaces;

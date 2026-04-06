@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-
 namespace Verendar.Garage.Infrastructure.Repositories.Implements;
 
 public class GarageMemberRepository(GarageDbContext context)

@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Verendar.Garage.Application.Dtos.Clients;
 using Verendar.Garage.Application.ExternalServices;
