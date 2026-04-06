@@ -74,20 +74,18 @@ public class GarageMemberService(
     }
 
     public async Task<ApiResponse<List<GarageMemberResponse>>> GetMembersAsync(
-        Guid garageId,
-        Guid branchId,
+        GarageMemberQueryRequest query,
         Guid requestingUserId,
-        PaginationRequest request,
         CancellationToken ct = default)
     {
-        request.Normalize();
+        query.Normalize();
 
-        var garage = await _unitOfWork.Garages.FindOneAsync(g => g.Id == garageId && g.DeletedAt == null);
+        var garage = await _unitOfWork.Garages.FindOneAsync(g => g.Id == query.GarageId && g.DeletedAt == null);
         if (garage is null)
             return ApiResponse<List<GarageMemberResponse>>.NotFoundResponse(EndpointMessages.Member.GarageNotFound);
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(
-            b => b.Id == branchId && b.GarageId == garageId && b.DeletedAt == null);
+            b => b.Id == query.BranchId && b.GarageId == query.GarageId && b.DeletedAt == null);
         if (branch is null)
             return ApiResponse<List<GarageMemberResponse>>.NotFoundResponse(EndpointMessages.Member.BranchNotInGarage);
 
@@ -96,7 +94,7 @@ public class GarageMemberService(
         {
             var managerMembership = await _unitOfWork.Members.FindOneAsync(m =>
                 m.UserId == requestingUserId
-                && m.GarageBranchId == branchId
+                && m.GarageBranchId == query.BranchId
                 && m.Role == MemberRole.Manager
                 && m.Status == MemberStatus.Active
                 && m.DeletedAt == null);
@@ -105,17 +103,21 @@ public class GarageMemberService(
                 return ApiResponse<List<GarageMemberResponse>>.ForbiddenResponse(EndpointMessages.Member.ForbiddenListMembers);
         }
 
+        var name = query.Name;
         var (items, totalCount) = await _unitOfWork.Members.GetPagedAsync(
-            request.PageNumber,
-            request.PageSize,
-            filter: m => m.GarageBranchId == branchId && m.DeletedAt == null,
+            query.PageNumber,
+            query.PageSize,
+            filter: m => m.GarageBranchId == query.BranchId && m.DeletedAt == null
+                && (name == null || EF.Functions.ILike(m.DisplayName, $"%{name}%"))
+                && (query.Role == null || m.Role == query.Role.Value)
+                && (query.Status == null || m.Status == query.Status.Value),
             orderBy: q => q.OrderByDescending(m => m.CreatedAt));
 
         return ApiResponse<GarageMemberResponse>.SuccessPagedResponse(
-            items.Select(m => m.ToResponse(garageId)).ToList(),
+            items.Select(m => m.ToResponse(query.GarageId)).ToList(),
             totalCount,
-            request.PageNumber,
-            request.PageSize,
+            query.PageNumber,
+            query.PageSize,
             EndpointMessages.Member.ListSuccess);
     }
 

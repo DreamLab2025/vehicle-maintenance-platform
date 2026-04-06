@@ -11,10 +11,8 @@ public interface IGarageMemberService
         CancellationToken ct = default);
 
     Task<ApiResponse<List<GarageMemberResponse>>> GetMembersAsync(
-        Guid garageId,
-        Guid branchId,
+        GarageMemberQueryRequest query,
         Guid requestingUserId,
-        PaginationRequest request,
         CancellationToken ct = default);
 
     Task<ApiResponse<GarageMemberResponse>> UpdateMemberStatusAsync(

@@ -88,19 +88,12 @@ public static class GarageMemberApis
     }
 
     private static async Task<IResult> GetMembers(
-        [FromQuery] Guid garageId,
-        [FromQuery] Guid branchId,
-        [AsParameters] PaginationRequest request,
+        [AsParameters] GarageMemberQueryRequest query,
         ICurrentUserService currentUserService,
         IGarageMemberService memberService,
         CancellationToken ct)
     {
-        var result = await memberService.GetMembersAsync(
-            garageId,
-            branchId,
-            currentUserService.UserId,
-            request,
-            ct);
+        var result = await memberService.GetMembersAsync(query, currentUserService.UserId, ct);
         return result.ToHttpResult();
     }
 

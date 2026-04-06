@@ -59,6 +59,15 @@ public class GarageDetailResponse : GarageResponse
     public List<GarageBranchSummaryResponse> Branches { get; set; } = [];
 }
 
+public class GarageMemberQueryRequest : PaginationRequest
+{
+    public Guid GarageId { get; set; }
+    public Guid BranchId { get; set; }
+    public string? Name { get; set; }
+    public MemberRole? Role { get; set; }
+    public MemberStatus? Status { get; set; }
+}
+
 public class AddMemberRequest
 {
     public string FullName { get; set; } = string.Empty;
