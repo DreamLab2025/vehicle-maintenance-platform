@@ -35,6 +35,10 @@ namespace Verendar.Identity.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string[]>("ImageUrls")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasMaxLength(5000)

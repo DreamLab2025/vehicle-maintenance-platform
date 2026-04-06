@@ -22,4 +22,6 @@ public class Feedback : BaseEntity
     public string? ContactEmail { get; set; }
 
     public FeedbackStatus Status { get; set; } = FeedbackStatus.Pending;
+
+    public List<string> ImageUrls { get; set; } = [];
 }

@@ -35,5 +35,17 @@ public class CreateFeedbackRequestValidator : AbstractValidator<CreateFeedbackRe
             .EmailAddress()
             .WithMessage("Email liên hệ không hợp lệ.")
             .When(x => !string.IsNullOrEmpty(x.ContactEmail));
+
+        RuleFor(x => x.ImageUrls)
+            .Must(urls => urls == null || urls.Count <= 5)
+            .WithMessage("Chỉ được đính kèm tối đa 5 ảnh.")
+            .When(x => x.ImageUrls != null);
+
+        RuleForEach(x => x.ImageUrls)
+            .NotEmpty()
+            .WithMessage("URL ảnh không được để trống.")
+            .Must(url => Uri.TryCreate(url, UriKind.Absolute, out _))
+            .WithMessage("URL ảnh không hợp lệ.")
+            .When(x => x.ImageUrls != null);
     }
 }

@@ -11,7 +11,8 @@ public static class FeedbackMappings
         Subject = request.Subject,
         Content = request.Content,
         Rating = request.Rating,
-        ContactEmail = request.ContactEmail
+        ContactEmail = request.ContactEmail,
+        ImageUrls = request.ImageUrls ?? []
     };
 
     public static FeedbackResponse ToResponse(this Feedback feedback) => new()
@@ -23,6 +24,7 @@ public static class FeedbackMappings
         Content = feedback.Content,
         Rating = feedback.Rating,
         ContactEmail = feedback.ContactEmail,
+        ImageUrls = feedback.ImageUrls,
         Status = feedback.Status,
         CreatedAt = feedback.CreatedAt
     };

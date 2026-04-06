@@ -13,6 +13,21 @@ namespace Verendar.Identity.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Feedback>(entity =>
+            {
+                var imageUrlsComparer = new ValueComparer<List<string>>(
+                    (c1, c2) => c1!.SequenceEqual(c2!),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList());
+
+                entity.Property(e => e.ImageUrls)
+                    .HasConversion(
+                        v => v.ToArray(),
+                        v => v.ToList())
+                    .HasColumnType("text[]")
+                    .Metadata.SetValueComparer(imageUrlsComparer);
+            });
+
             modelBuilder.Entity<User>(entity =>
             {
                 var roleComparer = new ValueComparer<List<UserRole>>(

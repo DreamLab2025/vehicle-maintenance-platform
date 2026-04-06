@@ -9,6 +9,7 @@ public record CreateFeedbackRequest
     public string Content { get; init; } = null!;
     public int? Rating { get; init; }
     public string? ContactEmail { get; init; }
+    public List<string>? ImageUrls { get; init; }
 }
 
 public record UpdateFeedbackStatusRequest
@@ -25,6 +26,7 @@ public record FeedbackResponse
     public string Content { get; init; } = null!;
     public int? Rating { get; init; }
     public string? ContactEmail { get; init; }
+    public List<string> ImageUrls { get; init; } = [];
     public FeedbackStatus Status { get; init; }
     public DateTime CreatedAt { get; init; }
 }
