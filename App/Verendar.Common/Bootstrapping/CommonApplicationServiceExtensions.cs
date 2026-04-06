@@ -206,23 +206,87 @@ namespace Verendar.Common.Bootstrapping
 
         private static Uri BuildRabbitMqUri(string connectionString)
         {
-            // amqp://user:pass@host:port — passwords with special chars (@, #, %) break new Uri()
-            var match = System.Text.RegularExpressions.Regex.Match(
-                connectionString,
-                @"^(?<scheme>amqps?)://(?<user>[^:]+):(?<pass>.+)@(?<host>[^:/]+)(?::(?<port>\d+))?(?<vhost>/.*)?$"
-            );
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new UriFormatException("RabbitMQ connection string is empty.");
 
-            if (!match.Success)
-                return new Uri(connectionString);
+            var normalizedConnectionString = NormalizeConnectionString(connectionString);
 
-            var scheme = match.Groups["scheme"].Value;
-            var user = Uri.EscapeDataString(match.Groups["user"].Value);
-            var pass = Uri.EscapeDataString(match.Groups["pass"].Value);
-            var host = match.Groups["host"].Value;
-            var port = match.Groups["port"].Success ? $":{match.Groups["port"].Value}" : string.Empty;
-            var vhost = match.Groups["vhost"].Success ? match.Groups["vhost"].Value : string.Empty;
+            if (Uri.TryCreate(normalizedConnectionString, UriKind.Absolute, out var validUri) &&
+                !string.IsNullOrWhiteSpace(validUri.Host))
+            {
+                return validUri;
+            }
 
-            return new Uri($"{scheme}://{user}:{pass}@{host}{port}{vhost}");
+            var recoveredUri = TryRecoverUriFromUnescapedCredentials(normalizedConnectionString);
+            if (recoveredUri != null)
+            {
+                return recoveredUri;
+            }
+
+            throw new UriFormatException(
+                "RabbitMQ connection string is invalid. Expected format: amqp://user:password@host:port[/vhost]");
+        }
+
+        private static string NormalizeConnectionString(string connectionString)
+        {
+            var normalized = connectionString.Trim();
+
+            if (normalized.Length < 2)
+                return normalized;
+
+            var isWrappedInDoubleQuotes = normalized.StartsWith('"') && normalized.EndsWith('"');
+            var isWrappedInSingleQuotes = normalized.StartsWith('\'') && normalized.EndsWith('\'');
+
+            if (!isWrappedInDoubleQuotes && !isWrappedInSingleQuotes)
+                return normalized;
+
+            return normalized[1..^1].Trim();
+        }
+
+        private static Uri? TryRecoverUriFromUnescapedCredentials(string connectionString)
+        {
+            var schemeSeparatorIndex = connectionString.IndexOf("://", StringComparison.Ordinal);
+            if (schemeSeparatorIndex <= 0)
+                return null;
+
+            var scheme = connectionString[..schemeSeparatorIndex];
+            if (!scheme.Equals("amqp", StringComparison.OrdinalIgnoreCase) &&
+                !scheme.Equals("amqps", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            var remainder = connectionString[(schemeSeparatorIndex + 3)..];
+            var authorityEndIndex = remainder.IndexOfAny(new[] { '/', '?', '#' });
+            var authority = authorityEndIndex >= 0 ? remainder[..authorityEndIndex] : remainder;
+            var pathAndQuery = authorityEndIndex >= 0 ? remainder[authorityEndIndex..] : string.Empty;
+
+            var credentialsSeparatorIndex = authority.LastIndexOf('@');
+            if (credentialsSeparatorIndex <= 0 || credentialsSeparatorIndex == authority.Length - 1)
+                return null;
+
+            var userInfo = authority[..credentialsSeparatorIndex];
+            var hostPort = authority[(credentialsSeparatorIndex + 1)..];
+            var passwordSeparatorIndex = userInfo.IndexOf(':');
+            var username = passwordSeparatorIndex >= 0 ? userInfo[..passwordSeparatorIndex] : userInfo;
+            var password = passwordSeparatorIndex >= 0 ? userInfo[(passwordSeparatorIndex + 1)..] : string.Empty;
+
+            var escapedUsername = Uri.EscapeDataString(username);
+            var escapedPassword = string.IsNullOrEmpty(password)
+                ? string.Empty
+                : Uri.EscapeDataString(password);
+
+            var rebuiltConnectionString = string.IsNullOrEmpty(password)
+                ? $"{scheme}://{escapedUsername}@{hostPort}{pathAndQuery}"
+                : $"{scheme}://{escapedUsername}:{escapedPassword}@{hostPort}{pathAndQuery}";
+
+            if (Uri.TryCreate(rebuiltConnectionString, UriKind.Absolute, out var recoveredUri) &&
+                !string.IsNullOrWhiteSpace(recoveredUri.Host))
+            {
+                return recoveredUri;
+            }
+
+            return null;
         }
 
         public static WebApplication UseCommonService(this WebApplication app)
