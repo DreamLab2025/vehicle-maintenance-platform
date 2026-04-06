@@ -1,71 +1,108 @@
-Create detailed implementation plan for: $ARGUMENTS
-
-Flags: `--auto` · `--fast` · `--hard` · `--parallel` · `--no-tasks`
+Research and create an implementation plan for: $ARGUMENTS
 
 ---
 
-## Stage 1 — Research
+## Flags
 
-Use `/ck:scout` to locate relevant files before reading — it's faster than manual glob/grep and surfaces patterns across layers in one pass. Scout the entity, service, repository, and route handler for the affected module, then read what's relevant.
+| Flag         | Effect |
+| ------------ | ------ |
+| `--fast`     | Shallow scout, skip Steps 5–6. Best for simple CRUD. |
+| `--hard`     | Deep scout across all layers. Force Steps 5 + 6 with more detail. |
+| `--auto`     | No pauses between steps. Default. |
+| `--parallel` | Run Scout + Analyze concurrently. |
+| `--two`      | Fork at Step 3: produce Approach A + Approach B + Recommendation. |
+| `--no-tasks` | Do not emit a TodoWrite block. |
 
-**Always read:**
-- `docs/requirements/` — vision, user stories, constraints
-- `docs/architecture/` — domain model, ADRs, layer map
-- Relevant entity (Domain), service/repository (Application + Infrastructure), and route handler (Api) for the affected module
+Default (no flags): run Steps 1–4; include Steps 5–6 only when schema or auth changes are present.
 
-**`--fast`:** scout + read only direct matches — entity file, service file, route file.
-
-**`--hard`:** also read EF Core migrations, existing tests, cross-service contracts (MassTransit events, typed HTTP clients), and relevant ADRs.
-
-**`--parallel`:** scout and probe Domain + Infrastructure + Api concurrently.
-
-Service ownership:
-- Identity: User / Auth / OTP
-- Vehicle: Vehicle / Brand / Model / Variant / Type / PartCategory / PartProduct / Odometer
-- Garage: Garage / GarageBranch / Mechanic / Booking
-- Media: MediaFile · Payment: VNPay · Location: Province / Ward / District
-- Ai: Gemini / Questionnaire / Prediction · Notification: Email / SMS / SignalR
-
-Unless `--auto`, confirm key findings before continuing.
+Subcommands: `/ck:plan:archive`, `/ck:plan:validate`, `/ck:plan:red-team`
 
 ---
 
-## Stage 2 — Plan
+## Step 1 — Scout
 
-Use sequential thinking to work through the plan step by step — reason through each layer in order (Domain → Application → Infrastructure → Api), revise if a later layer reveals a conflict with an earlier decision, and branch when a genuine tradeoff requires comparing two paths before committing.
+Invoke `/ck:scout` with the feature name/keywords.
 
-#### Context
-- Service/module owner, entities and tables involved
-- Current state: what exists vs. what's missing
+Find: closest existing feature, entities/repos/services involved, naming and response shape conventions.
 
-#### API Contract
-- Route, method, request/response shape, status codes, required roles
+Also check `docs/requirements/`, `docs/architecture/`, `docs/design/`, `docs/plans/` for documented constraints or prior plans.
 
-#### Implementation Steps
-Domain → Application → Infrastructure → Api, with specific file names and the change in each.
-
-#### Validation Rules
-- Structural: FluentValidation at the request boundary
-- Business: ownership checks, permission checks, data integrity inside the service
-
-#### Edge Cases & Risks
-- What can go wrong, migration impact, permission/ownership edge cases
-
-#### Alternatives Considered
-Brief note on dismissed tradeoffs (if any).
+**`--fast`**: single targeted query, stop at first match.
+**`--hard`**: full call-chain scout (endpoint → handler → service → repo → DB config → migration).
+**`--parallel`**: launch alongside Step 2.
 
 ---
 
-## Stage 3 — Tasks
+## Step 2 — Analyze
 
-Unless `--no-tasks`, create a TodoWrite task list — one item per layer. Example:
+- **Service**: which Verendar microservice owns this? (Identity · Vehicle · Media · Notification · Ai · Garage · Payment · Location)
+- **Entities**: list each entity/table touched — read, written, or new
+- **Current state**: what exists vs. what must be added
+- **Cross-service**: does this require async events (MassTransit) or sync HTTP calls (typed client)?
+- **Assumptions**: call out anything inferred — flag explicitly
+- **Open questions**: anything that blocks design
 
-- [ ] Domain: add `X` to `Entity`
-- [ ] Infrastructure: migration `AddX`
-- [ ] Infrastructure: implement `GetXAsync` in repository
-- [ ] Application: update service + DTOs
-- [ ] Api: add `POST /x` route
+**`--hard`**: use `sequential-thinking` skill; also identify what adjacent features might break.
 
 ---
 
-Do not write implementation code — only the plan. Flag any assumption that needs confirmation.
+## Step 3 — Design
+
+**API Contract**: route, HTTP method, request/response shapes, status codes per case, required auth/roles.
+
+**Data Flow**:
+```
+Request → Validator → Handler → Service → Repository → DB
+                                        ↓
+                                   Response shape
+```
+Note async side-effects (MassTransit events, cache invalidation, media ops).
+
+**Interfaces**: new repository method signatures, new service method signatures, new/changed DTOs.
+
+**`--two`**: fork here — produce Approach A + Approach B, each with full API Contract / Data Flow / Interfaces, then add a Recommendation section.
+
+---
+
+## Step 4 — Plan
+
+Ordered, layer-by-layer steps. Each step names the exact file and what changes.
+
+```
+N. [Layer] File — what to add/change
+   Depends on: (step numbers, or "none")
+```
+
+Layer order: **Domain → Application → Infrastructure → Api**
+
+Include: new entities/fields, repo interface + impl, service method + validator, endpoint handler + route, `GlobalUsings.cs` updates, migration, MassTransit contracts/consumers if needed.
+
+**Without `--no-tasks`**: emit a TodoWrite block with each step as a task.
+
+---
+
+## Step 5 — Validate _(skip with `--fast`; mandatory with `--hard` or schema/auth changes)_
+
+- Migration safety: NOT NULL columns have defaults or are nullable
+- Auth: endpoint is properly protected; ownership checks are inside the service
+- No N+1 introduced
+- Response shape matches `ApiResponse<T>` contract
+- Pagination used for all list endpoints (except Location unbounded lists)
+
+---
+
+## Step 6 — Red-team _(skip with `--fast`; mandatory with `--hard`)_
+
+Adversarially challenge the plan. For each: state the failure mode and whether the plan mitigates it.
+
+- Permission/ownership edge cases
+- Concurrent mutation / race conditions
+- Invalid state transitions
+- Migration rollback safety
+- Missing business rule not enforced
+- Cross-service consistency (event vs. sync call tradeoffs)
+
+---
+
+Do not write implementation code — only the plan.
+Flag any assumption that needs confirmation before implementation begins.

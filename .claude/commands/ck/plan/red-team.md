@@ -1,67 +1,77 @@
-Run `/ck:plan` first (or accept a plan pasted in $ARGUMENTS), then challenge it hard.
+Run adversarial review against an existing plan or feature description: $ARGUMENTS
 
-Topic / plan to red-team: $ARGUMENTS
+This subcommand runs Step 6 (Red-team) in isolation.
+Use it when you have an existing plan and want a focused adversarial pass without redoing the full pipeline.
 
----
+`$ARGUMENTS` can be:
 
-## Red-team checklist
-
-Work through each angle systematically:
-
-1. **Wrong assumptions** — what does the plan take for granted that might not be true?
-   - Client always sends valid data?
-   - Entity always exists when referenced?
-   - External service always responds?
-
-2. **Uncovered edge cases**
-   - Soft-deleted records referenced by new queries
-   - Concurrent modifications (two users acting on the same resource simultaneously)
-   - Empty collections, null foreign keys, boundary values
-
-3. **Permission model gaps**
-   - Can a non-owner trigger this endpoint?
-   - Is the admin vs. resource-owner distinction handled?
-   - Does the plan check ownership at the right layer (service, not just route)?
-
-4. **Volume and performance risks**
-   - N+1 queries introduced by the new code path
-   - Missing indexes for new filter/sort columns
-   - Unbounded list without pagination
-
-5. **Migration hazards**
-   - Non-nullable column added to a table with existing rows (needs default or migration strategy)
-   - Column renamed or dropped that is still referenced by existing code or other migrations
-
-6. **Cross-service fragility**
-   - MassTransit consumer failure path — what happens if the consumer throws?
-   - Typed HTTP client — timeout, circuit breaker, retry policy considered?
-   - Event contract change — will existing consumers break?
-
-7. **Validation gaps**
-   - Business rules that FluentValidation cannot catch (ownership, uniqueness, state transitions)
-   - Missing service-layer guards for those rules
+- A feature name → look for `docs/plans/<slug>.md` first, fall back to the current conversation context.
+- A file path → read that file directly.
+- Empty → red-team the most recent plan in the current conversation.
 
 ---
 
-## Output — Red-Team Report
+## Red-team Process
 
-For each finding:
+For each item below, state:
 
-| #   | Area        | Finding                                | Severity | Mitigation                                          |
-| --- | ----------- | -------------------------------------- | -------- | --------------------------------------------------- |
-| 1   | Permissions | Non-owner can call DELETE endpoint     | High     | Add ownership check in service before delete        |
-| 2   | Performance | `GetAllBranchesAsync` lacks pagination | Medium   | Wrap with `PaginationRequest` + `GetPagedAsync`     |
-| 3   | Migration   | New `Rating` column is non-nullable    | High     | Set `defaultValue: 0` in migration or make nullable |
-| ... |             |                                        |          |                                                     |
+1. The **failure mode** (what breaks, for whom, under what condition).
+2. Whether the plan **mitigates** it, **partially mitigates** it, or **leaves it open**.
+3. A **suggested fix** if unmitigated (one sentence — no code).
 
-Severity:
+### Permission / Ownership
 
-- **High** — will cause bugs in production or break existing behavior
-- **Medium** — risk under certain conditions or at scale
-- **Low** — minor, acceptable to defer
+- Who can call this endpoint that the design did not intend?
+- Can a lower-privilege role reach this by crafting a valid but unauthorized request?
+- Are ownership checks inside the service, or only at the route level?
 
-## After the report
+### Concurrent Mutation
 
-Address all **High** findings by revising the plan. Present the revised plan after the report. Medium and Low findings are called out but left to the team to decide.
+- What happens if two requests modify the same record simultaneously?
+- Is there an optimistic concurrency check (row version / ETag)?
+- Is there a window where soft-delete + re-create produces a duplicate?
 
-Do not implement anything — only red-team and report.
+### Invalid State Transitions
+
+- Which entity states make this operation illegal? (e.g. closed project, archived semester)
+- Does the plan enforce these transitions, or assume the client will not attempt them?
+
+### Migration Safety
+
+- Is this a new table, new column, or logic-only change?
+- If new NOT NULL column: is there a default? Will the migration apply cleanly on prod data?
+- Is the migration reversible without data loss?
+
+### Missing Business Rules
+
+- List every constraint mentioned in `docs/requirements/` that this feature touches.
+- For each: is it enforced in the plan? If not, flag it.
+
+### Scope Creep / Over-engineering
+
+- Does any step in the plan add complexity beyond what the requirement asks?
+- Is there a simpler path that achieves the same outcome?
+
+---
+
+## Output Format
+
+```
+## Red-team Report: <Feature Name>
+
+### [Risk Category]
+**Failure mode**: ...
+**Mitigation status**: Mitigated / Partial / Open
+**Suggested fix** (if open): ...
+```
+
+End with a **Risk Summary** table:
+
+| Risk | Status                     | Priority         |
+| ---- | -------------------------- | ---------------- |
+| ...  | Open / Mitigated / Partial | High / Med / Low |
+
+---
+
+Do not rewrite the plan — only report findings.
+Flag open risks that block implementation vs. risks that can be deferred.

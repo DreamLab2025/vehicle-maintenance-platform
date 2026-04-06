@@ -8,7 +8,7 @@ Run each check and report pass/fail with a short explanation for any failure.
 ```bash
 task build
 ```
-Must complete with 0 errors, 0 warnings that would break runtime.
+Must complete with 0 errors.
 
 ### Tests
 ```bash
@@ -17,20 +17,19 @@ task test:all
 All tests must pass.
 
 ### Pending migrations
-Check if there are pending EF Core migrations for each modified service:
+Check if there are pending EF Core migrations per service:
 ```bash
-dotnet ef migrations list \
-  --project {Service}/Verendar.{Service}.Infrastructure \
-  --startup-project {Service}/Verendar.{Service}
+task migrate:list PROJECT={Service}/Verendar.{Service}.Infrastructure STARTUP={Service}/Verendar.{Service}
 ```
-Flag any migration that shows `(Pending)`. Run with `task migrate:add NAME=... PROJECT=... STARTUP=...` if needed.
+Flag any migration that shows `(Pending)`.
 
-### User Secrets / environment variables
-Verify these are set for each service in the target environment:
-- `ConnectionStrings__{ServiceDatabase}` — PostgreSQL connection string per service
-- `RabbitMQ__ConnectionString` — RabbitMQ connection string
-- `Redis__ConnectionString` — Redis (if service uses it)
-- `Jwt__SecretKey` — JWT signing key (Identity service, must be ≥ 32 chars)
+### Environment variables (`.env.prod`)
+Verify these are set:
+- `GATEWAY_PORT` — should be `80` for Cloudflare proxy
+- `JWT_BEARER_ISSUER` / `JWT_BEARER_AUDIENCE` — must be `https://api.verendar.vn`
+- `CORS_ALLOWED_ORIGINS` — frontend domains (e.g. `https://verendar.vn`)
+- Per-service DB names: `IDENTITY_SERVICE_DATABASE`, `VEHICLE_SERVICE_DATABASE`, `MEDIA_SERVICE_DATABASE`, `NOTIFICATION_SERVICE_DATABASE`, `AI_SERVICE_DATABASE`, `LOCATION_SERVICE_DATABASE`, `GARAGE_SERVICE_DATABASE`
+- DB/Redis/RabbitMQ passwords, JWT secret, Resend key, S3 credentials
 
 ### Git status
 ```bash
@@ -39,11 +38,12 @@ git log origin/main..HEAD --oneline
 ```
 No uncommitted changes. All commits pushed to remote.
 
-### Docker infrastructure
+### Docker containers (prod check via SSH)
 ```bash
-docker ps
+docker-compose -f docker-compose.prod.yml --env-file .env.prod ps
+curl -s http://localhost/health
 ```
-PostgreSQL, RabbitMQ, Redis containers must be running (or Aspire is managing them via `task run`).
+All service containers must be running; health endpoint returns `healthy`.
 
 ## Output format
 

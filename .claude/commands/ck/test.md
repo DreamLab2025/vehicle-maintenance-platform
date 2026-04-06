@@ -1,33 +1,21 @@
-Run the test suite for the Verendar backend.
+Explicitly run the test suite. Use when you need integration tests, a full suite run before commit/PR, or targeted filtering.
 
-## Default: run all tests
 ```bash
-task test:all
-```
-
-## Run a specific service's tests
-```bash
-task test PROJECT=Location/Verendar.Location.Tests
-task test PROJECT=Garage/Verendar.Garage.Tests
+task test:all                                         # all services
+task test PROJECT=Garage/Verendar.Garage.Tests        # single service
+task test PROJECT=Identity/Verendar.Identity.Tests
 task test PROJECT=Vehicle/Verendar.Vehicle.Tests
+task test PROJECT=Ai/Verendar.Ai.Tests
+task test PROJECT=Location/Verendar.Location.Tests
+task test PROJECT=Media/Verendar.Media.Tests
+task test PROJECT=Notification/Verendar.Notification.Tests
+task test PROJECT=Payment/Verendar.Payment.Tests
 ```
-
-## Run with coverage
-```bash
-task test:coverage PROJECT=Location/Verendar.Location.Tests
-```
-
-## After tests run
-
-1. If all pass — confirm count and report clean.
-2. If any fail — read the failure output carefully:
-   - Is the test assertion wrong (expected changed), or the implementation broken?
-   - Trace the failing test to the service/validator it covers
-   - Do not delete or weaken tests to make them pass
-3. If asked to fix failures, use `/fix:test` for details.
 
 ## Interpreting results
-- Test projects live at `{Service}/Verendar.{Service}.Tests/`
-- Tests use xUnit + Moq + FluentAssertions — see `.claude/skills/backend-development/references/testing.md`
-- Location service is the reference test implementation
-- If tests fail with connection errors, check Docker or Aspire infrastructure is running (`task docker:dev:up`)
+
+- **All pass** → confirm count, report clean
+- **Any fail** → read failure output: is the assertion wrong or the implementation broken? Trace to the service/validator. Do not delete or weaken tests to make them pass
+- **Build error in test project** → check `GlobalUsings.cs` — missing namespace or cross-layer import
+
+Test files mirror `{Service}/Verendar.{Service}.Application/Services/` and `Validators/` under `{Service}/Verendar.{Service}.Tests/`.

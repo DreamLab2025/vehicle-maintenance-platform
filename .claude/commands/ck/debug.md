@@ -1,20 +1,19 @@
 Investigate and fix the following issue in the Verendar backend: $ARGUMENTS
 
-## Investigation approach
-1. Reproduce the problem — what exact input triggers it, what is the actual vs expected behavior
-2. Trace the call path — from API endpoint → service → repository → DB
-3. Check authorization flow if the issue involves 401/403 (role_permissions, resource ownership)
-4. Check EF Core query if the issue involves wrong/missing data
-5. Check FluentValidation pipeline if the issue involves 400s
-6. Check external service integration if the issue involves Notification service (email/OTP via MassTransit) or Media service (file upload)
+Read the relevant code before hypothesizing — most bugs are obvious after seeing the whole picture.
 
-## Diagnosis format
-- Root cause (be specific — not "the query is wrong" but which query and why)
-- Why it went undetected (missing validation? wrong assumption? missing test?)
-- Fix
+## Diagnosis
 
-## Fix approach
-- Minimal change — don't refactor surrounding code unless it's the root cause
-- If the fix touches the domain, follow the layer rules (Domain → Application → Infrastructure → Api)
-- If the fix changes a DB query, check for N+1 risk
-- Verify permission checks are correct after fix
+- **Root cause**: specific file/line/query and why it's wrong
+- **Why undetected**: missing test? wrong assumption? hidden coupling?
+- **Fix**: minimal, scoped to root cause
+
+## Common failure patterns
+
+- **Empty or wrong data**: missing `DeletedAt == null` filter — soft-deleted records appear in queries when the global EF filter isn't configured for that entity
+- **EF tracking error**: entity loaded with `AsNoTracking()` then modified, or loaded in one scope and mutated in another
+- **Silent N+1**: navigation property accessed in a loop without `.Include()` in the query
+- **403 despite correct role**: `RequireAuthorization()` configured incorrectly on the endpoint, or JWT claims not matching expected policy
+- **Validation not running**: validator not registered in DI, or `ValidateAsync()` missing at the call site
+- **Mutation not persisted**: `IUnitOfWork.SaveChangesAsync()` not called after entity change
+- **Inter-service call failure**: typed HTTP client base URL not configured in Aspire service discovery; check `Configuration["Services:{Name}:BaseUrl"]`

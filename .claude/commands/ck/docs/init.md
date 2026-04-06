@@ -11,23 +11,27 @@ docs/
 │   ├── scope.md           — in-scope features, out-of-scope items
 │   ├── user-stories.md    — user roles and their key workflows
 │   └── constraints.md     — tech constraints, compliance, performance requirements
-└── architecture/
-    ├── domain-model.md    — aggregates, entities, value objects per service
-    ├── layers.md          — CA layer responsibilities and dependency rules
-    ├── integrations.md    — service-to-service communication (MassTransit events, HTTP clients)
-    └── decisions/         — ADRs (Architecture Decision Records)
-        └── adr-001-template.md
+├── architecture/
+│   ├── domain-model.md    — aggregates, entities, value objects per service
+│   ├── layers.md          — CA layer responsibilities and dependency rules
+│   ├── services.md        — inter-service communication (MassTransit events + typed HTTP clients)
+│   └── decisions/         — ADRs (Architecture Decision Records)
+│       └── adr-001-template.md
+├── design/
+│   ├── 01-identity-tables.md
+│   ├── 02-vehicle-tables.md
+│   ├── 03-garage-tables.md
+│   └── 04-payment-tables.md
+└── plans/                 — implementation plans (one file per feature)
 ```
 
 ## What to populate
 
-1. **Read** each service's `Domain/Entities/` to derive the domain model
-2. **Read** each service's Host `Apis/` to list all exposed API surfaces
+1. **Read** each `{Service}/Verendar.{Service}.Domain/Entities/` to derive the domain model per service
+2. **Read** each `{Service}/Verendar.{Service}/Apis/` to list all exposed API surfaces
 3. **Read** `CLAUDE.md` for layer rules and key architectural decisions
 4. Populate each file with what is derivable from the code — do not invent requirements
 5. Mark any section `<!-- TODO: confirm with team -->` where intent is unclear from code alone
-
-Services to cover: `Identity`, `Vehicle`, `Garage`, `Media`, `Notification`, `Payment`, `Location`, `Ai`
 
 ## ADR template (`adr-001-template.md`)
 

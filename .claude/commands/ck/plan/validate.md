@@ -1,35 +1,75 @@
-Run `/ck:plan` first (or accept a plan pasted in $ARGUMENTS), then validate each implementation step against the actual codebase.
+Run a validation pass against an existing plan or feature description: $ARGUMENTS
 
-Topic / plan to validate: $ARGUMENTS
+This subcommand runs Step 5 (Validate) in isolation.
+Use it after a plan exists and you want a focused feasibility check without redoing the full pipeline.
+
+`$ARGUMENTS` can be:
+
+- A feature name → look for `docs/plans/<slug>.md` first, fall back to current conversation context.
+- A file path → read that file directly.
+- Empty → validate the most recent plan in the current conversation.
 
 ---
 
-## What to validate
+## Validation Checks
 
-For each file named in the plan:
+Run each check and report **Pass**, **Fail**, or **Warning** with a one-line reason.
 
-1. **Existence** — does the file exist at the expected path?
-2. **Pattern conformance** — do the patterns the plan relies on already exist there? (e.g. `IRepository<T>`, `ToResponse()`, `MapGroup`, `AbstractValidator<T>`)
-3. **Schema conflicts** — does the proposed column/field conflict with the EF Core snapshot or existing migrations?
-4. **Interface contracts** — if the plan adds a method to an interface, does the interface exist and will the new signature clash?
-5. **Convention compliance** — does the proposed code follow project rules (soft delete, `ApiResponse<T>`, no AutoMapper, paginated lists)?
+### Migration Safety
 
-## Output — Validation Report
+- [ ] Does this plan add a NOT NULL column? If yes: does it have a default value or is it applied after a backfill?
+- [ ] Is the migration reversible without data loss?
+- [ ] Does the migration touch a high-volume table? Flag for index review.
 
-| Step | Status | Finding |
+### Auth / Ownership
+
+- [ ] Is the endpoint properly protected with `RequireAuthorization()`?
+- [ ] Is resource ownership checked inside the service (not just at the route level)?
+- [ ] Are anonymous callers explicitly blocked where required?
+
+### Query Safety
+
+- [ ] Does any new query produce an N+1 (missing `.Include()` or separate loop query)?
+- [ ] Are paginated queries using `GetPagedAsync()` with `PaginationRequest`?
+- [ ] Are any unbounded queries introduced outside the Location service?
+
+### Response Contract
+
+- [ ] Does the success response match `ApiResponse<T>` with the correct `isSuccess: true` shape?
+- [ ] Are all failure paths returning the correct failure response — no raw strings?
+- [ ] Do handlers call `.ToHttpResult()`, not `Results.Ok()` directly?
+
+### Layer Integrity
+
+- [ ] Does the plan keep `{Service}.Application/GlobalUsings.cs` free of Infrastructure namespaces?
+- [ ] Are new DTOs placed in `Application/` (not `Domain/` or host project)?
+- [ ] Does the Domain layer remain free of external package dependencies?
+
+### Cross-service
+
+- [ ] If this raises a MassTransit event: does the contract extend `BaseEvent`? Is it in a `Contracts` project?
+- [ ] If this calls another service via typed HTTP client: is the client registered in `Bootstrapping/`?
+
+---
+
+## Output Format
+
+```
+## Validation Report: <Feature Name>
+
+| Check | Result | Note |
 |---|---|---|
-| Add `X` to `Entity` | ✅ Safe | Matches existing nullable pattern |
-| Add `GetXAsync` to repo | ⚠️ Risk | Interface already has `GetXAsync` with different signature |
-| New migration | ❌ Conflict | Non-nullable column on table with existing rows |
-| ... | | |
+| NOT NULL default | Pass | Column is nullable |
+| Unbounded query | Warning | Location service — intentional, uses 24h Redis cache |
+| N+1 query | Fail | GetMembers loop missing .Include() |
+...
 
-Status key:
-- ✅ Safe — no issues found
-- ⚠️ Risk — will work but needs attention
-- ❌ Conflict — will break existing code or violate a constraint
+### Action Items
+- [Fail] Fix N+1: add `.Include()` to GetMembers query in Step 4.
+- [Warning] Confirm: is this Location service query intentionally unbounded?
+```
 
-## After the report
+---
 
-List all ⚠️ and ❌ items with a suggested fix for each. If all steps are ✅, confirm the plan is ready to implement.
-
-Do not implement anything — only validate and report.
+Do not rewrite the plan — only report findings and required action items.
+Fail items block implementation. Warnings need confirmation before proceeding.

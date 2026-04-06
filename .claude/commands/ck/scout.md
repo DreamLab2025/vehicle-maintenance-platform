@@ -1,28 +1,25 @@
 Scout the codebase to locate specific code, files, or patterns: $ARGUMENTS
 
 ## Mode
-Read-only. No edits. Fast, targeted search — not a full exploration.
+Read-only. No edits. Fast, targeted — not a full exploration.
 
 ## How to scout
 
-1. **Start with a glob** — if you know a filename pattern or directory:
+1. **Glob** for filename patterns (Verendar uses per-service folders):
    - Entities: `{Service}/Verendar.{Service}.Domain/Entities/`
    - Services: `{Service}/Verendar.{Service}.Application/Services/`
    - Endpoints: `{Service}/Verendar.{Service}/Apis/`
    - Validators: `{Service}/Verendar.{Service}.Application/Validators/`
-   - Repositories: `{Service}/Verendar.{Service}.Infrastructure/Repositories/`
+   - Repos: `{Service}/Verendar.{Service}.Infrastructure/Repositories/`
+   - Events/Contracts: `{Service}/Verendar.{Service}.Contracts/`
 
-   Services: `Identity`, `Vehicle`, `Garage`, `Media`, `Notification`, `Payment`, `Location`, `Ai`
+   Services: `Ai` · `Garage` · `Identity` · `Location` · `Media` · `Notification` · `Payment` · `Vehicle`
 
-2. **Search by keyword** — if you're looking for a class name, method, or string literal, grep for it across the service directories.
+2. **Grep** for class name, method name, or string literal across the repo root
 
-3. **Follow references** — if you find one piece, read it and trace to the next: entity → repository interface → implementation → service → endpoint.
+3. **Follow references** — entity → repo interface → impl → service → endpoint
 
 ## Output
-
-Report:
-- **Found**: file path(s) and line number(s) where the target lives
-- **Structure**: brief description of what the code does (1–2 sentences per file)
-- **Related**: other files closely related to the target (e.g. the validator for a DTO, the mapping extension for an entity)
-
-Do not suggest changes. Just report what you found and where.
+- **Found**: file path(s) and line number(s)
+- **Structure**: 1–2 sentences per file describing what it does
+- **Related**: closely related files (e.g. validator for a DTO, mapping extension for an entity)

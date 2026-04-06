@@ -1,33 +1,67 @@
-Research and create an implementation plan with two alternative approaches for: $ARGUMENTS
+Alias for `/ck:plan --two`. Run the full planning pipeline with two alternative approaches for: $ARGUMENTS
 
-Follow the same exploration steps as `/plan`, then present exactly two approaches.
+Execute `/ck:plan` with the `--two` flag applied. The pipeline is identical to the main plan command with one difference: at Step 3 (Design), fork into Approach A and Approach B instead of producing a single design.
 
-## Structure each approach as
+---
+
+## Steps 1–2 (shared)
+
+Run Scout and Analyze exactly as in `/ck:plan`. Both approaches share the same scouting context and analysis.
+
+Supports all flags from `/ck:plan`:
+
+- `--fast`, `--hard`, `--auto`, `--parallel`, `--no-tasks`
+
+---
+
+## Step 3 — Design (forked)
+
+Produce two complete design blocks.
 
 ### Approach A — [Short Name]
 
-**Summary**: One sentence description of the approach.
+**Summary**: One sentence.
 
-**Implementation steps**: Layer-by-layer breakdown (Domain → Application → Infrastructure → Api)
+**API Contract**: route, method, request/response shape, status codes, roles.
 
-**Tradeoffs**:
+**Data Flow**:
 
-- Pros: what this makes easier
-- Cons: what this complicates or costs
-- Best when: the condition under which this approach is preferable
+```
+Request → Validator → Handler → Service → Repository → DB
+```
+
+**Interfaces / Contracts**: new repository methods, service methods, DTOs.
 
 ---
 
 ### Approach B — [Short Name]
 
-(same structure)
+_(same structure as Approach A)_
+
+---
+
+## Steps 4–6 (per approach)
+
+For each approach, produce its own:
+
+- **Plan** (Step 4): ordered implementation steps with `Depends on:` annotations.
+- **Validate** (Step 5): if schema or auth changes are present.
+- **Red-team** (Step 6): if `--hard` or mandatory risks exist.
+
+Keep steps clearly scoped to their approach (prefix with `A.` or `B.`).
 
 ---
 
 ## Recommendation
 
-State which approach you recommend and why, given the current codebase state and project constraints (RBAC model, soft delete, EF Core patterns in use).
+State which approach you recommend and why, given:
 
-If the choice depends on something only the team knows (e.g. expected query volume, future extensibility plans), name that dependency explicitly instead of guessing.
+- Current codebase conventions (EF Core patterns, RBAC model, soft delete)
+- Scout findings
+
+If the decision depends on something only the team knows (query volume, extensibility plans, undocumented policy), **name that dependency explicitly** — do not guess.
+
+---
 
 Do not write implementation code — only the plan.
+Flag any assumption that needs confirmation before implementation begins.

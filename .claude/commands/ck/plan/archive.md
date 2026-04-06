@@ -1,42 +1,36 @@
-Run `/ck:plan` first (or accept a plan pasted in $ARGUMENTS), then save it to docs.
+Save the current plan to the docs archive: $ARGUMENTS
 
-Topic / plan to archive: $ARGUMENTS
+This subcommand runs AFTER a plan has already been produced in the conversation.
+It does NOT re-run the planning pipeline — it only persists the plan output.
 
 ---
 
-Save the finalized plan to:
+## Behavior
 
-```
-docs/plans/<kebab-case-topic>-plan.md
-```
+1. **Determine slug** from `$ARGUMENTS` or infer from the feature name in the plan.
+   - Slug format: lowercase, hyphen-separated (e.g. `project-member-invite`, `semester-create`).
 
-If the `docs/plans/` directory does not exist, create it first.
+2. **Resolve output path**: `docs/plans/<slug>.md`
+   - If `docs/plans/` does not exist, create it.
+   - If the file already exists, confirm with the user before overwriting.
 
-## File format
+3. **Write the plan** to that file using this header:
 
 ```markdown
-# Plan: <Topic>
-_Created: <YYYY-MM-DD>_
+---
+feature: <feature name>
+date: <today's date>
+status: draft
+---
 
-## Context
-...
+# Plan: <Feature Name>
 
-## API Contract
-...
-
-## Implementation Steps
-...
-
-## Validation Rules
-...
-
-## Edge Cases & Risks
-...
-
-## Alternatives Considered
-...
+<plan content verbatim from the conversation>
 ```
 
-Include every section from the plan. If the plan used `--two`, include both approaches and the recommendation.
+4. **Confirm** to the user: file path written, word count, status field.
 
-Confirm the save path before writing, unless the user said `--auto`.
+---
+
+Do not re-generate or summarize the plan — archive it exactly as produced.
+Do not open the file in the editor or run any build commands.

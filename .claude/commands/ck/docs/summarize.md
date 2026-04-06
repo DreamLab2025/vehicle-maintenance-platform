@@ -5,22 +5,24 @@ Summarize the Verendar codebase and create an overview document.
 Read the codebase and produce a clear summary covering:
 
 ### 1. Project purpose
-- What problem does this system solve?
-- Who are the users? (derive from role constants and API surface)
+- What problem does this system solve? (vehicle maintenance platform)
+- Who are the users? (derive from API surfaces and auth patterns)
 
-### 2. Domain model
-- List all aggregates/entities per service (`{Service}/Verendar.{Service}.Domain/Entities/`)
-- Group by service: Identity, Vehicle, Garage, Media, Notification, Payment, Location, Ai
-- Note key relationships and cross-service event contracts
+### 2. Domain model per service
+- List all aggregates/entities in each `{Service}/Verendar.{Service}.Domain/Entities/`
+- Group by service: Identity · Vehicle · Media · Notification · Ai · Garage · Payment · Location
+- Note relationships and cross-service event flows
 
 ### 3. API surface
-- List all route groups from each service's Host `Apis/` directory
-- For each group: what it manages, gateway route prefix
+- List all route groups from each `{Service}/Verendar.{Service}/Apis/`
+- For each group: what it manages, auth requirements
 
 ### 4. Key architectural decisions
-- Microservices via Aspire, each service: Domain / Application / Infrastructure / Host
-- Patterns enforced (Minimal API, FluentValidation, soft delete, `ApiResponse<T>`, MassTransit)
-- External dependencies (PostgreSQL per service, RabbitMQ, Redis, VNPay)
+- Microservices with Aspire orchestration (local) / Docker Compose (prod)
+- Clean Architecture layers per service
+- Patterns enforced: Minimal API, FluentValidation, soft delete, `ApiResponse<T>`, `PaginationRequest`
+- Inter-service: MassTransit/RabbitMQ (async) + typed HTTP clients (sync)
+- External: PostgreSQL (per-service DB), Redis, RabbitMQ, Cloudflare/EC2 (prod)
 
 ### 5. What's missing / in progress
 - TODOs in code
