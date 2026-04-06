@@ -175,7 +175,24 @@ namespace Verendar.Common.Bootstrapping
                     var rabbitMqConnectionString = builder.Configuration.GetConnectionString(Const.RabbitMQ)
                         ?? throw new ArgumentNullException(nameof(builder.Configuration), "RabbitMq connection string is empty");
 
-                    cfg.Host(BuildRabbitMqUri(rabbitMqConnectionString));
+                    var rabbitMqHostSettings = BuildRabbitMqHostSettings(rabbitMqConnectionString);
+
+                    cfg.Host(
+                        rabbitMqHostSettings.Host,
+                        rabbitMqHostSettings.Port,
+                        rabbitMqHostSettings.VirtualHost,
+                        hostConfigurator =>
+                        {
+                            if (!string.IsNullOrWhiteSpace(rabbitMqHostSettings.Username))
+                            {
+                                hostConfigurator.Username(rabbitMqHostSettings.Username);
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(rabbitMqHostSettings.Password))
+                            {
+                                hostConfigurator.Password(rabbitMqHostSettings.Password);
+                            }
+                        });
 
                     cfg.ConfigureEndpoints(context);
 
@@ -212,7 +229,8 @@ namespace Verendar.Common.Bootstrapping
             var normalizedConnectionString = NormalizeConnectionString(connectionString);
 
             if (Uri.TryCreate(normalizedConnectionString, UriKind.Absolute, out var validUri) &&
-                !string.IsNullOrWhiteSpace(validUri.Host))
+                !string.IsNullOrWhiteSpace(validUri.Host) &&
+                IsSupportedRabbitMqScheme(validUri.Scheme))
             {
                 return validUri;
             }
@@ -225,6 +243,41 @@ namespace Verendar.Common.Bootstrapping
 
             throw new UriFormatException(
                 "RabbitMQ connection string is invalid. Expected format: amqp://user:password@host:port[/vhost]");
+        }
+
+        private static RabbitMqHostSettings BuildRabbitMqHostSettings(string connectionString)
+        {
+            var uri = BuildRabbitMqUri(connectionString);
+
+            string? username = null;
+            string? password = null;
+
+            if (!string.IsNullOrWhiteSpace(uri.UserInfo))
+            {
+                var passwordSeparatorIndex = uri.UserInfo.IndexOf(':');
+                if (passwordSeparatorIndex < 0)
+                {
+                    username = Uri.UnescapeDataString(uri.UserInfo);
+                }
+                else
+                {
+                    username = Uri.UnescapeDataString(uri.UserInfo[..passwordSeparatorIndex]);
+                    password = Uri.UnescapeDataString(uri.UserInfo[(passwordSeparatorIndex + 1)..]);
+                }
+            }
+
+            var port = uri.Port <= 0 ? GetDefaultRabbitMqPort(uri.Scheme) : uri.Port;
+            if (port is < 1 or > ushort.MaxValue)
+            {
+                throw new UriFormatException($"RabbitMQ connection string contains invalid port '{uri.Port}'.");
+            }
+
+            return new RabbitMqHostSettings(
+                Host: uri.Host,
+                Port: (ushort)port,
+                VirtualHost: GetVirtualHost(uri.AbsolutePath),
+                Username: username,
+                Password: password);
         }
 
         private static string NormalizeConnectionString(string connectionString)
@@ -250,8 +303,7 @@ namespace Verendar.Common.Bootstrapping
                 return null;
 
             var scheme = connectionString[..schemeSeparatorIndex];
-            if (!scheme.Equals("amqp", StringComparison.OrdinalIgnoreCase) &&
-                !scheme.Equals("amqps", StringComparison.OrdinalIgnoreCase))
+            if (!IsSupportedRabbitMqScheme(scheme))
             {
                 return null;
             }
@@ -288,6 +340,40 @@ namespace Verendar.Common.Bootstrapping
 
             return null;
         }
+
+        private static bool IsSupportedRabbitMqScheme(string scheme)
+        {
+            return scheme.Equals("amqp", StringComparison.OrdinalIgnoreCase) ||
+                   scheme.Equals("amqps", StringComparison.OrdinalIgnoreCase) ||
+                   scheme.Equals("rabbitmq", StringComparison.OrdinalIgnoreCase) ||
+                   scheme.Equals("rabbitmqs", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static int GetDefaultRabbitMqPort(string scheme)
+        {
+            return scheme.Equals("amqps", StringComparison.OrdinalIgnoreCase) ||
+                   scheme.Equals("rabbitmqs", StringComparison.OrdinalIgnoreCase)
+                ? 5671
+                : 5672;
+        }
+
+        private static string GetVirtualHost(string absolutePath)
+        {
+            if (string.IsNullOrWhiteSpace(absolutePath) || absolutePath == "/")
+            {
+                return "/";
+            }
+
+            var virtualHost = Uri.UnescapeDataString(absolutePath.TrimStart('/'));
+            return string.IsNullOrWhiteSpace(virtualHost) ? "/" : virtualHost;
+        }
+
+        private sealed record RabbitMqHostSettings(
+            string Host,
+            ushort Port,
+            string VirtualHost,
+            string? Username,
+            string? Password);
 
         public static WebApplication UseCommonService(this WebApplication app)
         {
