@@ -96,12 +96,13 @@ namespace Verendar.Vehicle.Bootstrapping
                 });
             }
 
-            RecurringJob.AddOrUpdate<OdometerReminderJob>(
+            var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
+            recurringJobManager.AddOrUpdate<OdometerReminderJob>(
                 "odometer-reminder",
                 x => x.ExecuteAsync(CancellationToken.None),
                 "0 0 * * *");
 
-            RecurringJob.AddOrUpdate<MaintenanceReminderJob>(
+            recurringJobManager.AddOrUpdate<MaintenanceReminderJob>(
                 "maintenance-reminder-Critical",
                 x => x.ExecuteAsync(CancellationToken.None),
                 "0 0 * * *");
