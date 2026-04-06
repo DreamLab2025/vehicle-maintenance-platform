@@ -28,7 +28,7 @@ public class BookingCancelledEventConsumer(
         try
         {
             var (title, content) = GarageBookingNotificationMappings.BookingCancelledCopy(m);
-            var actionUrl = routes.UserBookingHistoryUrl(m.BookingId);
+            var actionUrl = routes.UserBookingHistoryUrl();
 
             var notification = NotificationMappings.CreateUserNotification(
                 m.CustomerUserId,
