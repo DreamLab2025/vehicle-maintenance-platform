@@ -15,12 +15,12 @@ This command invokes the **planner** agent to create a comprehensive implementat
 
 ## When to Use
 
-Use `/plan` when:
+Use `/ck:plan` when:
 
 - Starting a new feature
 - Making significant architectural changes
 - Working on complex refactoring
-- Multiple files/components will be affected
+- Multiple files/services will be affected
 - Requirements are unclear or ambiguous
 
 ## How It Works
@@ -28,89 +28,84 @@ Use `/plan` when:
 The planner agent will:
 
 1. **Analyze the request** and restate requirements in clear terms
-2. **Break down into phases** with specific, actionable steps
-3. **Identify dependencies** between components
+2. **Break down into phases** following the Verendar layer order: Domain → Infrastructure → Application → Host → Tests
+3. **Identify dependencies** between components and services
 4. **Assess risks** and potential blockers
-5. **Estimate complexity** (High/Medium/Low)
+5. **Estimate complexity** (High/Medium/High)
 6. **Present the plan** and WAIT for your explicit confirmation
 
 ## Example Usage
 
 ```
-User: /plan I need to add real-time notifications when markets resolve
+User: /ck:plan Add push notification when a booking is assigned to a mechanic
 
 Agent (planner):
-# Implementation Plan: Real-Time Market Resolution Notifications
+# Implementation Plan: Booking Assigned Push Notification
 
 ## Requirements Restatement
-- Send notifications to users when markets they're watching resolve
-- Support multiple notification channels (in-app, email, webhook)
-- Ensure notifications are delivered reliably
-- Include market outcome and user's position result
+- When a booking is assigned to a mechanic, send a push notification to the mechanic
+- Notification must include booking ID, vehicle info, and scheduled time
+- Delivered via existing Notification service
+- Triggered by BookingAssignedEvent (MassTransit/RabbitMQ)
 
 ## Implementation Phases
 
-### Phase 1: Database Schema
-- Add notifications table with columns: id, user_id, market_id, type, status, created_at
-- Add user_notification_preferences table for channel preferences
-- Create indexes on user_id and market_id for performance
+### Phase 1: Contracts
+- Ensure `BookingAssignedEvent` in `Verendar.Garage.Contracts` includes MechanicId, BookingId, VehicleInfo, ScheduledAt
+- If missing fields, add them and update the publisher
 
-### Phase 2: Notification Service
-- Create notification service in lib/notifications.ts
-- Implement notification queue using BullMQ/Redis
-- Add retry logic for failed deliveries
-- Create notification templates
+### Phase 2: Notification Consumer
+- Add consumer `BookingAssignedNotificationConsumer` in `Notification/Verendar.Notification.Infrastructure/Consumers/`
+- Consume `BookingAssignedEvent`; look up mechanic's device token via `IIdentityClient`
+- Call push notification provider (FCM/APNs) or existing `IPushService`
 
-### Phase 3: Integration Points
-- Hook into market resolution logic (when status changes to "resolved")
-- Query all users with positions in market
-- Enqueue notifications for each user
+### Phase 3: Application Service
+- Add `SendBookingAssignedNotificationAsync` to `NotificationService`
+- Build notification payload: title "Booking Assigned", body includes vehicle + time
+- Persist notification record in `Notifications` table (soft-delete compliant)
 
-### Phase 4: Frontend Components
-- Create NotificationBell component in header
-- Add NotificationList modal
-- Implement real-time updates via Supabase subscriptions
-- Add notification preferences page
+### Phase 4: Host Wiring
+- Consumer is auto-discovered — no manual registration needed
+- Verify consumer appears in Aspire dashboard under Notification service
+
+### Phase 5: Tests
+- Unit test `BookingAssignedNotificationConsumer`: mock `IIdentityClient`, mock `IPushService`
+- Verify notification record persisted on success
+- Verify no crash if mechanic device token is null (graceful skip)
 
 ## Dependencies
-- Redis (for queue)
-- Email service (SendGrid/Resend)
-- Supabase real-time subscriptions
+- `BookingAssignedEvent` must carry `MechanicId`
+- `IIdentityClient` must expose `GetDeviceTokenAsync(userId)`
+- Push service integration must already exist or be added in Phase 3
 
 ## Risks
-- HIGH: Email deliverability (SPF/DKIM required)
-- MEDIUM: Performance with 1000+ users per market
-- MEDIUM: Notification spam if markets resolve frequently
-- LOW: Real-time subscription overhead
+- HIGH: If mechanic has no device token registered, skip silently — don't fail the consumer
+- MEDIUM: `IIdentityClient` call adds latency — consider caching token per userId (Redis, TTL 1h)
+- LOW: Consumer idempotency — MassTransit retries on failure; notification must not duplicate
 
 ## Estimated Complexity: MEDIUM
-- Backend: 4-6 hours
-- Frontend: 3-4 hours
-- Testing: 2-3 hours
-- Total: 9-13 hours
 
 **WAITING FOR CONFIRMATION**: Proceed with this plan? (yes/no/modify)
 ```
 
 ## Important Notes
 
-**CRITICAL**: The planner agent will **NOT** write any code until you explicitly confirm the plan with "yes" or "proceed" or similar affirmative response.
+**CRITICAL**: The planner agent will **NOT** write any code until you explicitly confirm the plan with "yes", "proceed", or similar affirmative response.
 
 If you want changes, respond with:
 
-- "modify: [your changes]"
-- "different approach: [alternative]"
-- "skip phase 2 and do phase 3 first"
+- `"modify: [your changes]"`
+- `"different approach: [alternative]"`
+- `"skip phase 2 and do phase 3 first"`
 
 ## Integration with Other Commands
 
-After planning:
+After planning and confirming:
 
-- Use `/code-review` to review completed implementation
+- Use `/ck:cook` to implement the plan
+- Use `/ck:test` to run tests after implementation
+- Use `/ck:git:cm` to commit when done
 
-## Related Agents
+## Related Agent
 
-This command invokes the `planner` agent provided by ECC.
-
-For manual installs, the source file lives at:
-`agents/planner.md`
+This command invokes the `planner` agent defined at `.claude/agents/planner.md`.
