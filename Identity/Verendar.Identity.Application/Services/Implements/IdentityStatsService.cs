@@ -18,13 +18,8 @@ public class IdentityStatsService(IUnitOfWork unitOfWork) : IIdentityStatsServic
         var fromDt = fromDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var toDt = toDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
 
-        var userStatsTask = _unitOfWork.Stats.GetUserStatsAsync(fromDt, toDt, ct);
-        var feedbackStatsTask = _unitOfWork.Stats.GetFeedbackStatsAsync(fromDt, toDt, ct);
-
-        await Task.WhenAll(userStatsTask, feedbackStatsTask);
-
-        var u = userStatsTask.Result;
-        var f = feedbackStatsTask.Result;
+        var u = await _unitOfWork.Stats.GetUserStatsAsync(fromDt, toDt, ct);
+        var f = await _unitOfWork.Stats.GetFeedbackStatsAsync(fromDt, toDt, ct);
 
         var response = new IdentityOverviewStatsResponse(
             Users: new IdentityUserStatsSection(

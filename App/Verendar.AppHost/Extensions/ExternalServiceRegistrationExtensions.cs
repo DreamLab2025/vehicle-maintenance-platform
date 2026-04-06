@@ -66,6 +66,7 @@ namespace Verendar.AppHost.Extensions
             if (!isIsolatedTestRun)
             {
                 seq = seq.WithDataVolume();
+                seq = seq.WithEndpoint("http", endpoint => endpoint.Port = 5341);
             }
 
             var identityDb = postgres.AddDatabase("identity-db", "Identities");
