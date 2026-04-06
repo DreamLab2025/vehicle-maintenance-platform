@@ -27,6 +27,10 @@ public class AddMemberRequestValidator : AbstractValidator<AddMemberRequest>
 
         RuleFor(x => x.BranchId)
             .NotEmpty().WithMessage("BranchId không được để trống");
+
+        RuleFor(x => x.Password)
+            .MinimumLength(8).WithMessage("Mật khẩu tối thiểu 8 ký tự")
+            .When(x => !string.IsNullOrWhiteSpace(x.Password));
     }
 }
 

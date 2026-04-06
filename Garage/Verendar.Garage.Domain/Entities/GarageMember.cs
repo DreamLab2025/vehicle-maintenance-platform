@@ -22,6 +22,9 @@ public class GarageMember : BaseEntity
     [MaxLength(500)]
     public string? AvatarUrl { get; set; }
 
+    [MaxLength(256)]
+    public string? StaffPassword { get; set; }
+
     public MemberStatus Status { get; set; } = MemberStatus.Active;
 
     // Navigation

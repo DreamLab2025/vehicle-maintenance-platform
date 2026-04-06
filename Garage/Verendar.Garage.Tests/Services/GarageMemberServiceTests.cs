@@ -38,7 +38,7 @@ public class GarageMemberServiceTests
 
         var identity = new Mock<IIdentityClient>(MockBehavior.Strict);
         identity.Setup(i => i.CreateManagerUserAsync(It.IsAny<CreateMemberUserRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(createdUserId);
+            .ReturnsAsync(((Guid?)createdUserId, (string?)"Manager@123456"));
 
         var sut = new GarageMemberService(NullLogger<GarageMemberService>.Instance, m.UnitOfWork.Object, identity.Object);
 
@@ -189,7 +189,7 @@ public class GarageMemberServiceTests
 
         var identity = new Mock<IIdentityClient>(MockBehavior.Strict);
         identity.Setup(i => i.CreateMechanicUserAsync(It.IsAny<CreateMemberUserRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Guid?)null);
+            .ReturnsAsync(((Guid?)null, (string?)null));
 
         var sut = new GarageMemberService(NullLogger<GarageMemberService>.Instance, m.UnitOfWork.Object, identity.Object);
 

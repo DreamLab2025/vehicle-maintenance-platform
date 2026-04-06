@@ -22,6 +22,11 @@ namespace Verendar.Identity.Application.Validators
                 .MaximumLength(20)
                 .WithMessage("Số điện thoại tối đa 20 ký tự")
                 .When(x => x.PhoneNumber != null);
+
+            RuleFor(x => x.Password)
+                .MinimumLength(8)
+                .WithMessage("Mật khẩu tối thiểu 8 ký tự")
+                .When(x => !string.IsNullOrWhiteSpace(x.Password));
         }
     }
 }

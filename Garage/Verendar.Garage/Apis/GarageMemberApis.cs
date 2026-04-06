@@ -73,6 +73,19 @@ public static class GarageMemberApis
             .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
 
+        group.MapGet("/{memberId:guid}/password", GetMemberPassword)
+            .WithName("GetGarageMemberPassword")
+            .WithOpenApi(operation =>
+            {
+                operation.Summary = "Owner hoặc Manager xem mật khẩu thành viên";
+                return operation;
+            })
+            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner), nameof(RoleType.GarageManager)))
+            .Produces<ApiResponse<MemberPasswordResponse>>(StatusCodes.Status200OK)
+            .Produces<ApiResponse<MemberPasswordResponse>>(StatusCodes.Status403Forbidden)
+            .Produces<ApiResponse<MemberPasswordResponse>>(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status401Unauthorized);
+
         return group;
     }
 
@@ -115,6 +128,17 @@ public static class GarageMemberApis
         CancellationToken ct)
     {
         var result = await memberService.RemoveMemberAsync(id, currentUserService.UserId, ct);
+        return result.ToHttpResult();
+    }
+
+    private static async Task<IResult> GetMemberPassword(
+        [FromRoute] Guid memberId,
+        [FromQuery] Guid garageId,
+        ICurrentUserService currentUserService,
+        IGarageMemberService memberService,
+        CancellationToken ct)
+    {
+        var result = await memberService.GetMemberPasswordAsync(memberId, garageId, currentUserService.UserId, ct);
         return result.ToHttpResult();
     }
 }

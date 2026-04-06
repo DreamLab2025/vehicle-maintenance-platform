@@ -49,7 +49,7 @@ public class GarageMemberService(
         }
 
         var createUserRequest = request.ToCreateMemberUserRequest();
-        var userId = request.Role == MemberRole.Manager
+        var (userId, actualPassword) = request.Role == MemberRole.Manager
             ? await _identityClient.CreateManagerUserAsync(createUserRequest, ct)
             : await _identityClient.CreateMechanicUserAsync(createUserRequest, ct);
 
@@ -63,7 +63,7 @@ public class GarageMemberService(
         if (exists is not null)
             return ApiResponse<GarageMemberResponse>.ConflictResponse(EndpointMessages.Member.MemberAlreadyInBranch);
 
-        var member = request.ToEntity(userId.Value);
+        var member = request.ToEntity(userId.Value, actualPassword);
 
         await _unitOfWork.Members.AddAsync(member);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -197,5 +197,35 @@ public class GarageMemberService(
         await _unitOfWork.SaveChangesAsync(ct);
 
         return ApiResponse<bool>.SuccessResponse(true, EndpointMessages.Member.RemoveSuccess);
+    }
+
+    public async Task<ApiResponse<MemberPasswordResponse>> GetMemberPasswordAsync(
+        Guid memberId,
+        Guid garageId,
+        Guid callerId,
+        CancellationToken ct = default)
+    {
+        var garage = await _unitOfWork.Garages.FindOneAsync(g => g.Id == garageId && g.DeletedAt == null);
+        if (garage is null)
+            return ApiResponse<MemberPasswordResponse>.NotFoundResponse(EndpointMessages.Member.GarageNotFound);
+
+        var member = await _unitOfWork.Members.GetByIdInGarageAsync(memberId, garageId, ct);
+        if (member is null)
+            return ApiResponse<MemberPasswordResponse>.NotFoundResponse(EndpointMessages.Member.MemberNotFound);
+
+        var isOwner = garage.OwnerId == callerId;
+        if (!isOwner)
+        {
+            if (member.Role != MemberRole.Mechanic)
+                return ApiResponse<MemberPasswordResponse>.ForbiddenResponse(EndpointMessages.Member.PasswordNotVisible);
+
+            var isActiveManager = await _unitOfWork.Members.IsActiveManagerOfBranchAsync(member.GarageBranchId, callerId, ct);
+            if (!isActiveManager)
+                return ApiResponse<MemberPasswordResponse>.ForbiddenResponse(EndpointMessages.Member.PasswordNotVisible);
+        }
+
+        return ApiResponse<MemberPasswordResponse>.SuccessResponse(
+            new MemberPasswordResponse(memberId, member.StaffPassword),
+            EndpointMessages.Member.GetPasswordSuccess);
     }
 }

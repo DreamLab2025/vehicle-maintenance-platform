@@ -27,4 +27,6 @@ public interface IGarageMemberRepository : IGenericRepository<GarageMember>
         MemberRole? role = null,
         MemberStatus? status = null,
         CancellationToken ct = default);
+
+    Task<GarageMember?> GetByIdInGarageAsync(Guid memberId, Guid garageId, CancellationToken ct = default);
 }

@@ -133,6 +133,8 @@ public static class EndpointMessages
         public const string ForbiddenRemoveMember = "Bạn không thể xóa thành viên này.";
         public const string ManagerOnlyRemoveMechanic = "Quản lý chỉ có thể xóa thợ máy trong phạm vi chi nhánh của mình.";
         public const string RemoveSuccess = "Đã xóa thành viên.";
+        public const string PasswordNotVisible = "Bạn không có quyền xem mật khẩu của thành viên này.";
+        public const string GetPasswordSuccess = "Đã lấy mật khẩu thành viên.";
     }
 
     public static class ServiceCategory

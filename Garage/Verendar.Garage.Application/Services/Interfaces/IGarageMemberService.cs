@@ -25,4 +25,10 @@ public interface IGarageMemberService
         Guid memberId,
         Guid requestingUserId,
         CancellationToken ct = default);
+
+    Task<ApiResponse<MemberPasswordResponse>> GetMemberPasswordAsync(
+        Guid memberId,
+        Guid garageId,
+        Guid callerId,
+        CancellationToken ct = default);
 }

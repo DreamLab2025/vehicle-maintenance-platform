@@ -17,10 +17,10 @@ public class IdentityHttpClient(
     private readonly IServiceTokenProvider _serviceTokenProvider = serviceTokenProvider;
     private readonly ILogger<IdentityHttpClient> _logger = logger;
 
-    public Task<Guid?> CreateMechanicUserAsync(CreateMemberUserRequest request, CancellationToken ct = default) =>
+    public Task<(Guid? UserId, string? ActualPassword)> CreateMechanicUserAsync(CreateMemberUserRequest request, CancellationToken ct = default) =>
         CreateMemberAsync("/api/internal/users/mechanic", request, ct);
 
-    public Task<Guid?> CreateManagerUserAsync(CreateMemberUserRequest request, CancellationToken ct = default) =>
+    public Task<(Guid? UserId, string? ActualPassword)> CreateManagerUserAsync(CreateMemberUserRequest request, CancellationToken ct = default) =>
         CreateMemberAsync("/api/internal/users/manager", request, ct);
 
     public Task<bool> AssignRoleAsync(Guid userId, string role, CancellationToken ct = default) =>
@@ -67,7 +67,7 @@ public class IdentityHttpClient(
         }
     }
 
-    private async Task<Guid?> CreateMemberAsync(string path, CreateMemberUserRequest request, CancellationToken ct)
+    private async Task<(Guid? UserId, string? ActualPassword)> CreateMemberAsync(string path, CreateMemberUserRequest request, CancellationToken ct)
     {
         try
         {
@@ -87,25 +87,26 @@ public class IdentityHttpClient(
             {
                 _logger.LogWarning("Identity create member failed: {Path} {Status} {Body}",
                     path, response.StatusCode, content);
-                return null;
+                return (null, null);
             }
 
-            if (TryExtractUserId(content, out var userId))
-                return userId;
+            if (TryExtractCreateMemberResult(content, out var userId, out var actualPassword))
+                return (userId, actualPassword);
 
-            _logger.LogWarning("Identity create member success but cannot parse userId: {Path}", path);
-            return null;
+            _logger.LogWarning("Identity create member success but cannot parse response: {Path} Body={Body}", path, content);
+            return (null, null);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error calling identity endpoint {Path}", path);
-            return null;
+            return (null, null);
         }
     }
 
-    private static bool TryExtractUserId(string json, out Guid userId)
+    private static bool TryExtractCreateMemberResult(string json, out Guid userId, out string? actualPassword)
     {
         userId = Guid.Empty;
+        actualPassword = null;
 
         if (string.IsNullOrWhiteSpace(json))
             return false;
@@ -113,29 +114,33 @@ public class IdentityHttpClient(
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
 
-        // direct payload: { "userId": "..." }
-        if (TryReadUserId(root, out userId))
+        // direct payload: { "userId": "...", "actualPassword": "..." }
+        if (TryReadCreateMemberResult(root, out userId, out actualPassword))
             return true;
 
-        // wrapped payload: { "data": { "userId": "..." } }
-        if (root.TryGetProperty("data", out var dataElement) && TryReadUserId(dataElement, out userId))
+        // wrapped payload: { "data": { "userId": "...", "actualPassword": "..." } }
+        if (root.TryGetProperty("data", out var dataElement) && TryReadCreateMemberResult(dataElement, out userId, out actualPassword))
             return true;
 
         return false;
     }
 
-    private static bool TryReadUserId(JsonElement element, out Guid userId)
+    private static bool TryReadCreateMemberResult(JsonElement element, out Guid userId, out string? actualPassword)
     {
         userId = Guid.Empty;
+        actualPassword = null;
+
         if (!element.TryGetProperty("userId", out var userIdElement))
             return false;
 
-        if (userIdElement.ValueKind == JsonValueKind.String
-            && Guid.TryParse(userIdElement.GetString(), out userId))
-            return true;
+        if (userIdElement.ValueKind != JsonValueKind.String
+            || !Guid.TryParse(userIdElement.GetString(), out userId))
+            return false;
 
-        return userIdElement.ValueKind == JsonValueKind.String
-            ? false
-            : Guid.TryParse(userIdElement.ToString(), out userId);
+        if (element.TryGetProperty("actualPassword", out var pwElement)
+            && pwElement.ValueKind == JsonValueKind.String)
+            actualPassword = pwElement.GetString();
+
+        return true;
     }
 }

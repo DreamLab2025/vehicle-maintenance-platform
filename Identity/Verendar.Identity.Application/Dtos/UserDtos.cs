@@ -17,18 +17,20 @@ namespace Verendar.Identity.Application.Dtos
     public record CreateMechanicRequest(
         string FullName,
         string Email,
-        string? PhoneNumber
+        string? PhoneNumber,
+        string? Password = null
     );
 
-    public record CreateMechanicResponse(Guid UserId);
+    public record CreateMechanicResponse(Guid UserId, string ActualPassword);
 
     public record CreateManagerRequest(
         string FullName,
         string Email,
-        string? PhoneNumber
+        string? PhoneNumber,
+        string? Password = null
     );
 
-    public record CreateManagerResponse(Guid UserId);
+    public record CreateManagerResponse(Guid UserId, string ActualPassword);
 
     public record GarageContactResponse(string FullName, string Email, string PhoneNumber);
 

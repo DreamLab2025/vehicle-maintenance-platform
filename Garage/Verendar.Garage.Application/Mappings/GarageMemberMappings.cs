@@ -5,9 +5,9 @@ namespace Verendar.Garage.Application.Mappings;
 public static class GarageMemberMappings
 {
     public static CreateMemberUserRequest ToCreateMemberUserRequest(this AddMemberRequest request) =>
-        new(request.FullName, request.Email, request.PhoneNumber);
+        new(request.FullName, request.Email, request.PhoneNumber, request.Password);
 
-    public static GarageMember ToEntity(this AddMemberRequest request, Guid userId) =>
+    public static GarageMember ToEntity(this AddMemberRequest request, Guid userId, string? actualPassword = null) =>
         new()
         {
             UserId = userId,
@@ -16,7 +16,8 @@ public static class GarageMemberMappings
             Status = MemberStatus.Active,
             DisplayName = request.FullName,
             Email = request.Email,
-            PhoneNumber = request.PhoneNumber
+            PhoneNumber = request.PhoneNumber,
+            StaffPassword = actualPassword
         };
 
     public static GarageMemberResponse ToResponse(this GarageMember member, Guid garageId)

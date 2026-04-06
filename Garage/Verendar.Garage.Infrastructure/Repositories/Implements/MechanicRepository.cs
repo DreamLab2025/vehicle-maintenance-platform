@@ -114,4 +114,12 @@ public class GarageMemberRepository(GarageDbContext context)
 
         return (items, totalCount);
     }
+
+    public Task<GarageMember?> GetByIdInGarageAsync(Guid memberId, Guid garageId, CancellationToken ct = default) =>
+        context.GarageMembers
+            .AsNoTracking()
+            .Where(m => m.Id == memberId
+                        && m.GarageBranch.GarageId == garageId
+                        && m.DeletedAt == null)
+            .FirstOrDefaultAsync(ct);
 }

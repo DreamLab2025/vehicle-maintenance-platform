@@ -66,7 +66,9 @@ namespace Verendar.Identity.Application.Services.Implements
                 return ApiResponse<CreateMechanicResponse>.ConflictResponse("Email đã được đăng ký.");
             }
 
-            var tempPassword = "Mechanic@" + RandomNumberGenerator.GetInt32(100000, 999999);
+            var actualPassword = !string.IsNullOrWhiteSpace(request.Password)
+                ? request.Password
+                : "Mechanic@" + RandomNumberGenerator.GetInt32(100000, 999999);
 
             var user = new User
             {
@@ -82,7 +84,7 @@ namespace Verendar.Identity.Application.Services.Implements
                 RefreshTokenExpiryTime = null
             };
 
-            user.PasswordHash = _passwordHasher.HashPassword(user, tempPassword);
+            user.PasswordHash = _passwordHasher.HashPassword(user, actualPassword);
 
             await _unitOfWork.Users.AddAsync(user);
             await _unitOfWork.SaveChangesAsync();
@@ -96,7 +98,7 @@ namespace Verendar.Identity.Application.Services.Implements
                     UserId = user.Id,
                     FullName = user.FullName,
                     Email = email,
-                    TempPassword = tempPassword,
+                    TempPassword = actualPassword,
                     Role = nameof(UserRole.Mechanic)
                 });
             }
@@ -106,7 +108,7 @@ namespace Verendar.Identity.Application.Services.Implements
             }
 
             return ApiResponse<CreateMechanicResponse>.CreatedResponse(
-                new CreateMechanicResponse(user.Id),
+                new CreateMechanicResponse(user.Id, actualPassword),
                 "Tạo tài khoản mechanic thành công."
             );
         }
@@ -122,7 +124,9 @@ namespace Verendar.Identity.Application.Services.Implements
                 return ApiResponse<CreateManagerResponse>.ConflictResponse("Email đã được đăng ký.");
             }
 
-            var tempPassword = "Manager@" + RandomNumberGenerator.GetInt32(100000, 999999);
+            var actualPassword = !string.IsNullOrWhiteSpace(request.Password)
+                ? request.Password
+                : "Manager@" + RandomNumberGenerator.GetInt32(100000, 999999);
 
             var user = new User
             {
@@ -138,7 +142,7 @@ namespace Verendar.Identity.Application.Services.Implements
                 RefreshTokenExpiryTime = null
             };
 
-            user.PasswordHash = _passwordHasher.HashPassword(user, tempPassword);
+            user.PasswordHash = _passwordHasher.HashPassword(user, actualPassword);
 
             await _unitOfWork.Users.AddAsync(user);
             await _unitOfWork.SaveChangesAsync();
@@ -152,7 +156,7 @@ namespace Verendar.Identity.Application.Services.Implements
                     UserId = user.Id,
                     FullName = user.FullName,
                     Email = email,
-                    TempPassword = tempPassword,
+                    TempPassword = actualPassword,
                     Role = nameof(UserRole.GarageManager)
                 });
             }
@@ -162,7 +166,7 @@ namespace Verendar.Identity.Application.Services.Implements
             }
 
             return ApiResponse<CreateManagerResponse>.CreatedResponse(
-                new CreateManagerResponse(user.Id),
+                new CreateManagerResponse(user.Id, actualPassword),
                 "Tạo tài khoản manager thành công."
             );
         }
