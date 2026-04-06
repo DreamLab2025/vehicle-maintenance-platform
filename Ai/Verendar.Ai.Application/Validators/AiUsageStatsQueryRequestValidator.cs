@@ -1,5 +1,3 @@
-using Verendar.Ai.Application.Dtos.Ai;
-
 namespace Verendar.Ai.Application.Validators;
 
 public class AiUsageStatsQueryRequestValidator : AbstractValidator<AiUsageStatsQueryRequest>

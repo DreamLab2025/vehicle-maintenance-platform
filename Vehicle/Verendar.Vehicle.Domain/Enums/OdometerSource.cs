@@ -1,5 +1,3 @@
-using System.ComponentModel;
-
 namespace Verendar.Vehicle.Domain.Enums
 {
     public enum OdometerSource

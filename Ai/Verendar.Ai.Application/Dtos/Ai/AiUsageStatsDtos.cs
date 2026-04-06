@@ -1,5 +1,3 @@
-using Verendar.Common.Shared;
-
 namespace Verendar.Ai.Application.Dtos.Ai;
 
 public class AiUsageStatsQueryRequest : PaginationRequest

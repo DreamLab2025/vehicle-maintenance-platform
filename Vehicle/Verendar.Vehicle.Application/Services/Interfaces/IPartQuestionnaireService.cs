@@ -1,5 +1,3 @@
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Services.Interfaces
 {
     public interface IPartQuestionnaireService

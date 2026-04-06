@@ -1,5 +1,3 @@
-using Verendar.Garage.Domain.ValueObjects;
-
 namespace Verendar.Garage.Domain.Entities;
 
 [Index(nameof(BookingId))]

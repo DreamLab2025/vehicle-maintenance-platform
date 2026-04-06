@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace Verendar.Ai.Infrastructure.ExternalServices
 {
     internal static class GenerativeAiImageHttp

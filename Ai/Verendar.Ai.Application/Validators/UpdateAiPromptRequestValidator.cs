@@ -1,5 +1,4 @@
 using Verendar.Ai.Application.Dtos.AiPrompt;
-using Verendar.Ai.Domain.Enums;
 
 namespace Verendar.Ai.Application.Validators;
 

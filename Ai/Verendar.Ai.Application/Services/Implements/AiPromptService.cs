@@ -1,11 +1,5 @@
 using Verendar.Ai.Application.Dtos.AiPrompt;
-using Verendar.Ai.Application.Mappings;
-using Verendar.Ai.Application.Services.Interfaces;
-using Verendar.Ai.Domain.Entities;
-using Verendar.Ai.Domain.Enums;
-using Verendar.Ai.Domain.Repositories.Interfaces;
 using Verendar.Common.Caching;
-using Verendar.Common.Shared;
 
 namespace Verendar.Ai.Application.Services.Implements;
 

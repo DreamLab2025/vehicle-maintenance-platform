@@ -1,7 +1,6 @@
 using System.Globalization;
 using Verendar.Common.Stats;
 using Verendar.Garage.Application.Mappings;
-using Verendar.Garage.Domain.Enums;
 using Verendar.Garage.Domain.Models;
 
 namespace Verendar.Garage.Infrastructure.Repositories.Implements;

@@ -1,5 +1,3 @@
-using Verendar.Garage.Application.Dtos.Clients;
-
 namespace Verendar.Garage.Application.ExternalServices;
 
 public interface IBusinessLookupService

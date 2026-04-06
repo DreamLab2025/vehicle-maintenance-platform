@@ -1,6 +1,3 @@
-using Verendar.Common.Shared;
-using Verendar.Garage.Domain.Enums;
-
 namespace Verendar.Garage.Application.Dtos;
 
 // ── Requests ──────────────────────────────────────────────────────────────────

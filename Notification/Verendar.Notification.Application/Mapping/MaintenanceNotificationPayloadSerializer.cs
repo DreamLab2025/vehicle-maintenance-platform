@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Vehicle.Contracts.Events;
 
 namespace Verendar.Notification.Application.Mapping;

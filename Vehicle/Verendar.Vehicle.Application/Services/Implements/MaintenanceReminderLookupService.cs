@@ -1,7 +1,5 @@
-using Verendar.Common.Shared;
 using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Contracts.Dtos.Internal;
-using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Application.Services.Implements;
 

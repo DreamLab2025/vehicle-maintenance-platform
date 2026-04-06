@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Verendar.Garage.Domain.Enums;
 using Verendar.Garage.Domain.Models;
 
 namespace Verendar.Garage.Infrastructure.Repositories.Implements;

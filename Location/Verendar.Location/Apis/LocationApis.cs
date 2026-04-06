@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using Verendar.Common.Caching;
-using Verendar.Location.Application.Dtos;
 using Verendar.Location.Application.ExternalServices;
 using Verendar.Location.Application.Shared.Const;
 

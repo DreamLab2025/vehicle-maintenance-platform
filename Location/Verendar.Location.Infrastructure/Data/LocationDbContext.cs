@@ -1,7 +1,6 @@
 namespace Verendar.Location.Infrastructure.Data;
 
 using Microsoft.EntityFrameworkCore;
-using Verendar.Common.Databases.Base;
 
 public class LocationDbContext(DbContextOptions<LocationDbContext> options) : DbContext(options)
 {

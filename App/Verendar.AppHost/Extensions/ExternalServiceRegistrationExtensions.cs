@@ -1,6 +1,4 @@
-using Aspire.Hosting;
 using Microsoft.Extensions.Hosting;
-using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Yarp;
 using Scalar.Aspire;
 using Yarp.ReverseProxy.Configuration;

@@ -2,7 +2,6 @@ using FluentValidation;
 using Hangfire;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Verendar.Ai.Application.Validators;
 using Verendar.Ai.Apis;
@@ -10,16 +9,15 @@ using Verendar.Ai.Application.Clients;
 using Verendar.Ai.Application.Jobs;
 using Verendar.Ai.Application.Options;
 using Verendar.Ai.Application.Services.Implements;
-using Verendar.Ai.Application.Services.Interfaces;
 using Verendar.Common.Bootstrapping;
 using Verendar.Common.Http;
 using Verendar.Ai.Domain.Repositories.Interfaces;
 using Verendar.Ai.Infrastructure.Clients;
+using Verendar.Ai.Infrastructure.Configuration;
 using Verendar.Ai.Infrastructure.Data;
 using Verendar.Ai.Infrastructure.ExternalServices;
 using Verendar.Ai.Infrastructure.Repositories.Implements;
 using Verendar.Ai.Infrastructure.Services;
-using Verendar.Common.Shared;
 using Verendar.ServiceDefaults;
 
 namespace Verendar.Ai.Bootstrapping

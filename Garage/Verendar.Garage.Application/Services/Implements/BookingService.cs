@@ -6,7 +6,6 @@ using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;
 using Verendar.Garage.Application.Services.Interfaces;
 using Verendar.Garage.Contracts.Events;
-using Verendar.Garage.Domain.ValueObjects;
 
 namespace Verendar.Garage.Application.Services.Implements;
 

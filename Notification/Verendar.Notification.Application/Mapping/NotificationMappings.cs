@@ -1,5 +1,3 @@
-using Verendar.Notification.Application.Dtos.Notifications;
-
 namespace Verendar.Notification.Application.Mapping;
 
 public static class NotificationMappings

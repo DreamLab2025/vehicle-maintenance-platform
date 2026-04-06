@@ -1,7 +1,5 @@
 using MassTransit;
-using Microsoft.Extensions.Logging;
 using Verendar.Vehicle.Contracts.Events;
-using Verendar.Vehicle.Application.Clients;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Jobs

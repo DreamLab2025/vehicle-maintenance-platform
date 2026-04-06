@@ -1,6 +1,4 @@
 using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
-using Verendar.Garage.Domain.Enums;
 using Verendar.Garage.Domain.Models;
 using GarageEntity = global::Verendar.Garage.Domain.Entities.Garage;
 

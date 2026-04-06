@@ -1,5 +1,4 @@
 using Verendar.Garage.Application.Dtos;
-using Verendar.Garage.Domain.ValueObjects;
 
 namespace Verendar.Garage.Application.Mappings;
 

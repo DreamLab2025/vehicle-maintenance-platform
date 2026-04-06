@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Verendar.Common.Jwt;
 using Verendar.Common.Stats;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Services.Interfaces;

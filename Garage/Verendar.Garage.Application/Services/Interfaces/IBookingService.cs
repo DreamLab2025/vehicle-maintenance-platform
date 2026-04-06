@@ -1,5 +1,4 @@
 using Verendar.Garage.Application.Dtos;
-using Verendar.Garage.Domain.Enums;
 
 namespace Verendar.Garage.Application.Services.Interfaces;
 

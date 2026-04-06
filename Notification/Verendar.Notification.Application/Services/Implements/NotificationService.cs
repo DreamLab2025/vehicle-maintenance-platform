@@ -1,4 +1,3 @@
-using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Mapping;
 
 namespace Verendar.Notification.Application.Services.Implements;

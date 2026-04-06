@@ -1,7 +1,5 @@
-using Verendar.Common.Databases.Implements;
 using Verendar.Common.Databases.Interfaces;
 using Verendar.Common.Databases.UnitOfWork;
-using Verendar.Identity.Domain.Entities;
 using Verendar.Identity.Domain.Repositories.Interfaces;
 
 namespace Verendar.Identity.Infrastructure.Repositories.Implements

@@ -1,6 +1,5 @@
 using Verendar.Common.Jwt;
 using GarageEntity = global::Verendar.Garage.Domain.Entities.Garage;
-using Verendar.Garage.Domain.Entities;
 
 namespace Verendar.Garage.Infrastructure.Data;
 

@@ -1,5 +1,4 @@
 using MassTransit;
-using Microsoft.Extensions.Logging;
 using Verendar.Payment.Contracts.Events;
 
 namespace Verendar.Garage.Application.Consumers;

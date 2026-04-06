@@ -1,4 +1,3 @@
-using Verendar.Common.Databases.Base;
 using Verendar.Vehicle.Application.Dtos.Internal;
 using Verendar.Vehicle.Application.Mappings;
 using Verendar.Vehicle.Application.Services.Interfaces;

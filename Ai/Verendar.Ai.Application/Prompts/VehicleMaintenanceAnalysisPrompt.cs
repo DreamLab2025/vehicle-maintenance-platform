@@ -1,6 +1,3 @@
-using Verendar.Ai.Application.Dtos.VehicleService;
-using Verendar.Ai.Application.Services.Interfaces;
-
 namespace Verendar.Ai.Application.Prompts;
 
 public static class VehicleMaintenanceAnalysisPrompt

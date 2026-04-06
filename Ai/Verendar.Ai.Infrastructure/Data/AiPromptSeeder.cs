@@ -1,5 +1,4 @@
 using System.Reflection;
-using Verendar.Ai.Domain.Entities;
 using Verendar.Ai.Domain.Enums;
 
 namespace Verendar.Ai.Infrastructure.Data;

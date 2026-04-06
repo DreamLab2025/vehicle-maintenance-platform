@@ -1,4 +1,3 @@
-using Verendar.Ai.Application.Clients;
 using Verendar.Common.Http;
 
 namespace Verendar.Ai.Infrastructure.Clients

@@ -1,6 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Services.Interfaces;
 using Verendar.Vehicle.Contracts.Dtos.Internal;
 
 namespace Verendar.Vehicle.Apis;

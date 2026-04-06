@@ -1,5 +1,4 @@
 using Verendar.Notification.Application.Constants;
-using Verendar.Notification.Domain.Enums;
 using Verendar.Vehicle.Contracts.Enums;
 using Verendar.Vehicle.Contracts.Events;
 

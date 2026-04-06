@@ -3,7 +3,6 @@ using Verendar.Notification.Application.Constants;
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Mapping;
 using Verendar.Vehicle.Contracts.Enums;
-using NotificationEntity = Verendar.Notification.Domain.Entities.Notification;
 
 namespace Verendar.Notification.Infrastructure.Seeders;
 

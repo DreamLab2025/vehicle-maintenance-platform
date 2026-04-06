@@ -1,5 +1,3 @@
-using System.ComponentModel;
-
 namespace Verendar.Ai.Domain.Enums
 {
     public enum AiOperation

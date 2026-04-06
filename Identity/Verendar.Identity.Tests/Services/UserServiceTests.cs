@@ -2,7 +2,6 @@ using System.Linq.Expressions;
 using MassTransit;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using Verendar.Common.Shared;
 using Verendar.Identity.Application.Dtos;
 using Verendar.Identity.Application.Services.Implements;
 using Verendar.Identity.Domain.Entities;

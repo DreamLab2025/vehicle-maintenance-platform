@@ -1,4 +1,3 @@
-using MassTransit;
 using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;
 using Verendar.Garage.Application.Mappings;

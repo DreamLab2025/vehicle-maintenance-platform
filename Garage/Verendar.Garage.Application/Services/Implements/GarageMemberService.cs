@@ -1,4 +1,3 @@
-using Verendar.Common.Shared;
 using Verendar.Garage.Application.Clients;
 using Verendar.Garage.Application.Constants;
 using Verendar.Garage.Application.Dtos;

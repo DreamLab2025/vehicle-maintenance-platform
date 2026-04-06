@@ -1,4 +1,3 @@
-using Verendar.Common.Shared;
 using Verendar.Garage.Application.Dtos;
 
 namespace Verendar.Garage.Application.Services.Interfaces;

@@ -2,7 +2,6 @@ using Microsoft.Extensions.Options;
 using Verendar.Garage.Contracts.Events;
 using Verendar.Notification.Application.Mapping;
 using Verendar.Notification.Application.Options;
-using Verendar.Notification.Application.Services.Interfaces;
 
 namespace Verendar.Notification.Application.Consumers;
 

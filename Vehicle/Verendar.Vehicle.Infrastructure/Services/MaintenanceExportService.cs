@@ -4,10 +4,8 @@ using Verendar.Common.Shared;
 using CsvHelper.Configuration;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
 using Verendar.Vehicle.Application.Dtos;
 using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Vehicle.Domain.Entities;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Infrastructure.Services

@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements

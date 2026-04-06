@@ -1,4 +1,3 @@
-using Verendar.Common.Databases.Interfaces;
 using Verendar.Common.Databases.UnitOfWork;
 using Verendar.Identity.Domain.Entities;
 

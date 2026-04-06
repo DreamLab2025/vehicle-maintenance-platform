@@ -1,6 +1,4 @@
-using MassTransit;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using Verendar.Notification.Application.Hubs;
 using Verender.Identity.Contracts.Events;
 

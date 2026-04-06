@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Application.Dtos.Health;
 using Verendar.Ai.Application.Dtos.OdometerScan;
