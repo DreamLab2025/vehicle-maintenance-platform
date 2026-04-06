@@ -92,6 +92,36 @@ public static class BookingMappings
     {
         var name = item.Product?.Name ?? item.Service?.Name ?? item.Bundle?.Name ?? string.Empty;
 
+        BookingProductSummary? productDetails = null;
+        if (item.Product is not null)
+        {
+            productDetails = new BookingProductSummary
+            {
+                Id = item.Product.Id,
+                Name = item.Product.Name,
+                Description = item.Product.Description,
+                ImageUrl = item.Product.ImageUrl,
+                MaterialPrice = item.Product.MaterialPrice.Amount,
+                MaterialPriceCurrency = item.Product.MaterialPrice.Currency,
+                EstimatedDurationMinutes = item.Product.EstimatedDurationMinutes
+            };
+        }
+
+        BookingServiceSummary? serviceDetails = null;
+        if (item.Service is not null)
+        {
+            serviceDetails = new BookingServiceSummary
+            {
+                Id = item.Service.Id,
+                Name = item.Service.Name,
+                Description = item.Service.Description,
+                ImageUrl = item.Service.ImageUrl,
+                LaborPrice = item.Service.LaborPrice.Amount,
+                LaborPriceCurrency = item.Service.LaborPrice.Currency,
+                EstimatedDurationMinutes = item.Service.EstimatedDurationMinutes
+            };
+        }
+
         BookingBundleSummary? bundleDetails = null;
         if (item.Bundle is not null)
         {
@@ -125,6 +155,8 @@ public static class BookingMappings
             BookedItemAmount = item.BookedItemPrice.Amount,
             BookedItemCurrency = item.BookedItemPrice.Currency,
             SortOrder = item.SortOrder,
+            ProductDetails = productDetails,
+            ServiceDetails = serviceDetails,
             BundleDetails = bundleDetails
         };
     }

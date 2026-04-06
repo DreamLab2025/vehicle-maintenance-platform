@@ -63,7 +63,31 @@ public record BookingLineItemResponse
     public decimal BookedItemAmount { get; init; }
     public string BookedItemCurrency { get; init; } = "VND";
     public int SortOrder { get; init; }
+    public BookingProductSummary? ProductDetails { get; init; }
+    public BookingServiceSummary? ServiceDetails { get; init; }
     public BookingBundleSummary? BundleDetails { get; init; }
+}
+
+public record BookingProductSummary
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string? Description { get; init; }
+    public string? ImageUrl { get; init; }
+    public decimal MaterialPrice { get; init; }
+    public string MaterialPriceCurrency { get; init; } = "VND";
+    public int? EstimatedDurationMinutes { get; init; }
+}
+
+public record BookingServiceSummary
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string? Description { get; init; }
+    public string? ImageUrl { get; init; }
+    public decimal LaborPrice { get; init; }
+    public string LaborPriceCurrency { get; init; } = "VND";
+    public int? EstimatedDurationMinutes { get; init; }
 }
 
 public record BookingBundleSummary
