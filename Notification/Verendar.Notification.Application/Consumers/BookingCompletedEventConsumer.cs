@@ -58,5 +58,58 @@ public class BookingCompletedEventConsumer(
                 "Error processing BookingCompleted — MessageId:{MessageId} BookingId:{BookingId}",
                 messageId, message.BookingId);
         }
+
+        await NotifyStaffAsync(message, messageId, context.CancellationToken);
+    }
+
+    private async Task NotifyStaffAsync(BookingCompletedEvent message, string messageId, CancellationToken ct)
+    {
+        var (title, content) = GarageBookingNotificationMappings.BookingCompletedForStaffCopy(message);
+        var actionPath = appOptions.Value.BookingDetailRelativeUrl(message.BookingId);
+
+        if (message.OwnerUserId != Guid.Empty)
+            await TrySendStaffInAppAsync(message.OwnerUserId, title, content, message, messageId, actionPath, ct);
+
+        foreach (var managerId in message.ManagerUserIds)
+            await TrySendStaffInAppAsync(managerId, title, content, message, messageId, actionPath, ct);
+    }
+
+    private async Task TrySendStaffInAppAsync(
+        Guid staffUserId,
+        string title,
+        string content,
+        BookingCompletedEvent message,
+        string messageId,
+        string actionPath,
+        CancellationToken ct)
+    {
+        try
+        {
+            var notification = NotificationMappings.CreateUserNotification(
+                staffUserId,
+                title,
+                content,
+                NotificationPriority.Medium,
+                "Booking",
+                message.BookingId,
+                actionPath);
+
+            await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
+                unitOfWork, notification, staffUserId, ct);
+            await ConsumerNotificationFlow.PushInAppAndMarkDeliveredAsync(
+                inAppNotificationService,
+                notificationService,
+                staffUserId,
+                title,
+                content,
+                notification.Id,
+                ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Failed to notify staff {StaffUserId} for BookingCompleted — MessageId:{MessageId} BookingId:{BookingId}",
+                staffUserId, messageId, message.BookingId);
+        }
     }
 }

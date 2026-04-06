@@ -36,7 +36,7 @@ public class GarageMemberRepository(GarageDbContext context)
                  && m.DeletedAt == null,
             ct);
 
-    public async Task<(Guid Id, string DisplayName)?> GetActiveMechanicForAssignmentAsync(
+    public async Task<(Guid Id, Guid UserId, string DisplayName)?> GetActiveMechanicForAssignmentAsync(
         Guid memberId,
         Guid branchId,
         CancellationToken ct = default)
@@ -49,10 +49,10 @@ public class GarageMemberRepository(GarageDbContext context)
                 && m.Role == MemberRole.Mechanic
                 && m.Status == MemberStatus.Active
                 && m.DeletedAt == null)
-            .Select(m => new { m.Id, m.DisplayName })
+            .Select(m => new { m.Id, m.UserId, m.DisplayName })
             .FirstOrDefaultAsync(ct);
 
-        return row is null ? null : (row.Id, row.DisplayName);
+        return row is null ? null : (row.Id, row.UserId, row.DisplayName);
     }
 
     public Task<List<GarageMember>> GetActiveByGarageIdAsync(Guid garageId, CancellationToken ct = default) =>

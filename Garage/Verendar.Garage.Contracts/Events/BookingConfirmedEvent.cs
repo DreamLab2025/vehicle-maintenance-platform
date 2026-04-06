@@ -10,6 +10,7 @@ public class BookingConfirmedEvent : BaseEvent
     public Guid CustomerUserId { get; set; }
     public Guid GarageBranchId { get; set; }
     public Guid MechanicMemberId { get; set; }
+    public Guid MechanicUserId { get; set; }
     public string MechanicDisplayName { get; set; } = string.Empty;
     public string BranchName { get; set; } = string.Empty;
     public DateTime ScheduledAt { get; set; }

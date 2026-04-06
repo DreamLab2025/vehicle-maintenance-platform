@@ -6,7 +6,7 @@ public interface IGarageMemberRepository : IGenericRepository<GarageMember>
     Task<bool> IsMemberOfBranchAsync(Guid branchId, Guid userId, CancellationToken ct = default);
     Task<bool> IsActiveManagerOfBranchAsync(Guid branchId, Guid userId, CancellationToken ct = default);
 
-    Task<(Guid Id, string DisplayName)?> GetActiveMechanicForAssignmentAsync(
+    Task<(Guid Id, Guid UserId, string DisplayName)?> GetActiveMechanicForAssignmentAsync(
         Guid memberId,
         Guid branchId,
         CancellationToken ct = default);

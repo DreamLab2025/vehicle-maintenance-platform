@@ -11,6 +11,8 @@ public class BookingCompletedEvent : BaseEvent
     public Guid UserVehicleId { get; set; }
     public Guid GarageBranchId { get; set; }
     public string BranchName { get; set; } = string.Empty;
+    public Guid OwnerUserId { get; set; }
+    public List<Guid> ManagerUserIds { get; set; } = [];
     public int? CurrentOdometer { get; set; }
     public DateTime CompletedAt { get; set; }
     public decimal TotalAmount { get; set; }

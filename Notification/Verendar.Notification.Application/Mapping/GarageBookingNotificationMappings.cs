@@ -56,4 +56,19 @@ public static class GarageBookingNotificationMappings
             + "Vui lòng xác nhận và phân công thợ.";
         return (title, body);
     }
+
+    public static (string Title, string Body) BookingAssignedToMechanicCopy(BookingConfirmedEvent m)
+    {
+        var title = NotificationConstants.ConsumerCopy.BookingAssignedMechanicTitle;
+        var body = $"Bạn được phân công lịch hẹn tại {m.BranchName} vào {m.ScheduledAt:dd/MM/yyyy HH:mm} (UTC). "
+            + (string.IsNullOrWhiteSpace(m.ItemsSummary) ? "" : $"Công việc: {m.ItemsSummary}.");
+        return (title, body.Trim());
+    }
+
+    public static (string Title, string Body) BookingCompletedForStaffCopy(BookingCompletedEvent m)
+    {
+        var title = NotificationConstants.ConsumerCopy.BookingCompletedStaffTitle;
+        var body = $"Lịch hẹn tại {m.BranchName} đã hoàn tất. Mở chi tiết để xem thông tin.";
+        return (title, body);
+    }
 }

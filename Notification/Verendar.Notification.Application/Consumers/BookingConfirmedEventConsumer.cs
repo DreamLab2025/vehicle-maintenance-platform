@@ -85,5 +85,54 @@ public class BookingConfirmedEventConsumer(
                 "Error processing BookingConfirmed — MessageId:{MessageId} BookingId:{BookingId}",
                 messageId, m.BookingId);
         }
+
+        await NotifyMechanicAsync(m, messageId, context.CancellationToken);
+    }
+
+    private async Task NotifyMechanicAsync(BookingConfirmedEvent m, string messageId, CancellationToken ct)
+    {
+        if (m.MechanicUserId == Guid.Empty)
+        {
+            logger.LogWarning(
+                "BookingConfirmed — MechanicUserId missing, skipping mechanic notification. BookingId:{BookingId}",
+                m.BookingId);
+            return;
+        }
+
+        try
+        {
+            var (title, content) = GarageBookingNotificationMappings.BookingAssignedToMechanicCopy(m);
+            var actionPath = appOptions.Value.BookingDetailRelativeUrl(m.BookingId);
+
+            var notification = NotificationMappings.CreateUserNotification(
+                m.MechanicUserId,
+                title,
+                content,
+                NotificationPriority.High,
+                "Booking",
+                m.BookingId,
+                actionPath);
+
+            await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
+                unitOfWork, notification, m.MechanicUserId, ct);
+            await ConsumerNotificationFlow.PushInAppAndMarkDeliveredAsync(
+                inAppNotificationService,
+                notificationService,
+                m.MechanicUserId,
+                title,
+                content,
+                notification.Id,
+                ct);
+
+            logger.LogInformation(
+                "BookingConfirmed mechanic notified — BookingId:{BookingId} MechanicUserId:{MechanicUserId}",
+                m.BookingId, m.MechanicUserId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Failed to notify mechanic for BookingConfirmed — MessageId:{MessageId} BookingId:{BookingId}",
+                messageId, m.BookingId);
+        }
     }
 }

@@ -64,50 +64,58 @@ public class BookingCreatedConsumer(
 
     private async Task NotifyStaffAsync(BookingCreatedEvent message, string messageId, string actionPath, CancellationToken ct)
     {
-        var recipients = message.ManagerUserIds.Count > 0
-            ? message.ManagerUserIds
-            : message.OwnerUserId != Guid.Empty ? [message.OwnerUserId] : [];
+        var (title, content) = GarageBookingNotificationMappings.BookingCreatedForStaffCopy(message);
 
-        if (recipients.Count == 0)
-        {
+        // Owner always receives the notification (has visibility across all branches)
+        if (message.OwnerUserId != Guid.Empty)
+            await TrySendStaffInAppAsync(message.OwnerUserId, title, content, message, messageId, actionPath, ct);
+
+        // Each branch manager receives the notification independently
+        foreach (var managerId in message.ManagerUserIds)
+            await TrySendStaffInAppAsync(managerId, title, content, message, messageId, actionPath, ct);
+
+        if (message.OwnerUserId == Guid.Empty && message.ManagerUserIds.Count == 0)
             logger.LogWarning(
                 "BookingCreated — no staff recipient found for branch {BranchId}, BookingId: {BookingId}",
                 message.GarageBranchId, message.BookingId);
-            return;
-        }
+    }
 
-        var (title, content) = GarageBookingNotificationMappings.BookingCreatedForStaffCopy(message);
-
-        foreach (var staffUserId in recipients)
+    private async Task TrySendStaffInAppAsync(
+        Guid staffUserId,
+        string title,
+        string content,
+        BookingCreatedEvent message,
+        string messageId,
+        string actionPath,
+        CancellationToken ct)
+    {
+        try
         {
-            try
-            {
-                var notification = NotificationMappings.CreateUserNotification(
-                    staffUserId,
-                    title,
-                    content,
-                    NotificationPriority.High,
-                    "Booking",
-                    message.BookingId,
-                    actionPath);
+            var notification = NotificationMappings.CreateUserNotification(
+                staffUserId,
+                title,
+                content,
+                NotificationPriority.High,
+                "Booking",
+                message.BookingId,
+                actionPath);
 
-                await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
-                    unitOfWork, notification, staffUserId, ct);
-                await ConsumerNotificationFlow.PushInAppAndMarkDeliveredAsync(
-                    inAppNotificationService,
-                    notificationService,
-                    staffUserId,
-                    title,
-                    content,
-                    notification.Id,
-                    ct);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex,
-                    "Failed to notify staff {StaffUserId} for BookingCreated — MessageId: {MessageId}, BookingId: {BookingId}",
-                    staffUserId, messageId, message.BookingId);
-            }
+            await ConsumerNotificationFlow.PersistWithInAppDeliveryAsync(
+                unitOfWork, notification, staffUserId, ct);
+            await ConsumerNotificationFlow.PushInAppAndMarkDeliveredAsync(
+                inAppNotificationService,
+                notificationService,
+                staffUserId,
+                title,
+                content,
+                notification.Id,
+                ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Failed to notify staff {StaffUserId} for BookingCreated — MessageId: {MessageId}, BookingId: {BookingId}",
+                staffUserId, messageId, message.BookingId);
         }
     }
 }

@@ -336,6 +336,7 @@ public class BookingService(
                 CustomerUserId = booking.UserId,
                 GarageBranchId = booking.GarageBranchId,
                 MechanicMemberId = mechanic.Value.Id,
+                MechanicUserId = mechanic.Value.UserId,
                 MechanicDisplayName = mechanic.Value.DisplayName,
                 BranchName = reloaded!.GarageBranch.Name,
                 ScheduledAt = booking.ScheduledAt,
@@ -416,9 +417,11 @@ public class BookingService(
             else if (request.Status == BookingStatus.Completed)
             {
                 var lineItems = await ResolveCompletedLineItemsAsync(reloaded!, ct);
+                var completedOwnerUserId = await _unitOfWork.GarageBranches.GetGarageOwnerIdByBranchIdAsync(reloaded!.GarageBranchId, ct) ?? Guid.Empty;
+                var completedManagerUserIds = await _unitOfWork.Members.GetActiveManagerUserIdsByBranchIdAsync(reloaded.GarageBranchId, ct);
                 await _publishEndpoint.Publish(new BookingCompletedEvent
                 {
-                    BookingId = reloaded!.Id,
+                    BookingId = reloaded.Id,
                     UserId = reloaded.UserId,
                     UserVehicleId = reloaded.UserVehicleId,
                     GarageBranchId = reloaded.GarageBranchId,
@@ -426,7 +429,9 @@ public class BookingService(
                     CurrentOdometer = reloaded.CurrentOdometer,
                     CompletedAt = reloaded.CompletedAt ?? DateTime.UtcNow,
                     TotalAmount = reloaded.BookedTotalPrice.Amount,
-                    LineItems = lineItems
+                    LineItems = lineItems,
+                    OwnerUserId = completedOwnerUserId,
+                    ManagerUserIds = completedManagerUserIds
                 }, ct);
             }
         }

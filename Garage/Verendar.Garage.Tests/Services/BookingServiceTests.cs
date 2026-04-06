@@ -230,7 +230,7 @@ public class BookingServiceTests
         m.GarageBranches.Setup(r => r.GetGarageOwnerIdByBranchIdAsync(branchId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ownerId);
         m.Members.Setup(r => r.GetActiveMechanicForAssignmentAsync(mechanicMemberId, branchId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((mechanicMemberId, "Thợ A"));
+            .ReturnsAsync((mechanicMemberId, Guid.NewGuid(), "Thợ A"));
         m.Bookings.Setup(r => r.TryAssignMechanicPersistAsync(
                 bookingId,
                 mechanicMemberId,
@@ -297,7 +297,7 @@ public class BookingServiceTests
         m.GarageBranches.Setup(r => r.GetGarageOwnerIdByBranchIdAsync(branchId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(ownerId);
         m.Members.Setup(r => r.GetActiveMechanicForAssignmentAsync(mechanicMemberId, branchId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((mechanicMemberId, "Thợ A"));
+            .ReturnsAsync((mechanicMemberId, Guid.NewGuid(), "Thợ A"));
         m.Bookings.Setup(r => r.TryAssignMechanicPersistAsync(
                 bookingId,
                 mechanicMemberId,
