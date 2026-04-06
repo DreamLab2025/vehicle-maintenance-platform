@@ -1,55 +1,55 @@
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Domain.Entities;
-
 namespace Verendar.Vehicle.Application.Mappings
 {
     public static class VariantMappings
     {
-        public static VehicleVariant ToEntity(this VehicleVariantRequest request)
+        public static Variant ToEntity(this VariantRequest request)
         {
-            return new VehicleVariant
+            return new Variant
             {
                 VehicleModelId = request.VehicleModelId,
                 Color = request.Color,
                 HexCode = ColorCode.IsHex(request.HexCode) ? request.HexCode : "#000000",
-                ImageUrl = request.ImageUrl
+                ImageUrl = request.ImageUrl,
+                ImageMediaFileId = request.ImageMediaFileId
             };
         }
 
-        public static VehicleVariantResponse ToResponse(this VehicleVariant entity)
+        public static VariantResponse ToResponse(this Variant entity)
         {
-            return new VehicleVariantResponse
+            return new VariantResponse
             {
                 Id = entity.Id,
                 VehicleModelId = entity.VehicleModelId,
                 Color = entity.Color,
                 HexCode = entity.HexCode,
                 ImageUrl = entity.ImageUrl,
+                ImageMediaFileId = entity.ImageMediaFileId,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
         }
 
-        public static UserVehicleVariantResponse ToUserVehicleVariantResponse(this VehicleVariant entity)
+        public static UserVariantResponse ToUserVariantResponse(this Variant entity)
         {
-            return new UserVehicleVariantResponse
+            return new UserVariantResponse
             {
                 Id = entity.Id,
                 VehicleModelId = entity.VehicleModelId,
                 Color = entity.Color,
                 HexCode = entity.HexCode,
                 ImageUrl = entity.ImageUrl,
+                ImageMediaFileId = entity.ImageMediaFileId,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt,
                 Model = entity.VehicleModel?.ToModelResponse() ?? new ModelResponse()
             };
         }
 
-        public static void UpdateEntity(this VehicleVariant entity, VehicleVariantUpdateRequest request)
+        public static void UpdateFromRequest(this Variant entity, VariantUpdateRequest request)
         {
             entity.Color = request.Color;
             entity.ImageUrl = request.ImageUrl;
+            entity.ImageMediaFileId = request.ImageMediaFileId;
             entity.HexCode = ColorCode.IsHex(request.HexCode) ? request.HexCode : "#000000";
         }
     }

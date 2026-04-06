@@ -1,8 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(Slug), IsUnique = true)]
+    [Index(nameof(DisplayOrder))]
     public class PartCategory : BaseEntity
     {
         [Required]
@@ -11,7 +10,7 @@ namespace Verendar.Vehicle.Domain.Entities
 
         [Required]
         [MaxLength(50)]
-        public string Code { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
 
         [MaxLength(500)]
         public string? Description { get; set; }
@@ -19,9 +18,9 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(255)]
         public string? IconUrl { get; set; }
 
-        public int DisplayOrder { get; set; }
+        public Guid? IconMediaFileId { get; set; }
 
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
+        public int DisplayOrder { get; set; }
 
         public bool RequiresOdometerTracking { get; set; } = true;
 
@@ -35,9 +34,9 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(1000)]
         public string? ConsequencesIfNotHandled { get; set; }
 
-        public List<PartProduct> Products { get; set; } = [];
         public List<DefaultMaintenanceSchedule> DefaultSchedules { get; set; } = [];
-        public List<VehiclePartTracking> PartTrackings { get; set; } = [];
+        public List<PartTracking> PartTrackings { get; set; } = [];
         public List<MaintenanceRecordItem> MaintenanceItems { get; set; } = [];
+        public List<MaintenanceQuestionPartCategory> MaintenanceQuestionLinks { get; set; } = [];
     }
 }

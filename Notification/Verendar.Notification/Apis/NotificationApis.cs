@@ -1,8 +1,3 @@
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Notification.Application.Dtos.Notifications;
-using Verendar.Notification.Application.Services.Interfaces;
-
 namespace Verendar.Notification.Apis
 {
     public static class NotificationApis
@@ -17,7 +12,8 @@ namespace Verendar.Notification.Apis
                 .WithName("GetAllNotificationsForUser")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Lấy danh sách thông báo của người dùng (có phân trang)";
+                    operation.Summary =
+                        "Lấy danh sách thông báo.";
                     return operation;
                 })
                 .Produces<ApiResponse<List<NotificationListItemDto>>>(StatusCodes.Status200OK)
@@ -51,18 +47,19 @@ namespace Verendar.Notification.Apis
                     return operation;
                 })
                 .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
-                .Produces(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/{id:guid}", GetNotificationDetailForUser)
                 .WithName("GetNotificationDetailForUser")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Lấy chi tiết thông báo (kèm metadata snapshot lúc gửi)";
+                    operation.Summary =
+                        "Lấy chi tiết thông báo.";
                     return operation;
                 })
-                .Produces<ApiResponse<NotificationDetailDto>>(StatusCodes.Status200OK)
-                .Produces(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<NotificationListItemDto>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<NotificationListItemDto>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapDelete("/{id:guid}", SoftDeleteNotificationById)
@@ -73,7 +70,7 @@ namespace Verendar.Notification.Apis
                     return operation;
                 })
                 .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
-                .Produces(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return builder;
@@ -85,12 +82,11 @@ namespace Verendar.Notification.Apis
             [AsParameters] PaginationRequest request,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.GetInAppNotificationsForUserAsync(userId, request, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.BadRequest(response);
+            var response = await notificationService.GetInAppNotificationsForUserAsync(
+                currentUser.UserId,
+                request,
+                cancellationToken);
+            return response.ToHttpResult();
         }
 
         private static async Task<IResult> GetNotificationDetailForUser(
@@ -99,12 +95,11 @@ namespace Verendar.Notification.Apis
             INotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.GetNotificationDetailForUserAsync(userId, id, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.NotFound(response);
+            var response = await notificationService.GetNotificationDetailForUserAsync(
+                currentUser.UserId,
+                id,
+                cancellationToken);
+            return response.ToHttpResult();
         }
 
         private static async Task<IResult> GetNotificationStatus(
@@ -112,12 +107,8 @@ namespace Verendar.Notification.Apis
             INotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.GetStatusAsync(userId, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.BadRequest(response);
+            var response = await notificationService.GetStatusAsync(currentUser.UserId, cancellationToken);
+            return response.ToHttpResult();
         }
 
         private static async Task<IResult> MarkAllNotificationsAsRead(
@@ -125,12 +116,8 @@ namespace Verendar.Notification.Apis
             INotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.MarkAllAsReadAsync(userId, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.BadRequest(response);
+            var response = await notificationService.MarkAllAsReadAsync(currentUser.UserId, cancellationToken);
+            return response.ToHttpResult();
         }
 
         private static async Task<IResult> MarkOneNotificationAsRead(
@@ -139,12 +126,8 @@ namespace Verendar.Notification.Apis
             INotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.MarkAsReadAsync(userId, id, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.NotFound(response);
+            var response = await notificationService.MarkAsReadAsync(currentUser.UserId, id, cancellationToken);
+            return response.ToHttpResult();
         }
 
         private static async Task<IResult> SoftDeleteNotificationById(
@@ -153,12 +136,8 @@ namespace Verendar.Notification.Apis
             INotificationService notificationService,
             CancellationToken cancellationToken = default)
         {
-            var userId = currentUser.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var response = await notificationService.SoftDeleteByIdAsync(userId, id, cancellationToken);
-            return response.IsSuccess ? Results.Ok(response) : Results.NotFound(response);
+            var response = await notificationService.SoftDeleteByIdAsync(currentUser.UserId, id, cancellationToken);
+            return response.ToHttpResult();
         }
     }
 }

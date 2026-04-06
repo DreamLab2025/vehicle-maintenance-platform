@@ -1,13 +1,10 @@
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Domain.Entities;
-
 namespace Verendar.Vehicle.Application.Mappings
 {
     public static class DefaultMaintenanceScheduleMappings
     {
-        public static DefaultMaintenanceScheduleResponse ToResponse(this DefaultMaintenanceSchedule schedule)
+        public static DefaultScheduleResponse ToResponse(this DefaultMaintenanceSchedule schedule)
         {
-            return new DefaultMaintenanceScheduleResponse
+            return new DefaultScheduleResponse
             {
                 InitialKm = schedule.InitialKm,
                 KmInterval = schedule.KmInterval,
@@ -17,7 +14,7 @@ namespace Verendar.Vehicle.Application.Mappings
             };
         }
 
-        public static List<DefaultMaintenanceScheduleResponse> ToResponseList(this IEnumerable<DefaultMaintenanceSchedule> schedules)
+        public static List<DefaultScheduleResponse> ToResponseList(this IEnumerable<DefaultMaintenanceSchedule> schedules)
         {
             return schedules.Select(s => s.ToResponse()).ToList();
         }

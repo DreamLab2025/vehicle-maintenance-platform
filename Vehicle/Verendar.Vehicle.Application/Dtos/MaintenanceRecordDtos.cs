@@ -1,9 +1,9 @@
 namespace Verendar.Vehicle.Application.Dtos
 {
-    public class MaintenanceRecordItemInput
+    public class RecordItemInput
     {
-        public string PartCategoryCode { get; set; } = string.Empty;
-        public Guid? PartProductId { get; set; }
+        public string PartCategorySlug { get; set; } = string.Empty;
+        public Guid? GarageProductId { get; set; }
         public string? CustomPartName { get; set; }
         public int? CustomKmInterval { get; set; }
         public int? CustomMonthsInterval { get; set; }
@@ -13,43 +13,46 @@ namespace Verendar.Vehicle.Application.Dtos
         public bool UpdatesTracking { get; set; } = true;
     }
 
-    public class CreateMaintenanceRecordRequest
+    public class CreateRecordRequest
     {
+        public Guid UserVehicleId { get; set; }
         public DateOnly ServiceDate { get; set; }
         public int OdometerAtService { get; set; }
         public string? GarageName { get; set; }
         public decimal? TotalCost { get; set; }
         public string? Notes { get; set; }
         public string? InvoiceImageUrl { get; set; }
-        public List<MaintenanceRecordItemInput> Items { get; set; } = [];
+        public List<RecordItemInput> Items { get; set; } = [];
     }
 
-    public class CreateMaintenanceRecordItemResult
+    public class RecordItemResult
     {
         public Guid MaintenanceRecordItemId { get; set; }
-        public string PartCategoryCode { get; set; } = null!;
-        public VehiclePartTrackingSummary Tracking { get; set; } = null!;
+        public string PartCategorySlug { get; set; } = null!;
+        public PartTrackingSummary Tracking { get; set; } = null!;
     }
 
-    public class CreateMaintenanceRecordResponse
+    public class CreateRecordResponse
     {
         public Guid MaintenanceRecordId { get; set; }
-        public List<CreateMaintenanceRecordItemResult> Items { get; set; } = [];
+        public List<RecordItemResult> Items { get; set; } = [];
     }
 
 
-    public class MaintenanceRecordItemDto
+    public class RecordItemDto
     {
         public Guid Id { get; set; }
-        public string PartName { get; set; } = string.Empty;
-        public string PartCategoryCode { get; set; } = null!;
-        public Guid? PartProductId { get; set; }
+        public Guid PartCategoryId { get; set; }
+        public string PartCategorySlug { get; set; } = null!;
+        public Guid? GarageProductId { get; set; }
+        public string? CustomPartName { get; set; }
         public string? InstanceIdentifier { get; set; }
         public decimal Price { get; set; }
         public string? Notes { get; set; }
+        public bool UpdatesTracking { get; set; }
     }
 
-    public class MaintenanceRecordSummaryDto
+    public class RecordSummaryDto
     {
         public Guid Id { get; set; }
         public Guid UserVehicleId { get; set; }
@@ -62,7 +65,7 @@ namespace Verendar.Vehicle.Application.Dtos
         public int ItemCount { get; set; }
     }
 
-    public class MaintenanceRecordDetailDto
+    public class RecordDetailDto
     {
         public Guid Id { get; set; }
         public Guid UserVehicleId { get; set; }
@@ -72,6 +75,6 @@ namespace Verendar.Vehicle.Application.Dtos
         public decimal TotalCost { get; set; }
         public string? Notes { get; set; }
         public string? InvoiceImageUrl { get; set; }
-        public List<MaintenanceRecordItemDto> Items { get; set; } = [];
+        public List<RecordItemDto> Items { get; set; } = [];
     }
 }

@@ -1,15 +1,17 @@
 using FluentValidation;
 using Hangfire;
+using QuestPDF.Infrastructure;
 using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Verendar.Common.Bootstrapping;
-using Verendar.Common.Shared;
+using Verendar.Common.Http;
 using Verendar.ServiceDefaults;
 using Verendar.Vehicle.Application.Validators;
 using Verendar.Vehicle.Apis;
 using Verendar.Vehicle.Application.Services.Implements;
 using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Vehicle.Application.Clients;
+using Verendar.Vehicle.Infrastructure.Services;
+using Verendar.Vehicle.Infrastructure.Clients;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
 using Verendar.Vehicle.Infrastructure.Data;
 using Verendar.Vehicle.Infrastructure.Repositories.Implements;
@@ -21,6 +23,8 @@ namespace Verendar.Vehicle.Bootstrapping
     {
         public static IHostApplicationBuilder AddApplicationServices(this IHostApplicationBuilder builder)
         {
+            QuestPDF.Settings.License = LicenseType.Community;
+
             builder.AddServiceDefaults();
 
             builder.AddCommonService();
@@ -41,9 +45,10 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddHttpClient<IIdentityServiceClient, IdentityServiceClient>(client =>
             {
                 var baseUrl = builder.Configuration["Identity:BaseUrl"]
-                    ?? builder.Configuration["Services:Identity:BaseUrl"]
-                    ?? "https://localhost:8001";
-                client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+                    ?? builder.Configuration["Services:Identity:BaseUrl"];
+                client.BaseAddress = new Uri(string.IsNullOrEmpty(baseUrl)
+                    ? "https+http://identity-service"
+                    : baseUrl.TrimEnd('/') + "/");
                 client.Timeout = TimeSpan.FromSeconds(10);
             });
 
@@ -54,16 +59,22 @@ namespace Verendar.Vehicle.Bootstrapping
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // Register Services
-            builder.Services.AddScoped<IVehicleTypeService, VehicleTypeService>();
-            builder.Services.AddScoped<IVehicleBrandService, VehicleBrandService>();
-            builder.Services.AddScoped<IVehicleModelService, VehicleModelService>();
-            builder.Services.AddScoped<IVehicleVariantService, VehicleVariantService>();
+            builder.Services.AddScoped<ITypeService, TypeService>();
+            builder.Services.AddScoped<IBrandService, BrandService>();
+            builder.Services.AddScoped<IModelService, ModelService>();
+            builder.Services.AddScoped<IVariantService, VariantService>();
             builder.Services.AddScoped<IUserVehicleService, UserVehicleService>();
             builder.Services.AddScoped<IMaintenanceReminderService, MaintenanceReminderService>();
-            builder.Services.AddScoped<IDefaultMaintenanceScheduleService, DefaultMaintenanceScheduleService>();
+            builder.Services.AddScoped<IMaintenanceReminderLookupService, MaintenanceReminderLookupService>();
+            builder.Services.AddScoped<IOdometerHistoryService, OdometerHistoryService>();
+            builder.Services.AddScoped<IPartTrackingService, PartTrackingService>();
+            builder.Services.AddScoped<IDefaultScheduleService, DefaultScheduleService>();
             builder.Services.AddScoped<IPartCategoryService, PartCategoryService>();
-            builder.Services.AddScoped<IPartProductService, PartProductService>();
+            builder.Services.AddScoped<IPartQuestionnaireService, PartQuestionnaireService>();
             builder.Services.AddScoped<IMaintenanceRecordService, MaintenanceRecordService>();
+            builder.Services.AddScoped<IMaintenanceExportService, MaintenanceExportService>();
+            builder.Services.AddScoped<IMaintenanceProposalService, MaintenanceProposalService>();
+            builder.Services.AddScoped<IVehicleStatsService, VehicleStatsService>();
 
             // FluentValidation
             builder.Services.AddValidatorsFromAssemblyContaining<UserVehicleRequestValidator>();
@@ -75,12 +86,17 @@ namespace Verendar.Vehicle.Bootstrapping
         {
             app.MapDefaultEndpoints();
 
+            app.UseHttpsRedirection();
+
             app.UseCommonService();
 
-            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            if (app.Environment.IsDevelopment())
             {
-                Authorization = Array.Empty<IDashboardAuthorizationFilter>()
-            });
+                app.UseHangfireDashboard("/hangfire", new DashboardOptions
+                {
+                    Authorization = Array.Empty<IDashboardAuthorizationFilter>()
+                });
+            }
 
             RecurringJob.AddOrUpdate<OdometerReminderJob>(
                 "odometer-reminder",
@@ -97,17 +113,20 @@ namespace Verendar.Vehicle.Bootstrapping
                 app.MapOpenApi();
             }
 
-            app.UseHttpsRedirection();
-
             app.MapBrandApi();
             app.MapTypeApi();
             app.MapModelApi();
-            app.MapModelImageApi();
+            app.MapVariantApi();
             app.MapUserVehicleApi();
             app.MapOdometerHistoryApi();
-            app.MapDefaultMaintenanceScheduleApi();
-            app.MapPartApi();
+            app.MapModelScheduleApi();
             app.MapMaintenanceRecordApi();
+            app.MapPartCategoryApi();
+            app.MapMaintenanceProposalApi();
+            app.MapInternalVehicleApi();
+            app.MapInternalGarageVehicleApi();
+            app.MapInternalMaintenanceReminderApi();
+            app.MapVehicleStatsApi();
 
             return app;
         }

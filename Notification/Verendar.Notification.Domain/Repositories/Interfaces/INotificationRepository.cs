@@ -1,12 +1,10 @@
-using Verendar.Common.Databases.Interfaces;
-
 namespace Verendar.Notification.Domain.Repositories.Interfaces
 {
     public interface INotificationRepository : IGenericRepository<Entities.Notification>
     {
         Task<Entities.Notification?> GetByIdAndUserIdAsync(Guid id, Guid userId, CancellationToken cancellationToken = default);
 
-        Task<(List<Entities.Notification> Items, int TotalCount)> GetByUserIdWithInAppChannelPagedAsync(
+        Task<(List<Entities.Notification> Items, int TotalCount)> GetByUserIdPagedAsync(
             Guid userId,
             int pageNumber,
             int pageSize,
@@ -14,6 +12,6 @@ namespace Verendar.Notification.Domain.Repositories.Interfaces
 
         Task<int> GetUnreadCountByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
 
-        Task<IReadOnlyList<Entities.Notification>> GetUnreadByUserIdWithInAppAsync(Guid userId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<Entities.Notification>> GetUnreadByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     }
 }

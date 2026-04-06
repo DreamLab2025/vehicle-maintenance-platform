@@ -1,174 +1,75 @@
-using System.Text.Json;
-using Verendar.Notification.Domain.Entities;
-using Verendar.Notification.Domain.Enums;
-using Verender.Identity.Contracts.Events;
-using Verendar.Vehicle.Contracts.Events;
 using Verendar.Notification.Application.Dtos.Notifications;
 
+namespace Verendar.Notification.Application.Mapping;
 
-namespace Verendar.Notification.Application.Mapping
+public static class NotificationMappings
 {
-    public static class NotificationMappings
+    public static NotificationEntity CreateUserNotification(
+        Guid userId,
+        string title,
+        string message,
+        NotificationPriority priority,
+        string entityType,
+        Guid? entityId,
+        string? actionUrl,
+        string? extendedPayloadJson = null)
     {
-        public static Domain.Entities.Notification OtpRequestedToNotificationEntity(
-                this OtpRequestedEvent message,
-                string title,
-                string content,
-                NotificationType type,
-                bool isFallback = false)
+        return new NotificationEntity
         {
-            return new Domain.Entities.Notification
-            {
-                UserId = message.UserId,
-                Title = title,
-                Message = content,
-                NotificationType = type,
-                Priority = NotificationPriority.High,
-                Status = NotificationStatus.Pending,
-                CreatedAt = DateTime.UtcNow,
-                MetadataJson = JsonSerializer.Serialize(new
-                {
-                    OtpType = message.Type,
-                    Expiry = message.ExpiryTime,
-                    IsFallback = isFallback,
-                })
-            };
-        }
-
-        public static Domain.Entities.Notification UserRegisteredToNotificationEntity(
-            this UserRegisteredEvent message,
-            string title,
-            string content,
-            NotificationType type,
-            bool isFallback = false)
-        {
-            return new Domain.Entities.Notification
-            {
-                UserId = message.UserId,
-                Title = title,
-                Message = content,
-                NotificationType = type,
-                Priority = isFallback ? NotificationPriority.Low : NotificationPriority.Medium,
-                Status = NotificationStatus.Pending,
-                CreatedAt = DateTime.UtcNow,
-                MetadataJson = JsonSerializer.Serialize(new
-                {
-                    IsFallback = isFallback,
-                })
-            };
-        }
-
-        public static Domain.Entities.Notification OdometerReminderToNotificationEntity(
-            this OdometerReminderEvent message,
-            string title,
-            string content)
-        {
-            var firstVehicle = message.Vehicles?.FirstOrDefault();
-            return new Domain.Entities.Notification
-            {
-                UserId = message.UserId,
-                Title = title,
-                Message = content,
-                NotificationType = NotificationType.User,
-                Priority = NotificationPriority.Medium,
-                Status = NotificationStatus.Pending,
-                CreatedAt = DateTime.UtcNow,
-                MetadataJson = JsonSerializer.Serialize(new { Type = "OdometerReminder" }),
-                EntityType = "OdometerReminder",
-                EntityId = firstVehicle?.UserVehicleId
-            };
-        }
-
-        public static Domain.Entities.Notification MaintenanceReminderToNotificationEntity(
-            this MaintenanceReminderEvent message,
-            string title,
-            string content)
-        {
-            var firstItem = message.Items?.FirstOrDefault();
-
-            var priority = message.Level switch
-            {
-                1 => NotificationPriority.Low,
-                2 => NotificationPriority.Medium,
-                3 => NotificationPriority.High,
-                4 => NotificationPriority.Critical,
-                _ => NotificationPriority.Medium
-            };
-
-            return new Domain.Entities.Notification
-            {
-                UserId = message.UserId,
-                Title = title,
-                Message = content,
-                NotificationType = NotificationType.User,
-                Priority = priority,
-                Status = NotificationStatus.Pending,
-                CreatedAt = DateTime.UtcNow,
-                MetadataJson = JsonSerializer.Serialize(new
-                {
-                    Type = "MaintenanceReminder",
-                    Level = message.Level,
-                    LevelName = message.LevelName,
-                    Items = message.Items
-                }),
-                EntityType = "MaintenanceReminder",
-                EntityId = firstItem?.UserVehicleId
-            };
-        }
-
-        public static NotificationDelivery CreateDelivery(
-            this Domain.Entities.Notification notification,
-            string? recipientAddress,
-            NotificationChannel channel)
-        {
-            return new NotificationDelivery
-            {
-                NotificationId = notification.Id,
-                Channel = channel,
-                RecipientAddress = recipientAddress,
-                Status = NotificationStatus.Pending,
-                CreatedAt = DateTime.UtcNow,
-                MaxRetries = 3
-            };
-        }
-
-        public static NotificationListItemDto ToListItemDto(this Domain.Entities.Notification n)
-        {
-            return new NotificationListItemDto
-            {
-                Id = n.Id,
-                Title = n.Title,
-                Message = n.Message,
-                NotificationType = n.NotificationType,
-                Priority = n.Priority,
-                Status = n.Status,
-                EntityType = n.EntityType,
-                EntityId = n.EntityId,
-                ActionUrl = n.ActionUrl,
-                IsRead = n.IsRead,
-                ReadAt = n.ReadAt,
-                CreatedAt = n.CreatedAt
-            };
-        }
-
-        public static NotificationDetailDto ToDetailDto(this Domain.Entities.Notification n)
-        {
-            return new NotificationDetailDto
-            {
-                Id = n.Id,
-                Title = n.Title,
-                Message = n.Message,
-                NotificationType = n.NotificationType,
-                Priority = n.Priority,
-                Status = n.Status,
-                EntityType = n.EntityType,
-                EntityId = n.EntityId,
-                ActionUrl = n.ActionUrl,
-                IsRead = n.IsRead,
-                ReadAt = n.ReadAt,
-                CreatedAt = n.CreatedAt,
-                Metadata = string.IsNullOrEmpty(n.MetadataJson) ? null : JsonSerializer.Deserialize<JsonElement>(n.MetadataJson)
-            };
-        }
+            UserId = userId,
+            Title = title,
+            Message = message,
+            NotificationType = NotificationType.User,
+            Priority = priority,
+            Status = NotificationStatus.Pending,
+            CreatedAt = DateTime.UtcNow,
+            EntityType = entityType,
+            EntityId = entityId,
+            ActionUrl = actionUrl,
+            ExtendedPayloadJson = extendedPayloadJson
+        };
     }
+
+    public static NotificationDelivery CreateDelivery(
+        this NotificationEntity notification,
+        string? recipientAddress,
+        NotificationChannel channel)
+    {
+        return new NotificationDelivery
+        {
+            NotificationId = notification.Id,
+            Channel = channel,
+            RecipientAddress = recipientAddress,
+            Status = NotificationStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public static NotificationListItemDto ToSummaryListItemDto(this NotificationEntity n) =>
+        ToListItemDtoCore(n, maintenanceItems: null);
+
+    public static NotificationListItemDto ToListItemDto(this NotificationEntity n) =>
+        ToListItemDtoCore(
+            n,
+            MaintenanceNotificationPayloadSerializer.TryDeserializeItems(n.ExtendedPayloadJson));
+
+    private static NotificationListItemDto ToListItemDtoCore(
+        NotificationEntity n,
+        IReadOnlyList<MaintenanceNotificationItemDto>? maintenanceItems) =>
+        new()
+        {
+            Id = n.Id,
+            Title = n.Title,
+            Message = n.Message,
+            NotificationType = n.NotificationType,
+            Priority = n.Priority,
+            Status = n.Status,
+            EntityType = n.EntityType,
+            EntityId = n.EntityId,
+            ActionUrl = n.ActionUrl,
+            IsRead = n.IsRead,
+            ReadAt = n.ReadAt,
+            CreatedAt = n.CreatedAt,
+            MaintenanceItems = maintenanceItems
+        };
 }

@@ -1,6 +1,3 @@
-using FluentValidation;
-using Verendar.Identity.Application.Dtos;
-
 namespace Verendar.Identity.Application.Validators
 {
     public class ResetPasswordRequestValidator : AbstractValidator<ResetPasswordRequest>
@@ -14,12 +11,6 @@ namespace Verendar.Identity.Application.Validators
                 .WithMessage("Email không hợp lệ")
                 .MaximumLength(256)
                 .WithMessage("Email tối đa 256 ký tự");
-
-            RuleFor(x => x.OtpCode)
-                .NotEmpty()
-                .WithMessage("Mã OTP không được để trống")
-                .Length(6, 6)
-                .WithMessage("Mã OTP phải gồm 6 chữ số");
 
             RuleFor(x => x.NewPassword)
                 .NotEmpty()

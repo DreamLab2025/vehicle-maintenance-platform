@@ -8,6 +8,7 @@ x-common-environment: &common-environment
   ASPNETCORE_ENVIRONMENT: Production
   ASPNETCORE_URLS: http://+:8080
   Cors__AllowedOrigins: ${CORS_ALLOWED_ORIGINS}
+  ConnectionStrings__seq: http://seq:5341
   JwtBearer__SecretKey: ${JWT_BEARER_SECRET_KEY}
   JwtBearer__Issuer: ${JWT_BEARER_ISSUER}
   JwtBearer__Audience: ${JWT_BEARER_AUDIENCE}
@@ -22,18 +23,18 @@ x-common-environment: &common-environment
 
 x-identity-service-environment: &identity-service-environment
   ConnectionStrings__identity-db: Host=postgres;Port=5432;Database=${IDENTITY_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=20;Minimum Pool Size=1;Connection Idle Lifetime=300
-  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
 
 x-vehicle-service-environment: &vehicle-service-environment
   ConnectionStrings__vehicle-db: Host=postgres;Port=5432;Database=${VEHICLE_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=20;Minimum Pool Size=1;Connection Idle Lifetime=300
-  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
   Identity__BaseUrl: ${IDENTITY_SERVICE_BASE_URL:-http://identity-service:8080}
 
 x-media-service-environment: &media-service-environment
   ConnectionStrings__media-db: Host=postgres;Port=5432;Database=${MEDIA_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=12;Minimum Pool Size=1;Connection Idle Lifetime=300
-  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
   S3Settings__BucketName: ${MEDIA_S3_BUCKET_NAME}
   S3Settings__Region: ${MEDIA_S3_REGION:-ap-southeast-1}
@@ -43,8 +44,9 @@ x-media-service-environment: &media-service-environment
 
 x-notification-service-environment: &notification-service-environment
   ConnectionStrings__notification-db: Host=postgres;Port=5432;Database=${NOTIFICATION_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=12;Minimum Pool Size=1;Connection Idle Lifetime=300
-  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  Email__EnableRealSend: ${NOTIFICATION_EMAIL_ENABLE_REAL_SEND:-true}
   Resend__ApiKey: ${RESEND_API_KEY}
   Resend__FromEmail: ${RESEND_FROM_EMAIL}
   Resend__FromName: ${RESEND_FROM_NAME:-Verendar}
@@ -58,7 +60,7 @@ x-notification-service-environment: &notification-service-environment
 
 x-ai-service-environment: &ai-service-environment
   ConnectionStrings__ai-db: Host=postgres;Port=5432;Database=${AI_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=6;Minimum Pool Size=1;Connection Idle Lifetime=300
-  ConnectionStrings__redis-cache: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
   AiProvider: ${AI_PROVIDER:-Gemini}
   Gemini__ApiKey: ${GEMINI_API_KEY}
@@ -66,13 +68,43 @@ x-ai-service-environment: &ai-service-environment
   Gemini__DefaultModel: ${GEMINI_DEFAULT_MODEL:-gemini-2.5-flash-lite}
   Gemini__MaxRetries: ${GEMINI_MAX_RETRIES:-3}
   Gemini__TimeoutSeconds: ${GEMINI_TIMEOUT_SECONDS:-180}
+  Gemini__RequestsPerMinute: ${GEMINI_REQUESTS_PER_MINUTE:-60}
+  Gemini__RequestsPerDay: ${GEMINI_REQUESTS_PER_DAY:-1500}
+  Gemini__MaxConcurrentRequests: ${GEMINI_MAX_CONCURRENT_REQUESTS:-5}
+  Gemini__DefaultParameters__MaxTokens: ${GEMINI_DEFAULT_PARAMETERS_MAX_TOKENS:-8192}
+  Gemini__DefaultParameters__Temperature: ${GEMINI_DEFAULT_PARAMETERS_TEMPERATURE:-0.7}
+  Gemini__DefaultParameters__TopP: ${GEMINI_DEFAULT_PARAMETERS_TOP_P:-0.95}
+  Gemini__DefaultParameters__TopK: ${GEMINI_DEFAULT_PARAMETERS_TOP_K:-40}
   Bedrock__Region: ${BEDROCK_REGION:-us-east-1}
   Bedrock__AccessKey: ${BEDROCK_ACCESS_KEY:-}
   Bedrock__SecretKey: ${BEDROCK_SECRET_KEY:-}
   Bedrock__DefaultModel: ${BEDROCK_DEFAULT_MODEL:-anthropic.claude-3-5-sonnet-20240620-v1:0}
   Bedrock__MaxRetries: ${BEDROCK_MAX_RETRIES:-3}
   Bedrock__TimeoutSeconds: ${BEDROCK_TIMEOUT_SECONDS:-60}
+  Bedrock__DefaultParameters__MaxTokens: ${BEDROCK_DEFAULT_PARAMETERS_MAX_TOKENS:-8192}
+  Bedrock__DefaultParameters__Temperature: ${BEDROCK_DEFAULT_PARAMETERS_TEMPERATURE:-0.7}
+  Bedrock__DefaultParameters__TopP: ${BEDROCK_DEFAULT_PARAMETERS_TOP_P:-0.95}
+  Bedrock__DefaultParameters__TopK: ${BEDROCK_DEFAULT_PARAMETERS_TOP_K:-40}
   VehicleService__BaseUrl: ${VEHICLE_SERVICE_BASE_URL:-http://vehicle-service:8080}
+  MediaService__BaseUrl: ${MEDIA_SERVICE_BASE_URL:-http://media-service:8080}
+
+x-location-service-environment: &location-service-environment
+  ConnectionStrings__location-db: Host=postgres;Port=5432;Database=${LOCATION_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=12;Minimum Pool Size=1;Connection Idle Lifetime=300
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  Geocoding__AWS__Enabled: ${LOCATION_AWS_GEOCODING_ENABLED:-true}
+  Geocoding__AWS__Region: ${LOCATION_AWS_REGION:-us-east-1}
+  Geocoding__AWS__AccessKey: ${LOCATION_AWS_ACCESS_KEY:-}
+  Geocoding__AWS__SecretKey: ${LOCATION_AWS_SECRET_KEY:-}
+
+x-garage-service-environment: &garage-service-environment
+  ConnectionStrings__garage-db: Host=postgres;Port=5432;Database=${GARAGE_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=20;Minimum Pool Size=1;Connection Idle Lifetime=300
+  ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
+  ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  Services__Location__BaseUrl: ${LOCATION_SERVICE_BASE_URL:-http://location-service:8080}
+  Services__Vehicle__BaseUrl: ${VEHICLE_SERVICE_BASE_URL:-http://vehicle-service:8080}
+  Services__Identity__BaseUrl: ${IDENTITY_SERVICE_BASE_URL:-http://identity-service:8080}
+  Services__Payment__BaseUrl: ${PAYMENT_SERVICE_BASE_URL:-}
 
 services:
   postgres:
@@ -137,6 +169,82 @@ services:
       - verendar-network
     restart: unless-stopped
 
+  seq:
+    image: datalust/seq:latest
+    container_name: verendar-seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "127.0.0.1:5341:5341"   # ingestion (internal only)
+      - "127.0.0.1:5340:80"     # UI — access via SSH tunnel: ssh -L 5340:localhost:5340 ec2-user@<ip>
+    volumes:
+      - seq_data:/data
+    mem_limit: 192m
+    cpus: 0.3
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
+  location-service:
+    image: ${DOCKER_IMAGE_PREFIX}/verendar-location-service:${IMAGE_TAG:-latest}
+    expose:
+      - "8080"
+    ports:
+      - "${LOCATION_SERVICE_PORT:-7006}:8080"
+    mem_limit: 288m
+    cpus: "0.20"
+    environment:
+      <<: [ *common-environment, *location-service-environment ]
+      DOTNET_RUNNING_IN_CONTAINER: "true"
+      DOTNET_GCConserve: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
+  garage-service:
+    image: ${DOCKER_IMAGE_PREFIX}/verendar-garage-service:${IMAGE_TAG:-latest}
+    expose:
+      - "8080"
+    ports:
+      - "${GARAGE_SERVICE_PORT:-7007}:8080"
+    mem_limit: 352m
+    cpus: "0.35"
+    environment:
+      <<: [ *common-environment, *garage-service-environment ]
+      DOTNET_RUNNING_IN_CONTAINER: "true"
+      DOTNET_GCConserve: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      location-service:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
   gateway:
     image: nginx:alpine
     container_name: verendar-gateway
@@ -161,6 +269,10 @@ services:
       notification-service:
         condition: service_healthy
       ai-service:
+        condition: service_healthy
+      location-service:
+        condition: service_healthy
+      garage-service:
         condition: service_healthy
 
   identity-service:
@@ -312,6 +424,7 @@ volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
+  seq_data:
 
 networks:
   verendar-network:

@@ -1,7 +1,5 @@
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Identity.Application.Dtos;
-using Verendar.Identity.Application.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Verendar.Common.EndpointFilters;
 
 namespace Verendar.Identity.Apis
 {
@@ -51,45 +49,93 @@ namespace Verendar.Identity.Apis
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status404NotFound);
 
+            group.MapPost("/", CreateUser)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<UserCreateRequest>())
+                .WithName("CreateUser")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Tạo người dùng (Admin)";
+                    return operation;
+                })
+                .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status201Created)
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status409Conflict);
+
+            group.MapPut("/{id:guid}", UpdateUser)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<UserUpdateRequest>())
+                .WithName("UpdateUser")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Cập nhật người dùng (Admin)";
+                    return operation;
+                })
+                .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status404NotFound)
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status409Conflict);
+
+            group.MapDelete("/{id:guid}", DeleteUser)
+                .WithName("DeleteUser")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Xóa mềm người dùng (Admin)";
+                    return operation;
+                })
+                .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.Admin)))
+                .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status404NotFound);
+
             return group;
         }
 
         private static async Task<IResult> GetCurrentUser(ICurrentUserService currentUserService, IUserService userService)
         {
-            var userId = currentUserService.UserId;
-
-            if (userId == Guid.Empty)
-            {
-                return Results.Unauthorized();
-            }
-
-            var result = await userService.GetUserByIdAsync(userId);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.NotFound(result);
+            var result = await userService.GetUserByIdAsync(currentUserService.UserId);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> GetAllUsers([AsParameters] PaginationRequest paginationRequest, IUserService userService)
         {
             var result = await userService.GetAllUsersAsync(paginationRequest);
-
-            return Results.Ok(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> GetUserById(Guid id, IUserService userService)
         {
             var result = await userService.GetUserByIdAsync(id);
+            return result.ToHttpResult();
+        }
 
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
+        private static async Task<IResult> CreateUser(
+            [FromBody] UserCreateRequest request,
+            IUserService userService,
+            CancellationToken cancellationToken)
+        {
+            var result = await userService.CreateUserAsync(request, cancellationToken);
+            return result.ToHttpResult();
+        }
 
-            return Results.NotFound(result);
+        private static async Task<IResult> UpdateUser(
+            Guid id,
+            [FromBody] UserUpdateRequest request,
+            IUserService userService,
+            CancellationToken cancellationToken)
+        {
+            var result = await userService.UpdateUserAsync(id, request, cancellationToken);
+            return result.ToHttpResult();
+        }
+
+        private static async Task<IResult> DeleteUser(
+            Guid id,
+            ICurrentUserService currentUserService,
+            IUserService userService,
+            CancellationToken cancellationToken)
+        {
+            var result = await userService.DeleteUserAsync(id, currentUserService.UserId, cancellationToken);
+            return result.ToHttpResult();
         }
     }
 }

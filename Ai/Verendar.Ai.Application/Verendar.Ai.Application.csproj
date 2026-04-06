@@ -7,12 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Verendar.Ai.Domain\Verendar.Ai.Domain.csproj" />
+    <PackageReference Include="FluentValidation" Version="11.10.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.10.0" />
+    <PackageReference Include="Hangfire.Core" Version="1.8.17" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Polly" Version="8.4.2" />
-    <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
+    <ProjectReference Include="..\Verendar.Ai.Domain\Verendar.Ai.Domain.csproj" />
+    <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
+    <ProjectReference Include="..\..\Vehicle\Verendar.Vehicle.Contracts\Verendar.Vehicle.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

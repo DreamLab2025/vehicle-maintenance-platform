@@ -1,8 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using Verendar.Common.Databases.Implements;
-using Verendar.Vehicle.Domain.Entities;
 using Verendar.Vehicle.Domain.Repositories.Interfaces;
-using Verendar.Vehicle.Infrastructure.Data;
 
 namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
 {
@@ -80,6 +76,21 @@ namespace Verendar.Vehicle.Infrastructure.Repositories.Implements
                 .ToListAsync(cancellationToken);
 
             return (items, totalCount);
+        }
+
+        public async Task<IReadOnlyList<OdometerHistory>> GetAllByUserVehicleIdAsync(Guid userVehicleId, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Where(x => x.UserVehicleId == userVehicleId)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<OdometerHistory>> GetRecordedOnOrAfterOrderedAsync(Guid userVehicleId, DateOnly fromDate, CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .Where(h => h.UserVehicleId == userVehicleId && h.RecordedDate >= fromDate)
+                .OrderBy(h => h.RecordedDate)
+                .ToListAsync(cancellationToken);
         }
     }
 }

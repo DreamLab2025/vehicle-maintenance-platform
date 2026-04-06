@@ -1,6 +1,4 @@
-using Verendar.Common.Databases.Interfaces;
 using Verendar.Vehicle.Domain.Entities;
-using Verendar.Vehicle.Domain.Enums;
 
 namespace Verendar.Vehicle.Domain.Repositories.Interfaces
 {
@@ -14,5 +12,11 @@ namespace Verendar.Vehicle.Domain.Repositories.Interfaces
             bool includeAlreadyNotified,
             CancellationToken cancellationToken = default);
         Task<IEnumerable<MaintenanceReminder>> GetByUserVehicleIdWithDetailsAsync(Guid userVehicleId, CancellationToken cancellationToken = default);
+        Task<IReadOnlyList<MaintenanceReminder>> GetByIdsForUserAsync(
+            IReadOnlyList<Guid> reminderIds,
+            Guid userId,
+            CancellationToken cancellationToken = default);
+
+        Task<Dictionary<ReminderLevel, int>> GetActiveCountByLevelAsync(CancellationToken ct = default);
     }
 }

@@ -15,9 +15,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
     <ProjectReference Include="..\..\Vehicle\Verendar.Vehicle.Contracts\Verendar.Vehicle.Contracts.csproj" />
     <ProjectReference Include="..\Verendar.Notification.Application\Verendar.Notification.Application.csproj" />
     <ProjectReference Include="..\Verendar.Notification.Domain\Verendar.Notification.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="ExternalServices\Resend\Templates\Email\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

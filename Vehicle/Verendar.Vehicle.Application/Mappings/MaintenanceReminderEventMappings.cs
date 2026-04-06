@@ -1,5 +1,5 @@
 using Verendar.Vehicle.Contracts.Events;
-using Verendar.Vehicle.Domain.Entities;
+using ContractsReminderLevel = Verendar.Vehicle.Contracts.Enums.ReminderLevel;
 
 namespace Verendar.Vehicle.Application.Mappings
 {
@@ -7,7 +7,7 @@ namespace Verendar.Vehicle.Application.Mappings
     {
         public static MaintenanceReminderItemDto ToEventItem(this MaintenanceReminder r)
         {
-            var pt = r.PartTracking;
+            var pt = r.TrackingCycle?.PartTracking;
             var uv = pt?.UserVehicle;
             var vehicleDisplay = uv?.Variant?.VehicleModel != null
                 ? $"{uv.Variant.VehicleModel.Name}" + (string.IsNullOrEmpty(uv.LicensePlate) ? "" : $" - {uv.LicensePlate}")
@@ -19,6 +19,8 @@ namespace Verendar.Vehicle.Application.Mappings
 
             return new MaintenanceReminderItemDto
             {
+                PartTrackingId = pt?.Id ?? Guid.Empty,
+                DataCapturedAtUtc = DateTime.UtcNow,
                 PartCategoryName = pt?.PartCategory?.Name ?? string.Empty,
                 Description = pt?.PartCategory?.Description,
                 UserVehicleId = pt?.UserVehicleId ?? Guid.Empty,
@@ -28,7 +30,8 @@ namespace Verendar.Vehicle.Application.Mappings
                 InitialOdometer = pt?.LastReplacementOdometer,
                 PercentageRemaining = r.PercentageRemaining,
                 VehicleDisplayName = vehicleDisplay,
-                EstimatedNextReplacementDate = estimatedNextDate
+                EstimatedNextReplacementDate = estimatedNextDate,
+                Level = (ContractsReminderLevel)(int)r.Level
             };
         }
     }

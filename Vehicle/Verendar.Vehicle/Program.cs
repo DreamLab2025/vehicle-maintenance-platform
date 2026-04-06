@@ -16,8 +16,8 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<VehicleDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    await VehicleCatalogSeeder.SeedAsync(db, logger);
-    await MaintenanceReminderTestDataSeeder.SeedAsync(db, logger);
+    await VehicleProductionDataSeed.SeedAsync(db, logger);
+    await VehicleDevelopmentDataSeed.SeedAsync(db, logger);
 }
 
 app.UseApplicationServices();

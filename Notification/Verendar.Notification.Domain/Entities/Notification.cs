@@ -1,9 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using Verendar.Common.Databases.Base;
-using Verendar.Notification.Domain.Enums;
-
 namespace Verendar.Notification.Domain.Entities
 {
     [Index(nameof(UserId), nameof(IsRead))]
@@ -29,9 +23,6 @@ namespace Verendar.Notification.Domain.Entities
 
         public NotificationStatus Status { get; set; } = NotificationStatus.Pending;
 
-        [Column(TypeName = "jsonb")]
-        public string? MetadataJson { get; set; }
-
         [MaxLength(50)]
         public string? EntityType { get; set; }
 
@@ -40,10 +31,10 @@ namespace Verendar.Notification.Domain.Entities
         [MaxLength(500)]
         public string? ActionUrl { get; set; }
 
+        public string? ExtendedPayloadJson { get; set; }
+
         public bool IsRead { get; set; } = false;
         public DateTime? ReadAt { get; set; }
-
-        public DateTime? ExpiresAt { get; set; }
 
         public ICollection<NotificationDelivery> Deliveries { get; set; } = new List<NotificationDelivery>();
     }

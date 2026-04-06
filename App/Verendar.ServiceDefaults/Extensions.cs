@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
@@ -7,6 +9,8 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using Serilog;
+using Serilog.Events;
 
 namespace Verendar.ServiceDefaults
 {
@@ -46,6 +50,8 @@ namespace Verendar.ServiceDefaults
 
         public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
         {
+            builder.ConfigureSerilog();
+
             builder.Logging.AddOpenTelemetry(logging =>
             {
                 logging.IncludeFormattedMessage = true;
@@ -61,19 +67,26 @@ namespace Verendar.ServiceDefaults
                 })
                 .WithTracing(tracing =>
                 {
-                    tracing.AddSource(builder.Environment.ApplicationName)
-                        .AddAspNetCoreInstrumentation(tracing =>
-                            // Exclude health check requests from tracing
-                            tracing.Filter = context =>
-                                !context.Request.Path.StartsWithSegments(HealthEndpointPath)
-                                && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath)
-                        )
-                        // Uncomment the following line to enable gRPC instrumentation (requires the OpenTelemetry.Instrumentation.GrpcNetClient package)
-                        //.AddGrpcClientInstrumentation()
+                    tracing.AddProcessor(new HangfireStatementTraceFilterProcessor())
+                        .AddSource(builder.Environment.ApplicationName)
+                        .AddAspNetCoreInstrumentation()
                         .AddHttpClientInstrumentation();
                 });
 
-            builder.AddOpenTelemetryExporters();
+            builder.AddSeqLogsOnlyEndpoint("seq");
+
+            return builder;
+        }
+
+        private static TBuilder ConfigureSerilog<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
+        {
+            builder.Logging.ClearProviders();
+            builder.Services.AddSerilog((services, lc) => lc
+                .ReadFrom.Configuration(builder.Configuration)
+                .ReadFrom.Services(services)
+                .Enrich.FromLogContext()
+                .Enrich.WithMachineName(),
+                writeToProviders: true);
 
             return builder;
         }
@@ -86,13 +99,6 @@ namespace Verendar.ServiceDefaults
             {
                 builder.Services.AddOpenTelemetry().UseOtlpExporter();
             }
-
-            // Uncomment the following lines to enable the Azure Monitor exporter (requires the Azure.Monitor.OpenTelemetry.AspNetCore package)
-            //if (!string.IsNullOrEmpty(builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"]))
-            //{
-            //    builder.Services.AddOpenTelemetry()
-            //       .UseAzureMonitor();
-            //}
 
             return builder;
         }
@@ -108,21 +114,26 @@ namespace Verendar.ServiceDefaults
 
         public static WebApplication MapDefaultEndpoints(this WebApplication app)
         {
-            // Adding health checks endpoints to applications in non-development environments has security implications.
-            // See https://aka.ms/dotnet/aspire/healthchecks for details before enabling these endpoints in non-development environments.
-            if (app.Environment.IsDevelopment())
-            {
-                // All health checks must pass for app to be considered ready to accept traffic after starting
-                app.MapHealthChecks(HealthEndpointPath);
+            app.MapHealthChecks(HealthEndpointPath);
 
-                // Only health checks tagged with the "live" tag must pass for app to be considered alive
-                app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
-                {
-                    Predicate = r => r.Tags.Contains("live")
-                });
-            }
+            app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
+            {
+                Predicate = r => r.Tags.Contains("live")
+            });
 
             return app;
+        }
+    }
+
+    internal sealed class HangfireStatementTraceFilterProcessor : BaseProcessor<Activity>
+    {
+        public override void OnEnd(Activity activity)
+        {
+            var statement = activity.GetTagItem("db.statement") as string;
+            if (statement != null && statement.Contains("hangfire", StringComparison.OrdinalIgnoreCase))
+            {
+                activity.ActivityTraceFlags &= ~ActivityTraceFlags.Recorded;
+            }
         }
     }
 }

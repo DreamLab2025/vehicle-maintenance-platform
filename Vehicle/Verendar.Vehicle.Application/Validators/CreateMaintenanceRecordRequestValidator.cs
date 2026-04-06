@@ -1,11 +1,8 @@
-using FluentValidation;
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Validators
 {
-    public class CreateMaintenanceRecordRequestValidator : AbstractValidator<CreateMaintenanceRecordRequest>
+    public class CreateRecordRequestValidator : AbstractValidator<CreateRecordRequest>
     {
-        public CreateMaintenanceRecordRequestValidator()
+        public CreateRecordRequestValidator()
         {
             RuleFor(x => x.OdometerAtService)
                 .GreaterThanOrEqualTo(0)
@@ -17,11 +14,11 @@ namespace Verendar.Vehicle.Application.Validators
 
             RuleForEach(x => x.Items).ChildRules(item =>
             {
-                item.RuleFor(x => x.PartCategoryCode)
+                item.RuleFor(x => x.PartCategorySlug)
                     .NotEmpty()
-                    .WithMessage("Mã linh kiện không được để trống")
+                    .WithMessage("Slug linh kiện không được để trống")
                     .MaximumLength(50)
-                    .WithMessage("Mã linh kiện tối đa 50 ký tự");
+                    .WithMessage("Slug linh kiện tối đa 50 ký tự");
                 item.RuleFor(x => x.Price)
                     .GreaterThanOrEqualTo(0)
                     .When(x => x.Price.HasValue)
@@ -39,7 +36,7 @@ namespace Verendar.Vehicle.Application.Validators
                     .WithMessage("Khi không chọn sản phẩm cần nhập tên phụ tùng (CustomPartName).")
                     .MaximumLength(200)
                     .WithMessage("Tên phụ tùng tối đa 200 ký tự")
-                    .When(x => !x.PartProductId.HasValue);
+                    .When(x => !x.GarageProductId.HasValue);
                 item.RuleFor(x => x.CustomPartName)
                     .MaximumLength(200)
                     .When(x => x.CustomPartName != null)
@@ -53,7 +50,7 @@ namespace Verendar.Vehicle.Application.Validators
                     .When(x => x.CustomMonthsInterval.HasValue)
                     .WithMessage("Chu kỳ tháng phải lớn hơn 0");
                 item.RuleFor(x => x)
-                    .Must(x => x.PartProductId.HasValue || !x.UpdatesTracking || (x.CustomKmInterval ?? 0) > 0 || (x.CustomMonthsInterval ?? 0) > 0)
+                    .Must(x => x.GarageProductId.HasValue || !x.UpdatesTracking || (x.CustomKmInterval ?? 0) > 0 || (x.CustomMonthsInterval ?? 0) > 0)
                     .WithMessage("Khi không chọn sản phẩm và có cập nhật tracking, cần nhập ít nhất Chu kỳ km hoặc Chu kỳ tháng (vd: 1500 km / 3 tháng theo hướng dẫn thợ).");
             });
 

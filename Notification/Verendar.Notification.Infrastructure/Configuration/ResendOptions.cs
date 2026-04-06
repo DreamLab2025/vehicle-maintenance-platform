@@ -2,7 +2,7 @@ namespace Verendar.Notification.Infrastructure.Configuration
 {
     public class ResendOptions
     {
-        public const string SectionName = "Resend";
+        public const string SectionName = "Email:Resend";
 
         public string ApiKey { get; set; } = string.Empty;
         public string FromEmail { get; set; } = string.Empty;

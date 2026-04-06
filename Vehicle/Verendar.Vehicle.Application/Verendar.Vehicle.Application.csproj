@@ -12,6 +12,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.11" />
     <ProjectReference Include="..\Verendar.Vehicle.Contracts\Verendar.Vehicle.Contracts.csproj" />
     <ProjectReference Include="..\Verendar.Vehicle.Domain\Verendar.Vehicle.Domain.csproj" />
+    <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
+    <ProjectReference Include="..\..\Garage\Verendar.Garage.Contracts\Verendar.Garage.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,98 +1,124 @@
-using Verendar.Common.Shared;
 using Verendar.Notification.Application.Dtos.Notifications;
 using Verendar.Notification.Application.Mapping;
-using Verendar.Notification.Application.Services.Interfaces;
-using Verendar.Notification.Domain.Enums;
-using Verendar.Notification.Domain.Repositories.Interfaces;
 
-namespace Verendar.Notification.Application.Services.Implements
+namespace Verendar.Notification.Application.Services.Implements;
+
+public class NotificationService(
+    IUnitOfWork unitOfWork,
+    ILogger<NotificationService> logger) : INotificationService
 {
-    public class NotificationService(IUnitOfWork unitOfWork) : INotificationService
+    private readonly ILogger<NotificationService> _logger = logger;
+
+    public async Task<ApiResponse<NotificationListItemDto>> GetNotificationDetailForUserAsync(
+        Guid userId,
+        Guid notificationId,
+        CancellationToken cancellationToken = default)
     {
-        public async Task<ApiResponse<NotificationDetailDto>> GetNotificationDetailForUserAsync(
-            Guid userId,
-            Guid notificationId,
-            CancellationToken cancellationToken = default)
+        var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
+        if (notification == null)
         {
-            var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
-            if (notification == null)
-                return ApiResponse<NotificationDetailDto>.FailureResponse("Không tìm thấy thông báo.");
-
-            var hasInApp = await unitOfWork.NotificationDeliveries.FindOneAsync(d =>
-                d.NotificationId == notificationId && d.Channel == NotificationChannel.InApp) != null;
-            if (!hasInApp)
-                return ApiResponse<NotificationDetailDto>.FailureResponse("Thông báo không có trong app.");
-
-            return ApiResponse<NotificationDetailDto>.SuccessResponse(notification.ToDetailDto());
+            _logger.LogWarning("GetNotificationDetail: not found {NotificationId} for user {UserId}", notificationId, userId);
+            return ApiResponse<NotificationListItemDto>.NotFoundResponse("Không tìm thấy thông báo.");
         }
 
-        public async Task<ApiResponse<List<NotificationListItemDto>>> GetInAppNotificationsForUserAsync(
-            Guid userId,
-            PaginationRequest request,
-            CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                request.Normalize();
-                var (items, totalCount) = await unitOfWork.Notifications.GetByUserIdWithInAppChannelPagedAsync(
-                    userId, request.PageNumber, request.PageSize, cancellationToken);
+        var dto = notification.ToListItemDto();
+        return ApiResponse<NotificationListItemDto>.SuccessResponse(dto);
+    }
 
-                var dtos = items.Select(n => n.ToListItemDto()).ToList();
-                return ApiResponse<List<NotificationListItemDto>>.SuccessPagedResponse(
-                    dtos, totalCount, request.PageNumber, request.PageSize);
-            }
-            catch (Exception)
-            {
-                return ApiResponse<List<NotificationListItemDto>>.FailureResponse("Lỗi khi lấy danh sách thông báo.");
-            }
+    public async Task<ApiResponse<List<NotificationListItemDto>>> GetInAppNotificationsForUserAsync(
+        Guid userId,
+        PaginationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        request.Normalize();
+        var (items, totalCount) = await unitOfWork.Notifications.GetByUserIdPagedAsync(
+            userId, request.PageNumber, request.PageSize, cancellationToken);
+
+        var dtos = items.Select(n => n.ToSummaryListItemDto()).ToList();
+        return ApiResponse<List<NotificationListItemDto>>.SuccessPagedResponse(
+            dtos, totalCount, request.PageNumber, request.PageSize);
+    }
+
+    public async Task<ApiResponse<NotificationStatusDto>> GetStatusAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var unReadCount = await unitOfWork.Notifications.GetUnreadCountByUserIdAsync(userId, cancellationToken);
+        return ApiResponse<NotificationStatusDto>.SuccessResponse(new NotificationStatusDto { UnReadCount = unReadCount });
+    }
+
+    public async Task<ApiResponse<int>> MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var unread = await unitOfWork.Notifications.GetUnreadByUserIdAsync(userId, cancellationToken);
+        var readAt = DateTime.UtcNow;
+        foreach (var n in unread)
+        {
+            n.IsRead = true;
+            n.ReadAt = readAt;
         }
 
-        public async Task<ApiResponse<NotificationStatusDto>> GetStatusAsync(Guid userId, CancellationToken cancellationToken = default)
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return ApiResponse<int>.SuccessResponse(unread.Count, $"Đã đánh dấu {unread.Count} thông báo là đã đọc.");
+    }
+
+    public async Task<ApiResponse<bool>> MarkAsReadAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken = default)
+    {
+        var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
+        if (notification == null)
         {
-            var unReadCount = await unitOfWork.Notifications.GetUnreadCountByUserIdAsync(userId, cancellationToken);
-            return ApiResponse<NotificationStatusDto>.SuccessResponse(new NotificationStatusDto { UnReadCount = unReadCount });
+            _logger.LogWarning("MarkAsRead: notification not found {NotificationId} user {UserId}", notificationId, userId);
+            return ApiResponse<bool>.NotFoundResponse("Không tìm thấy thông báo.");
         }
 
-        public async Task<ApiResponse<int>> MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default)
+        if (notification.IsRead)
         {
-            var unread = await unitOfWork.Notifications.GetUnreadByUserIdWithInAppAsync(userId, cancellationToken);
-            var readAt = DateTime.UtcNow;
-            foreach (var n in unread)
-            {
-                n.IsRead = true;
-                n.ReadAt = readAt;
-            }
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-            return ApiResponse<int>.SuccessResponse(unread.Count, $"Đã đánh dấu {unread.Count} thông báo là đã đọc.");
+            _logger.LogWarning("MarkAsRead: already read {NotificationId} user {UserId}", notificationId, userId);
+            return ApiResponse<bool>.SuccessResponse(true, "Thông báo đã được đánh dấu đọc trước đó.");
         }
 
-        public async Task<ApiResponse<bool>> MarkAsReadAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken = default)
+        notification.IsRead = true;
+        notification.ReadAt = DateTime.UtcNow;
+        await unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return ApiResponse<bool>.SuccessResponse(true, "Đã đánh dấu thông báo là đã đọc.");
+    }
+
+    public async Task<ApiResponse<bool>> SoftDeleteByIdAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken = default)
+    {
+        var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
+        if (notification == null)
         {
-            var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
-            if (notification == null)
-                return ApiResponse<bool>.FailureResponse("Không tìm thấy thông báo.");
+            _logger.LogWarning("SoftDeleteNotification: not found {NotificationId} user {UserId}", notificationId, userId);
+            return ApiResponse<bool>.NotFoundResponse("Không tìm thấy thông báo.");
+        }
 
-            if (notification.IsRead)
-                return ApiResponse<bool>.SuccessResponse(true, "Thông báo đã được đánh dấu đọc trước đó.");
+        notification.DeletedAt = DateTime.UtcNow;
+        notification.DeletedBy = userId;
+        await unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return ApiResponse<bool>.SuccessResponse(true, "Đã xóa thông báo.");
+    }
 
-            notification.IsRead = true;
-            notification.ReadAt = DateTime.UtcNow;
+    public async Task MarkInAppDeliveredAsync(Guid notificationId, Guid userId, IReadOnlyDictionary<string, object?> metadata, CancellationToken cancellationToken = default)
+    {
+        _ = metadata;
+
+        var notification = await unitOfWork.Notifications.FindOneAsync(n =>
+            n.Id == notificationId && n.UserId == userId);
+        if (notification != null)
+        {
+            notification.Status = NotificationStatus.Sent;
             await unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-            return ApiResponse<bool>.SuccessResponse(true, "Đã đánh dấu thông báo là đã đọc.");
         }
 
-        public async Task<ApiResponse<bool>> SoftDeleteByIdAsync(Guid userId, Guid notificationId, CancellationToken cancellationToken = default)
+        var delivery = await unitOfWork.NotificationDeliveries.FindOneAsync(d =>
+            d.NotificationId == notificationId && d.Channel == NotificationChannel.InApp);
+        if (delivery != null)
         {
-            var notification = await unitOfWork.Notifications.GetByIdAndUserIdAsync(notificationId, userId, cancellationToken);
-            if (notification == null)
-                return ApiResponse<bool>.FailureResponse("Không tìm thấy thông báo.");
-
-            notification.DeletedAt = DateTime.UtcNow;
-            notification.DeletedBy = userId;
-            await unitOfWork.Notifications.UpdateAsync(notification.Id, notification);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-            return ApiResponse<bool>.SuccessResponse(true, "Đã xóa thông báo.");
+            delivery.Status = NotificationStatus.Sent;
+            delivery.SentAt = delivery.DeliveredAt = DateTime.UtcNow;
+            await unitOfWork.NotificationDeliveries.UpdateAsync(delivery.Id, delivery);
         }
+
+        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
+

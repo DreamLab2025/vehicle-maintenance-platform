@@ -1,9 +1,6 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(UserVehicleId), nameof(ServiceDate))]
     public class MaintenanceRecord : BaseEntity
     {
         [Required]
@@ -15,7 +12,6 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(200)]
         public string? GarageName { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
         public decimal TotalCost { get; set; }
 
         [MaxLength(2000)]
@@ -23,8 +19,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         [MaxLength(500)]
         public string? InvoiceImageUrl { get; set; }
-
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
 
         public UserVehicle UserVehicle { get; set; } = null!;
 

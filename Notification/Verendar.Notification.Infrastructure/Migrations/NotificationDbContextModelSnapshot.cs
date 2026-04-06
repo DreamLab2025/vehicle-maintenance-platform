@@ -51,8 +51,8 @@ namespace Verendar.Notification.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("ExtendedPayloadJson")
+                        .HasColumnType("jsonb");
 
                     b.Property<bool>("IsRead")
                         .HasColumnType("boolean");
@@ -61,9 +61,6 @@ namespace Verendar.Notification.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
-
-                    b.Property<string>("MetadataJson")
-                        .HasColumnType("jsonb");
 
                     b.Property<int>("NotificationType")
                         .HasColumnType("integer");
@@ -134,21 +131,12 @@ namespace Verendar.Notification.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<int>("MaxRetries")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("NextRetryAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<Guid>("NotificationId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("RecipientAddress")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<int>("RetryCount")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("SentAt")
                         .HasColumnType("timestamp with time zone");
@@ -204,12 +192,6 @@ namespace Verendar.Notification.Infrastructure.Migrations
                     b.Property<bool>("PhoneNumberVerified")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("SmsEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("SmsForHighPriorityOnly")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -227,109 +209,6 @@ namespace Verendar.Notification.Infrastructure.Migrations
                     b.ToTable("NotificationPreferences");
                 });
 
-            modelBuilder.Entity("Verendar.Notification.Domain.Entities.NotificationTemplate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("DefaultPriority")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("MessageTemplate")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<int>("NotificationType")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TitleTemplate")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("VariablesJson")
-                        .HasColumnType("jsonb");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("NotificationTemplates");
-                });
-
-            modelBuilder.Entity("Verendar.Notification.Domain.Entities.NotificationTemplateChannel", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Channel")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("CreatedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ExternalTemplateId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("boolean");
-
-                    b.Property<Guid>("NotificationTemplateId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NotificationTemplateId");
-
-                    b.ToTable("NotificationTemplateChannels");
-                });
-
             modelBuilder.Entity("Verendar.Notification.Domain.Entities.NotificationDelivery", b =>
                 {
                     b.HasOne("Verendar.Notification.Domain.Entities.Notification", "Notification")
@@ -341,25 +220,9 @@ namespace Verendar.Notification.Infrastructure.Migrations
                     b.Navigation("Notification");
                 });
 
-            modelBuilder.Entity("Verendar.Notification.Domain.Entities.NotificationTemplateChannel", b =>
-                {
-                    b.HasOne("Verendar.Notification.Domain.Entities.NotificationTemplate", "NotificationTemplate")
-                        .WithMany("Channels")
-                        .HasForeignKey("NotificationTemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("NotificationTemplate");
-                });
-
             modelBuilder.Entity("Verendar.Notification.Domain.Entities.Notification", b =>
                 {
                     b.Navigation("Deliveries");
-                });
-
-            modelBuilder.Entity("Verendar.Notification.Domain.Entities.NotificationTemplate", b =>
-                {
-                    b.Navigation("Channels");
                 });
 #pragma warning restore 612, 618
         }

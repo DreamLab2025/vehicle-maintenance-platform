@@ -1,9 +1,3 @@
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Application.Services.Interfaces;
-using Verendar.Common.EndpointFilters;
-
 namespace Verendar.Vehicle.Apis
 {
     public static class MaintenanceRecordApis
@@ -19,16 +13,15 @@ namespace Verendar.Vehicle.Apis
 
         public static RouteGroupBuilder MapMaintenanceRecordRoutes(this RouteGroupBuilder group)
         {
-            group.MapGet("/vehicles/{userVehicleId:guid}", GetMaintenanceHistory)
+            group.MapGet("/", GetMaintenanceHistory)
                 .WithName("GetMaintenanceHistory")
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Lấy lịch sử bảo dưỡng theo xe";
-                    operation.Description = "Trả về danh sách phiếu bảo dưỡng của xe (có product hoặc không đều đồng bộ qua PartName/ItemCount).";
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<IReadOnlyList<MaintenanceRecordSummaryDto>>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<IReadOnlyList<RecordSummaryDto>>>(StatusCodes.Status200OK)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             group.MapGet("/{maintenanceRecordId:guid}", GetMaintenanceRecordDetail)
@@ -36,26 +29,37 @@ namespace Verendar.Vehicle.Apis
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Lấy chi tiết phiếu bảo dưỡng";
-                    operation.Description = "Trả về chi tiết phiếu bảo dưỡng và danh sách phụ tùng; PartName đồng bộ (từ sản phẩm hoặc tên tùy chỉnh).";
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<MaintenanceRecordDetailDto>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<MaintenanceRecordDetailDto>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<RecordDetailDto>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<RecordDetailDto>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/vehicles/{userVehicleId:guid}", CreateMaintenanceRecord)
-                .AddEndpointFilter(ValidationEndpointFilter.Validate<CreateMaintenanceRecordRequest>())
+            group.MapPost("/", CreateMaintenanceRecord)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<CreateRecordRequest>())
                 .WithName("CreateMaintenanceRecord")
                 .WithOpenApi(operation =>
                 {
                     operation.Summary = "Tạo phiếu bảo dưỡng (1 lần maintenance, nhiều phụ tùng thay thế)";
-                    operation.Description = "Tạo một phiếu bảo dưỡng với nhiều item: cùng ngày/số km, mỗi item là một phụ tùng được thay thế và ghi nhận tracking tương ứng.";
                     return operation;
                 })
                 .RequireAuthorization()
-                .Produces<ApiResponse<CreateMaintenanceRecordResponse>>(StatusCodes.Status201Created)
-                .Produces<ApiResponse<CreateMaintenanceRecordResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<CreateRecordResponse>>(StatusCodes.Status201Created)
+                .Produces<ApiResponse<CreateRecordResponse>>(StatusCodes.Status400BadRequest)
+                .Produces(StatusCodes.Status401Unauthorized);
+
+            group.MapGet("/export", ExportMaintenance)
+                .WithName("ExportMaintenanceRecords")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Xuất lịch sử bảo dưỡng ra file PDF hoặc CSV";
+                    return operation;
+                })
+                .RequireAuthorization()
+                .Produces(StatusCodes.Status200OK)
+                .Produces<ApiResponse<object>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<object>>(StatusCodes.Status404NotFound)
                 .Produces(StatusCodes.Status401Unauthorized);
 
             return group;
@@ -66,39 +70,64 @@ namespace Verendar.Vehicle.Apis
             ICurrentUserService currentUserService,
             IMaintenanceRecordService maintenanceRecordService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await maintenanceRecordService.GetMaintenanceHistoryAsync(userId, userVehicleId);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            var result = await maintenanceRecordService.GetMaintenanceHistoryAsync(
+                currentUserService.UserId,
+                userVehicleId);
+            return result.ToHttpResult();
         }
+
 
         private static async Task<IResult> GetMaintenanceRecordDetail(
             Guid maintenanceRecordId,
             ICurrentUserService currentUserService,
             IMaintenanceRecordService maintenanceRecordService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
-
-            var result = await maintenanceRecordService.GetMaintenanceRecordDetailAsync(userId, maintenanceRecordId);
-            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+            var result = await maintenanceRecordService.GetMaintenanceRecordDetailAsync(
+                currentUserService.UserId,
+                maintenanceRecordId);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> CreateMaintenanceRecord(
-            Guid userVehicleId,
-            CreateMaintenanceRecordRequest request,
+            CreateRecordRequest request,
             ICurrentUserService currentUserService,
             IMaintenanceRecordService maintenanceRecordService)
         {
-            var userId = currentUserService.UserId;
-            if (userId == Guid.Empty)
-                return Results.Unauthorized();
+            var result = await maintenanceRecordService.CreateMaintenanceRecordAsync(
+                currentUserService.UserId,
+                request.UserVehicleId,
+                request);
+            return result.ToHttpResult();
+        }
 
-            var result = await maintenanceRecordService.CreateMaintenanceRecordAsync(userId, userVehicleId, request);
-            return result.IsSuccess ? Results.Created(string.Empty, result) : Results.BadRequest(result);
+        private static async Task<IResult> ExportMaintenance(
+            [AsParameters] ExportMaintenanceQueryRequest query,
+            ICurrentUserService currentUserService,
+            IMaintenanceExportService maintenanceExportService,
+            CancellationToken cancellationToken)
+        {
+            if (!Enum.TryParse<ExportFormat>(query.Format, ignoreCase: true, out var format))
+                return Results.BadRequest(ApiResponse<object>.FailureResponse("Định dạng không hợp lệ. Sử dụng 'pdf' hoặc 'csv'."));
+
+            var columns = string.IsNullOrWhiteSpace(query.Columns)
+                ? null
+                : query.Columns.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+            var request = new ExportMaintenanceRequest
+            {
+                UserVehicleId = query.UserVehicleId,
+                Format = format,
+                From = query.From,
+                To = query.To,
+                Columns = columns
+            };
+
+            var result = await maintenanceExportService.ExportAsync(currentUserService.UserId, request, cancellationToken);
+            if (!result.IsSuccess)
+                return result.ToHttpResult();
+
+            var (data, contentType, fileName) = result.Data!;
+            return Results.File(data, contentType, fileName);
         }
     }
 }

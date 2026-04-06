@@ -1,8 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(Slug), IsUnique = true)]
     public class VehicleType : BaseEntity
     {
         [Required]
@@ -11,7 +9,7 @@ namespace Verendar.Vehicle.Domain.Entities
 
         [Required]
         [MaxLength(50)]
-        public string Code { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
 
         [MaxLength(500)]
         public string? Description { get; set; }
@@ -19,8 +17,6 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(500)]
         public string? ImageUrl { get; set; }
 
-        public EntityStatus Status { get; set; } = EntityStatus.Active;
-
-        public List<VehicleBrand> Brands { get; set; } = [];
+        public List<Brand> Brands { get; set; } = [];
     }
 }

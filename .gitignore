@@ -364,8 +364,13 @@ FodyWeavers.xsd
 
 # dotenv environment variable files
 .env
+<<<<<<< HEAD
+.env.dev
+.env.prod
+=======
 .env.local
 .env.*.local
+>>>>>>> 47e99da096ff7bae1d470536cccd03c645c52e33
 
 # Local appsettings overrides (may contain secrets)
 appsettings.Local.json
@@ -388,3 +393,8 @@ hangfire.db-shm
 hangfire.db-wal
 
 .vscode
+
+docs/*
+.claude/settings.local.json
+
+scripts/boundaries/*

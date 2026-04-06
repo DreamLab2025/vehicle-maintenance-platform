@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Vehicle.Domain.Entities
 {
     public class MaintenanceRecordItem : BaseEntity
@@ -12,7 +8,7 @@ namespace Verendar.Vehicle.Domain.Entities
         [Required]
         public Guid PartCategoryId { get; set; }
 
-        public Guid? PartProductId { get; set; }
+        public Guid? GarageProductId { get; set; }
 
         [MaxLength(200)]
         public string? CustomPartName { get; set; }
@@ -20,7 +16,6 @@ namespace Verendar.Vehicle.Domain.Entities
         [MaxLength(50)]
         public string? InstanceIdentifier { get; set; }
 
-        [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
 
         [MaxLength(500)]
@@ -31,7 +26,5 @@ namespace Verendar.Vehicle.Domain.Entities
         public MaintenanceRecord MaintenanceRecord { get; set; } = null!;
 
         public PartCategory PartCategory { get; set; } = null!;
-
-        public PartProduct? PartProduct { get; set; }
     }
 }

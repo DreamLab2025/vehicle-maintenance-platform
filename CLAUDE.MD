@@ -1,147 +1,53 @@
-# Verendar Project — Claude Context
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Stack
 
 .NET 9 · Aspire 9.5 · PostgreSQL · RabbitMQ · Redis · YARP · Hangfire
 
-## Services
-
-| Service      | Architecture | Purpose                                    |
-|--------------|--------------|--------------------------------------------|
-| Identity     | Clean Arch   | Auth, JWT, OTP, user management            |
-| Vehicle      | Clean Arch   | Vehicle tracking, maintenance, scheduling  |
-| Media        | Clean Arch   | File upload, storage, asset serving        |
-| Notification | Clean Arch   | Email/SMS, SignalR hubs, event-driven      |
-| Ai           | Clean Arch   | Gemini analysis, onboarding questionnaire  |
-
-## Solution Layout
-
-```
-Verendar/
-├── App/
-│   ├── Verendar.AppHost/              # Aspire orchestration entry point
-│   │   └── Extensions/               # Per-service AppHost extension methods
-│   ├── Verendar.ServiceDefaults/      # Shared service configuration (telemetry, health)
-│   ├── Verendar.Common/              # Shared utilities (ApiResponse, Pagination, JWT, etc.)
-│   └── Verendar.DatabaseMigrationHelpers/
-├── Ai/
-│   ├── Verendar.Ai/                  # Host — Minimal API + Bootstrapping
-│   ├── Verendar.Ai.Application/      # Use cases, services, DTOs, prompts
-│   ├── Verendar.Ai.Domain/           # Entities, enums, repository interfaces
-│   └── Verendar.Ai.Infrastructure/   # EF Core, external services (Gemini)
-├── Identity/
-│   ├── Verendar.Identity/            # Host — Minimal API + Bootstrapping
-│   ├── Verendar.Identity.Application/
-│   ├── Verendar.Identity.Domain/
-│   ├── Verendar.Identity.Infrastructure/
-│   └── Verender.Identity.Contracts/  # Shared events (UserRegisteredEvent, etc.)
-├── Media/
-│   ├── Verendar.Media/               # Host
-│   ├── Verendar.Media.Application/
-│   ├── Verendar.Media.Domain/
-│   └── Verendar.Media.Infrastructure/
-├── Notification/
-│   ├── Verendar.Notification/        # Host — includes email Templates/
-│   ├── Verendar.Notification.Application/ # Consumers, Hubs (SignalR), Services
-│   ├── Verendar.Notification.Domain/
-│   └── Verendar.Notification.Infrastructure/
-├── Vehicle/
-│   ├── Verendar.Vehicle/             # Host — includes Jobs/ (Hangfire)
-│   ├── Verendar.Vehicle.Application/
-│   ├── Verendar.Vehicle.Contracts/   # Shared events
-│   ├── Verendar.Vehicle.Domain/
-│   └── Verendar.Vehicle.Infrastructure/
-├── docker/                           # Docker configs (gateway, postgres)
-└── Verendar.sln
-```
-
-## Key Patterns
-
-| Pattern | Convention |
-|---------|-----------|
-| **API** | Minimal API — `MapGroup` + `Map*Endpoints()`. Never Controllers. |
-| **DI** | Bootstrapping extension methods in `*/Bootstrapping/`. Not inline in Program.cs. |
-| **Mapping** | Static extension methods (`ToResponse()`, `ToEntity()`). No AutoMapper. |
-| **Validation** | FluentValidation in `Application/Validators/`. Vietnamese user-facing messages. |
-| **Response** | `ApiResponse<T>` from `App/Verendar.Common/Shared/ApiResponse.cs` wraps everything. |
-| **Secrets** | User Secrets only. Never in `appsettings.json`. |
-
-## Response Shape
-
-All endpoints return `ApiResponse<T>`:
-
-```json
-// Success (single)
-{ "isSuccess": true, "message": "Success", "data": { ... }, "metadata": null }
-
-// Success (paginated) — data is List<T>, metadata is PagingMetadata
-{ "isSuccess": true, "message": "Success", "data": [ ... ],
-  "metadata": { "pageNumber": 1, "pageSize": 10, "totalItems": 3,
-                "totalPages": 1, "hasNextPage": false, "hasPreviousPage": false } }
-
-// Business failure
-{ "isSuccess": false, "message": "Vehicle not found.", "data": null, "metadata": null }
-```
-
-**Exception**: FluentValidation errors and unhandled 500s use RFC 7807 Problem Details (not ApiResponse):
-```json
-{ "title": "One or more validation errors occurred.", "status": 400,
-  "errors": { "fieldName": ["message"] } }
-```
-
-## Architecture
-
-**Clean Architecture layers** (all services):
-```
-Domain → Application → Infrastructure → Host
-```
-- Domain: entities, value objects, domain events, interfaces
-- Application: use cases, validators, DTOs, service interfaces
-- Infrastructure: EF Core, repositories, external APIs
-- Host: Minimal API endpoints, program entry, bootstrapping
-
-**Communication**:
-- Sync: HTTP/REST via YARP reverse proxy
-- Async: RabbitMQ domain events (e.g., user registered → notification triggered)
-
-**Database**: One PostgreSQL DB per service. Migrations auto-run on startup via `MigrateDbContextAsync<T>()`.
-
-## AI-Assisted Onboarding Flow
-
-Allows users to initialize vehicle maintenance tracking accurately using AI.
-
-**Steps (all optional after vehicle creation)**:
-1. `POST /api/v1/user-vehicles` — creates vehicle with `NeedsOnboarding = true`, NO tracking yet
-2. `GET /api/v1/vehicle-models/{vehicleModelId}/part-categories/{code}/default-schedule` — manufacturer schedule
-3. Frontend shows questionnaire per part (e.g., "When did you last change oil?")
-4. `POST /api/v1/ai/vehicle-questionnaire/analyze` — AI analyzes ONE part, returns estimates + confidence
-5. `POST /api/v1/user-vehicles/{id}/apply-tracking` — creates/updates `VehiclePartTracking` with AI result
-6. Repeat steps 2–5 for other parts as needed
-7. `PATCH /api/v1/user-vehicles/{id}/complete-onboarding` — sets `NeedsOnboarding = false`
-
-**Key decisions**:
-- Lazy tracking: records only created when user explicitly analyzes a part
-- Single-part per AI request (accuracy > batch)
-- AI reasoning stored in `VehiclePartTracking.AiAnalysisResult` (JSON, for audit)
-- Vietnamese prompts for Gemini (token cost optimization)
-
-## Running Locally
+## Commands
 
 ```bash
-dotnet run --project App/Verendar.AppHost   # Starts all services + infrastructure
-dotnet build Verendar.sln               # Build check
+task run              # start all services + infra via Aspire
+task build            # build solution
+task test:all         # run all tests
+task test PROJECT=Location/Verendar.Location.Tests
+task clear            # remove Aspire containers and volumes
+
+task migrate:add NAME=<MigrationName> PROJECT=<Service>/Verendar.<Service>.Infrastructure STARTUP=<Service>/Verendar.<Service>
+task migrate:remove PROJECT=<Service>/Verendar.<Service>.Infrastructure STARTUP=<Service>/Verendar.<Service>
 ```
 
-Prerequisites: .NET 9 SDK, Docker (Postgres 17, RabbitMQ 3, Redis Alpine via Aspire).
+## System Structure
 
-## Skills Reference
+Each service is a 4-project group: `Verendar.{Service}` (Host) · `.Application` · `.Domain` · `.Infrastructure`.
+Shared code: `App/Verendar.Common` (ApiResponse, BaseEntity, ICacheService, IUnitOfWork helpers, middleware) and `App/Verendar.ServiceDefaults` (OpenTelemetry, health checks).
 
-`.claude/skills/backend-development/` — patterns, API design, mindset, performance, devops, code quality.
-Load it when making architectural decisions, designing endpoints, or reviewing code.
+Services: **Identity** · **Vehicle** · **Media** · **Notification** · **Ai** · **Garage** · **Payment** · **Location**
 
-## Notes
+MassTransit event contracts live in dedicated `Verendar.{Service}.Contracts` projects. All events extend `BaseEvent`. Consumers are auto-discovered from referenced assemblies — no manual registration needed.
 
-- All services follow Clean Architecture — Identity included
-- Never use Controllers — always Minimal API
-- No direct DB sharing between services — cross-service data via HTTP or events
-- `PaginationRequest` (default 10, max 100) on all list endpoints — no unbounded queries
+## Implementation Patterns
+
+**API layer** — Minimal API only. Route groups defined in `{Module}Apis.cs`, handlers are private static methods. Structural validation via `ValidationEndpointFilter.Validate<T>()` as an endpoint filter; business rules stay in the service layer. All responses use `ApiResponse<T>`; errors map to RFC 7807.
+
+**Domain** — All entities inherit `BaseEntity` (provides `Id` as UUID v7, `CreatedAt/By`, `UpdatedAt/By`, `DeletedAt/By`). Soft delete by setting `DeletedAt = DateTime.UtcNow`. `BaseDbContext` automatically applies a global query filter (`DeletedAt == null`) and populates audit fields on `SaveChangesAsync`. Lists go through `PaginationRequest` + `GetPagedAsync`.
+
+**Application services** — Call `IUnitOfWork` repositories directly, return `ApiResponse<T>`. DTO mapping via static extensions: `ToEntity()`, `ToResponse()`, `UpdateFromRequest()`.
+
+**Inter-service communication** — Two channels:
+
+- **Async (MassTransit/RabbitMQ)**: publish/consume events; exponential retry (5× , 2–30 s)
+- **Sync (typed HTTP clients)**: `ILocationClient`, `IPaymentClient`, `IIdentityClient`, etc., registered in each service's `Bootstrapping/`. Aspire service discovery: `https+http://service-name`; override via `Configuration["Services:{Name}:BaseUrl"]`. Internal endpoints (`/api/internal/...`) skip `ApiResponse<T>` and authenticate via `IServiceTokenProvider`.
+
+**Service bootstrap** — every Host follows: `AddServiceDefaults()` → `AddCommonService()` → `AddPostgresDatabase<TDbContext>()` → (optional) `AddServiceRedis()`. Then `Program.cs`: migrate → seed (dev only) → `UseApplicationServices()` → map route groups.
+
+## Constraints
+
+- No controllers, no AutoMapper, no MediatR
+- `ApiResponse<T>` on every public endpoint
+- Soft delete only — never `DbContext.Remove()`
+- Secrets in User Secrets only — never `appsettings.json`
+- Paginate all lists (`PaginationRequest`) — exception: Location service uses unbounded lists with 24 h Redis cache
+- Payment (VNPay) logic lives exclusively in the Payment service; other services call it via `IPaymentClient` + consume `PaymentSucceededEvent` / `PaymentRefundedEvent`

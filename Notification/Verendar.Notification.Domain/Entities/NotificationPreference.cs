@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Notification.Domain.Entities
 {
     [Index(nameof(UserId), IsUnique = true)]
@@ -20,8 +16,5 @@ namespace Verendar.Notification.Domain.Entities
         public bool EmailVerified { get; set; } = false;
 
         public bool InAppEnabled { get; set; } = true;
-        public bool SmsEnabled { get; set; } = true;
-
-        public bool SmsForHighPriorityOnly { get; set; } = true;
     }
 }

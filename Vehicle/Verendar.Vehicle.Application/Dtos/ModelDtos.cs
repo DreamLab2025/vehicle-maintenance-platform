@@ -1,20 +1,18 @@
-using Verendar.Common.Shared;
-using Verendar.Vehicle.Domain.Entities;
-
 namespace Verendar.Vehicle.Application.Dtos
 {
     public class ModelRequest
     {
         public string Name { get; set; } = null!;
-        public string? Code { get; set; }
         public Guid BrandId { get; set; }
         public Guid TypeId { get; set; }
-        public int? ReleaseYear { get; set; }
+        public int? ManufactureYear { get; set; }
         public VehicleFuelType? FuelType { get; set; }
         public VehicleTransmissionType? TransmissionType { get; set; }
         public List<ModelImageItem> Images { get; set; } = new();
         public int? EngineDisplacement { get; set; }
         public decimal? EngineCapacity { get; set; }
+
+        public string? Description { get; set; }
     }
 
     public class ModelImageItem
@@ -28,24 +26,41 @@ namespace Verendar.Vehicle.Application.Dtos
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
         public Guid BrandId { get; set; }
         public string BrandName { get; set; } = null!;
         public Guid TypeId { get; set; }
         public string TypeName { get; set; } = null!;
-        public int? ReleaseYear { get; set; }
+        public int? ManufactureYear { get; set; }
         public VehicleFuelType? FuelType { get; set; }
         public string FuelTypeName { get; set; } = null!;
         public VehicleTransmissionType? TransmissionType { get; set; }
         public string TransmissionTypeName { get; set; } = null!;
         public string? EngineDisplacementDisplay { get; set; }
         public decimal? EngineCapacity { get; set; }
+        public string? Description { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
 
     public class ModelResponseWithVariants : ModelResponse
     {
-        public List<VehicleVariantResponse> Variants { get; set; } = new();
+        public List<VariantResponse> Variants { get; set; } = new();
+    }
+
+    public class ModelSummary
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
+        public Guid BrandId { get; set; }
+        public string BrandName { get; set; } = null!;
+        public Guid TypeId { get; set; }
+        public string TypeName { get; set; } = null!;
+        public int? ManufactureYear { get; set; }
+        public string FuelTypeName { get; set; } = null!;
+        public string TransmissionTypeName { get; set; } = null!;
+        public string? Description { get; set; }
     }
 
     public class ModelFilterRequest : PaginationRequest
@@ -55,11 +70,8 @@ namespace Verendar.Vehicle.Application.Dtos
         public string? ModelName { get; set; }
         public VehicleTransmissionType? TransmissionType { get; set; }
         public int? EngineDisplacement { get; set; }
-        public int? ReleaseYear { get; set; }
+        public int? ManufactureYear { get; set; }
 
-        /// <summary>
-        /// Chuẩn hóa pagination và trim search string (ModelName).
-        /// </summary>
         public override void Normalize()
         {
             base.Normalize();

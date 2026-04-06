@@ -1,5 +1,10 @@
 namespace Verendar.Vehicle.Application.Dtos
 {
+    public class BrandFilterRequest : PaginationRequest
+    {
+        public Guid? TypeId { get; set; }
+    }
+
     public class BrandRequest
     {
         public Guid VehicleTypeId { get; set; }
@@ -7,6 +12,8 @@ namespace Verendar.Vehicle.Application.Dtos
         public string Name { get; set; } = null!;
 
         public string? LogoUrl { get; set; }
+
+        public Guid? LogoMediaFileId { get; set; }
 
         public string? Website { get; set; }
 
@@ -19,10 +26,23 @@ namespace Verendar.Vehicle.Application.Dtos
         public Guid VehicleTypeId { get; set; }
         public string VehicleTypeName { get; set; } = null!;
         public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
         public string? LogoUrl { get; set; }
+        public Guid? LogoMediaFileId { get; set; }
         public string? Website { get; set; }
         public string? SupportPhone { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+    }
+
+    public class BrandSummary
+    {
+        public Guid Id { get; set; }
+        public Guid VehicleTypeId { get; set; }
+        public string VehicleTypeName { get; set; } = null!;
+        public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
+        public string? LogoUrl { get; set; }
+        public Guid? LogoMediaFileId { get; set; }
     }
 }

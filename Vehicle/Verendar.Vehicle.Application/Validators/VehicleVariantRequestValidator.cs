@@ -1,11 +1,8 @@
-using FluentValidation;
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Validators
 {
-    public class VehicleVariantRequestValidator : AbstractValidator<VehicleVariantRequest>
+    public class VariantRequestValidator : AbstractValidator<VariantRequest>
     {
-        public VehicleVariantRequestValidator()
+        public VariantRequestValidator()
         {
             RuleFor(x => x.VehicleModelId)
                 .NotEmpty()
@@ -28,6 +25,10 @@ namespace Verendar.Vehicle.Application.Validators
                 .WithMessage("URL hình ảnh không được để trống")
                 .MaximumLength(500)
                 .WithMessage("URL hình ảnh tối đa 500 ký tự");
+
+            RuleFor(x => x)
+                .Must(x => !x.ImageMediaFileId.HasValue || !string.IsNullOrWhiteSpace(x.ImageUrl))
+                .WithMessage("ImageUrl là bắt buộc khi gửi ImageMediaFileId");
         }
     }
 }

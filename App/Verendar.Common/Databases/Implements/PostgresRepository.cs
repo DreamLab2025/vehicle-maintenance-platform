@@ -21,14 +21,21 @@ namespace Verendar.Common.Databases.Implements
             return count;
         }
 
-        public Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id)
         {
-            var entity = _dbSet.Find(id);
+            var entity = await _dbSet.FindAsync(id);
             if (entity != null)
             {
-                _dbSet.Remove(entity);
+                if (entity is ISoftDeleteEntity softDeleteEntity)
+                {
+                    softDeleteEntity.DeletedAt = DateTime.UtcNow;
+                    _context.Entry(entity).State = EntityState.Modified;
+                }
+                else
+                {
+                    _dbSet.Remove(entity);
+                }
             }
-            return Task.CompletedTask;
         }
 
         public async Task<T?> FindOneAsync(Expression<Func<T, bool>> expression)
@@ -53,12 +60,12 @@ namespace Verendar.Common.Databases.Implements
 
         public async Task<T?> GetByIdAsync(Guid id)
         {
-            return await _dbSet.FindAsync(id);
+            return await _dbSet.FirstOrDefaultAsync(e => e.Id == id);
         }
 
-        public Task UpdateAsync(Guid id, T entity)
+        public async Task UpdateAsync(Guid id, T entity)
         {
-            var existingEntity = _dbSet.Find(id);
+            var existingEntity = await _dbSet.FindAsync(id);
             if (existingEntity != null)
             {
                 if (!ReferenceEquals(existingEntity, entity))
@@ -66,7 +73,6 @@ namespace Verendar.Common.Databases.Implements
                     _context.Entry(existingEntity).CurrentValues.SetValues(entity);
                 }
             }
-            return Task.CompletedTask;
         }
 
         public IQueryable<T> AsQueryable()

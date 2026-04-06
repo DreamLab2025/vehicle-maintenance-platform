@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.10.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.10.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.11" />
+    <ProjectReference Include="..\Verendar.Garage.Contracts\Verendar.Garage.Contracts.csproj" />
+    <ProjectReference Include="..\Verendar.Garage.Domain\Verendar.Garage.Domain.csproj" />
+    <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
+    <ProjectReference Include="..\..\Payment\Verendar.Payment.Contracts\Verendar.Payment.Contracts.csproj" />
+    <ProjectReference Include="..\..\Vehicle\Verendar.Vehicle.Contracts\Verendar.Vehicle.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\Verender.Identity.Contracts\Verender.Identity.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

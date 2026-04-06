@@ -1,6 +1,3 @@
-using Verendar.Media.Application.Dtos;
-using Verendar.Media.Domain.Entities;
-
 namespace Verendar.Media.Application.Mappings
 {
     public static class MediaFileMappings

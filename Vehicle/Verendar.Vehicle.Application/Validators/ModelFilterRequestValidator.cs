@@ -1,6 +1,3 @@
-using FluentValidation;
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Validators
 {
     public class ModelFilterRequestValidator : AbstractValidator<ModelFilterRequest>
@@ -20,9 +17,9 @@ namespace Verendar.Vehicle.Application.Validators
                 .When(x => !string.IsNullOrEmpty(x.ModelName))
                 .WithMessage("Tên mẫu xe tìm kiếm tối đa 200 ký tự");
 
-            RuleFor(x => x.ReleaseYear)
+            RuleFor(x => x.ManufactureYear)
                 .InclusiveBetween(1900, 2100)
-                .When(x => x.ReleaseYear.HasValue)
+                .When(x => x.ManufactureYear.HasValue)
                 .WithMessage("Năm sản xuất phải từ 1900 đến 2100");
 
             RuleFor(x => x.EngineDisplacement)

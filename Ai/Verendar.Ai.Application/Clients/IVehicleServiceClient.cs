@@ -1,6 +1,3 @@
-using Verendar.Ai.Application.Dtos.VehicleService;
-using Verendar.Common.Shared;
-
 namespace Verendar.Ai.Application.Clients
 {
     public interface IVehicleServiceClient
@@ -11,7 +8,21 @@ namespace Verendar.Ai.Application.Clients
 
         Task<ApiResponse<VehicleServiceDefaultScheduleResponse>> GetDefaultScheduleAsync(
             Guid vehicleModelId,
-            string partCategoryCode,
+            string partCategorySlug,
+            CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<VehicleServiceOdometerSummaryResponse>> GetOdometerSummaryAsync(
+            Guid userVehicleId,
+            CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<List<VehicleServiceBaselinePartItem>>> GetBaselinePartsAsync(
+            Guid userVehicleId,
+            CancellationToken cancellationToken = default);
+
+        Task<ApiResponse<object>> ApplyTrackingInternalAsync(
+            Guid vehicleId,
+            Guid userId,
+            VehicleServiceApplyTrackingRequest request,
             CancellationToken cancellationToken = default);
     }
 }

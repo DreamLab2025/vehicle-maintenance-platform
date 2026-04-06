@@ -1,17 +1,11 @@
-using Verendar.Common.Shared;
-
 namespace Verendar.Vehicle.Application.Dtos
 {
     public class UserVehicleRequest
     {
         public Guid VehicleVariantId { get; set; }
-
-        public string LicensePlate { get; set; } = null!;
-
-        public string? VinNumber { get; set; }
-
-        public DateTime? PurchaseDate { get; set; }
-
+        public string? LicensePlate { get; set; }
+        public string? VIN { get; set; }
+        public DateOnly? PurchaseDate { get; set; }
         public int CurrentOdometer { get; set; }
     }
 
@@ -20,15 +14,29 @@ namespace Verendar.Vehicle.Application.Dtos
         public int CurrentOdometer { get; set; }
     }
 
+    public class FromScanOdometerRequest
+    {
+        public Guid MediaFileId { get; set; }
+        public int ConfirmedOdometer { get; set; }
+    }
+
+    public class UpdateOdometerResponse
+    {
+        public Guid UserVehicleId { get; set; }
+        public int CurrentOdometer { get; set; }
+        public DateOnly? LastOdometerUpdate { get; set; }
+    }
+
     public class ApplyTrackingConfigRequest
     {
-        public string PartCategoryCode { get; set; } = string.Empty;
+        public string PartCategorySlug { get; set; } = string.Empty;
         public int? LastReplacementOdometer { get; set; }
         public DateOnly? LastReplacementDate { get; set; }
         public int? PredictedNextOdometer { get; set; }
         public DateOnly? PredictedNextDate { get; set; }
         public string? AiReasoning { get; set; }
         public double? ConfidenceScore { get; set; }
+        public bool IsBaseline { get; set; } = false;
     }
 
     public class UserVehicleResponse
@@ -36,15 +44,62 @@ namespace Verendar.Vehicle.Application.Dtos
         public Guid Id { get; set; }
         public Guid UserId { get; set; }
         public string? LicensePlate { get; set; }
-        public string? VinNumber { get; set; }
-        public DateTime? PurchaseDate { get; set; }
+        public string? VIN { get; set; }
+        public DateOnly? PurchaseDate { get; set; }
         public int CurrentOdometer { get; set; }
-        public DateTime? LastOdometerUpdateAt { get; set; }
+        public DateOnly? LastOdometerUpdate { get; set; }
         public int? AverageKmPerDay { get; set; }
-        public bool NeedsOnboarding { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
-        public UserVehicleVariantResponse UserVehicleVariant { get; set; } = null!;
+        public UserVariantResponse UserVehicleVariant { get; set; } = null!;
+    }
+
+    public class VehicleTypeRefSummaryDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
+    }
+
+    public class VehicleBrandRefSummaryDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
+        public VehicleTypeRefSummaryDto Type { get; set; } = null!;
+    }
+
+    public class VehicleModelRefSummaryDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string Slug { get; set; } = null!;
+        public VehicleBrandRefSummaryDto Brand { get; set; } = null!;
+    }
+
+    public class UserVehicleVariantSummaryDto
+    {
+        public Guid Id { get; set; }
+        public string Color { get; set; } = null!;
+        public string HexCode { get; set; } = null!;
+        public string ImageUrl { get; set; } = null!;
+        public Guid? ImageMediaFileId { get; set; }
+        public VehicleModelRefSummaryDto Model { get; set; } = null!;
+    }
+
+    public class UserVehicleSummaryDto
+    {
+        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
+        public string? LicensePlate { get; set; }
+        public string? VIN { get; set; }
+        public DateOnly? PurchaseDate { get; set; }
+        public int CurrentOdometer { get; set; }
+        public DateOnly? LastOdometerUpdate { get; set; }
+        public int? AverageKmPerDay { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public UserVehicleVariantSummaryDto Variant { get; set; } = null!;
     }
 
 
@@ -57,26 +112,36 @@ namespace Verendar.Vehicle.Application.Dtos
     }
 
 
-    public class UserVehiclePartSummary
+    public class PartSummary
     {
         public Guid Id { get; set; }
         public Guid PartCategoryId { get; set; }
         public string PartCategoryName { get; set; } = null!;
-        public string PartCategoryCode { get; set; } = null!;
+        public string PartCategorySlug { get; set; } = null!;
         public string? IconUrl { get; set; }
         public bool IsDeclared { get; set; }
         public string? Description { get; set; }
     }
 
-    public class VehiclePartTrackingSummary
+    public class TrackingCycleSummary
+    {
+        public Guid Id { get; set; }
+        public string Status { get; set; } = null!;
+        public int StartOdometer { get; set; }
+        public DateOnly StartDate { get; set; }
+        public int? TargetOdometer { get; set; }
+        public DateOnly? TargetDate { get; set; }
+        public List<ReminderSummary> Reminders { get; set; } = new();
+    }
+
+    public class PartTrackingSummary
     {
         public Guid Id { get; set; }
         public Guid PartCategoryId { get; set; }
         public string PartCategoryName { get; set; } = null!;
-        public string PartCategoryCode { get; set; } = null!;
+        public string PartCategorySlug { get; set; } = null!;
         public string? InstanceIdentifier { get; set; }
-        public Guid? CurrentPartProductId { get; set; }
-        public string? CurrentPartProductName { get; set; }
+        public Guid? CurrentGarageProductId { get; set; }
         public int? LastReplacementOdometer { get; set; }
         public DateOnly? LastReplacementDate { get; set; }
         public int? CustomKmInterval { get; set; }
@@ -84,13 +149,15 @@ namespace Verendar.Vehicle.Application.Dtos
         public int? PredictedNextOdometer { get; set; }
         public DateOnly? PredictedNextDate { get; set; }
         public bool IsDeclared { get; set; }
-        public List<MaintenanceReminderSummary> Reminders { get; set; } = new();
+        public bool IsBaseline { get; set; }
+        public TrackingCycleSummary? ActiveCycle { get; set; }
     }
 
-    public class MaintenanceReminderSummary
+    public class ReminderSummary
     {
         public Guid Id { get; set; }
         public string Level { get; set; } = null!;
+        public string Status { get; set; } = null!;
         public int CurrentOdometer { get; set; }
         public int TargetOdometer { get; set; }
         public int RemainingKm { get; set; }
@@ -100,10 +167,9 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateOnly? NotifiedDate { get; set; }
         public bool IsDismissed { get; set; }
         public DateOnly? DismissedDate { get; set; }
-        public bool IsCurrent { get; set; }
     }
 
-    public class VehicleStreakResponse
+    public class StreakResponse
     {
         public Guid VehicleId { get; set; }
         public int CurrentStreak { get; set; }
@@ -117,11 +183,12 @@ namespace Verendar.Vehicle.Application.Dtos
         public string? Message { get; set; }
     }
 
-    public class ReminderWithPartCategoryDto
+    public class ReminderDetailDto
     {
         public Guid Id { get; set; }
-        public Guid VehiclePartTrackingId { get; set; }
+        public Guid TrackingCycleId { get; set; }
         public string Level { get; set; } = null!;
+        public string Status { get; set; } = null!;
         public int CurrentOdometer { get; set; }
         public int TargetOdometer { get; set; }
         public int RemainingKm { get; set; }
@@ -131,29 +198,27 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateOnly? NotifiedDate { get; set; }
         public bool IsDismissed { get; set; }
         public DateOnly? DismissedDate { get; set; }
-        public bool IsCurrent { get; set; }
-        public PartCategoryInfoDto PartCategory { get; set; } = null!;
+        public CategoryInfoDto PartCategory { get; set; } = null!;
     }
 
-    public class PartCategoryInfoDto
+    public class CategoryInfoDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
-        public string Code { get; set; } = null!;
+        public string Slug { get; set; } = null!;
         public string? Description { get; set; }
         public string? IconUrl { get; set; }
+        public Guid? IconMediaFileId { get; set; }
         public string? IdentificationSigns { get; set; }
         public string? ConsequencesIfNotHandled { get; set; }
     }
 
     public class OdometerHistoryQueryRequest : PaginationRequest
     {
+        public Guid UserVehicleId { get; set; }
         public DateOnly? FromDate { get; set; }
         public DateOnly? ToDate { get; set; }
 
-        /// <summary>
-        /// Chuẩn hóa pagination params.
-        /// </summary>
         public override void Normalize()
         {
             base.Normalize();
@@ -168,5 +233,23 @@ namespace Verendar.Vehicle.Application.Dtos
         public DateOnly RecordedDate { get; set; }
         public int? KmOnRecordedDate { get; set; }
         public string Source { get; set; } = null!;
+    }
+
+    public class VehicleHealthScoreResponse
+    {
+        public Guid VehicleId { get; set; }
+        public decimal? Score { get; set; }
+        public int TrackedPartCount { get; set; }
+        public List<PartHealthItem> Breakdown { get; set; } = [];
+    }
+
+    public class PartHealthItem
+    {
+        public Guid PartTrackingId { get; set; }
+        public string PartCategorySlug { get; set; } = null!;
+        public string PartCategoryName { get; set; } = null!;
+        public string? IconUrl { get; set; }
+        public int HealthScore { get; set; }
+        public string Status { get; set; } = null!;
     }
 }

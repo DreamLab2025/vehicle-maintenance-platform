@@ -27,7 +27,7 @@ namespace Verendar.Common.Bootstrapping
             builder.Services.Configure<JwtBearerConfigurationOptions>(
                 builder.Configuration.GetSection(JwtBearerConfigurationOptions.SectionName));
 
-            builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+            builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
             builder.Services.AddHttpContextAccessor();
 
             builder.Services.AddAuthentication(options =>
@@ -41,7 +41,7 @@ namespace Verendar.Common.Bootstrapping
                 var key = Encoding.UTF8.GetBytes(jwtOptions.SecretKey);
 
                 options.SaveToken = true;
-                options.RequireHttpsMetadata = false;
+                options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = jwtOptions.ValidateIssuer,
@@ -59,8 +59,8 @@ namespace Verendar.Common.Bootstrapping
                     OnAuthenticationFailed = context =>
                     {
                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<InvalidProgramException>>();
-                        logger.LogError(context.Exception, "JWT Authentication Failed. Token: {Token}",
-                            context.Request.Headers.Authorization.ToString());
+                        logger.LogError(context.Exception, "JWT Authentication Failed for request: {Path}",
+                            context.Request.Path);
 
                         if (context.Exception is SecurityTokenInvalidAudienceException)
                         {

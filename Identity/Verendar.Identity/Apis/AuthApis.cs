@@ -1,8 +1,4 @@
 using Verendar.Common.EndpointFilters;
-using Verendar.Common.Jwt;
-using Verendar.Common.Shared;
-using Verendar.Identity.Application.Dtos;
-using Verendar.Identity.Application.Services.Interfaces;
 
 namespace Verendar.Identity.Apis
 {
@@ -30,7 +26,8 @@ namespace Verendar.Identity.Apis
                 })
                 .AllowAnonymous()
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status400BadRequest);
+                .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status403Forbidden);
 
             group.MapPost("/register", RegisterUser)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<RegisterRequest>())
@@ -42,7 +39,8 @@ namespace Verendar.Identity.Apis
                 })
                 .AllowAnonymous()
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status200OK)
-                .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest);
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest)
+                .Produces<ApiResponse<UserDto>>(StatusCodes.Status409Conflict);
 
             group.MapPost("/refresh-token", RefreshToken)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<RefreshTokenRequest>())
@@ -52,10 +50,10 @@ namespace Verendar.Identity.Apis
                     operation.Summary = "Làm mới access token";
                     return operation;
                 })
-                .RequireAuthorization()
+                .AllowAnonymous()
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status200OK)
                 .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status400BadRequest)
-                .Produces(StatusCodes.Status401Unauthorized);
+                .Produces<ApiResponse<TokenResponse>>(StatusCodes.Status403Forbidden);
 
             group.MapPut("/change-password", ChangePassword)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<ChangePasswordRequest>())
@@ -70,12 +68,24 @@ namespace Verendar.Identity.Apis
                 .Produces<ApiResponse<UserDto>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/verify-otp", VerifyOtp)
+            group.MapPost("/verify-otp/register", VerifyRegisterOtp)
                 .AddEndpointFilter(ValidationEndpointFilter.Validate<VerifyOtpRequest>())
-                .WithName("VerifyOtp")
+                .WithName("VerifyRegisterOtp")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Xác thực OTP đăng ký";
+                    operation.Summary = "Xác thực OTP đăng ký tài khoản";
+                    return operation;
+                })
+                .AllowAnonymous()
+                .Produces<ApiResponse<bool>>(StatusCodes.Status200OK)
+                .Produces<ApiResponse<bool>>(StatusCodes.Status400BadRequest);
+
+            group.MapPost("/verify-otp/reset-password", VerifyResetPasswordOtp)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<VerifyResetPasswordOtpRequest>())
+                .WithName("VerifyResetPasswordOtp")
+                .WithOpenApi(operation =>
+                {
+                    operation.Summary = "Xác thực OTP lấy lại mật khẩu";
                     return operation;
                 })
                 .AllowAnonymous()
@@ -123,120 +133,55 @@ namespace Verendar.Identity.Apis
         private static async Task<IResult> ForgotPassword(ForgotPasswordRequest request, IAuthService authService)
         {
             var result = await authService.ForgotPasswordAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> ResetPassword(
-            ResetPasswordRequest request,
-            IAuthService authService)
+        private static async Task<IResult> ResetPassword(ResetPasswordRequest request, IAuthService authService)
         {
             var result = await authService.ResetPasswordAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> ResendOtp(ResendOtpRequest request, IAuthService authService)
         {
             var result = await authService.ResendRegisterOtpAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> VerifyOtp(VerifyOtpRequest request, IAuthService authService)
+        private static async Task<IResult> VerifyRegisterOtp(VerifyOtpRequest request, IAuthService authService)
         {
             var result = await authService.VerifyRegisterOtpAsync(request);
+            return result.ToHttpResult();
+        }
 
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+        private static async Task<IResult> VerifyResetPasswordOtp(VerifyResetPasswordOtpRequest request, IAuthService authService)
+        {
+            var result = await authService.VerifyResetPasswordOtpAsync(request);
+            return result.ToHttpResult();
         }
 
         private static async Task<IResult> ChangePassword(ChangePasswordRequest request, IAuthService authService, ICurrentUserService currentUserService)
         {
-            var userId = currentUserService.UserId;
-
-            if (userId == Guid.Empty)
-            {
-                return Results.Unauthorized();
-            }
-
-            var result = await authService.ChangePasswordAsync(userId, request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            var result = await authService.ChangePasswordAsync(currentUserService.UserId, request);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> RefreshToken(
-            RefreshTokenRequest request,
-            ICurrentUserService currentUser,
-            IAuthService authService)
+        private static async Task<IResult> RefreshToken(RefreshTokenRequest request, IAuthService authService)
         {
-            var userId = currentUser.UserId;
-
-            if (userId == Guid.Empty)
-            {
-                return Results.Unauthorized();
-            }
-
-            var result = await authService.RefreshTokenAsync(userId, request.RefreshToken);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            var result = await authService.RefreshTokenAsync(request.RefreshToken);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> RegisterUser(
-            RegisterRequest request,
-            IAuthService authService)
+        private static async Task<IResult> RegisterUser(RegisterRequest request, IAuthService authService)
         {
             var result = await authService.RegisterUserAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
 
-        private static async Task<IResult> LoginUser(
-            LoginRequest request,
-            IAuthService authService)
+        private static async Task<IResult> LoginUser(LoginRequest request, IAuthService authService)
         {
             var result = await authService.LoginUserAsync(request);
-
-            if (result.IsSuccess)
-            {
-                return Results.Ok(result);
-            }
-
-            return Results.BadRequest(result);
+            return result.ToHttpResult();
         }
     }
 }

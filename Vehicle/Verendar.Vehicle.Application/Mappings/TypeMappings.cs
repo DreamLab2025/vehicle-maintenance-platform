@@ -1,6 +1,3 @@
-﻿using Verendar.Vehicle.Application.Dtos;
-using Verendar.Vehicle.Domain.Entities;
-
 namespace Verendar.Vehicle.Application.Mappings
 {
     public static class TypeMappings
@@ -21,14 +18,26 @@ namespace Verendar.Vehicle.Application.Mappings
             {
                 Id = entity.Id,
                 Name = entity.Name,
+                Slug = entity.Slug,
                 Description = entity.Description,
-                ImageUrl = entity.ImageUrl ?? string.Empty,
+                ImageUrl = entity.ImageUrl,
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt
             };
         }
 
-        public static void UpdateEntity(this VehicleType entity, TypeRequest request)
+        public static TypeSummary ToSummary(this VehicleType entity)
+        {
+            return new TypeSummary
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                Slug = entity.Slug,
+                ImageUrl = entity.ImageUrl
+            };
+        }
+
+        public static void UpdateFromRequest(this VehicleType entity, TypeRequest request)
         {
             entity.Name = request.Name;
             entity.Description = request.Description;

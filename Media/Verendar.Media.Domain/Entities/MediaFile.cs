@@ -1,8 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Verendar.Common.Databases.Base;
-
 namespace Verendar.Media.Domain.Entities
 {
     [Index(nameof(UserId))]
@@ -35,6 +30,9 @@ namespace Verendar.Media.Domain.Entities
 
         public FileStatus Status { get; set; } = FileStatus.Pending;
 
+        [MaxLength(2000)]
+        public string? PublicPath { get; set; }
+
         [Column(TypeName = "jsonb")]
         public string? Metadata { get; set; }
     }
@@ -60,6 +58,18 @@ namespace Verendar.Media.Domain.Entities
         VehicleBrand = 3,
         VehicleVariant = 4,
         PartCategory = 5,
+
+        // Vehicle
+        MaintenanceInvoice = 6,
+
+        // Garage
+        GarageLogo = 10,
+        GarageBranchCover = 11,
+        GarageServiceImage = 12,
+        GarageProductImage = 13,
+        GarageBundleImage = 14,
+        ServiceCategoryIcon = 15,
+
         Other = 99
     }
 }

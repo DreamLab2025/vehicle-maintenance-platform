@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\App\Verendar.Common\Verendar.Common.csproj" />
+    <ProjectReference Include="..\..\Garage\Verendar.Garage.Contracts\Verendar.Garage.Contracts.csproj" />
     <ProjectReference Include="..\..\Identity\Verender.Identity.Contracts\Verender.Identity.Contracts.csproj" />
     <ProjectReference Include="..\..\Vehicle\Verendar.Vehicle.Contracts\Verendar.Vehicle.Contracts.csproj" />
     <ProjectReference Include="..\Verendar.Notification.Domain\Verendar.Notification.Domain.csproj" />

@@ -1,6 +1,3 @@
-using FluentValidation;
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Validators
 {
     public class PartCategoryRequestValidator : AbstractValidator<PartCategoryRequest>
@@ -13,12 +10,6 @@ namespace Verendar.Vehicle.Application.Validators
                 .MaximumLength(100)
                 .WithMessage("Tên danh mục tối đa 100 ký tự");
 
-            RuleFor(x => x.Code)
-                .NotEmpty()
-                .WithMessage("Mã danh mục không được để trống")
-                .MaximumLength(50)
-                .WithMessage("Mã danh mục tối đa 50 ký tự");
-
             RuleFor(x => x.Description)
                 .MaximumLength(500)
                 .When(x => !string.IsNullOrEmpty(x.Description))
@@ -28,6 +19,10 @@ namespace Verendar.Vehicle.Application.Validators
                 .MaximumLength(255)
                 .When(x => !string.IsNullOrEmpty(x.IconUrl))
                 .WithMessage("Đường dẫn icon tối đa 255 ký tự");
+
+            RuleFor(x => x)
+                .Must(x => !x.IconMediaFileId.HasValue || !string.IsNullOrWhiteSpace(x.IconUrl))
+                .WithMessage("IconUrl là bắt buộc khi gửi IconMediaFileId");
 
             RuleFor(x => x.DisplayOrder)
                 .GreaterThanOrEqualTo(0)

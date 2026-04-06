@@ -4,9 +4,7 @@ namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire
     {
         public Guid UserVehicleId { get; set; }
 
-        public Guid VehicleModelId { get; set; }
-
-        public string PartCategoryCode { get; set; } = string.Empty;
+        public string PartCategorySlug { get; set; } = string.Empty;
 
         public List<QuestionAnswerDto> Answers { get; set; } = new();
     }
@@ -22,7 +20,7 @@ namespace Verendar.Ai.Application.Dtos.VehicleQuestionnaire
 
     public class DefaultScheduleDto
     {
-        public string PartCategoryCode { get; set; } = string.Empty;
+        public string PartCategorySlug { get; set; } = string.Empty;
 
         public string PartCategoryName { get; set; } = string.Empty;
 

@@ -8,8 +8,14 @@ namespace Verendar.Identity.Application.Dtos
 
     public class RegisterRequest
     {
+        public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public DateOnly? DateOfBirth { get; set; }
+        public Gender? Gender { get; set; }
+
+        public string? ReferralCode { get; set; }
     }
 
     public class RefreshTokenRequest
@@ -29,6 +35,12 @@ namespace Verendar.Identity.Application.Dtos
         public string OtpCode { get; set; } = string.Empty;
     }
 
+    public class VerifyResetPasswordOtpRequest
+    {
+        public string Email { get; set; } = string.Empty;
+        public string OtpCode { get; set; } = string.Empty;
+    }
+
     public class ResendOtpRequest
     {
         public string Email { get; set; } = string.Empty;
@@ -42,7 +54,6 @@ namespace Verendar.Identity.Application.Dtos
     public class ResetPasswordRequest
     {
         public string Email { get; set; } = string.Empty;
-        public string OtpCode { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
         public string ConfirmNewPassword { get; set; } = string.Empty;
     }

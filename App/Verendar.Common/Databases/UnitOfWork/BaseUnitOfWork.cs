@@ -13,6 +13,28 @@ namespace Verendar.Common.Databases.UnitOfWork
             return await Context.SaveChangesAsync(cancellationToken);
         }
 
+        public virtual async Task ExecuteInTransactionAsync(Func<Task> operation, CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(operation);
+
+            var strategy = Context.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await Context.Database.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    await operation().ConfigureAwait(false);
+                    await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                    await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                    await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+                    throw;
+                }
+            }).ConfigureAwait(false);
+        }
+
         public virtual async Task BeginTransactionAsync()
         {
             _transaction = await Context.Database.BeginTransactionAsync();
@@ -57,6 +79,16 @@ namespace Verendar.Common.Databases.UnitOfWork
         {
             _transaction?.Dispose();
             Context.Dispose();
+        }
+
+        public virtual async ValueTask DisposeAsync()
+        {
+            if (_transaction != null)
+            {
+                await _transaction.DisposeAsync();
+                _transaction = null;
+            }
+            await Context.DisposeAsync();
         }
     }
 }

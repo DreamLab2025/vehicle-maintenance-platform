@@ -1,4 +1,4 @@
-Id,VehicleBrandId,Name,Code,ManufactureYear,FuelType,TransmissionType,EngineDisplacement,EngineCapacity,Description,Status
+Id,VehicleBrandId,Name,Slug,ManufactureYear,FuelType,TransmissionType,EngineDisplacement,EngineCapacity,Description,Status
 a0000001-0000-0000-0000-000000000001,b0000001-0000-0000-0000-000000000001,Wave Alpha,WAVE-ALPHA,2024,1,1,110,1.1,,1
 a0000002-0000-0000-0000-000000000002,b0000001-0000-0000-0000-000000000001,Wave Alpha Classic,WAVE-ALPHA-CLASSIC,2024,1,1,110,1.1,,1
 a0000003-0000-0000-0000-000000000003,b0000001-0000-0000-0000-000000000001,Wave RSX,WAVE-RSX,2024,1,1,110,1.1,,1

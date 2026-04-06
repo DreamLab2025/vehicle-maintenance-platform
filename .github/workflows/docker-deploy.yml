@@ -54,6 +54,12 @@ jobs:
           - image: verendar-ai-service
             dockerfile: Ai/Verendar.Ai/Dockerfile
             cache_scope: ai
+          - image: verendar-location-service
+            dockerfile: Location/Verendar.Location/Dockerfile
+            cache_scope: location
+          - image: verendar-garage-service
+            dockerfile: Garage/Verendar.Garage/Dockerfile
+            cache_scope: garage
 
     steps:
       - name: Checkout

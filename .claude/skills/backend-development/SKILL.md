@@ -1,90 +1,124 @@
 ---
 name: backend-development
 description: >
-  Backend development mindset and patterns for .NET microservices. This skill should be used
-  when making architectural decisions, designing APIs, structuring services, reviewing code quality,
-  thinking about performance, or setting up infrastructure. Use it as a thinking framework —
-  not a strict rulebook — to reason about tradeoffs in Clean Architecture, event-driven design,
-  API contracts, SOLID principles, caching, DevOps, and cross-service communication.
-  Grounded in the Verendar project but applicable as general backend engineering principles.
+  .NET Clean Architecture backend guide for the Verendar repo (Minimal API, EF Core,
+  PostgreSQL, microservices with Aspire). Always use this skill when touching any backend
+  work: adding entities, services, validators, or endpoints; writing or fixing tests;
+  reviewing architecture or code quality; fixing performance or N+1 issues; adding EF Core
+  migrations; or any task involving layers, response contracts, AppMessages, or domain
+  constants. When in doubt about where code goes or how to structure a feature in this
+  codebase, consult this skill.
+  References: api-design, architecture, code-quality, performance, testing, aspire.
 ---
 
-# Backend Development
+# Backend Development — .NET Clean Architecture (Verendar)
 
-A thinking guide for backend engineering. Each reference file is a lens — use them to reason through decisions, not to copy-paste solutions.
+To apply standards, patterns, and conventions for the Verendar microservices backend (Minimal API, EF Core, Aspire). Load only the references needed for the task.
 
-**The core habit**: Before writing code, ask *why* the current pattern exists, *whether* it applies here, and *what* you'd change to improve it.
+## References
 
----
-
-## Reference Index
-
-| File | Use When Thinking About |
-|------|------------------------|
-| `references/backend-architecture.md` | Service boundaries, layers, when to simplify or split, event vs HTTP, scaling structure |
-| `references/backend-api-design.md` | Contract design, route shape, validation strategy, ApiResponse wrapper, versioning |
-| `references/backend-code-quality.md` | SOLID tradeoffs, naming, mapping approaches, DI structure, recognizing code smells |
-| `references/backend-devops.md` | Infrastructure setup, secrets, migrations, background jobs, running locally |
-| `references/backend-mindset.md` | Design decisions, lazy vs eager, audit trails, security posture, when to break patterns |
-| `references/backend-performance.md` | Query efficiency, caching strategy, async pitfalls, background job design, capacity signals |
-
----
-
-## Principles to Internalize
-
-These aren't rules — they're defaults worth questioning when context changes:
-
-- **Domain-first thinking** — understand the business before picking the pattern
-- **Prefer explicit over clever** — code that's obvious beats code that's "elegant"
-- **Paginate by default** — unbounded queries are a future incident waiting to happen
-- **Async by default** — blocking calls in async code are invisible until they're catastrophic
-- **Secrets outside source** — one leaked key can undo months of work
-- **One DB per service** — crossing DB boundaries couples services at the worst layer
-- **Validate at the boundary** — trust internal types, distrust external input
-
-Each of these has valid exceptions. The skill is knowing *when* to break them with intention.
+| Situation                                                            | When to load           | File                          |
+| -------------------------------------------------------------------- | ---------------------- | ----------------------------- |
+| New endpoint or API module                                           | API design, routes     | `references/api-design.md`    |
+| Where code lives, layer structure                                    | Architecture decisions | `references/architecture.md`  |
+| SOLID, patterns, clean code, refactoring                             | Code quality           | `references/code-quality.md`  |
+| Slow queries, N+1, caching, pagination                               | Performance            | `references/performance.md`   |
+| Unit tests, coverage                                                 | Testing                | `references/testing.md`       |
+| Aspire orchestration, service registration, startup, database wiring | Aspire/infra           | `references/aspire.md`        |
+| Inter-service HTTP clients, MassTransit events, consumers            | Service communication  | `references/communication.md` |
 
 ---
 
-## Current Project Context
+## Decision Tree
 
-**Stack**: .NET 9 · Aspire 9.5 · PostgreSQL · RabbitMQ · Redis · YARP · Hangfire
-
-**Services**: Identity · Vehicle · Media · Notification · AI
-
-**Architecture style**: Clean Architecture (Domain → Application → Infrastructure → Host) for domain services; monolithic for Identity (simpler, intentional).
-
-**Key patterns in use**:
-- Minimal API (`MapGroup` + `Map*Endpoints()`) instead of Controllers
-- Repository + UnitOfWork for data access
-- Static extension methods for DTO mapping (no AutoMapper)
-- FluentValidation for request validation
-- Bootstrapping extension methods for DI (not inline in Program.cs)
-- User Secrets for all sensitive config
+```
+TASK?
+│
+├─ New feature / endpoint
+│  ├─ Where does it live?          → references/architecture.md
+│  ├─ How to structure the API?    → references/api-design.md
+│  ├─ Service + validation code?   → references/code-quality.md
+│  └─ Write tests for the service  → references/testing.md
+│
+├─ Code review / quality check
+│  ├─ Architecture violations?     → references/architecture.md
+│  ├─ API contract issues?         → references/api-design.md
+│  └─ Code style / patterns?       → references/code-quality.md
+│
+├─ Performance issue
+│  └─ Slow query / N+1 / memory    → references/performance.md
+│
+├─ Writing or reviewing tests
+│  └─ Unit tests (xUnit + Moq)     → references/testing.md
+│
+├─ Aspire / infra
+│  ├─ Adding a new service         → references/aspire.md
+│  └─ Startup, DB wiring, Redis    → references/aspire.md
+│
+├─ Inter-service communication
+│  ├─ HTTP client (service→service) → references/communication.md
+│  └─ MassTransit publish/consume  → references/communication.md
+│
+└─ All of the above
+   └─ Read relevant reference(s) before writing code
+```
 
 ---
 
-## Adding a New Feature — Thinking Checklist
+## Project Stack
 
-Not a mechanical checklist — a sequence of questions:
-
-1. **Which domain owns this?** Does it fit an existing service or need a new one?
-2. **What's the core entity?** Define it in Domain before touching anything else.
-3. **What does the API contract look like?** Design the endpoint shape before implementation.
-4. **What can go wrong?** Define validation rules and error states early.
-5. **What's the data access pattern?** Read-heavy? Write-heavy? Needs caching?
-6. **Any cross-service effects?** Event vs synchronous call — think about failure modes.
-7. **What's the migration impact?** New table, new column, or just new logic?
+| Concern       | Technology                                                                         |
+| ------------- | ---------------------------------------------------------------------------------- |
+| Runtime       | .NET 9, C# 13                                                                      |
+| Orchestration | .NET Aspire 9.5                                                                    |
+| API style     | Minimal API (no Controllers)                                                       |
+| ORM           | EF Core + PostgreSQL                                                               |
+| Validation    | FluentValidation (endpoint filter pattern)                                         |
+| Auth          | JWT Bearer (`RequireAuthorization()`)                                              |
+| Messaging     | RabbitMQ + MassTransit                                                             |
+| Caching       | Redis (`ICacheService`)                                                            |
+| Background    | Hangfire (dev-guarded dashboard)                                                   |
+| Gateway       | YARP (port 8080)                                                                   |
+| Task runner   | Taskfile (`task run`, `task build`, `task migrate:add NAME=X PROJECT=Y STARTUP=Z`) |
 
 ---
 
-## When to Deviate from Patterns
+## Solution Layout
 
-Patterns exist because they solved a problem. When context changes, the pattern may not fit:
+Each service is a **4-project slice** under `{Service}/`:
 
-- Small services can skip CA layers — a 3-endpoint service doesn't need 4 projects
-- Async events add complexity — synchronous HTTP is fine when latency is acceptable
-- Caching adds staleness risk — sometimes fresh data matters more than speed
-- Soft deletes add query complexity — hard deletes are fine when data has no audit value
+```
+{Service}/
+├── Verendar.{Service}              → Host: Minimal API endpoints, Program.cs, DI wiring
+├── Verendar.{Service}.Application  → Services, DTOs, Validators, Mappings, Constants
+├── Verendar.{Service}.Domain       → Entities, Repository interfaces, Enums
+└── Verendar.{Service}.Infrastructure → EF Core, Repository implementations, DbContext
+```
 
-**Always document why** you deviated. The next engineer will thank you.
+Services: `Identity`, `Vehicle`, `Media`, `Notification`, `Ai`, `Garage`, `Payment`, `Location`.
+
+**Special cases:**
+
+- `Verendar.Identity.Contracts` and `Verendar.Vehicle.Contracts` — shared MassTransit event contracts
+- Identity service implementations live in `Infrastructure/Services/` (depend on ASP.NET Core Identity + MassTransit)
+- `Verendar.Location.Tests` — reference implementation for unit tests
+
+---
+
+## Core Rules (Non-Negotiable)
+
+1. **No AutoMapper** — static extension methods only (`ToResponse()`, `ToEntity()`)
+2. **No MediatR / CQRS** — services call repositories directly via `IUnitOfWork`
+3. **No Controllers** — Minimal API: `MapGroup` → `MapXxxRoutes()` → private handlers
+4. **Always async** — `async/await` throughout, never `.Result` or `.Wait()`
+5. **Always soft delete** — set `DeletedAt = DateTime.UtcNow`, never call `DbContext.Remove()`
+6. **Always paginate lists** — `PaginationRequest` + `GetPagedAsync` (exception: Location uses unbounded lists — static reference data with Redis 24h TTL)
+7. **Primary constructor** — `public class FooService(ILogger<FooService> logger, IUnitOfWork uow)` + `private readonly` fields
+8. **Tests required** — every new API endpoint must have unit tests covering its service logic. When modifying existing logic, verify and update the relevant tests. When changing structure (entity fields, response shape, layer boundaries), update the test file to match. See `references/testing.md`.
+
+---
+
+## Related
+
+- **Refs:** See References table; load only what the task needs.
+- To update this skill: use `skill-creator` and apply format (frontmatter, References table, &lt;200 lines, imperative).

@@ -1,14 +1,10 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Verendar.Common.Databases.Base;
-using Verendar.Vehicle.Domain.Enums;
-
 namespace Verendar.Vehicle.Domain.Entities
 {
+    [Index(nameof(TrackingCycleId), nameof(Level))]
     public class MaintenanceReminder : BaseEntity
     {
         [Required]
-        public Guid VehiclePartTrackingId { get; set; }
+        public Guid TrackingCycleId { get; set; }
 
         public int CurrentOdometer { get; set; }
 
@@ -18,7 +14,6 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public ReminderLevel Level { get; set; }
 
-        [Column(TypeName = "decimal(5,2)")]
         public decimal PercentageRemaining { get; set; }
 
         public bool IsNotified { get; set; } = false;
@@ -29,8 +24,8 @@ namespace Verendar.Vehicle.Domain.Entities
 
         public DateOnly? DismissedDate { get; set; }
 
-        public bool IsCurrent { get; set; } = false;
+        public ReminderStatus Status { get; set; } = ReminderStatus.Active;
 
-        public VehiclePartTracking PartTracking { get; set; } = null!;
+        public TrackingCycle TrackingCycle { get; set; } = null!;
     }
 }

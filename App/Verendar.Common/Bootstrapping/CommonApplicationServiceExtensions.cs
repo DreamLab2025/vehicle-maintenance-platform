@@ -52,12 +52,11 @@ namespace Verendar.Common.Bootstrapping
 
             builder.Services.AddRateLimiter(options =>
             {
-                // Per-IP fixed window: 200 req/min per client with a small queue buffer.
-                // Previously this was a global (shared) limiter — 100 req/min for ALL users combined,
-                // causing legitimate users to get 429/503 at 20-30 concurrent users.
                 options.AddPolicy("Fixed", context =>
                     RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        partitionKey: context.Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                            ?? context.Connection.RemoteIpAddress?.ToString()
+                            ?? "unknown",
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
                             PermitLimit = 200,
@@ -193,13 +192,14 @@ namespace Verendar.Common.Bootstrapping
                 });
             });
 
-            // Configure JSON serialization for Minimal APIs to use string enums
             builder.Services.Configure<JsonOptions>(options =>
             {
                 options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                options.SerializerOptions.Converters.Add(new TimeOnlyJsonConverter());
             });
 
             builder.AddJwtAuthentication();
+            builder.Services.AddSingleton<IServiceTokenProvider, ServiceTokenProvider>();
             builder.AddDefaultSwagger();
 
             return builder;
@@ -211,7 +211,10 @@ namespace Verendar.Common.Bootstrapping
             {
                 app.UseDefaultSwagger();
             }
-            
+
+            app.UseMiddleware<CorrelationIdMiddleware>();
+            app.UseMiddleware<HttpRequestLoggingMiddleware>();
+
             var corsPolicyName = app.Environment.IsDevelopment() ? "DevelopmentCors" : "ProductionCors";
             app.UseCors(corsPolicyName);
             app.UseMiddleware<GlobalExceptionsMiddleware>();

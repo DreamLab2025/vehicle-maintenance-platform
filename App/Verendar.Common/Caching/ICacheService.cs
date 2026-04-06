@@ -6,6 +6,8 @@
 
         Task SetAsync<T>(string key, T value, TimeSpan? expiry = null);
 
+        Task<bool> SetIfNotExistsAsync<T>(string key, T value, TimeSpan? expiry = null);
+
         Task RemoveAsync(string key);
     }
 }

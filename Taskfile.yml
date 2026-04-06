@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: "3"
+
+tasks:
+  #task ls
+  ls:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  #task run
+  run:
+    desc: Run all services and infrastructure via Aspire AppHost
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - dotnet run --project App/Verendar.AppHost
+
+  build:
+    desc: Build all services and infrastructure
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - dotnet build Verendar.sln
+
+  clean:
+    desc: Clean all services and infrastructure
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - dotnet clean Verendar.sln
+
+  test:
+    desc: Run tests
+    dir: "{{.TASKFILE_DIR}}"
+    requires:
+      vars: [PROJECT]
+    cmds:
+      - dotnet test {{.PROJECT}}
+
+  test:all:
+    desc: Run all tests
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - task app:test PROJECT=Location/Verendar.Location.Tests
+      - task app:test PROJECT=Vehicle/Verendar.Vehicle.Tests
+      - task app:test PROJECT=Media/Verendar.Media.Tests
+      - task app:test PROJECT=Notification/Verendar.Notification.Tests
+      - task app:test PROJECT=Ai/Verendar.Ai.Tests
+      - task app:test PROJECT=Garage/Verendar.Garage.Tests
+      - task app:test PROJECT=Payment/Verendar.Payment.Tests
+
+  test:coverage:
+    desc: Run tests and generate coverage report
+    dir: "{{.TASKFILE_DIR}}"
+    requires:
+      vars: [PROJECT]
+    cmds:
+      - dotnet test {{.PROJECT}} --collect:"XPlat Code Coverage"
+      - dotnet reportgenerator -reports:"./coverage.cobertura.xml" -targetdir:"./coverage-report" -reporttypes:Html -verbosity:quiet
+
+  clear:
+    desc: Remove Aspire containers and volumes
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - cmd: powershell -NoProfile -ExecutionPolicy Bypass -File "{{.TASKFILE_DIR}}/docker/aspire-clean.ps1"
+        platforms: [windows]
+      - cmd: sh "{{.TASKFILE_DIR}}/docker/aspire-clean.sh"
+        platforms: [linux, darwin]
+
+  migrate:add:
+    desc: Create a new EF migration (requires NAME, PROJECT, STARTUP)
+    dir: "{{.TASKFILE_DIR}}"
+    requires:
+      vars: [NAME, PROJECT, STARTUP]
+    cmds:
+      - dotnet ef migrations add {{.NAME}} --project {{.PROJECT}} --startup-project {{.STARTUP}}
+
+  migrate:remove:
+    desc: Remove the last EF migration (requires PROJECT, STARTUP)
+    dir: "{{.TASKFILE_DIR}}"
+    requires:
+      vars: [PROJECT, STARTUP]
+    cmds:
+      - dotnet ef migrations remove --project {{.PROJECT}} --startup-project {{.STARTUP}}
+
+  docker:dev:up:
+    desc: Start dev stack
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - docker compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev up -d
+
+  docker:dev:down:
+    desc: Stop dev stack (keeps compose named volumes)
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - docker compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev down
+
+  docker:dev:down:v:
+    desc: Stop dev stack and delete compose volumes (postgres/redis/rabbitmq data)
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - docker compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev down -v
+
+  pull:
+    desc: Pull the latest changes from the remote repository
+    dir: "{{.TASKFILE_DIR}}"
+    requires:
+      vars: [br]
+    cmds:
+      - git pull origin {{.br}}
+
+  .:
+    desc: Run the cursor . command
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - cursor .

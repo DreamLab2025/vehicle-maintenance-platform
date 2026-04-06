@@ -1,13 +1,12 @@
 using FluentValidation;
 using Verendar.Common.Bootstrapping;
-using Verendar.Common.Shared;
 using Verendar.Identity.Apis;
 using Verendar.Identity.Application.Validators;
 using Verendar.Identity.Infrastructure.Data;
 using Verendar.Identity.Infrastructure.Repositories.Implements;
-using Verendar.Identity.Infrastructure.Services;
-using Verendar.Identity.Domain.Repositories.Interfaces;
+using Verendar.Identity.Application.Services.Implements;
 using Verendar.Identity.Application.Services.Interfaces;
+using Verendar.Identity.Domain.Repositories.Interfaces;
 using Verendar.ServiceDefaults;
 
 namespace Verendar.Identity.Bootstrapping
@@ -29,6 +28,8 @@ namespace Verendar.Identity.Bootstrapping
             builder.Services.AddScoped<IIdentityTokenService, IdentityTokenService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+            builder.Services.AddScoped<IIdentityStatsService, IdentityStatsService>();
 
             builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
@@ -39,6 +40,8 @@ namespace Verendar.Identity.Bootstrapping
         {
             app.MapDefaultEndpoints();
 
+            app.UseHttpsRedirection();
+
             app.UseCommonService();
 
             if (app.Environment.IsDevelopment())
@@ -46,11 +49,11 @@ namespace Verendar.Identity.Bootstrapping
                 app.MapOpenApi();
             }
 
-            app.UseHttpsRedirection();
-
             app.MapAuthApi();
             app.MapUserApi();
             app.MapInternalUserApi();
+            app.MapFeedbackApi();
+            app.MapIdentityStatsApi();
 
             return app;
         }

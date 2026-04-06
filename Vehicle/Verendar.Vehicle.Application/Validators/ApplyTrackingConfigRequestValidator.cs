@@ -1,17 +1,14 @@
-using FluentValidation;
-using Verendar.Vehicle.Application.Dtos;
-
 namespace Verendar.Vehicle.Application.Validators
 {
     public class ApplyTrackingConfigRequestValidator : AbstractValidator<ApplyTrackingConfigRequest>
     {
         public ApplyTrackingConfigRequestValidator()
         {
-            RuleFor(x => x.PartCategoryCode)
+            RuleFor(x => x.PartCategorySlug)
                 .NotEmpty()
-                .WithMessage("Mã linh kiện không được để trống")
+                .WithMessage("Slug linh kiện không được để trống")
                 .MaximumLength(50)
-                .WithMessage("Mã linh kiện tối đa 50 ký tự");
+                .WithMessage("Slug linh kiện tối đa 50 ký tự");
 
             RuleFor(x => x.LastReplacementOdometer)
                 .GreaterThanOrEqualTo(0)

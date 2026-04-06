@@ -1,8 +1,3 @@
-using Verendar.Common.Databases.Base;
-using Verendar.Identity.Application.Dtos;
-using Verendar.Identity.Application.Helpers;
-using Verendar.Identity.Domain.Entities;
-
 namespace Verendar.Identity.Application.Mappings
 {
     public static class UserMappings
@@ -17,7 +12,8 @@ namespace Verendar.Identity.Application.Mappings
                 PhoneNumber = user.PhoneNumber ?? string.Empty,
                 EmailVerified = user.EmailVerified,
                 PhoneNumberVerified = user.PhoneNumberVerified,
-                Status = user.Status.ToString(),
+                DateOfBirth = user.DateOfBirth,
+                Gender = user.Gender?.ToString(),
                 Roles = user.Roles.Select(r => r.ToString()).ToList(),
                 CreatedAt = user.CreatedAt
             };
@@ -30,11 +26,33 @@ namespace Verendar.Identity.Application.Mappings
             return new User
             {
                 Id = userId,
+                FullName = request.FullName.Trim(),
                 Email = normalizedEmail,
                 PasswordHash = passwordHash,
-                FullName = normalizedEmail,
-                Status = EntityStatus.Active,
+                PhoneNumber = request.PhoneNumber,
+                DateOfBirth = request.DateOfBirth,
+                Gender = request.Gender,
                 Roles = new List<UserRole> { UserRole.User },
+                PhoneNumberVerified = false,
+                EmailVerified = false,
+                RefreshToken = string.Empty,
+                RefreshTokenExpiryTime = null
+            };
+        }
+
+        public static User ToNewUser(this UserCreateRequest request, string passwordHash)
+        {
+            var normalizedEmail = EmailHelper.Normalize(request.Email);
+            return new User
+            {
+                Id = Guid.CreateVersion7(),
+                FullName = request.FullName.Trim(),
+                Email = normalizedEmail,
+                PasswordHash = passwordHash,
+                PhoneNumber = request.PhoneNumber,
+                DateOfBirth = request.DateOfBirth,
+                Gender = request.Gender,
+                Roles = request.Roles.Distinct().ToList(),
                 PhoneNumberVerified = false,
                 EmailVerified = false,
                 RefreshToken = string.Empty,

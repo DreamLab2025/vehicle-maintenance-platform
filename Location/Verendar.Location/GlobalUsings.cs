@@ -1,0 +1,14 @@
+global using Microsoft.AspNetCore.Http;
+global using Verendar.Common.Bootstrapping;
+global using Verendar.Common.Shared;
+global using Verendar.DatabaseMigrationHelpers;
+global using Verendar.Location.Application.Dtos;
+global using Verendar.Location.Application.Services.Implements;
+global using Verendar.Location.Application.Services.Interfaces;
+global using Verendar.Location.Apis;
+global using Verendar.Location.Bootstrapping;
+global using Verendar.Location.Domain.Repositories.Interfaces;
+global using Verendar.Location.Infrastructure.Data;
+global using Verendar.Location.Infrastructure.Data.Seeders;
+global using Verendar.Location.Infrastructure.Repositories.Implements;
+global using Verendar.ServiceDefaults;
