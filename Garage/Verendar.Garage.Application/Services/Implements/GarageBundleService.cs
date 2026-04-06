@@ -13,24 +13,45 @@ public class GarageBundleService(
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<ApiResponse<List<GarageBundleListItemResponse>>> GetBundlesByBranchAsync(
-        Guid branchId, bool activeOnly, PaginationRequest pagination, CancellationToken ct = default)
+        GarageBundleQueryRequest query, CancellationToken ct = default)
     {
-        pagination.Normalize();
+        query.Normalize();
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(
-            b => b.Id == branchId && b.DeletedAt == null);
+            b => b.Id == query.BranchId && b.DeletedAt == null);
         if (branch is null)
             return ApiResponse<List<GarageBundleListItemResponse>>.NotFoundResponse(
-                string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
+                string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, query.BranchId));
+
+        // Bundle price is computed from items — filter by price in-memory after mapping.
+        if (query.MinPrice.HasValue || query.MaxPrice.HasValue)
+        {
+            var (allItems, _) = await _unitOfWork.GarageBundles.GetPagedByBranchIdAsync(
+                query.BranchId, query.ActiveOnly, pageNumber: 1, pageSize: 500, query.Name, ct);
+
+            var filtered = allItems.Select(b => b.ToListItemResponse())
+                .Where(b => query.MinPrice == null || b.FinalPrice >= query.MinPrice.Value)
+                .Where(b => query.MaxPrice == null || b.FinalPrice <= query.MaxPrice.Value)
+                .ToList();
+
+            var paged = filtered
+                .Skip((query.PageNumber - 1) * query.PageSize)
+                .Take(query.PageSize)
+                .ToList();
+
+            return ApiResponse<List<GarageBundleListItemResponse>>.SuccessPagedResponse(
+                paged, filtered.Count, query.PageNumber, query.PageSize,
+                EndpointMessages.Bundle.ListSuccess);
+        }
 
         var (items, totalCount) = await _unitOfWork.GarageBundles.GetPagedByBranchIdAsync(
-            branchId, activeOnly, pagination.PageNumber, pagination.PageSize, ct);
+            query.BranchId, query.ActiveOnly, query.PageNumber, query.PageSize, query.Name, ct);
 
         return ApiResponse<List<GarageBundleListItemResponse>>.SuccessPagedResponse(
             items.Select(b => b.ToListItemResponse()).ToList(),
             totalCount,
-            pagination.PageNumber,
-            pagination.PageSize,
+            query.PageNumber,
+            query.PageSize,
             EndpointMessages.Bundle.ListSuccess);
     }
 

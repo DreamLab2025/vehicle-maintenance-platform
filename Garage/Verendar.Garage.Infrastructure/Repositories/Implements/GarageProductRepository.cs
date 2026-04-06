@@ -16,6 +16,10 @@ public class GarageProductRepository(GarageDbContext context)
         bool activeOnly,
         int pageNumber,
         int pageSize,
+        string? name = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        Guid? categoryId = null,
         CancellationToken ct = default)
     {
         var query = _db.Set<GarageProduct>()
@@ -24,6 +28,14 @@ public class GarageProductRepository(GarageDbContext context)
 
         if (activeOnly)
             query = query.Where(p => p.Status == ProductStatus.Active);
+        if (name is not null)
+            query = query.Where(p => EF.Functions.ILike(p.Name, $"%{name}%"));
+        if (minPrice.HasValue)
+            query = query.Where(p => p.MaterialPrice.Amount >= minPrice.Value);
+        if (maxPrice.HasValue)
+            query = query.Where(p => p.MaterialPrice.Amount <= maxPrice.Value);
+        if (categoryId.HasValue)
+            query = query.Where(p => p.PartCategoryId == categoryId.Value);
 
         query = query.OrderBy(p => p.Name);
 

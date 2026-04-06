@@ -1,4 +1,3 @@
-using Verendar.Common.Shared;
 using Verendar.Garage.Application.Dtos;
 
 namespace Verendar.Garage.Application.Services.Interfaces;
@@ -6,7 +5,7 @@ namespace Verendar.Garage.Application.Services.Interfaces;
 public interface IGarageProductService
 {
     Task<ApiResponse<List<GarageProductListItemResponse>>> GetProductsByBranchAsync(
-        Guid branchId, bool activeOnly, PaginationRequest pagination, CancellationToken ct = default);
+        GarageProductQueryRequest query, CancellationToken ct = default);
 
     Task<ApiResponse<GarageProductResponse>> GetProductByIdAsync(Guid id, CancellationToken ct = default);
 

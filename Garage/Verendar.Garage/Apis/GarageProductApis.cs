@@ -99,13 +99,11 @@ public static class GarageProductApis
     }
 
     private static async Task<IResult> GetByBranch(
-        [FromQuery] Guid branchId,
-        [FromQuery] bool activeOnly,
-        [AsParameters] PaginationRequest pagination,
+        [AsParameters] GarageProductQueryRequest query,
         IGarageProductService productService,
         CancellationToken ct)
     {
-        var result = await productService.GetProductsByBranchAsync(branchId, activeOnly, pagination, ct);
+        var result = await productService.GetProductsByBranchAsync(query, ct);
         return result.ToHttpResult();
     }
 

@@ -2,6 +2,16 @@ namespace Verendar.Garage.Application.Dtos;
 
 // ── Requests ──────────────────────────────────────────────────────────────────
 
+public class GarageServiceQueryRequest : PaginationRequest
+{
+    public Guid BranchId { get; set; }
+    public bool ActiveOnly { get; set; }
+    public string? Name { get; set; }
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
+    public Guid? CategoryId { get; set; }
+}
+
 public class CreateGarageServiceRequest
 {
     public string Name { get; set; } = null!;

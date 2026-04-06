@@ -13,5 +13,6 @@ public interface IGarageBundleRepository : IGenericRepository<GarageBundle>
         bool activeOnly,
         int pageNumber,
         int pageSize,
+        string? name = null,
         CancellationToken ct = default);
 }

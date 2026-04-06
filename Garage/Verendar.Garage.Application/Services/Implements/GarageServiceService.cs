@@ -13,24 +13,25 @@ public class GarageServiceService(
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<ApiResponse<List<GarageServiceListItemResponse>>> GetServicesByBranchAsync(
-        Guid branchId, bool activeOnly, PaginationRequest pagination, CancellationToken ct = default)
+        GarageServiceQueryRequest query, CancellationToken ct = default)
     {
-        pagination.Normalize();
+        query.Normalize();
 
         var branch = await _unitOfWork.GarageBranches.FindOneAsync(
-            b => b.Id == branchId && b.DeletedAt == null);
+            b => b.Id == query.BranchId && b.DeletedAt == null);
         if (branch is null)
             return ApiResponse<List<GarageServiceListItemResponse>>.NotFoundResponse(
-                string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
+                string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, query.BranchId));
 
         var (items, totalCount) = await _unitOfWork.GarageServices.GetPagedByBranchIdAsync(
-            branchId, activeOnly, pagination.PageNumber, pagination.PageSize, ct);
+            query.BranchId, query.ActiveOnly, query.PageNumber, query.PageSize,
+            query.Name, query.MinPrice, query.MaxPrice, query.CategoryId, ct);
 
         return ApiResponse<List<GarageServiceListItemResponse>>.SuccessPagedResponse(
             items.Select(s => s.ToListItemResponse()).ToList(),
             totalCount,
-            pagination.PageNumber,
-            pagination.PageSize,
+            query.PageNumber,
+            query.PageSize,
             EndpointMessages.OfferedServices.ListSuccess);
     }
 

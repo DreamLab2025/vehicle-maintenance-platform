@@ -1,5 +1,16 @@
 namespace Verendar.Garage.Application.Dtos;
 
+// ── Requests ──────────────────────────────────────────────────────────────────
+
+public class GarageBundleQueryRequest : PaginationRequest
+{
+    public Guid BranchId { get; set; }
+    public bool ActiveOnly { get; set; }
+    public string? Name { get; set; }
+    public decimal? MinPrice { get; set; }
+    public decimal? MaxPrice { get; set; }
+}
+
 // ── Nested ────────────────────────────────────────────────────────────────────
 
 public class BundleItemRequest

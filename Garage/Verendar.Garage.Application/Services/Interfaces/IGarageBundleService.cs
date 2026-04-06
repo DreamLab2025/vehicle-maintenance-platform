@@ -1,4 +1,3 @@
-using Verendar.Common.Shared;
 using Verendar.Garage.Application.Dtos;
 
 namespace Verendar.Garage.Application.Services.Interfaces;
@@ -6,7 +5,7 @@ namespace Verendar.Garage.Application.Services.Interfaces;
 public interface IGarageBundleService
 {
     Task<ApiResponse<List<GarageBundleListItemResponse>>> GetBundlesByBranchAsync(
-        Guid branchId, bool activeOnly, PaginationRequest pagination, CancellationToken ct = default);
+        GarageBundleQueryRequest query, CancellationToken ct = default);
 
     Task<ApiResponse<GarageBundleResponse>> GetBundleByIdAsync(Guid id, CancellationToken ct = default);
 

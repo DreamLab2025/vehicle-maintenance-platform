@@ -75,13 +75,11 @@ public static class GarageServiceApis
     }
 
     private static async Task<IResult> GetByBranch(
-        [FromQuery] Guid branchId,
-        [FromQuery] bool activeOnly,
-        [AsParameters] PaginationRequest pagination,
+        [AsParameters] GarageServiceQueryRequest query,
         IGarageServiceService serviceService,
         CancellationToken ct)
     {
-        var result = await serviceService.GetServicesByBranchAsync(branchId, activeOnly, pagination, ct);
+        var result = await serviceService.GetServicesByBranchAsync(query, ct);
         return result.ToHttpResult();
     }
 

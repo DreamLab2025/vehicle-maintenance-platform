@@ -22,8 +22,6 @@ public static class GarageCatalogApis
             .WithOpenApi(op =>
             {
                 op.Summary = "Xem toàn bộ danh mục (dịch vụ, sản phẩm, combo) của một chi nhánh";
-                op.Description = "Public endpoint. Lọc theo type (service/product/bundle) và/hoặc categoryId. " +
-                                 "Chỉ trả về items Active của chi nhánh đang Active.";
                 return op;
             })
             .Produces<ApiResponse<List<CatalogItemResponse>>>(StatusCodes.Status200OK)

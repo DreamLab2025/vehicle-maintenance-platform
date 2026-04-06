@@ -11,5 +11,9 @@ public interface IGarageProductRepository : IGenericRepository<GarageProduct>
         bool activeOnly,
         int pageNumber,
         int pageSize,
+        string? name = null,
+        decimal? minPrice = null,
+        decimal? maxPrice = null,
+        Guid? categoryId = null,
         CancellationToken ct = default);
 }

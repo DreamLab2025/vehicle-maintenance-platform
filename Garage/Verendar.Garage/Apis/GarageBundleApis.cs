@@ -75,13 +75,11 @@ public static class GarageBundleApis
     }
 
     private static async Task<IResult> GetByBranch(
-        [FromQuery] Guid branchId,
-        [FromQuery] bool activeOnly,
-        [AsParameters] PaginationRequest pagination,
+        [AsParameters] GarageBundleQueryRequest query,
         IGarageBundleService bundleService,
         CancellationToken ct)
     {
-        var result = await bundleService.GetBundlesByBranchAsync(branchId, activeOnly, pagination, ct);
+        var result = await bundleService.GetBundlesByBranchAsync(query, ct);
         return result.ToHttpResult();
     }
 

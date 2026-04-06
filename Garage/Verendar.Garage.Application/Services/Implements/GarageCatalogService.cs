@@ -32,7 +32,8 @@ public class GarageCatalogService(
         if (query.Type is null or CatalogItemType.Service)
         {
             var (services, _) = await _unitOfWork.GarageServices.GetPagedByBranchIdAsync(
-                branchId, activeOnly: true, pageNumber: 1, pageSize: InternalFetchLimit, ct);
+                branchId, activeOnly: true, pageNumber: 1, pageSize: InternalFetchLimit,
+                name: query.Name, ct: ct);
 
             var mapped = query.CategoryId.HasValue
                 ? services
@@ -46,18 +47,25 @@ public class GarageCatalogService(
         if (query.Type is null or CatalogItemType.Product)
         {
             var (products, _) = await _unitOfWork.GarageProducts.GetPagedByBranchIdAsync(
-                branchId, activeOnly: true, pageNumber: 1, pageSize: InternalFetchLimit, ct);
+                branchId, activeOnly: true, pageNumber: 1, pageSize: InternalFetchLimit,
+                name: query.Name, categoryId: query.CategoryId, ct: ct);
             allItems.AddRange(products.Select(p => p.ToCatalogItem()));
         }
 
         if (query.Type is null or CatalogItemType.Bundle)
         {
             var (bundles, _) = await _unitOfWork.GarageBundles.GetPagedByBranchIdAsync(
-                branchId, activeOnly: true, pageNumber: 1, pageSize: InternalFetchLimit, ct);
+                branchId, activeOnly: true, pageNumber: 1, pageSize: InternalFetchLimit,
+                name: query.Name, ct: ct);
             allItems.AddRange(bundles.Select(b => b.ToCatalogItem()));
         }
 
         allItems = [.. allItems.OrderBy(i => i.Name)];
+
+        if (query.MinPrice.HasValue)
+            allItems = allItems.Where(i => i.Price.Amount >= query.MinPrice.Value).ToList();
+        if (query.MaxPrice.HasValue)
+            allItems = allItems.Where(i => i.Price.Amount <= query.MaxPrice.Value).ToList();
 
         var totalCount = allItems.Count;
         var paged = allItems
@@ -66,8 +74,8 @@ public class GarageCatalogService(
             .ToList();
 
         _logger.LogDebug(
-            "GetCatalog: branch={BranchId} type={Type} categoryId={CategoryId} total={Total}",
-            branchId, query.Type, query.CategoryId, totalCount);
+            "GetCatalog: branch={BranchId} type={Type} categoryId={CategoryId} name={Name} total={Total}",
+            branchId, query.Type, query.CategoryId, query.Name, totalCount);
 
         return ApiResponse<List<CatalogItemResponse>>.SuccessPagedResponse(
             paged, totalCount, query.PageNumber, query.PageSize,

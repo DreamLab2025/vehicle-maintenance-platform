@@ -31,6 +31,7 @@ public class GarageBundleRepository(GarageDbContext context)
         bool activeOnly,
         int pageNumber,
         int pageSize,
+        string? name = null,
         CancellationToken ct = default)
     {
         var query = _db.Set<GarageBundle>()
@@ -39,6 +40,8 @@ public class GarageBundleRepository(GarageDbContext context)
 
         if (activeOnly)
             query = query.Where(b => b.Status == ProductStatus.Active);
+        if (name is not null)
+            query = query.Where(b => EF.Functions.ILike(b.Name, $"%{name}%"));
 
         query = query.OrderBy(b => b.Name);
 
