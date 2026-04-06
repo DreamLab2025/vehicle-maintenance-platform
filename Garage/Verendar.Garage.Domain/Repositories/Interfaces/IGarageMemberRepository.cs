@@ -16,4 +16,13 @@ public interface IGarageMemberRepository : IGenericRepository<GarageMember>
     Task<List<Guid>> GetActiveManagerUserIdsByBranchIdAsync(Guid branchId, CancellationToken ct = default);
 
     Task<GarageMember?> GetLatestActiveMembershipWithBranchAsync(Guid userId, CancellationToken ct = default);
+
+    Task<(List<GarageMember> Items, int TotalCount)> GetPagedByBranchIdAsync(
+        Guid branchId,
+        int pageNumber,
+        int pageSize,
+        string? name = null,
+        MemberRole? role = null,
+        MemberStatus? status = null,
+        CancellationToken ct = default);
 }

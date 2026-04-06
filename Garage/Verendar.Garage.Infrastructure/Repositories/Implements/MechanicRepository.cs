@@ -77,4 +77,34 @@ public class GarageMemberRepository(GarageDbContext context)
                         && m.GarageBranch.Garage.DeletedAt == null)
             .OrderByDescending(m => m.CreatedAt)
             .FirstOrDefaultAsync(ct);
+
+    public async Task<(List<GarageMember> Items, int TotalCount)> GetPagedByBranchIdAsync(
+        Guid branchId,
+        int pageNumber,
+        int pageSize,
+        string? name = null,
+        MemberRole? role = null,
+        MemberStatus? status = null,
+        CancellationToken ct = default)
+    {
+        var query = context.GarageMembers
+            .AsNoTracking()
+            .Where(m => m.GarageBranchId == branchId && m.DeletedAt == null);
+
+        if (name is not null)
+            query = query.Where(m => EF.Functions.ILike(m.DisplayName, $"%{name}%"));
+        if (role.HasValue)
+            query = query.Where(m => m.Role == role.Value);
+        if (status.HasValue)
+            query = query.Where(m => m.Status == status.Value);
+
+        var totalCount = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(m => m.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, totalCount);
+    }
 }

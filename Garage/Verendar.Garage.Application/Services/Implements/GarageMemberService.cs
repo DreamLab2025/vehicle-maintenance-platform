@@ -103,15 +103,9 @@ public class GarageMemberService(
                 return ApiResponse<List<GarageMemberResponse>>.ForbiddenResponse(EndpointMessages.Member.ForbiddenListMembers);
         }
 
-        var name = query.Name;
-        var (items, totalCount) = await _unitOfWork.Members.GetPagedAsync(
-            query.PageNumber,
-            query.PageSize,
-            filter: m => m.GarageBranchId == query.BranchId && m.DeletedAt == null
-                && (name == null || EF.Functions.ILike(m.DisplayName, $"%{name}%"))
-                && (query.Role == null || m.Role == query.Role.Value)
-                && (query.Status == null || m.Status == query.Status.Value),
-            orderBy: q => q.OrderByDescending(m => m.CreatedAt));
+        var (items, totalCount) = await _unitOfWork.Members.GetPagedByBranchIdAsync(
+            query.BranchId, query.PageNumber, query.PageSize,
+            query.Name, query.Role, query.Status, ct);
 
         return ApiResponse<GarageMemberResponse>.SuccessPagedResponse(
             items.Select(m => m.ToResponse(query.GarageId)).ToList(),
