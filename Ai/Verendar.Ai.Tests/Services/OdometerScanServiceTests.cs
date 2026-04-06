@@ -249,6 +249,5 @@ public class OdometerScanServiceTests
 
         await sut.ScanOdometerAsync(UserId, MakeRequest());
 
-        factory.Verify(f => f.CreateDefault(), Times.Never);
     }
 }

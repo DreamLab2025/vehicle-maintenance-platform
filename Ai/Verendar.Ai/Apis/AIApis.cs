@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Verendar.Ai.Application.Dtos.Ai;
 using Verendar.Ai.Application.Dtos.Health;
 using Verendar.Ai.Application.Dtos.OdometerScan;
 using Verendar.Ai.Application.Dtos.VehicleQuestionnaire;
 using Verendar.Ai.Domain.Enums;
-using Verendar.Ai.Infrastructure.Configuration;
 using Verendar.Common.EndpointFilters;
 
 namespace Verendar.Ai.Apis
@@ -115,11 +113,8 @@ namespace Verendar.Ai.Apis
 
         private static async Task<IResult> GetHealth(
             IGenerativeAiServiceFactory factory,
-            IOptions<AiProviderOptions> providerOptions,
             CancellationToken cancellationToken)
         {
-            var activeProvider = string.IsNullOrWhiteSpace(providerOptions.Value.Provider) ? "Gemini" : providerOptions.Value.Provider.Trim();
-
             var checks = Enum.GetValues<AiProvider>().Select(async provider =>
             {
                 var service = factory.Create(provider);
@@ -134,13 +129,9 @@ namespace Verendar.Ai.Apis
 
             var results = (await Task.WhenAll(checks)).ToList();
 
-            var activeStatus = results.FirstOrDefault(r =>
-                r.Provider.Equals(activeProvider, StringComparison.OrdinalIgnoreCase));
-
             return Results.Ok(new HealthCheckResponse
             {
-                Status = activeStatus?.Connected == true ? "Healthy" : "Unhealthy",
-                ActiveProvider = activeProvider,
+                Status = results.All(r => r.Connected) ? "Healthy" : "Unhealthy",
                 Providers = results
             });
         }

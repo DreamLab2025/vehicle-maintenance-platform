@@ -13,7 +13,7 @@ public static class AiPromptSeeder
             "English instructions; user-facing message in JSON must be Vietnamese.",
             "Verendar.Ai.Infrastructure.Data.Prompts.odometer-scan.txt"),
 
-        (AiOperation.AnalyzeMaintenanceQuestionnaire, AiProvider.Gemini,
+        (AiOperation.AnalyzeMaintenanceQuestionnaire, AiProvider.Bedrock,
             "Vehicle Maintenance Analysis Prompt",
             "English instructions; reasoning and warnings in JSON must be Vietnamese.",
             "Verendar.Ai.Infrastructure.Data.Prompts.analyze-maintenance-questionnaire.txt"),

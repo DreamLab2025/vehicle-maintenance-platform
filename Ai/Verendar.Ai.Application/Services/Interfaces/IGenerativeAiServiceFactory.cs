@@ -4,7 +4,6 @@ namespace Verendar.Ai.Application.Services.Interfaces
 {
     public interface IGenerativeAiServiceFactory
     {
-        IGenerativeAiService CreateDefault();
         IGenerativeAiService Create(AiProvider provider);
     }
 }

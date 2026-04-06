@@ -15,7 +15,6 @@ using Verendar.Common.Bootstrapping;
 using Verendar.Common.Http;
 using Verendar.Ai.Domain.Repositories.Interfaces;
 using Verendar.Ai.Infrastructure.Clients;
-using Verendar.Ai.Infrastructure.Configuration;
 using Verendar.Ai.Infrastructure.Data;
 using Verendar.Ai.Infrastructure.ExternalServices;
 using Verendar.Ai.Infrastructure.Repositories.Implements;
@@ -81,10 +80,6 @@ namespace Verendar.Ai.Bootstrapping
                 builder.Configuration.GetSection(GeminiSettings.SectionName));
             builder.Services.Configure<BedrockSettings>(
                 builder.Configuration.GetSection(BedrockSettings.SectionName));
-            builder.Services.Configure<AiProviderOptions>(options =>
-            {
-                options.Provider = builder.Configuration.GetValue<string>(AiProviderOptions.ConfigKey) ?? "Gemini";
-            });
             builder.Services.Configure<PromptVersioningOptions>(
                 builder.Configuration.GetSection(PromptVersioningOptions.SectionName));
 
@@ -94,8 +89,6 @@ namespace Verendar.Ai.Bootstrapping
             builder.Services.AddScoped<GeminiService>();
             builder.Services.AddScoped<BedrockService>();
             builder.Services.AddScoped<IGenerativeAiServiceFactory, GenerativeAiServiceFactory>();
-            builder.Services.AddScoped<IGenerativeAiService>(sp =>
-                sp.GetRequiredService<IGenerativeAiServiceFactory>().CreateDefault());
 
             builder.Services.AddScoped<IAiPromptService, AiPromptService>();
             builder.Services.AddScoped<IVehicleMaintenanceAnalysisService, VehicleMaintenanceAnalysisService>();
