@@ -21,7 +21,6 @@ public interface IBookingService
         Guid currentUserId,
         bool assignedToMe,
         Guid? branchId,
-        Guid? userId,
         BookingStatus? status,
         PaginationRequest pagination,
         CancellationToken ct = default);

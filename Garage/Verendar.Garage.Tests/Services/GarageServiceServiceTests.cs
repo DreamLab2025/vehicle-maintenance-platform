@@ -23,7 +23,7 @@ public class GarageServiceServiceTests
             .ReturnsAsync((GarageBranch?)null);
 
         var sut = new GarageServiceService(NullLogger<GarageServiceService>.Instance, m.UnitOfWork.Object);
-        var result = await sut.GetServicesByBranchAsync(branchId, false, new PaginationRequest());
+        var result = await sut.GetServicesByBranchAsync(new GarageServiceQueryRequest { BranchId = branchId, ActiveOnly = false });
 
         GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
     }

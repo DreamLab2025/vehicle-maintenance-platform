@@ -142,7 +142,7 @@ public class GarageBundleServiceTests
             .ReturnsAsync((GarageBranch?)null);
 
         var sut = new GarageBundleService(NullLogger<GarageBundleService>.Instance, m.UnitOfWork.Object);
-        var result = await sut.GetBundlesByBranchAsync(branchId, false, new PaginationRequest());
+        var result = await sut.GetBundlesByBranchAsync(new GarageBundleQueryRequest { BranchId = branchId, ActiveOnly = false });
 
         GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
     }
@@ -167,11 +167,12 @@ public class GarageBundleServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([bundle], 1));
 
         var sut = new GarageBundleService(NullLogger<GarageBundleService>.Instance, m.UnitOfWork.Object);
-        var result = await sut.GetBundlesByBranchAsync(branchId, false, new PaginationRequest());
+        var result = await sut.GetBundlesByBranchAsync(new GarageBundleQueryRequest { BranchId = branchId, ActiveOnly = false });
 
         GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.Bundle.ListSuccess, 1, 1);
     }

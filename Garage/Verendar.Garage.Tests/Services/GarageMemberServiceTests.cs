@@ -113,7 +113,7 @@ public class GarageMemberServiceTests
         var identity = new Mock<IIdentityClient>(MockBehavior.Strict);
         var sut = new GarageMemberService(NullLogger<GarageMemberService>.Instance, m.UnitOfWork.Object, identity.Object);
 
-        var result = await sut.GetMembersAsync(garageId, branchId, requesterId, new PaginationRequest(), CancellationToken.None);
+        var result = await sut.GetMembersAsync(new GarageMemberQueryRequest { GarageId = garageId, BranchId = branchId }, requesterId, CancellationToken.None);
 
         GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, EndpointMessages.Member.ForbiddenListMembers);
     }
@@ -220,10 +220,19 @@ public class GarageMemberServiceTests
 
         var m = new GarageUnitOfWorkMock();
         SetupBasicRepositories(m, garages, branches, members);
+        m.Members.Setup(r => r.GetPagedByBranchIdAsync(
+                branchId,
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<string?>(),
+                It.IsAny<MemberRole?>(),
+                It.IsAny<MemberStatus?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((members, members.Count));
         var identity = new Mock<IIdentityClient>(MockBehavior.Strict);
         var sut = new GarageMemberService(NullLogger<GarageMemberService>.Instance, m.UnitOfWork.Object, identity.Object);
 
-        var result = await sut.GetMembersAsync(garageId, branchId, ownerId, new PaginationRequest(), CancellationToken.None);
+        var result = await sut.GetMembersAsync(new GarageMemberQueryRequest { GarageId = garageId, BranchId = branchId }, ownerId, CancellationToken.None);
 
         GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.Member.ListSuccess, 1, 1);
     }

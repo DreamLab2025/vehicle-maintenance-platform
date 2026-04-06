@@ -162,18 +162,13 @@ public class BookingService(
         Guid currentUserId,
         bool assignedToMe,
         Guid? branchId,
-        Guid? userId,
         BookingStatus? status,
         PaginationRequest pagination,
         CancellationToken ct = default)
     {
-        if (assignedToMe && (branchId.HasValue || userId.HasValue))
+        if (assignedToMe && branchId.HasValue)
             return ApiResponse<List<BookingListItemResponse>>.FailureResponse(
                 EndpointMessages.Booking.AssignedToMeConflict);
-
-        if (branchId.HasValue && userId.HasValue)
-            return ApiResponse<List<BookingListItemResponse>>.FailureResponse(
-                EndpointMessages.Booking.BranchAndUserConflict);
 
         if (assignedToMe)
             return await GetBookingsAssignedToMeAsync(currentUserId, status, pagination, ct);
@@ -181,28 +176,19 @@ public class BookingService(
         if (branchId.HasValue)
             return await GetBookingsByBranchIdAsync(branchId.Value, currentUserId, status, pagination, ct);
 
-        if (userId.HasValue)
-            return await GetBookingsByUserIdAsync(userId.Value, currentUserId, status, pagination, ct);
-
-        return ApiResponse<List<BookingListItemResponse>>.FailureResponse(
-            EndpointMessages.Booking.MissingFilter);
+        return await GetBookingsByUserIdAsync(currentUserId, status, pagination, ct);
     }
 
     private async Task<ApiResponse<List<BookingListItemResponse>>> GetBookingsByUserIdAsync(
-        Guid requestedUserId,
-        Guid currentUserId,
+        Guid userId,
         BookingStatus? status,
         PaginationRequest request,
         CancellationToken ct = default)
     {
         request.Normalize();
 
-        if (requestedUserId != currentUserId)
-            return ApiResponse<List<BookingListItemResponse>>.ForbiddenResponse(
-                EndpointMessages.Booking.UserMismatchForbidden);
-
         var (items, totalCount) = await _unitOfWork.Bookings.GetPagedByUserIdAsync(
-            requestedUserId,
+            userId,
             request.PageNumber,
             request.PageSize,
             status,

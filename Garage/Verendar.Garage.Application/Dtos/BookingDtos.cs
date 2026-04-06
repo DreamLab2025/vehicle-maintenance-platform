@@ -9,7 +9,6 @@ public class GetBookingsRequest : PaginationRequest
 {
     public bool? AssignedToMe { get; set; }
     public Guid? BranchId { get; set; }
-    public Guid? UserId { get; set; }
     public BookingStatus? Status { get; set; }
 }
 

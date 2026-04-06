@@ -152,7 +152,7 @@ public class GarageProductServiceTests
             .ReturnsAsync((GarageBranch?)null);
 
         var sut = new GarageProductService(NullLogger<GarageProductService>.Instance, m.UnitOfWork.Object);
-        var result = await sut.GetProductsByBranchAsync(branchId, false, new PaginationRequest());
+        var result = await sut.GetProductsByBranchAsync(new GarageProductQueryRequest { BranchId = branchId, ActiveOnly = false });
 
         GarageServiceResponseAssert.AssertFailureEnvelope(result, 404, string.Format(EndpointMessages.BranchManager.BranchNotFoundByIdFormat, branchId));
     }
@@ -177,11 +177,15 @@ public class GarageProductServiceTests
                 It.IsAny<bool>(),
                 It.IsAny<int>(),
                 It.IsAny<int>(),
+                It.IsAny<string?>(),
+                It.IsAny<decimal?>(),
+                It.IsAny<decimal?>(),
+                It.IsAny<Guid?>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(([product], 1));
 
         var sut = new GarageProductService(NullLogger<GarageProductService>.Instance, m.UnitOfWork.Object);
-        var result = await sut.GetProductsByBranchAsync(branchId, false, new PaginationRequest());
+        var result = await sut.GetProductsByBranchAsync(new GarageProductQueryRequest { BranchId = branchId, ActiveOnly = false });
 
         GarageServiceResponseAssert.AssertPagedSuccessEnvelope(result, EndpointMessages.Product.ListSuccess, 1, 1);
     }

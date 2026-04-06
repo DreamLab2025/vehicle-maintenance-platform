@@ -36,7 +36,7 @@ public static class BookingApis
             .WithOpenApi(operation =>
             {
                 operation.Summary =
-                    "Danh sách booking: userId (user), branchId (Owner/Manager), assignedToMe=true (Mechanic)";
+                    "Danh sách booking: branchId (Owner/Manager), assignedToMe=true (Mechanic), mặc định lấy booking của user hiện tại";
                 return operation;
             })
             .RequireAuthorization()
@@ -131,7 +131,7 @@ public static class BookingApis
             return Results.Unauthorized();
 
         var result = await bookingService.GetBookingsAsync(
-            currentUserId, request.AssignedToMe == true, request.BranchId, request.UserId, request.Status, request, ct);
+            currentUserId, request.AssignedToMe == true, request.BranchId, request.Status, request, ct);
         return result.ToHttpResult();
     }
 

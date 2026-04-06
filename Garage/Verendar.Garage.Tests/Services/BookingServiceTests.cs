@@ -145,26 +145,10 @@ public class BookingServiceTests
             Guid.NewGuid(),
             assignedToMe: true,
             branchId: Guid.NewGuid(),
-            userId: null,
+            status: null,
             pagination: new PaginationRequest());
 
         GarageServiceResponseAssert.AssertFailureEnvelope(result, 400, EndpointMessages.Booking.AssignedToMeConflict);
-    }
-
-    [Fact]
-    public async Task GetBookingsAsync_WhenUserIdAndCurrentUserMismatch_Returns403()
-    {
-        var m = new GarageUnitOfWorkMock();
-        var sut = CreateSut(m);
-
-        var result = await sut.GetBookingsAsync(
-            currentUserId: Guid.NewGuid(),
-            assignedToMe: false,
-            branchId: null,
-            userId: Guid.NewGuid(),
-            pagination: new PaginationRequest());
-
-        GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, EndpointMessages.Booking.UserMismatchForbidden);
     }
 
     [Fact]
@@ -179,7 +163,7 @@ public class BookingServiceTests
             currentUserId: Guid.NewGuid(),
             assignedToMe: true,
             branchId: null,
-            userId: null,
+            status: null,
             pagination: new PaginationRequest());
 
         GarageServiceResponseAssert.AssertFailureEnvelope(result, 403, EndpointMessages.Booking.NotMechanicForbidden);
