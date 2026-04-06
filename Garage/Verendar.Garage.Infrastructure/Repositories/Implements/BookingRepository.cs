@@ -34,21 +34,6 @@ public class BookingRepository(GarageDbContext context)
             .Include(b => b.StatusHistory.OrderByDescending(h => h.ChangedAt))
             .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null, ct);
 
-    public async Task<Booking?> GetByIdTrackedWithDetailsAsync(Guid id, CancellationToken ct = default) =>
-        await _db.Set<Booking>()
-            .AsSplitQuery()
-            .Include(b => b.GarageBranch)
-                .ThenInclude(br => br.Garage)
-            .Include(b => b.Mechanic)
-            .Include(b => b.LineItems.OrderBy(i => i.SortOrder))
-                .ThenInclude(i => i.Product)
-            .Include(b => b.LineItems.OrderBy(i => i.SortOrder))
-                .ThenInclude(i => i.Service)
-            .Include(b => b.LineItems.OrderBy(i => i.SortOrder))
-                .ThenInclude(i => i.Bundle)
-            .Include(b => b.StatusHistory)
-            .FirstOrDefaultAsync(b => b.Id == id && b.DeletedAt == null, ct);
-
     public async Task<Booking?> GetByIdTrackedForMutationAsync(Guid id, CancellationToken ct = default) =>
         await _db.Set<Booking>()
             .Include(b => b.GarageBranch)
@@ -73,6 +58,7 @@ public class BookingRepository(GarageDbContext context)
         return await strategy.ExecuteAsync(
             async cancellationToken =>
             {
+                _db.ChangeTracker.Clear();
                 await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
                 try
                 {
@@ -98,6 +84,94 @@ public class BookingRepository(GarageDbContext context)
                             BookingId = bookingId,
                             FromStatus = fromStatus,
                             ToStatus = BookingStatus.Confirmed,
+                            ChangedByUserId = actorId,
+                            ChangedAt = now
+                        },
+                        cancellationToken);
+
+                    await _db.SaveChangesAsync(cancellationToken);
+                    await tx.CommitAsync(cancellationToken);
+                    return true;
+                }
+                catch
+                {
+                    await tx.RollbackAsync(cancellationToken);
+                    throw;
+                }
+            },
+            ct);
+    }
+
+    public async Task<bool> TryUpdateMechanicStatusPersistAsync(
+        Guid bookingId,
+        Guid mechanicMemberId,
+        BookingStatus fromStatus,
+        BookingStatus toStatus,
+        Guid actorId,
+        int? currentOdometer,
+        CancellationToken ct = default)
+    {
+        var strategy = _db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(
+            async cancellationToken =>
+            {
+                _db.ChangeTracker.Clear();
+                await using var tx = await _db.Database.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    var now = DateTime.UtcNow;
+                    var updateQuery = _db.Set<Booking>()
+                        .Where(b =>
+                            b.Id == bookingId
+                            && b.DeletedAt == null
+                            && b.MechanicId == mechanicMemberId
+                            && b.Status == fromStatus);
+
+                    int rows;
+
+                    if (toStatus == BookingStatus.Completed)
+                    {
+                        if (currentOdometer.HasValue)
+                        {
+                            rows = await updateQuery.ExecuteUpdateAsync(s => s
+                                .SetProperty(b => b.Status, toStatus)
+                                .SetProperty(b => b.CompletedAt, now)
+                                .SetProperty(b => b.CurrentOdometer, currentOdometer.Value)
+                                .SetProperty(b => b.UpdatedAt, now)
+                                .SetProperty(b => b.UpdatedBy, actorId),
+                                cancellationToken);
+                        }
+                        else
+                        {
+                            rows = await updateQuery.ExecuteUpdateAsync(s => s
+                                .SetProperty(b => b.Status, toStatus)
+                                .SetProperty(b => b.CompletedAt, now)
+                                .SetProperty(b => b.UpdatedAt, now)
+                                .SetProperty(b => b.UpdatedBy, actorId),
+                                cancellationToken);
+                        }
+                    }
+                    else
+                    {
+                        rows = await updateQuery.ExecuteUpdateAsync(s => s
+                            .SetProperty(b => b.Status, toStatus)
+                            .SetProperty(b => b.UpdatedAt, now)
+                            .SetProperty(b => b.UpdatedBy, actorId),
+                            cancellationToken);
+                    }
+
+                    if (rows == 0)
+                    {
+                        await tx.RollbackAsync(cancellationToken);
+                        return false;
+                    }
+
+                    await _db.Set<BookingStatusHistory>().AddAsync(
+                        new BookingStatusHistory
+                        {
+                            BookingId = bookingId,
+                            FromStatus = fromStatus,
+                            ToStatus = toStatus,
                             ChangedByUserId = actorId,
                             ChangedAt = now
                         },
@@ -635,7 +709,8 @@ public class BookingRepository(GarageDbContext context)
                 var week = ISOWeek.GetWeekOfYear(d);
                 var year = ISOWeek.GetYear(d);
                 return $"{year:0000}-W{week:00}";
-            },
+            }
+            ,
             StatsPeriod.Quarterly => d => $"{d.Year:0000}-Q{(d.Month - 1) / 3 + 1}",
             _ => d => $"{d.Year:0000}-{d.Month:00}"
         };

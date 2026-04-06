@@ -360,16 +360,14 @@ public class BookingService(
         UpdateBookingMechanicStatusRequest request,
         CancellationToken ct = default)
     {
-        var booking = await _unitOfWork.Bookings.GetByIdTrackedWithDetailsAsync(bookingId, ct);
+        var booking = await _unitOfWork.Bookings.GetByIdTrackedForMutationAsync(bookingId, ct);
         if (booking is null)
             return ApiResponse<BookingResponse>.NotFoundResponse(EndpointMessages.Booking.BookingNotFound);
 
         if (booking.MechanicId is null)
             return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.NotAssignedYet);
 
-        var mechanicMember = await _unitOfWork.Members.FindOneAsync(m =>
-            m.Id == booking.MechanicId && m.DeletedAt == null);
-        if (mechanicMember is null || mechanicMember.UserId != mechanicUserId)
+        if (!await _unitOfWork.Members.IsAssignedMechanicForUserAsync(booking.MechanicId.Value, mechanicUserId, ct))
             return ApiResponse<BookingResponse>.ForbiddenResponse(EndpointMessages.Booking.MechanicForbidden);
 
         var from = booking.Status;
@@ -387,18 +385,19 @@ public class BookingService(
         else
             return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.MechanicStatusInvalid);
 
-        booking.Status = request.Status;
-        booking.UpdatedAt = DateTime.UtcNow;
-        if (request.Status == BookingStatus.Completed)
-        {
-            booking.CompletedAt = DateTime.UtcNow;
-            if (request.CurrentOdometer.HasValue)
-                booking.CurrentOdometer = request.CurrentOdometer;
-        }
+        var persisted = await _unitOfWork.Bookings.TryUpdateMechanicStatusPersistAsync(
+            bookingId,
+            booking.MechanicId.Value,
+            from,
+            request.Status,
+            mechanicUserId,
+            request.Status == BookingStatus.Completed ? request.CurrentOdometer : null,
+            ct);
 
-        AddHistory(booking, from, request.Status, mechanicUserId);
+        if (!persisted)
+            return ApiResponse<BookingResponse>.ConflictResponse(EndpointMessages.Booking.AssignConcurrentlyModified);
 
-        await _unitOfWork.SaveChangesAsync(ct);
+        var reloaded = await _unitOfWork.Bookings.GetByIdWithDetailsAsync(bookingId, ct);
 
         try
         {
@@ -416,17 +415,17 @@ public class BookingService(
             }
             else if (request.Status == BookingStatus.Completed)
             {
-                var lineItems = await ResolveCompletedLineItemsAsync(booking, ct);
+                var lineItems = await ResolveCompletedLineItemsAsync(reloaded!, ct);
                 await _publishEndpoint.Publish(new BookingCompletedEvent
                 {
-                    BookingId = booking.Id,
-                    UserId = booking.UserId,
-                    UserVehicleId = booking.UserVehicleId,
-                    GarageBranchId = booking.GarageBranchId,
-                    BranchName = booking.GarageBranch.Name,
-                    CurrentOdometer = booking.CurrentOdometer,
-                    CompletedAt = booking.CompletedAt ?? DateTime.UtcNow,
-                    TotalAmount = booking.BookedTotalPrice.Amount,
+                    BookingId = reloaded!.Id,
+                    UserId = reloaded.UserId,
+                    UserVehicleId = reloaded.UserVehicleId,
+                    GarageBranchId = reloaded.GarageBranchId,
+                    BranchName = reloaded.GarageBranch.Name,
+                    CurrentOdometer = reloaded.CurrentOdometer,
+                    CompletedAt = reloaded.CompletedAt ?? DateTime.UtcNow,
+                    TotalAmount = reloaded.BookedTotalPrice.Amount,
                     LineItems = lineItems
                 }, ct);
             }
@@ -436,7 +435,6 @@ public class BookingService(
             _logger.LogWarning(ex, "Failed to publish status event for booking {BookingId} → {Status}", booking.Id, request.Status);
         }
 
-        var reloaded = await _unitOfWork.Bookings.GetByIdWithDetailsAsync(bookingId, ct);
         return ApiResponse<BookingResponse>.SuccessResponse(
             reloaded!.ToResponse(),
             EndpointMessages.Booking.MechanicStatusUpdated);

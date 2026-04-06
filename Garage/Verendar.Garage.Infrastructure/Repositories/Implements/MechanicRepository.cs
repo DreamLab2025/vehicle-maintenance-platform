@@ -29,6 +29,13 @@ public class GarageMemberRepository(GarageDbContext context)
                  && m.DeletedAt == null,
             ct);
 
+    public Task<bool> IsAssignedMechanicForUserAsync(Guid mechanicMemberId, Guid userId, CancellationToken ct = default) =>
+        context.GarageMembers.AnyAsync(
+            m => m.Id == mechanicMemberId
+                 && m.UserId == userId
+                 && m.DeletedAt == null,
+            ct);
+
     public async Task<(Guid Id, string DisplayName)?> GetActiveMechanicForAssignmentAsync(
         Guid memberId,
         Guid branchId,

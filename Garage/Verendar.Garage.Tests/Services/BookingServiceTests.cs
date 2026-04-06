@@ -316,6 +316,67 @@ public class BookingServiceTests
         result.Data.Status.Should().Be(BookingStatus.Confirmed);
     }
 
+    [Fact]
+    public async Task UpdateMechanicStatusAsync_WhenPersistReturnsFalse_Returns409()
+    {
+        var bookingId = Guid.NewGuid();
+        var branchId = Guid.NewGuid();
+        var mechanicMemberId = Guid.NewGuid();
+        var mechanicUserId = Guid.NewGuid();
+
+        var booking = new Booking
+        {
+            Id = bookingId,
+            GarageBranchId = branchId,
+            UserId = Guid.NewGuid(),
+            UserVehicleId = Guid.NewGuid(),
+            MechanicId = mechanicMemberId,
+            Status = BookingStatus.Confirmed,
+            ScheduledAt = DateTime.UtcNow.AddHours(1),
+            BookedTotalPrice = new Money { Amount = 100_000, Currency = "VND" },
+            GarageBranch = new GarageBranch
+            {
+                Id = branchId,
+                GarageId = Guid.NewGuid(),
+                Name = "Chi nhánh",
+                Slug = "chi-nhanh",
+                Address = new(),
+                WorkingHours = new(),
+                Garage = new GarageEntity
+                {
+                    Id = Guid.NewGuid(),
+                    OwnerId = Guid.NewGuid(),
+                    BusinessName = "Garage",
+                    Slug = "garage"
+                }
+            }
+        };
+
+        var m = new GarageUnitOfWorkMock();
+        m.Bookings.Setup(r => r.GetByIdTrackedForMutationAsync(bookingId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(booking);
+        m.Members.Setup(r => r.IsAssignedMechanicForUserAsync(mechanicMemberId, mechanicUserId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        m.Bookings.Setup(r => r.TryUpdateMechanicStatusPersistAsync(
+                bookingId,
+                mechanicMemberId,
+                BookingStatus.Confirmed,
+                BookingStatus.InProgress,
+                mechanicUserId,
+                null,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var sut = CreateSut(m);
+        var result = await sut.UpdateMechanicStatusAsync(
+            bookingId,
+            mechanicUserId,
+            new UpdateBookingMechanicStatusRequest { Status = BookingStatus.InProgress });
+
+        GarageServiceResponseAssert.AssertFailureEnvelope(result, 409, EndpointMessages.Booking.AssignConcurrentlyModified);
+        m.Bookings.Verify(r => r.GetByIdWithDetailsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static BookingService CreateSut(GarageUnitOfWorkMock mock)
     {
         var vehicleClient = new Mock<IVehicleGarageClient>();

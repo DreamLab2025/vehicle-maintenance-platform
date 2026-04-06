@@ -11,6 +11,8 @@ public interface IGarageMemberRepository : IGenericRepository<GarageMember>
         Guid branchId,
         CancellationToken ct = default);
 
+    Task<bool> IsAssignedMechanicForUserAsync(Guid mechanicMemberId, Guid userId, CancellationToken ct = default);
+
     Task<List<GarageMember>> GetActiveByGarageIdAsync(Guid garageId, CancellationToken ct = default);
 
     Task<List<Guid>> GetActiveManagerUserIdsByBranchIdAsync(Guid branchId, CancellationToken ct = default);

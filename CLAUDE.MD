@@ -37,6 +37,7 @@ MassTransit event contracts live in dedicated `Verendar.{Service}.Contracts` pro
 **Application services** — Call `IUnitOfWork` repositories directly, return `ApiResponse<T>`. DTO mapping via static extensions: `ToEntity()`, `ToResponse()`, `UpdateFromRequest()`.
 
 **Inter-service communication** — Two channels:
+
 - **Async (MassTransit/RabbitMQ)**: publish/consume events; exponential retry (5× , 2–30 s)
 - **Sync (typed HTTP clients)**: `ILocationClient`, `IPaymentClient`, `IIdentityClient`, etc., registered in each service's `Bootstrapping/`. Aspire service discovery: `https+http://service-name`; override via `Configuration["Services:{Name}:BaseUrl"]`. Internal endpoints (`/api/internal/...`) skip `ApiResponse<T>` and authenticate via `IServiceTokenProvider`.
 
@@ -50,17 +51,3 @@ MassTransit event contracts live in dedicated `Verendar.{Service}.Contracts` pro
 - Secrets in User Secrets only — never `appsettings.json`
 - Paginate all lists (`PaginationRequest`) — exception: Location service uses unbounded lists with 24 h Redis cache
 - Payment (VNPay) logic lives exclusively in the Payment service; other services call it via `IPaymentClient` + consume `PaymentSucceededEvent` / `PaymentRefundedEvent`
-
-## References
-
-`.claude/skills/backend-development/references/` — load when needed:
-
-| Need | File |
-|---|---|
-| API structure, routes, pagination | `api-design.md` |
-| Layer responsibilities, checklist | `architecture.md` |
-| SOLID, clean code | `code-quality.md` |
-| N+1, caching, query hygiene | `performance.md` |
-| Tests (xUnit + Moq + FluentAssertions) | `testing.md` |
-| Aspire orchestration, DB/Redis wiring | `aspire.md` |
-| HTTP clients, MassTransit events | `communication.md` |
