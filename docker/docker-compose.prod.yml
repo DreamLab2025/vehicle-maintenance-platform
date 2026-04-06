@@ -46,6 +46,7 @@ x-notification-service-environment: &notification-service-environment
   ConnectionStrings__notification-db: Host=postgres;Port=5432;Database=${NOTIFICATION_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=12;Minimum Pool Size=1;Connection Idle Lifetime=300
   ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  Email__EnableRealSend: ${NOTIFICATION_EMAIL_ENABLE_REAL_SEND:-true}
   Resend__ApiKey: ${RESEND_API_KEY}
   Resend__FromEmail: ${RESEND_FROM_EMAIL}
   Resend__FromName: ${RESEND_FROM_NAME:-Verendar}
@@ -85,6 +86,7 @@ x-ai-service-environment: &ai-service-environment
   Bedrock__DefaultParameters__TopP: ${BEDROCK_DEFAULT_PARAMETERS_TOP_P:-0.95}
   Bedrock__DefaultParameters__TopK: ${BEDROCK_DEFAULT_PARAMETERS_TOP_K:-40}
   VehicleService__BaseUrl: ${VEHICLE_SERVICE_BASE_URL:-http://vehicle-service:8080}
+  MediaService__BaseUrl: ${MEDIA_SERVICE_BASE_URL:-http://media-service:8080}
 
 x-location-service-environment: &location-service-environment
   ConnectionStrings__location-db: Host=postgres;Port=5432;Database=${LOCATION_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=12;Minimum Pool Size=1;Connection Idle Lifetime=300

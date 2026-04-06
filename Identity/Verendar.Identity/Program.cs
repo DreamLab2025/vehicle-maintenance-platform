@@ -20,6 +20,7 @@ if (app.Environment.IsDevelopment())
     await GarageOwnerDevUserSeeder.SeedAsync(db, logger);
     await AdminUserSeeder.SeedAsync(db, logger);
     await GarageDevMemberUserSeeder.SeedAsync(db, logger);
+    await CsvUserSeeder.SeedAsync(db, logger);
 }
 
 app.UseApplicationServices();
