@@ -151,6 +151,7 @@ namespace Verendar.AppHost.Extensions
                     yarp.AddRoute("/api/v1/auth/{**catch-all}", identityCluster);
                     yarp.AddRoute("/api/v1/users/{**catch-all}", identityCluster);
                     yarp.AddRoute("/api/v1/feedback/{**catch-all}", identityCluster);
+                    yarp.AddRoute("/api/v1/identity/{**catch-all}", identityCluster);
 
                     var aiCluster = yarp.AddProjectCluster(aiService);
                     yarp.AddRoute("/api/v1/ai/{**catch-all}", aiCluster);
@@ -165,6 +166,7 @@ namespace Verendar.AppHost.Extensions
                     yarp.AddRoute("/api/v1/part-categories/{**catch-all}", vehicleCluster);
                     yarp.AddRoute("/api/v1/types/{**catch-all}", vehicleCluster);
                     yarp.AddRoute("/api/v1/brands/{**catch-all}", vehicleCluster);
+                    yarp.AddRoute("/api/v1/vehicle/{**catch-all}", vehicleCluster);
 
                     var mediaCluster = yarp.AddProjectCluster(mediaService);
                     yarp.AddRoute("/api/v1/media-files/{**catch-all}", mediaCluster);
@@ -186,6 +188,7 @@ namespace Verendar.AppHost.Extensions
                     yarp.AddRoute("/api/v1/garage-catalog/{**catch-all}", garageCluster);
                     yarp.AddRoute("/api/v1/members/{**catch-all}", garageCluster);
                     yarp.AddRoute("/api/v1/branches/{**catch-all}", garageCluster);
+                    yarp.AddRoute("/api/v1/garage/{**catch-all}", garageCluster);
                 })
                 .WaitFor(identityService)
                 .WaitFor(vehicleService)
