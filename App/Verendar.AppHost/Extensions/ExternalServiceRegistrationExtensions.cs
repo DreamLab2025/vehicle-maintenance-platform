@@ -205,7 +205,7 @@ namespace Verendar.AppHost.Extensions
 
             if (isDevelopment)
             {
-                builder.AddScalarApiReference("api-docs", configureOptions: options => options
+                var scalarDocs = builder.AddScalarApiReference("api-docs", configureOptions: options => options
                     .PreferHttpsEndpoint()
                     .AllowSelfSignedCertificates()
                     .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json")
@@ -218,6 +218,11 @@ namespace Verendar.AppHost.Extensions
                     .WithApiReference(aiService)
                     .WithApiReference(locationService)
                     .WithApiReference(garageService);
+
+                if (!isIsolatedTestRun)
+                {
+                    scalarDocs = scalarDocs.WithEndpoint("http", endpoint => endpoint.Port = 8081);
+                }
             }
 
             return builder;
