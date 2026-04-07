@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Verendar.Identity.Application.Shared.Helpers;
 
@@ -7,12 +8,18 @@ namespace Verendar.Identity.Infrastructure.Data.Seeders
     public static class AdminUserSeeder
     {
         private static readonly Guid AdminUserId = Guid.Parse("22222222-2222-2222-2222-222222222222");
-        private const string AdminEmail = "admin@gmail.com";
-        private const string AdminPassword = "12345@Abc";
 
-        public static async Task SeedAsync(UserDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
+        public static async Task SeedAsync(
+            UserDbContext db,
+            IConfiguration configuration,
+            ILogger? logger = null,
+            CancellationToken cancellationToken = default)
         {
-            var normalizedEmail = EmailHelper.Normalize(AdminEmail);
+            var email = configuration["Seed:Admin:Email"] ?? "admin@gmail.com";
+            var password = configuration["Seed:Admin:Password"] ?? "12345@Abc";
+            var fullName = configuration["Seed:Admin:FullName"] ?? "System Administrator";
+
+            var normalizedEmail = EmailHelper.Normalize(email);
             var alreadySeeded = await db.Users
                 .IgnoreQueryFilters()
                 .AnyAsync(
@@ -33,7 +40,7 @@ namespace Verendar.Identity.Infrastructure.Data.Seeders
             {
                 Id = AdminUserId,
                 Email = normalizedEmail,
-                FullName = "System Administrator (Dev Seed)",
+                FullName = fullName,
                 PasswordHash = string.Empty,
                 EmailVerified = true,
                 PhoneNumberVerified = false,
@@ -41,12 +48,12 @@ namespace Verendar.Identity.Infrastructure.Data.Seeders
                 CreatedAt = DateTime.UtcNow,
                 CreatedBy = AdminUserId
             };
-            user.PasswordHash = hasher.HashPassword(user, AdminPassword);
+            user.PasswordHash = hasher.HashPassword(user, password);
 
             db.Users.Add(user);
             await db.SaveChangesAsync(cancellationToken);
-            logger?.LogInformation(
-                "Seeded admin user: {Email} (Id: {UserId}) — Development only",
+            logger?.LogWarning(
+                "Seeded admin user: {Email} (Id: {UserId})",
                 normalizedEmail,
                 AdminUserId);
         }

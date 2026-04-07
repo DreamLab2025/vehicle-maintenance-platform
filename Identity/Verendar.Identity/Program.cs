@@ -11,6 +11,15 @@ var app = builder.Build();
 
 await app.MigrateDbContextAsync<UserDbContext>();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await AdminUserSeeder.SeedAsync(db, configuration, logger);
+    await CsvUserSeeder.SeedAsync(db, logger);
+}
+
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
@@ -18,9 +27,7 @@ if (app.Environment.IsDevelopment())
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     await TestUserSeeder.SeedAsync(db, logger);
     await GarageOwnerDevUserSeeder.SeedAsync(db, logger);
-    await AdminUserSeeder.SeedAsync(db, logger);
     await GarageDevMemberUserSeeder.SeedAsync(db, logger);
-    await CsvUserSeeder.SeedAsync(db, logger);
 }
 
 app.UseApplicationServices();
