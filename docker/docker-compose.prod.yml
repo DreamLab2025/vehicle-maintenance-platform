@@ -239,7 +239,7 @@ services:
       rabbitmq:
         condition: service_healthy
       location-service:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: [ "CMD-SHELL", "wget -qO- http://localhost:8080/alive || exit 1" ]
       interval: 10s
@@ -266,19 +266,19 @@ services:
     restart: unless-stopped
     depends_on:
       identity-service:
-        condition: service_healthy
+        condition: service_started
       vehicle-service:
-        condition: service_healthy
+        condition: service_started
       media-service:
-        condition: service_healthy
+        condition: service_started
       notification-service:
-        condition: service_healthy
+        condition: service_started
       ai-service:
-        condition: service_healthy
+        condition: service_started
       location-service:
-        condition: service_healthy
+        condition: service_started
       garage-service:
-        condition: service_healthy
+        condition: service_started
 
   identity-service:
     image: ${DOCKER_IMAGE_PREFIX}/verendar-identity-service:${IMAGE_TAG:-latest}
