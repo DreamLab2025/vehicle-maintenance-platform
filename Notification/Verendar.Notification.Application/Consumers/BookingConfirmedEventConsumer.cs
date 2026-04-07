@@ -27,7 +27,7 @@ public class BookingConfirmedEventConsumer(
         try
         {
             var (title, content) = GarageBookingNotificationMappings.BookingConfirmedCopy(m);
-            var customerActionUrl = routes.UserBookingHistoryUrl();
+            var customerActionUrl = routes.UserProposalUrl(m.UserVehicleId);
 
             var notification = NotificationMappings.CreateUserNotification(
                 m.CustomerUserId,
