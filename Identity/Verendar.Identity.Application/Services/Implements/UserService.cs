@@ -26,21 +26,31 @@ namespace Verendar.Identity.Application.Services.Implements
             var phone = request.Phone?.Trim();
             var roles = request.Roles?.Where(r => Enum.IsDefined(typeof(UserRole), r)).ToList();
             var descending = request.IsDescending != false;
+            var query = _unitOfWork.Users.AsQueryable();
 
-            var users = await _unitOfWork.Users.GetPagedAsync(
-                request.PageNumber,
-                request.PageSize,
-                u => (string.IsNullOrEmpty(name) || u.FullName.ToLower().Contains(name))
-                  && (string.IsNullOrEmpty(phone) || (u.PhoneNumber != null && u.PhoneNumber.Contains(phone)))
-                  && (roles == null || roles.Count == 0 || u.Roles.Any(r => roles.Contains(r))),
-                BuildOrderBy(request.SortBy, descending)
-            );
+            if (!string.IsNullOrEmpty(name))
+                query = query.Where(u => u.FullName.ToLower().Contains(name));
+            if (!string.IsNullOrEmpty(phone))
+                query = query.Where(u => u.PhoneNumber != null && u.PhoneNumber.Contains(phone));
 
-            var userDtos = users.Items.Select(u => u.ToDto()).ToList();
+            query = BuildOrderBy(request.SortBy, descending)(query);
+
+            var allMatched = await query.ToListAsync();
+
+            var filtered = (roles == null || roles.Count == 0)
+                ? allMatched
+                : allMatched.Where(u => u.Roles.Any(r => roles.Contains(r))).ToList();
+
+            var totalCount = filtered.Count;
+            var userDtos = filtered
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(u => u.ToDto())
+                .ToList();
 
             return ApiResponse<List<UserDto>>.SuccessPagedResponse(
                 userDtos,
-                users.TotalCount,
+                totalCount,
                 request.PageNumber,
                 request.PageSize,
                 "Lấy danh sách người dùng thành công."

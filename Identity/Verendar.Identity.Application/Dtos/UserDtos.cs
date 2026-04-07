@@ -62,11 +62,6 @@ namespace Verendar.Identity.Application.Dtos
         public List<UserRole> Roles { get; set; } = [];
     }
 
-    /// <summary>
-    /// Search/filter params for the admin "get all users" endpoint.
-    /// SortBy: "name" | "email" | "phone" | "createdAt" (default).
-    /// IsDescending: true (default) | false.
-    /// </summary>
     public class UserFilterRequest : PaginationRequest
     {
         public string? Name { get; set; }
