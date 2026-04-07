@@ -106,8 +106,9 @@ namespace Verendar.Ai.Application.Services.Implements
             GeminiVehicleAnalysisResult? analysisResult;
             try
             {
+                var normalizedAiContent = NormalizeAiJsonPayload(aiResponse.Data.Content);
                 analysisResult = JsonSerializer.Deserialize<GeminiVehicleAnalysisResult>(
-                    aiResponse.Data.Content,
+                    normalizedAiContent,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
             catch (JsonException ex)
@@ -204,6 +205,21 @@ namespace Verendar.Ai.Application.Services.Implements
             };
 
             return ApiResponse<VehicleQuestionnaireResponse>.SuccessResponse(response);
+        }
+
+        private static string NormalizeAiJsonPayload(string content)
+        {
+            var json = content.Trim();
+
+            if (!json.StartsWith("```", StringComparison.Ordinal))
+                return json;
+
+            var start = json.IndexOf('{');
+            var end = json.LastIndexOf('}');
+            if (start >= 0 && end > start)
+                return json[start..(end + 1)];
+
+            return json;
         }
 
         private async Task<ApiResponse<VehicleServiceUserVehicleResponse>> FetchUserVehicleAsync(

@@ -339,6 +339,32 @@ public class VehicleMaintenanceAnalysisServiceTests
         result.Data.Metadata.ResponseTimeMs.Should().Be(1200);
     }
 
+    [Fact]
+    public async Task AnalyzeQuestionnaireAsync_WhenAiReturnsJsonCodeFence_ReturnsMappedResponse()
+    {
+        var (sut, aiService, vehicleClient, _) = CreateSut();
+        SetupHappyPathDependencies(vehicleClient);
+        aiService.Setup(a => a.GenerateContentAsync(
+                It.IsAny<string>(), AiOperation.AnalyzeMaintenanceQuestionnaire, UserId,
+                null, null, null, 0.5m, null))
+            .ReturnsAsync(ApiResponse<GenerativeAiResponse>.SuccessResponse(new GenerativeAiResponse
+            {
+                Content = "```json\n" + MakeValidAiJson() + "\n```",
+                Model = "google.gemma-3-4b-it",
+                Provider = AiProvider.Bedrock,
+                TotalTokens = 925,
+                TotalCost = 0.0009m,
+                ResponseTimeMs = 4104
+            }));
+
+        var result = await sut.AnalyzeQuestionnaireAsync(UserId, MakeRequest());
+
+        AiServiceResponseAssert.AssertSuccessEnvelope(result);
+        result.Data.Should().NotBeNull();
+        result.Data!.Recommendations.Should().HaveCount(1);
+        result.Data.Recommendations[0].PartCategorySlug.Should().Be("engine-oil");
+    }
+
     private static void SetupVehicleAndSummary(Mock<IVehicleServiceClient> vehicleClient)
     {
         vehicleClient.Setup(c => c.GetUserVehicleByIdAsync(UserVehicleId, It.IsAny<CancellationToken>()))
