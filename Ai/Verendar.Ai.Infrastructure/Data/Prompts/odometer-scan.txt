@@ -10,3 +10,7 @@ Return JSON only (no markdown, no extra text) with this exact shape:
 Rules:
 - If the reading is unclear or missing, set detectedOdometer to null and explain why in message (Vietnamese).
 - The message field must always be Vietnamese, concise, and user-facing.
+- Return exactly one JSON object.
+- The first character must be `{` and the last character must be `}`.
+- Do not wrap output in markdown/code fences (no ```json, no ```).
+- Do not add any explanatory text before or after JSON.
