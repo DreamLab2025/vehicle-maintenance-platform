@@ -334,6 +334,7 @@ public class BookingService(
             {
                 BookingId = booking.Id,
                 CustomerUserId = booking.UserId,
+                UserVehicleId = booking.UserVehicleId,
                 GarageId = reloaded!.GarageBranch.GarageId,
                 GarageBranchId = booking.GarageBranchId,
                 MechanicMemberId = mechanic.Value.Id,
@@ -409,6 +410,7 @@ public class BookingService(
                 {
                     BookingId = booking.Id,
                     CustomerUserId = booking.UserId,
+                    UserVehicleId = booking.UserVehicleId,
                     GarageId = reloaded!.GarageBranch.GarageId,
                     GarageBranchId = booking.GarageBranchId,
                     FromStatus = from.ToString(),
@@ -488,6 +490,7 @@ public class BookingService(
             {
                 BookingId = booking.Id,
                 CustomerUserId = booking.UserId,
+                UserVehicleId = booking.UserVehicleId,
                 GarageId = booking.GarageBranch.GarageId,
                 GarageBranchId = booking.GarageBranchId,
                 BranchName = booking.GarageBranch.Name,

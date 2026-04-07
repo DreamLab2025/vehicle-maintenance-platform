@@ -10,8 +10,6 @@ public class NotificationAppOptions
 
     public string BookingDetailPathFormat { get; set; } = "/bookings/{0}";
 
-    public string UserBookingHistoryPath { get; set; } = "/user/booking-history";
-
     public string GarageDashboardPathFormat { get; set; } = "/garage-dashboard/{0}/branch/{1}";
 
     public string UserProposalPathFormat { get; set; } = "/user/proposal/{0}";
@@ -24,9 +22,6 @@ public class NotificationAppOptions
 
     public string BookingDetailRelativeUrl(Guid bookingId) =>
         string.Format(BookingDetailPathFormat, bookingId);
-
-    public string UserBookingHistoryUrl() =>
-        ToAbsoluteUrl(UserBookingHistoryPath);
 
     public string GarageDashboardBookingsUrl(Guid garageId, Guid branchId) =>
         ToAbsoluteUrl(string.Format(GarageDashboardPathFormat, garageId, branchId) + "?tab=bookings");
