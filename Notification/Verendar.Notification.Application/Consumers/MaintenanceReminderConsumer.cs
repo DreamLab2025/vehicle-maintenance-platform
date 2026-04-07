@@ -47,7 +47,7 @@ public class MaintenanceReminderConsumer(
                 var count = groupItems.Count;
                 var (title, body) = MaintenanceReminderMappings.ToVehicleGroupCopy(
                     groupLevel, vehicleDisplayName, count);
-                var actionPath = routes.UserVehicleMaintenanceRelativeUrl(vehicleId);
+                const string actionPath = "/";
                 var actionAbsolute = routes.ToAbsoluteUrl(actionPath);
 
                 var payloadJson = MaintenanceNotificationPayloadSerializer.SerializeFromEventItems(groupItems);
