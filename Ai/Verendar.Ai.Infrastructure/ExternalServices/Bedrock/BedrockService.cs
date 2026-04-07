@@ -352,16 +352,24 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
         {
             var root = JsonDocument.Parse(responseContent).RootElement;
 
-            var content = ExtractTextContent(root);
+            var content = NormalizeModelTextContent(ExtractTextContent(root));
 
             var inputTokens = 0;
             var outputTokens = 0;
+            var totalTokensFromUsage = 0;
             if (root.TryGetProperty("usage", out var usage))
             {
                 if (usage.TryGetProperty("input_tokens", out var inProp))
                     inputTokens = inProp.GetInt32();
                 if (usage.TryGetProperty("output_tokens", out var outProp))
                     outputTokens = outProp.GetInt32();
+                if (usage.TryGetProperty("total_tokens", out var totalProp))
+                    totalTokensFromUsage = totalProp.GetInt32();
+
+                if (inputTokens == 0 && usage.TryGetProperty("prompt_tokens", out var promptTokens))
+                    inputTokens = promptTokens.GetInt32();
+                if (outputTokens == 0 && usage.TryGetProperty("completion_tokens", out var completionTokens))
+                    outputTokens = completionTokens.GetInt32();
 
                 if (inputTokens == 0 && usage.TryGetProperty("promptTokenCount", out var promptTokenCount))
                     inputTokens = promptTokenCount.GetInt32();
@@ -369,7 +377,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                     outputTokens = candidateTokenCount.GetInt32();
             }
 
-            var totalTokens = inputTokens + outputTokens;
+            var totalTokens = totalTokensFromUsage > 0 ? totalTokensFromUsage : inputTokens + outputTokens;
             var inputCost = (inputTokens / 1_000_000m) * _config.Pricing.InputCostPer1MTokens;
             var outputCost = (outputTokens / 1_000_000m) * _config.Pricing.OutputCostPer1MTokens;
 
@@ -390,6 +398,31 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
 
         private static string ExtractTextContent(JsonElement root)
         {
+            // OpenAI-compatible chat completion shape returned by some Bedrock models
+            // {"choices":[{"message":{"content":"..."}}],"usage":{"prompt_tokens":...}}
+            if (root.TryGetProperty("choices", out var choices) &&
+                choices.ValueKind == JsonValueKind.Array &&
+                choices.GetArrayLength() > 0)
+            {
+                var firstChoice = choices[0];
+                if (firstChoice.ValueKind == JsonValueKind.Object)
+                {
+                    if (firstChoice.TryGetProperty("message", out var message) &&
+                        message.ValueKind == JsonValueKind.Object &&
+                        message.TryGetProperty("content", out var messageContent) &&
+                        messageContent.ValueKind == JsonValueKind.String)
+                    {
+                        return messageContent.GetString() ?? string.Empty;
+                    }
+
+                    if (firstChoice.TryGetProperty("text", out var choiceText) &&
+                        choiceText.ValueKind == JsonValueKind.String)
+                    {
+                        return choiceText.GetString() ?? string.Empty;
+                    }
+                }
+            }
+
             // Anthropic Messages format
             if (root.TryGetProperty("content", out var contentArr) && contentArr.ValueKind == JsonValueKind.Array)
             {
@@ -468,6 +501,24 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
             }
 
             return string.Empty;
+        }
+
+        private static string NormalizeModelTextContent(string rawContent)
+        {
+            if (string.IsNullOrWhiteSpace(rawContent))
+                return string.Empty;
+
+            var normalized = rawContent.Trim();
+
+            if (!normalized.StartsWith("```", StringComparison.Ordinal))
+                return normalized;
+
+            var jsonStart = normalized.IndexOf('{');
+            var jsonEnd = normalized.LastIndexOf('}');
+            if (jsonStart >= 0 && jsonEnd > jsonStart)
+                return normalized[jsonStart..(jsonEnd + 1)];
+
+            return normalized;
         }
 
         private static string TruncateForLog(string value, int maxLength)
