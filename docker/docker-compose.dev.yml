@@ -74,7 +74,7 @@ x-ai-service-environment: &ai-service-environment
   Bedrock__Region: ${BEDROCK_REGION:-us-east-1}
   Bedrock__AccessKey: ${BEDROCK_ACCESS_KEY:-}
   Bedrock__SecretKey: ${BEDROCK_SECRET_KEY:-}
-  Bedrock__DefaultModel: ${BEDROCK_DEFAULT_MODEL:-anthropic.claude-3-5-sonnet-20240620-v1:0}
+  Bedrock__DefaultModel: ${BEDROCK_DEFAULT_MODEL:-anthropic.claude-3-5-sonnet-20241022-v2:0}
   Bedrock__MaxRetries: ${BEDROCK_MAX_RETRIES:-3}
   Bedrock__TimeoutSeconds: ${BEDROCK_TIMEOUT_SECONDS:-60}
   Bedrock__DefaultParameters__MaxTokens: ${BEDROCK_DEFAULT_PARAMETERS_MAX_TOKENS:-8192}

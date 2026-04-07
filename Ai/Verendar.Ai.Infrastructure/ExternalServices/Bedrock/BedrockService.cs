@@ -390,6 +390,9 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 return "Tạm thời quá tải. Vui lòng thử lại sau vài phút.";
             if (error.Contains("timeout", StringComparison.OrdinalIgnoreCase))
                 return AiExternalServiceMessages.AiRequestTimeout;
+            if (error.Contains("end of its life", StringComparison.OrdinalIgnoreCase) ||
+                error.Contains("deprecated", StringComparison.OrdinalIgnoreCase))
+                return "Model Bedrock đã hết vòng đời. Vui lòng cập nhật Bedrock:DefaultModel lên phiên bản mới hơn.";
             if (error.Contains("AccessDenied", StringComparison.OrdinalIgnoreCase) || error.Contains("UnrecognizedClientException", StringComparison.OrdinalIgnoreCase))
                 return "Lỗi xác thực AWS. Kiểm tra cấu hình Bedrock.";
             return "Đã xảy ra lỗi khi gọi API AI. Vui lòng thử lại.";
