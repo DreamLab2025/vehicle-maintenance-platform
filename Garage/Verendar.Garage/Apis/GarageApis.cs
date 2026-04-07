@@ -111,7 +111,7 @@ public static class GarageApis
                 operation.Summary = "Chủ garage chỉnh sửa thông tin (chỉ khi Pending hoặc Rejected)";
                 return operation;
             })
-            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner)))
+            .RequireAuthorization()
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status404NotFound)
@@ -125,7 +125,7 @@ public static class GarageApis
                 operation.Summary = "Chủ garage nộp lại hồ sơ sau khi bị từ chối (Rejected → Pending)";
                 return operation;
             })
-            .RequireAuthorization(policy => policy.RequireRole(nameof(RoleType.GarageOwner)))
+            .RequireAuthorization()
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status200OK)
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status400BadRequest)
             .Produces<ApiResponse<GarageResponse>>(StatusCodes.Status404NotFound)
