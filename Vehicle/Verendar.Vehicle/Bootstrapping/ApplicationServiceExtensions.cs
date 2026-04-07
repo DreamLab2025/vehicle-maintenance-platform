@@ -1,7 +1,6 @@
 using FluentValidation;
 using Hangfire;
 using QuestPDF.Infrastructure;
-using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using Verendar.Common.Bootstrapping;
 using Verendar.ServiceDefaults;
@@ -92,20 +91,23 @@ namespace Verendar.Vehicle.Bootstrapping
             {
                 app.UseHangfireDashboard("/hangfire", new DashboardOptions
                 {
-                    Authorization = Array.Empty<IDashboardAuthorizationFilter>()
+                    Authorization = []
                 });
             }
 
-            var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
-            recurringJobManager.AddOrUpdate<OdometerReminderJob>(
-                "odometer-reminder",
-                x => x.ExecuteAsync(CancellationToken.None),
-                "0 0 * * *");
+            app.Lifetime.ApplicationStarted.Register(() =>
+            {
+                var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
+                recurringJobManager.AddOrUpdate<OdometerReminderJob>(
+                    "odometer-reminder",
+                    x => x.ExecuteAsync(CancellationToken.None),
+                    "0 0 * * *");
 
-            recurringJobManager.AddOrUpdate<MaintenanceReminderJob>(
-                "maintenance-reminder-Critical",
-                x => x.ExecuteAsync(CancellationToken.None),
-                "0 0 * * *");
+                recurringJobManager.AddOrUpdate<MaintenanceReminderJob>(
+                    "maintenance-reminder-Critical",
+                    x => x.ExecuteAsync(CancellationToken.None),
+                    "0 0 * * *");
+            });
 
             if (app.Environment.IsDevelopment())
             {
