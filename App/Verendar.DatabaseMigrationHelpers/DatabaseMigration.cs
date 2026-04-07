@@ -33,15 +33,7 @@ namespace Verendar.DatabaseMigrationHelpers
                     logger.LogInformation("Migrating database for context {DbContextName}", typeof(TContext).Name);
                     await strategy.ExecuteAsync(async () =>
                     {
-                        try
-                        {
-                            await context.Database.MigrateAsync(cancellationToken);
-                        }
-                        catch (Exception ex)
-                        {
-                            logger.LogError(ex, "An error occurred while applying migrations for context {DbContextName}", typeof(TContext).Name);
-                            throw;
-                        }
+                        await context.Database.MigrateAsync(cancellationToken);
                     });
 
                     logger.LogInformation("Database migration completed for context {DbContextName}", typeof(TContext).Name);
@@ -61,6 +53,7 @@ namespace Verendar.DatabaseMigrationHelpers
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "An error occurred while migrating the database used on context {DbContextName}", typeof(TContext).Name);
+                    throw;
                 }
             }
             return host;
