@@ -25,6 +25,9 @@ x-identity-service-environment: &identity-service-environment
   ConnectionStrings__identity-db: Host=postgres;Port=5432;Database=${IDENTITY_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=20;Minimum Pool Size=1;Connection Idle Lifetime=300
   ConnectionStrings__redis: redis:6379,password=${REDIS_PASSWORD}
   ConnectionStrings__rabbitmq: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+  Seed__Admin__Email: ${ADMIN_EMAIL:?ADMIN_EMAIL is required}
+  Seed__Admin__Password: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+  Seed__Admin__FullName: ${ADMIN_FULL_NAME:-System Administrator}
 
 x-vehicle-service-environment: &vehicle-service-environment
   ConnectionStrings__vehicle-db: Host=postgres;Port=5432;Database=${VEHICLE_SERVICE_DATABASE};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Maximum Pool Size=20;Minimum Pool Size=1;Connection Idle Lifetime=300
