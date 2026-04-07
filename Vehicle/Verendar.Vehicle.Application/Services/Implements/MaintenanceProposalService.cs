@@ -28,10 +28,12 @@ namespace Verendar.Vehicle.Application.Services.Implements
 
             var items = proposals.Select(p => p.ToResponse(categoryNames)).ToList();
 
-            return ApiResponse<List<MaintenanceProposalResponse>>.SuccessResponse(
+            return ApiResponse<List<MaintenanceProposalResponse>>.SuccessPagedResponse(
                 items,
-                "Lấy danh sách đề xuất bảo dưỡng thành công.",
-                new PagingMetadata(pagination.PageNumber, pagination.PageSize, total));
+                total,
+                pagination.PageNumber,
+                pagination.PageSize,
+                "Lấy danh sách đề xuất bảo dưỡng thành công.");
         }
 
         public async Task<ApiResponse<MaintenanceProposalResponse>> UpdateAsync(

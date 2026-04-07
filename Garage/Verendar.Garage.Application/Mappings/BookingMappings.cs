@@ -7,7 +7,9 @@ public static class BookingMappings
     public static BookingResponse ToResponse(
         this Booking booking,
         BookingCustomerSummary? customer = null,
-        BookingVehicleSummary? vehicle = null)
+        BookingVehicleSummary? vehicleSnapshot = null,
+        bool includeFullVehicle = false,
+        IReadOnlyDictionary<Guid, string>? changedByNames = null)
     {
         var branch = booking.GarageBranch;
         var garage = branch.Garage;
@@ -15,8 +17,10 @@ public static class BookingMappings
         return new BookingResponse
         {
             Id = booking.Id,
-            UserId = booking.UserId,
-            UserVehicleId = booking.UserVehicleId,
+            CustomerName = customer?.FullName ?? string.Empty,
+            CustomerPhone = customer?.PhoneNumber ?? string.Empty,
+            VehicleBrand = vehicleSnapshot?.BrandName ?? string.Empty,
+            VehicleModel = vehicleSnapshot?.ModelName ?? string.Empty,
             GarageBranchId = booking.GarageBranchId,
             MechanicId = booking.MechanicId,
             MechanicDisplayName = booking.Mechanic?.DisplayName,
@@ -48,14 +52,14 @@ public static class BookingMappings
                     Id = h.Id,
                     FromStatus = h.FromStatus,
                     ToStatus = h.ToStatus,
-                    ChangedByUserId = h.ChangedByUserId,
+                    ChangedByName = changedByNames?.TryGetValue(h.ChangedByUserId, out var n) == true ? n : null,
                     Note = h.Note,
                     ChangedAt = h.ChangedAt,
                     CreatedAt = h.CreatedAt
                 })
                 .ToList(),
             Customer = customer,
-            Vehicle = vehicle
+            Vehicle = includeFullVehicle ? vehicleSnapshot : null
         };
     }
 

@@ -121,7 +121,9 @@ public class BookingService(
         if (created is null)
             return ApiResponse<BookingResponse>.FailureResponse(EndpointMessages.Booking.BookingReloadFailed);
 
-        return ApiResponse<BookingResponse>.CreatedResponse(created.ToResponse(), EndpointMessages.Booking.BookingCreated);
+        return ApiResponse<BookingResponse>.CreatedResponse(
+            await BuildBookingResponseAsync(created, userId, ct),
+            EndpointMessages.Booking.BookingCreated);
     }
 
     public async Task<ApiResponse<BookingResponse>> GetBookingByIdAsync(
@@ -136,17 +138,8 @@ public class BookingService(
         if (!await CanViewerAccessBookingAsync(booking, viewerId, ct))
             return ApiResponse<BookingResponse>.ForbiddenResponse(EndpointMessages.Booking.BookingForbiddenView);
 
-        var isAssignedMechanic = await IsAssignedMechanicViewerAsync(booking, viewerId, ct);
-        BookingCustomerSummary? customer = null;
-        BookingVehicleSummary? vehicle = null;
-        if (isAssignedMechanic)
-        {
-            customer = await _identityContactClient.GetCustomerContactAsync(booking.UserId, ct);
-            vehicle = DeserializeVehicleSnapshot(booking.VehicleSnapshotJson);
-        }
-
         return ApiResponse<BookingResponse>.SuccessResponse(
-            booking.ToResponse(customer, vehicle),
+            await BuildBookingResponseAsync(booking, viewerId, ct),
             EndpointMessages.Booking.BookingDetailSuccess);
     }
 
@@ -353,7 +346,7 @@ public class BookingService(
         }
 
         return ApiResponse<BookingResponse>.SuccessResponse(
-            reloaded!.ToResponse(),
+            await BuildBookingResponseAsync(reloaded!, actorId, ct),
             EndpointMessages.Booking.AssignSuccess);
     }
 
@@ -446,7 +439,7 @@ public class BookingService(
         }
 
         return ApiResponse<BookingResponse>.SuccessResponse(
-            reloaded!.ToResponse(),
+            await BuildBookingResponseAsync(reloaded!, mechanicUserId, ct),
             EndpointMessages.Booking.MechanicStatusUpdated);
     }
 
@@ -508,6 +501,44 @@ public class BookingService(
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
+
+    private async Task<BookingResponse> BuildBookingResponseAsync(
+        Booking booking,
+        Guid viewerId,
+        CancellationToken ct)
+    {
+        var customer = await _identityContactClient.GetCustomerContactAsync(booking.UserId, ct);
+        var vehicleSnapshot = DeserializeVehicleSnapshot(booking.VehicleSnapshotJson);
+        var isAssignedMechanic = await IsAssignedMechanicViewerAsync(booking, viewerId, ct);
+        var changedByNames = await ResolveChangedByNamesAsync(booking, customer, ct);
+        return booking.ToResponse(customer, vehicleSnapshot, isAssignedMechanic, changedByNames);
+    }
+
+    private async Task<IReadOnlyDictionary<Guid, string>> ResolveChangedByNamesAsync(
+        Booking booking,
+        BookingCustomerSummary? customer,
+        CancellationToken ct)
+    {
+        var result = new Dictionary<Guid, string>();
+        var uniqueUserIds = booking.StatusHistory
+            .Select(h => h.ChangedByUserId)
+            .Distinct()
+            .ToHashSet();
+
+        if (customer is not null && uniqueUserIds.Contains(booking.UserId))
+            result[booking.UserId] = customer.FullName;
+
+        var memberUserIds = uniqueUserIds.Where(id => id != booking.UserId).ToList();
+        if (memberUserIds.Count > 0)
+        {
+            var members = await _unitOfWork.Members.GetAllAsync(
+                m => memberUserIds.Contains(m.UserId) && m.DeletedAt == null);
+            foreach (var m in members)
+                result.TryAdd(m.UserId, m.DisplayName);
+        }
+
+        return result;
+    }
 
     private record ResolvedLineItems(List<BookingLineItem>? LineItems, string? Error);
 
