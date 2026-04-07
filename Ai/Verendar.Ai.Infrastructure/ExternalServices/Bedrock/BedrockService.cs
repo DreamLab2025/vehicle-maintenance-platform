@@ -310,7 +310,27 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                     return ApiResponse<GenerativeAiResponse>.FailureResponse(AiExternalServiceMessages.EmptyAiResponse);
                 }
 
+                logger.LogInformation(
+                    "[TEMP] Bedrock raw output - Model: {Model}, Operation: {Operation}, UserId: {UserId}, RawResponse: {RawResponse}",
+                    selectedModel,
+                    operation,
+                    userId,
+                    TruncateForLog(responseContent, 4000));
+
                 var bedrockResponse = ParseBedrockResponse(responseContent, selectedModel, stopwatch.ElapsedMilliseconds);
+
+                if (string.IsNullOrWhiteSpace(bedrockResponse.Content))
+                {
+                    logger.LogError(
+                        "Bedrock API returned empty text content - Model: {Model}, Operation: {Operation}, UserId: {UserId}, RawResponse: {RawResponse}",
+                        selectedModel,
+                        operation,
+                        userId,
+                        TruncateForLog(responseContent, 500));
+
+                    return ApiResponse<GenerativeAiResponse>.FailureResponse(
+                        "Model Bedrock hiện tại không trả về nội dung văn bản hợp lệ. Vui lòng đổi model hoặc kiểm tra schema request/response của model này.");
+                }
 
                 logger.LogInformation(
                     "Bedrock API success - Model: {Model}, Operation: {Operation}, UserId: {UserId}, Tokens: {TotalTokens}, Cost: ${Cost:F4}, Time: {Time}ms",
@@ -332,27 +352,7 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
         {
             var root = JsonDocument.Parse(responseContent).RootElement;
 
-            var content = string.Empty;
-            if (root.TryGetProperty("content", out var contentArr))
-            {
-                foreach (var block in contentArr.EnumerateArray())
-                {
-                    if (block.TryGetProperty("type", out var typeEl) &&
-                        typeEl.GetString() == "text" &&
-                        block.TryGetProperty("text", out var textProp))
-                    {
-                        content = textProp.GetString() ?? string.Empty;
-                        break;
-                    }
-                }
-
-                if (string.IsNullOrEmpty(content) && contentArr.GetArrayLength() > 0)
-                {
-                    var first = contentArr[0];
-                    if (first.TryGetProperty("text", out var textProp))
-                        content = textProp.GetString() ?? string.Empty;
-                }
-            }
+            var content = ExtractTextContent(root);
 
             var inputTokens = 0;
             var outputTokens = 0;
@@ -362,6 +362,11 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                     inputTokens = inProp.GetInt32();
                 if (usage.TryGetProperty("output_tokens", out var outProp))
                     outputTokens = outProp.GetInt32();
+
+                if (inputTokens == 0 && usage.TryGetProperty("promptTokenCount", out var promptTokenCount))
+                    inputTokens = promptTokenCount.GetInt32();
+                if (outputTokens == 0 && usage.TryGetProperty("candidatesTokenCount", out var candidateTokenCount))
+                    outputTokens = candidateTokenCount.GetInt32();
             }
 
             var totalTokens = inputTokens + outputTokens;
@@ -383,6 +388,96 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
             };
         }
 
+        private static string ExtractTextContent(JsonElement root)
+        {
+            // Anthropic Messages format
+            if (root.TryGetProperty("content", out var contentArr) && contentArr.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var block in contentArr.EnumerateArray())
+                {
+                    if (block.ValueKind != JsonValueKind.Object)
+                        continue;
+
+                    if (block.TryGetProperty("type", out var typeEl) &&
+                        typeEl.GetString() == "text" &&
+                        block.TryGetProperty("text", out var textProp) &&
+                        textProp.ValueKind == JsonValueKind.String)
+                    {
+                        return textProp.GetString() ?? string.Empty;
+                    }
+                }
+
+                if (contentArr.GetArrayLength() > 0)
+                {
+                    var first = contentArr[0];
+                    if (first.ValueKind == JsonValueKind.Object &&
+                        first.TryGetProperty("text", out var firstText) &&
+                        firstText.ValueKind == JsonValueKind.String)
+                    {
+                        return firstText.GetString() ?? string.Empty;
+                    }
+                }
+            }
+
+            // Common single-field text outputs
+            if (root.TryGetProperty("outputText", out var outputText) && outputText.ValueKind == JsonValueKind.String)
+                return outputText.GetString() ?? string.Empty;
+            if (root.TryGetProperty("output_text", out var outputTextSnake) && outputTextSnake.ValueKind == JsonValueKind.String)
+                return outputTextSnake.GetString() ?? string.Empty;
+            if (root.TryGetProperty("generation", out var generation) && generation.ValueKind == JsonValueKind.String)
+                return generation.GetString() ?? string.Empty;
+
+            // Result arrays used by several Bedrock models
+            if (root.TryGetProperty("results", out var results) &&
+                results.ValueKind == JsonValueKind.Array &&
+                results.GetArrayLength() > 0)
+            {
+                var firstResult = results[0];
+                if (firstResult.ValueKind == JsonValueKind.Object)
+                {
+                    if (firstResult.TryGetProperty("outputText", out var resultOutputText) && resultOutputText.ValueKind == JsonValueKind.String)
+                        return resultOutputText.GetString() ?? string.Empty;
+                    if (firstResult.TryGetProperty("text", out var resultText) && resultText.ValueKind == JsonValueKind.String)
+                        return resultText.GetString() ?? string.Empty;
+                }
+            }
+
+            // Gemini-style candidate payloads
+            if (root.TryGetProperty("candidates", out var candidates) &&
+                candidates.ValueKind == JsonValueKind.Array &&
+                candidates.GetArrayLength() > 0)
+            {
+                var firstCandidate = candidates[0];
+                if (firstCandidate.ValueKind == JsonValueKind.Object &&
+                    firstCandidate.TryGetProperty("content", out var candidateContent))
+                {
+                    if (candidateContent.ValueKind == JsonValueKind.Object &&
+                        candidateContent.TryGetProperty("parts", out var parts) &&
+                        parts.ValueKind == JsonValueKind.Array &&
+                        parts.GetArrayLength() > 0)
+                    {
+                        var firstPart = parts[0];
+                        if (firstPart.ValueKind == JsonValueKind.Object &&
+                            firstPart.TryGetProperty("text", out var partText) &&
+                            partText.ValueKind == JsonValueKind.String)
+                        {
+                            return partText.GetString() ?? string.Empty;
+                        }
+                    }
+                }
+            }
+
+            return string.Empty;
+        }
+
+        private static string TruncateForLog(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value) || value.Length <= maxLength)
+                return value;
+
+            return value[..maxLength] + "...";
+        }
+
         private static string GetUserFriendlyMessage(string? error)
         {
             if (string.IsNullOrEmpty(error)) return "Đã xảy ra lỗi khi gọi API AI. Vui lòng thử lại.";
@@ -390,6 +485,9 @@ namespace Verendar.Ai.Infrastructure.ExternalServices
                 return "Tạm thời quá tải. Vui lòng thử lại sau vài phút.";
             if (error.Contains("timeout", StringComparison.OrdinalIgnoreCase))
                 return AiExternalServiceMessages.AiRequestTimeout;
+            if (error.Contains("inference profile", StringComparison.OrdinalIgnoreCase) ||
+                error.Contains("on-demand throughput", StringComparison.OrdinalIgnoreCase))
+                return "Model Bedrock này yêu cầu Inference Profile. Vui lòng cấu hình Bedrock:DefaultModel bằng inference profile ID/ARN.";
             if (error.Contains("end of its life", StringComparison.OrdinalIgnoreCase) ||
                 error.Contains("deprecated", StringComparison.OrdinalIgnoreCase))
                 return "Model Bedrock đã hết vòng đời. Vui lòng cập nhật Bedrock:DefaultModel lên phiên bản mới hơn.";
