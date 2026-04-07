@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Reflection;
+using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Verendar.Common.Jwt;
@@ -175,6 +176,7 @@ namespace Verendar.Common.Bootstrapping
                 {
                     var rabbitMqConnectionString = builder.Configuration.GetConnectionString(Const.RabbitMQ)
                         ?? throw new ArgumentNullException(nameof(builder.Configuration), "RabbitMq connection string is empty");
+                    var queueNamePrefix = ResolveQueueNamePrefix(builder, entryAssembly);
 
                     var rabbitMqHostSettings = BuildRabbitMqHostSettings(rabbitMqConnectionString);
 
@@ -195,7 +197,14 @@ namespace Verendar.Common.Bootstrapping
                             }
                         });
 
-                    cfg.ConfigureEndpoints(context);
+                    if (string.IsNullOrWhiteSpace(queueNamePrefix))
+                    {
+                        cfg.ConfigureEndpoints(context);
+                    }
+                    else
+                    {
+                        cfg.ConfigureEndpoints(context, new KebabCaseEndpointNameFormatter(queueNamePrefix, false));
+                    }
 
                     cfg.UseMessageRetry(retry =>
                     {
@@ -223,6 +232,67 @@ namespace Verendar.Common.Bootstrapping
         }
 
         private static readonly SearchValues<char> HostSectionDelimiters = SearchValues.Create(['/', '?']);
+
+        private static string ResolveQueueNamePrefix(IHostApplicationBuilder builder, Assembly? entryAssembly)
+        {
+            var serviceName = ResolveServiceName(builder.Environment.ApplicationName, entryAssembly);
+            var configuredPrefix = builder.Configuration["MassTransit:QueueNamePrefix"];
+
+            if (string.IsNullOrWhiteSpace(configuredPrefix))
+            {
+                return serviceName;
+            }
+
+            var interpolatedPrefix = configuredPrefix.Replace("{serviceName}", serviceName, StringComparison.OrdinalIgnoreCase);
+            return NormalizeQueueSegment(interpolatedPrefix);
+        }
+
+        private static string ResolveServiceName(string? applicationName, Assembly? entryAssembly)
+        {
+            var rawName = string.IsNullOrWhiteSpace(applicationName)
+                ? entryAssembly?.GetName().Name ?? string.Empty
+                : applicationName;
+
+            const string verendarPrefix = "Verendar.";
+            if (rawName.StartsWith(verendarPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                rawName = rawName[verendarPrefix.Length..];
+            }
+
+            return NormalizeQueueSegment(rawName);
+        }
+
+        private static string NormalizeQueueSegment(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var builder = new StringBuilder();
+            foreach (var c in value)
+            {
+                if (char.IsLetterOrDigit(c))
+                {
+                    if (char.IsUpper(c) &&
+                        builder.Length > 0 &&
+                        builder[^1] != '-')
+                    {
+                        builder.Append('-');
+                    }
+
+                    builder.Append(char.ToLowerInvariant(c));
+                    continue;
+                }
+
+                if (builder.Length > 0 && builder[^1] != '-')
+                {
+                    builder.Append('-');
+                }
+            }
+
+            return builder.ToString().Trim('-');
+        }
 
         private static Uri BuildRabbitMqUri(string connectionString)
         {
