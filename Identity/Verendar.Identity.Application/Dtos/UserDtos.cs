@@ -71,7 +71,7 @@ namespace Verendar.Identity.Application.Dtos
     {
         public string? Name { get; set; }
         public string? Phone { get; set; }
-        public List<UserRole>? Roles { get; set; }
+        public UserRole[]? Roles { get; set; }
         public string? SortBy { get; set; }
     }
 }
