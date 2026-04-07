@@ -12,13 +12,18 @@ public class NotificationAppOptions
 
     public string GarageDashboardPathFormat { get; set; } = "/garage-dashboard/{0}/branch/{1}";
 
-    public string ProposalPathFormat { get; set; } = "/proposal/{0}";
+    public string ProposalPathFormat { get; set; } = "/user/proposal/{0}";
 
-    public string UserVehicleMaintenancePathFormat { get; set; } = "/user-vehicles/{0}/maintenance-records";
+    public string UserBookingHistoryPath { get; set; } = "/user/booking-history";
+
+    public string UserVehicleMaintenancePathFormat { get; set; } = "/";
 
     public string UserVehicleOdometerPathFormat { get; set; } = "/user-vehicles/{0}/odometer";
 
     public string UserVehiclesFallbackPath { get; set; } = "/user-vehicles";
+
+    public string UserBookingHistoryUrl() =>
+        BaseUrl.TrimEnd('/') + UserBookingHistoryPath;
 
     public string BookingDetailRelativeUrl(Guid bookingId) =>
         string.Format(BookingDetailPathFormat, bookingId);

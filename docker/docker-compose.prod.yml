@@ -180,12 +180,28 @@ services:
       ACCEPT_EULA: "Y"
       SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_FIRSTRUN_ADMINPASSWORD:?SEQ_FIRSTRUN_ADMINPASSWORD is required}
     ports:
-      - "127.0.0.1:5341:5341"   # ingestion (internal only)
-      - "127.0.0.1:5340:80"     # UI — access via SSH tunnel: ssh -L 5340:localhost:5340 ec2-user@<ip>
+      - "127.0.0.1:5341:5341"
+      - "127.0.0.1:5340:80"
     volumes:
       - seq_data:/data
     mem_limit: 192m
     cpus: 0.3
+    networks:
+      - verendar-network
+    restart: unless-stopped
+
+  pgweb:
+    image: sosedoff/pgweb:latest
+    container_name: verendar-pgweb
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-verendar}?sslmode=disable
+    ports:
+      - "127.0.0.1:5433:8081"   # UI — access via SSH tunnel: ssh -L 5433:localhost:5433 ec2-user@<ip>
+    mem_limit: 64m
+    cpus: "0.10"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - verendar-network
     restart: unless-stopped

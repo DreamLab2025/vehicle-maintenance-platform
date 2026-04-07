@@ -100,6 +100,24 @@ tasks:
     cmds:
       - docker compose -f docker/docker-compose.dev.yml --env-file docker/.env.dev down -v
 
+  docker:prod:up:
+    desc: Start production stack
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.prod up -d
+
+  docker:prod:down:
+    desc: Stop production stack (keeps compose named volumes)
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.prod down
+
+  docker:prod:down:v:
+    desc: Stop production stack and delete compose volumes (postgres/redis/rabbitmq data)
+    dir: "{{.TASKFILE_DIR}}"
+    cmds:
+      - docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.prod down -v
+
   pull:
     desc: Pull the latest changes from the remote repository
     dir: "{{.TASKFILE_DIR}}"

@@ -1,4 +1,74 @@
 {
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"scripts/hooks/session-start.js\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Write|Edit|Glob|Grep|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/skills/continuous-learning-v2/hooks/observe.sh pre",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/skills/strategic-compact/suggest-compact.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Read|Write|Edit|Glob|Grep|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/skills/continuous-learning-v2/hooks/observe.sh post",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/hooks/build-check.py",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"scripts/hooks/session-end.js\"",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
   "ignorePatterns": [
     "**/bin/**",
     "**/obj/**",

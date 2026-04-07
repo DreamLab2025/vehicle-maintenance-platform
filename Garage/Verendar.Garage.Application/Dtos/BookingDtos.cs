@@ -109,7 +109,7 @@ public record BookingStatusHistoryItemResponse
     public Guid Id { get; init; }
     public BookingStatus FromStatus { get; init; }
     public BookingStatus ToStatus { get; init; }
-    public Guid ChangedByUserId { get; init; }
+    public string? ChangedByName { get; init; }
     public string? Note { get; init; }
     public DateTime ChangedAt { get; init; }
     public DateTime CreatedAt { get; init; }
@@ -139,8 +139,10 @@ public record BookingVehicleSummary
 public record BookingResponse
 {
     public Guid Id { get; init; }
-    public Guid UserId { get; init; }
-    public Guid UserVehicleId { get; init; }
+    public string CustomerName { get; init; } = string.Empty;
+    public string CustomerPhone { get; init; } = string.Empty;
+    public string VehicleBrand { get; init; } = string.Empty;
+    public string VehicleModel { get; init; } = string.Empty;
     public Guid GarageBranchId { get; init; }
     public Guid? MechanicId { get; init; }
     public string? MechanicDisplayName { get; init; }
