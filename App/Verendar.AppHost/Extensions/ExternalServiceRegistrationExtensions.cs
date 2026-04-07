@@ -61,6 +61,27 @@ namespace Verendar.AppHost.Extensions
                 .WithContainerName($"verendar-aspire-seq{runSuffix}")
                 .ExcludeFromManifest();
 
+            var seqAdminPassword = builder.Configuration["SEQ_FIRSTRUN_ADMINPASSWORD"];
+            var seqNoAuthentication = builder.Configuration["SEQ_FIRSTRUN_NOAUTHENTICATION"];
+
+            if (!string.IsNullOrWhiteSpace(seqAdminPassword))
+            {
+                seq = seq.WithEnvironment("SEQ_FIRSTRUN_ADMINPASSWORD", seqAdminPassword);
+            }
+            else if (string.Equals(seqNoAuthentication, "true", StringComparison.OrdinalIgnoreCase)
+                     || isDevelopment
+                     || isIsolatedTestRun)
+            {
+                // Development and isolated test runs default to no-auth to avoid first-run bootstrap failures.
+                seq = seq.WithEnvironment("SEQ_FIRSTRUN_NOAUTHENTICATION", "true");
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "Seq requires first-run authentication config. Set SEQ_FIRSTRUN_ADMINPASSWORD, " +
+                    "or set SEQ_FIRSTRUN_NOAUTHENTICATION=true if authentication is intentionally disabled.");
+            }
+
             if (!isIsolatedTestRun)
             {
                 seq = seq.WithDataVolume();

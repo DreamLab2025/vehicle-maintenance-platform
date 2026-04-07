@@ -161,7 +161,7 @@ services:
       - "5672:5672"
       - "127.0.0.1:15672:15672"
     healthcheck:
-      test: [ "CMD-SHELL", "rabbitmq-diagnostics -q ping" ]
+      test: [ "CMD-SHELL", "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_local_alarms" ]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -175,6 +175,7 @@ services:
     container_name: verendar-seq
     environment:
       ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_FIRSTRUN_ADMINPASSWORD:?SEQ_FIRSTRUN_ADMINPASSWORD is required}
     ports:
       - "127.0.0.1:5341:5341"   # ingestion (internal only)
       - "127.0.0.1:5340:80"     # UI — access via SSH tunnel: ssh -L 5340:localhost:5340 ec2-user@<ip>
@@ -214,6 +215,8 @@ services:
     networks:
       - verendar-network
     restart: unless-stopped
+    volumes:
+      - location_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   garage-service:
     image: ${DOCKER_IMAGE_PREFIX}/verendar-garage-service:${IMAGE_TAG:-latest}
@@ -245,6 +248,8 @@ services:
     networks:
       - verendar-network
     restart: unless-stopped
+    volumes:
+      - garage_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   gateway:
     image: nginx:alpine
@@ -304,6 +309,8 @@ services:
     networks:
       - verendar-network
     restart: unless-stopped
+    volumes:
+      - identity_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   vehicle-service:
     image: ${DOCKER_IMAGE_PREFIX}/verendar-vehicle-service:${IMAGE_TAG:-latest}
@@ -333,6 +340,8 @@ services:
     networks:
       - verendar-network
     restart: unless-stopped
+    volumes:
+      - vehicle_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   media-service:
     image: ${DOCKER_IMAGE_PREFIX}/verendar-media-service:${IMAGE_TAG:-latest}
@@ -362,6 +371,8 @@ services:
     networks:
       - verendar-network
     restart: unless-stopped
+    volumes:
+      - media_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   notification-service:
     image: ${DOCKER_IMAGE_PREFIX}/verendar-notification-service:${IMAGE_TAG:-latest}
@@ -391,6 +402,8 @@ services:
     networks:
       - verendar-network
     restart: unless-stopped
+    volumes:
+      - notification_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   ai-service:
     image: ${DOCKER_IMAGE_PREFIX}/verendar-ai-service:${IMAGE_TAG:-latest}
@@ -420,12 +433,21 @@ services:
     networks:
       - verendar-network
     restart: unless-stopped
+    volumes:
+      - ai_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
 volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
   seq_data:
+  identity_dp_keys:
+  vehicle_dp_keys:
+  media_dp_keys:
+  notification_dp_keys:
+  ai_dp_keys:
+  location_dp_keys:
+  garage_dp_keys:
 
 networks:
   verendar-network:
