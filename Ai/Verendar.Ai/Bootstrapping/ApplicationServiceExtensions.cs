@@ -118,11 +118,14 @@ namespace Verendar.Ai.Bootstrapping
                 });
             }
 
-            var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
-            recurringJobManager.AddOrUpdate<AiPromptRetentionJob>(
-                "ai-prompt-retention",
-                job => job.ExecuteAsync(CancellationToken.None),
-                Cron.Daily);
+            app.Lifetime.ApplicationStarted.Register(() =>
+            {
+                var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
+                recurringJobManager.AddOrUpdate<AiPromptRetentionJob>(
+                    "ai-prompt-retention",
+                    job => job.ExecuteAsync(CancellationToken.None),
+                    Cron.Daily);
+            });
             app.MapAiApi();
             app.MapAiPromptApi();
 

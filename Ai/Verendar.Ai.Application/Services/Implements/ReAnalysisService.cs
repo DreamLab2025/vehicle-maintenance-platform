@@ -5,9 +5,11 @@ namespace Verendar.Ai.Application.Services.Implements
 {
     public class ReAnalysisService(
         IVehicleServiceClient vehicleServiceClient,
+        IBackgroundJobClient backgroundJobClient,
         ILogger<ReAnalysisService> logger) : IReAnalysisService
     {
         private readonly IVehicleServiceClient _vehicleServiceClient = vehicleServiceClient;
+        private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
         private readonly ILogger<ReAnalysisService> _logger = logger;
 
         public async Task QueueReAnalysisForBaselinePartsAsync(Guid userVehicleId, Guid userId)
@@ -31,7 +33,7 @@ namespace Verendar.Ai.Application.Services.Implements
 
             foreach (var part in partsResult.Data)
             {
-                BackgroundJob.Enqueue<ReAnalyzePartJob>(j =>
+                _backgroundJobClient.Enqueue<ReAnalyzePartJob>(j =>
                     j.ExecuteAsync(userVehicleId, userId, part.PartCategorySlug, CancellationToken.None));
 
                 _logger.LogInformation(
