@@ -25,7 +25,9 @@ public class BookingStatusChangedEventConsumer(
         try
         {
             var (title, content) = GarageBookingNotificationMappings.BookingStatusChangedCopy(m);
-            var actionUrl = routes.UserBookingHistoryUrl();
+            var actionUrl = string.Equals(m.ToStatus, "Completed", StringComparison.OrdinalIgnoreCase)
+                ? routes.UserProposalUrl(m.UserVehicleId)
+                : routes.UserBookingHistoryUrl();
 
             var notification = NotificationMappings.CreateUserNotification(
                 m.CustomerUserId,

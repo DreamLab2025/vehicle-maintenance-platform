@@ -14,8 +14,7 @@ public static class NotificationSeeder
 
     private static readonly Guid SeedUserVehicleId = Guid.Parse("f0000001-0000-0000-0000-000000000001");
 
-    private static string MaintenanceActionPath(Guid userVehicleId) =>
-        $"/user-vehicles/{userVehicleId}/maintenance-records";
+    private const string MaintenanceActionPath = "/";
 
     private static string OdometerActionPath(Guid userVehicleId) =>
         $"/user-vehicles/{userVehicleId}/odometer";
@@ -100,7 +99,7 @@ public static class NotificationSeeder
                 level.ToNotificationPriority(),
                 "UserVehicle",
                 SeedUserVehicleId,
-                MaintenanceActionPath(SeedUserVehicleId),
+                MaintenanceActionPath,
                 payloadJson);
             totalSeeded++;
         }
