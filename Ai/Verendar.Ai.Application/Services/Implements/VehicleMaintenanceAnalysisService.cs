@@ -171,6 +171,7 @@ namespace Verendar.Ai.Application.Services.Implements
             // 12. Build response
             var lastReplacementDate = ParseDateOnly(geminiRec.LastServiceDate);
             var allWarnings = geminiRec.Warnings ?? [];
+            var needsImmediateAttention = vehicleInfo.CurrentOdometer >= finalOdo;
 
             var response = new VehicleQuestionnaireResponse
             {
@@ -191,7 +192,7 @@ namespace Verendar.Ai.Application.Services.Implements
                         AnalysisPhase = analysisPhase,
                         RangeNarrowsWhen = rangeNarrowsWhen,
                         Reasoning = geminiRec.Reasoning,
-                        NeedsImmediateAttention = geminiRec.NeedsImmediateAttention
+                        NeedsImmediateAttention = needsImmediateAttention
                     }
                 ],
                 Warnings = allWarnings,

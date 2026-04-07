@@ -365,6 +365,46 @@ public class VehicleMaintenanceAnalysisServiceTests
         result.Data.Recommendations[0].PartCategorySlug.Should().Be("engine-oil");
     }
 
+    [Fact]
+    public async Task AnalyzeQuestionnaireAsync_WhenAiFlagsImmediateButCurrentOdoBelowThreshold_ShouldOverrideToFalse()
+    {
+        var (sut, aiService, vehicleClient, _) = CreateSut();
+        SetupHappyPathDependencies(vehicleClient);
+        aiService.Setup(a => a.GenerateContentAsync(
+                        It.IsAny<string>(), AiOperation.AnalyzeMaintenanceQuestionnaire, UserId,
+                        null, null, null, 0.5m, null))
+                .ReturnsAsync(ApiResponse<GenerativeAiResponse>.SuccessResponse(new GenerativeAiResponse
+                {
+                    Content =
+                        """
+                                {
+                                    "recommendations": [
+                                        {
+                                            "partCategorySlug": "engine-oil",
+                                            "lastServiceOdometer": null,
+                                            "lastServiceDate": null,
+                                            "usageAdjustmentFactor": 1.1,
+                                            "reasoning": "AI đánh dấu khẩn cấp",
+                                            "needsImmediateAttention": true,
+                                            "warnings": []
+                                        }
+                                    ]
+                                }
+                                """,
+                    Model = "google.gemma-3-4b-it",
+                    Provider = AiProvider.Bedrock,
+                    TotalTokens = 900
+                }));
+
+        var result = await sut.AnalyzeQuestionnaireAsync(UserId, MakeRequest());
+
+        AiServiceResponseAssert.AssertSuccessEnvelope(result);
+        result.Data.Should().NotBeNull();
+        var rec = result.Data!.Recommendations[0];
+        rec.PredictedNextOdometer.Should().Be(50500); // 45000 + 5000 * 1.1
+        rec.NeedsImmediateAttention.Should().BeFalse(); // current 45000 < predicted 50500
+    }
+
     private static void SetupVehicleAndSummary(Mock<IVehicleServiceClient> vehicleClient)
     {
         vehicleClient.Setup(c => c.GetUserVehicleByIdAsync(UserVehicleId, It.IsAny<CancellationToken>()))
