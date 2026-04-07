@@ -24,13 +24,15 @@ namespace Verendar.Ai.Application.Services.Implements
         {
             var expected = currentOdo + kmInterval;
             var expectedDate = today.AddMonths(monthsInterval);
+            var earliest = currentOdo + (int)(kmInterval * 0.85);
+            var latest = currentOdo + (int)(kmInterval * 1.15);
 
             return new PredictionBase
             {
                 ExpectedNextOdometer = expected,
                 ExpectedNextDate = expectedDate,
-                EarliestNextOdometer = (int)(expected * 0.85),
-                LatestNextOdometer = (int)(expected * 1.15),
+                EarliestNextOdometer = earliest,
+                LatestNextOdometer = latest,
                 KmIntervalUsed = kmInterval,
                 DataSource = "manufacturer"
             };
@@ -41,13 +43,15 @@ namespace Verendar.Ai.Application.Services.Implements
             var expected = currentOdo + kmInterval;
             var expectedMonths = kmInterval / actualKmPerMonth;
             var expectedDate = today.AddDays((int)(expectedMonths * 30));
+            var earliest = currentOdo + (int)(kmInterval * 0.90);
+            var latest = currentOdo + (int)(kmInterval * 1.10);
 
             return new PredictionBase
             {
                 ExpectedNextOdometer = expected,
                 ExpectedNextDate = expectedDate,
-                EarliestNextOdometer = (int)(expected * 0.90),
-                LatestNextOdometer = (int)(expected * 1.10),
+                EarliestNextOdometer = earliest,
+                LatestNextOdometer = latest,
                 KmIntervalUsed = kmInterval,
                 DataSource = "actual_history"
             };
