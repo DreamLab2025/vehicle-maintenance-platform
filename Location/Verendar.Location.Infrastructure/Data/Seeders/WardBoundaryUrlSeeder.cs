@@ -3329,33 +3329,33 @@ public static class WardBoundaryUrlSeeder
         ["32248"] = "https://d3iova6424vljy.cloudfront.net/prod/location/wards/96_part_001.json",
     };
 
+    private const int ChunkSize = 500;
+
     public static async Task SeedAsync(LocationDbContext db, ILogger? logger = null, CancellationToken cancellationToken = default)
     {
-        var existingCodes = await db.Wards
-            .Where(w => w.BoundaryUrl == null)
-            .Select(w => w.Code)
-            .ToListAsync(cancellationToken);
-
-        if (existingCodes.Count == 0)
+        var nullUrlCount = await db.Wards.CountAsync(w => w.BoundaryUrl == null, cancellationToken);
+        if (nullUrlCount == 0)
         {
             logger?.LogInformation("WardBoundaryUrlSeeder: all wards already have BoundaryUrl, skipping");
             return;
         }
 
+        // Bulk UPDATE via VALUES table — replaces 3321 individual round trips with ~7 queries
+        // URLs are hardcoded constants — no SQL injection risk
         var seeded = 0;
-        foreach (var (wardCode, url) in BoundaryUrls)
+        foreach (var chunk in BoundaryUrls.ToList().Chunk(ChunkSize))
         {
-            if (!existingCodes.Contains(wardCode))
-            {
-                if (!await db.Wards.AnyAsync(w => w.Code == wardCode, cancellationToken))
-                    logger?.LogWarning("WardBoundaryUrlSeeder: ward code {Code} not found in DB, skipping", wardCode);
-                continue;
-            }
-
-            await db.Wards
-                .Where(w => w.Code == wardCode)
-                .ExecuteUpdateAsync(s => s.SetProperty(w => w.BoundaryUrl, url), cancellationToken);
-            seeded++;
+            var valueRows = string.Join(",", chunk.Select(kv => $"('{kv.Key}','{kv.Value}')"));
+#pragma warning disable EF1002 // values are compile-time constants, no injection risk
+            await db.Database.ExecuteSqlRawAsync(
+                $"""
+                UPDATE "Wards" SET "BoundaryUrl" = v.url
+                FROM (VALUES {valueRows}) AS v(code, url)
+                WHERE "Code" = v.code AND "BoundaryUrl" IS NULL
+                """,
+                cancellationToken);
+#pragma warning restore EF1002
+            seeded += chunk.Length;
         }
 
         logger?.LogInformation("WardBoundaryUrlSeeder: seeded {Count} ward boundary URLs", seeded);

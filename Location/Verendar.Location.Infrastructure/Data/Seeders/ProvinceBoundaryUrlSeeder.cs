@@ -55,22 +55,19 @@ public static class ProvinceBoundaryUrlSeeder
             return;
         }
 
-        var seeded = 0;
-        foreach (var (code, url) in BoundaryUrls)
-        {
-            if (!existingCodes.Contains(code))
-            {
-                if (!await db.Provinces.AnyAsync(p => p.Code == code, cancellationToken))
-                    logger?.LogWarning("ProvinceBoundaryUrlSeeder: province code {Code} not found in DB, skipping", code);
-                continue;
-            }
+        // Bulk UPDATE via VALUES table — replaces 34 individual round trips with 1 query
+        // URLs are hardcoded constants — no SQL injection risk
+        var valueRows = string.Join(",", BoundaryUrls.Select(kv => $"('{kv.Key}','{kv.Value}')"));
+#pragma warning disable EF1002 // values are compile-time constants, no injection risk
+        await db.Database.ExecuteSqlRawAsync(
+            $"""
+            UPDATE "Provinces" SET "BoundaryUrl" = v.url
+            FROM (VALUES {valueRows}) AS v(code, url)
+            WHERE "Code" = v.code AND "BoundaryUrl" IS NULL
+            """,
+            cancellationToken);
+#pragma warning restore EF1002
 
-            await db.Provinces
-                .Where(p => p.Code == code)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.BoundaryUrl, url), cancellationToken);
-            seeded++;
-        }
-
-        logger?.LogInformation("ProvinceBoundaryUrlSeeder: seeded {Count} province boundary URLs", seeded);
+        logger?.LogInformation("ProvinceBoundaryUrlSeeder: seeded {Count} province boundary URLs", BoundaryUrls.Count);
     }
 }
