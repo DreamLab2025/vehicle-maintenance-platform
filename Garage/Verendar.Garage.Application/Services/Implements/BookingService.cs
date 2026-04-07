@@ -334,8 +334,8 @@ public class BookingService(
             {
                 BookingId = booking.Id,
                 CustomerUserId = booking.UserId,
-                UserVehicleId = booking.UserVehicleId,
-                GarageId = reloaded!.GarageBranch.GarageId,
+                UserVehicleId = reloaded!.UserVehicleId,
+                GarageId = reloaded.GarageBranch.GarageId,
                 GarageBranchId = booking.GarageBranchId,
                 MechanicMemberId = mechanic.Value.Id,
                 MechanicUserId = mechanic.Value.UserId,
