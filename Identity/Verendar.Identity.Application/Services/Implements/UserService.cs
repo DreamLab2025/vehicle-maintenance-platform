@@ -18,14 +18,22 @@ namespace Verendar.Identity.Application.Services.Implements
         private readonly ILogger<UserService> _logger = logger;
         private readonly PasswordHasher<User> _passwordHasher = new PasswordHasher<User>();
 
-        public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(PaginationRequest paginationRequest)
+        public async Task<ApiResponse<List<UserDto>>> GetAllUsersAsync(UserFilterRequest request)
         {
-            paginationRequest.Normalize();
+            request.Normalize();
+
+            var name = request.Name?.Trim().ToLower();
+            var phone = request.Phone?.Trim();
+            var roles = request.Roles?.Where(r => Enum.IsDefined(typeof(UserRole), r)).ToList();
+            var descending = request.IsDescending != false;
+
             var users = await _unitOfWork.Users.GetPagedAsync(
-                paginationRequest.PageNumber,
-                paginationRequest.PageSize,
-                null,
-                q => q.OrderByDescending(u => u.CreatedAt)
+                request.PageNumber,
+                request.PageSize,
+                u => (string.IsNullOrEmpty(name) || u.FullName.ToLower().Contains(name))
+                  && (string.IsNullOrEmpty(phone) || (u.PhoneNumber != null && u.PhoneNumber.Contains(phone)))
+                  && (roles == null || roles.Count == 0 || u.Roles.Any(r => roles.Contains(r))),
+                BuildOrderBy(request.SortBy, descending)
             );
 
             var userDtos = users.Items.Select(u => u.ToDto()).ToList();
@@ -33,11 +41,28 @@ namespace Verendar.Identity.Application.Services.Implements
             return ApiResponse<List<UserDto>>.SuccessPagedResponse(
                 userDtos,
                 users.TotalCount,
-                paginationRequest.PageNumber,
-                paginationRequest.PageSize,
+                request.PageNumber,
+                request.PageSize,
                 "Lấy danh sách người dùng thành công."
             );
         }
+
+        private static Func<IQueryable<User>, IOrderedQueryable<User>> BuildOrderBy(string? sortBy, bool descending) =>
+            sortBy?.ToLower() switch
+            {
+                "name" => descending
+                    ? q => q.OrderByDescending(u => u.FullName)
+                    : q => q.OrderBy(u => u.FullName),
+                "email" => descending
+                    ? q => q.OrderByDescending(u => u.Email)
+                    : q => q.OrderBy(u => u.Email),
+                "phone" => descending
+                    ? q => q.OrderByDescending(u => u.PhoneNumber)
+                    : q => q.OrderBy(u => u.PhoneNumber),
+                _ => descending
+                    ? q => q.OrderByDescending(u => u.CreatedAt)
+                    : q => q.OrderBy(u => u.CreatedAt),
+            };
 
         public async Task<ApiResponse<UserDto>> GetUserByIdAsync(Guid userId)
         {

@@ -97,9 +97,9 @@ namespace Verendar.Identity.Apis
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> GetAllUsers([AsParameters] PaginationRequest paginationRequest, IUserService userService)
+        private static async Task<IResult> GetAllUsers([AsParameters] UserFilterRequest request, IUserService userService)
         {
-            var result = await userService.GetAllUsersAsync(paginationRequest);
+            var result = await userService.GetAllUsersAsync(request);
             return result.ToHttpResult();
         }
 
