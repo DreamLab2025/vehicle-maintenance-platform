@@ -256,7 +256,6 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - identity_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   vehicle-service:
     build:
@@ -282,7 +281,6 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - vehicle_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   media-service:
     build:
@@ -308,7 +306,6 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - media_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   notification-service:
     build:
@@ -334,7 +331,6 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - notification_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   ai-service:
     build:
@@ -360,7 +356,6 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - ai_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   location-service:
     build:
@@ -386,7 +381,6 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - location_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
   garage-service:
     build:
@@ -414,19 +408,11 @@ services:
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
-      - garage_dp_keys:/home/app/.aspnet/DataProtection-Keys
 
 volumes:
   postgres_data:
   redis_data:
   rabbitmq_data:
-  identity_dp_keys:
-  vehicle_dp_keys:
-  media_dp_keys:
-  notification_dp_keys:
-  ai_dp_keys:
-  location_dp_keys:
-  garage_dp_keys:
 
 networks:
   verendar-network:
