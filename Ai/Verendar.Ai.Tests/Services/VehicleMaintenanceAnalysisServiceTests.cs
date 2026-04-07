@@ -225,6 +225,27 @@ public class VehicleMaintenanceAnalysisServiceTests
     }
 
     [Fact]
+    public async Task AnalyzeQuestionnaireAsync_WhenAiReturnsEmptyContent_ReturnsFailure()
+    {
+        var (sut, aiService, vehicleClient, _) = CreateSut();
+        SetupHappyPathDependencies(vehicleClient);
+        aiService.Setup(a => a.GenerateContentAsync(
+                It.IsAny<string>(), AiOperation.AnalyzeMaintenanceQuestionnaire, UserId,
+                null, null, null, 0.5m, null))
+            .ReturnsAsync(ApiResponse<GenerativeAiResponse>.SuccessResponse(new GenerativeAiResponse
+            {
+                Content = string.Empty,
+                Model = "gemini-2.0-flash",
+                Provider = AiProvider.Gemini,
+                TotalTokens = 0
+            }));
+
+        var result = await sut.AnalyzeQuestionnaireAsync(UserId, MakeRequest());
+
+        AiServiceResponseAssert.AssertFailureEnvelope(result, "AI không trả về nội dung hợp lệ");
+    }
+
+    [Fact]
     public async Task AnalyzeQuestionnaireAsync_WhenAiReturnsEmptyRecommendations_ReturnsFailure()
     {
         var (sut, aiService, vehicleClient, _) = CreateSut();

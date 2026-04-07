@@ -96,6 +96,12 @@ namespace Verendar.Ai.Application.Services.Implements
                 return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse(aiResponse.Message ?? "Không thể phân tích dữ liệu");
             }
 
+            if (string.IsNullOrWhiteSpace(aiResponse.Data.Content))
+            {
+                _logger.LogWarning("AnalyzeQuestionnaire: AI response content is empty. Model: {Model}", aiResponse.Data.Model);
+                return ApiResponse<VehicleQuestionnaireResponse>.FailureResponse("AI không trả về nội dung hợp lệ");
+            }
+
             // 7. Parse Gemini output
             GeminiVehicleAnalysisResult? analysisResult;
             try
