@@ -12,7 +12,7 @@ public class NotificationAppOptions
 
     public string GarageDashboardPathFormat { get; set; } = "/garage-dashboard/{0}/branch/{1}";
 
-    public string ProposalPathFormat { get; set; } = "/user/proposal/{0}";
+    public string ProposalPathFormat { get; set; } = "/proposal/{0}";
 
     public string UserBookingHistoryPath { get; set; } = "/user/booking-history";
 
