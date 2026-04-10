@@ -6,7 +6,7 @@ namespace Verendar.Ai.Infrastructure.Configuration
         public string Region { get; set; } = "us-east-1";
         public string? AccessKey { get; set; }
         public string? SecretKey { get; set; }
-        public string DefaultModel { get; set; } = "anthropic.claude-3-5-sonnet-20241022-v2:0";
+        public string DefaultModel { get; set; } = "google.gemma-3-4b-it";
         public int MaxRetries { get; set; } = 3;
         public int TimeoutSeconds { get; set; } = 60;
         public BedrockDefaultParameters DefaultParameters { get; set; } = new();
