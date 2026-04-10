@@ -136,6 +136,14 @@ Payment logic must live **exclusively** in the Payment service. Other services c
 - [ ] `dotnet list package --vulnerable` returns clean
 - [ ] Payment logic isolated in Payment service
 
-## Reference
+## Handoff to Other Agents
 
-See skill `security-review` for full code examples and blockchain/Solana patterns.
+When you find issues that fall outside security scope, note them but do not deep-dive:
+- Verendar architectural constraints (ApiResponse<T>, soft delete) → delegate to `code-reviewer` agent
+- C# language idioms, async patterns → delegate to `csharp-reviewer` agent
+
+## Reference Skills
+
+These skills contain the authoritative patterns — read them for detailed examples before flagging issues:
+- `security-review` — Full .NET/Verendar security checklist with code examples
+- `api-design` — Endpoint auth patterns, ValidationEndpointFilter, internal endpoint conventions

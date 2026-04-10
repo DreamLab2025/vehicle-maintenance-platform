@@ -64,12 +64,10 @@ When invoked:
 
 ### MEDIUM — Verendar-Specific
 
-- **Hard delete** — `dbContext.Remove()` is banned; use `DeletedAt = DateTime.UtcNow`
-- **Missing `ApiResponse<T>`** — Public endpoints must wrap responses; internal skips
-- **AutoMapper usage** — Banned; use static `ToEntity()` / `ToResponse()` extensions
-- **MediatR usage** — Banned; call `IUnitOfWork` repositories directly
-- **Controller usage** — Banned; Minimal API only (`{Module}Apis.cs` route groups)
-- **`[FromQuery]` on list handlers** — Must use class inheriting `PaginationRequest` with `[AsParameters]`
+> Full constraint list is in `CLAUDE.md ## Constraints`. Flag only if encountered during C# review:
+
+- **Hard delete** — `dbContext.Remove()` → use `DeletedAt = DateTime.UtcNow`
+- **AutoMapper / MediatR / controllers** — all banned; see `CLAUDE.md`
 
 ### LOW — Conventions
 
@@ -104,9 +102,15 @@ Fix: What to change
 - **Warning**: MEDIUM issues only (can merge with caution)
 - **Block**: CRITICAL or HIGH issues found
 
+## Handoff to Other Agents
+
+When you find issues that fall outside this agent's scope, note them but do not deep-dive:
+- Verendar architectural constraints (ApiResponse<T>, soft delete, PaginationRequest) → delegate to `code-reviewer` agent
+- Security vulnerabilities (injection, secrets, auth) → delegate to `security-reviewer` agent
+- Test coverage and TDD structure → delegate to `tdd-guide` agent
+
 ## Reference Skills
 
-- `dotnet-patterns` — Idiomatic C# patterns and DI best practices
+These skills contain the authoritative patterns — read them for detailed examples before flagging issues:
+- `dotnet-patterns` — Idiomatic C# patterns, DI best practices, async/await
 - `csharp-testing` — xUnit / FluentAssertions / NSubstitute / Testcontainers patterns
-- `security-review` — .NET-specific security checklist
-- `api-design` — Verendar API conventions (ApiResponse<T>, PaginationRequest, soft delete)

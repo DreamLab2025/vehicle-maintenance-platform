@@ -115,6 +115,14 @@ task test PROJECT=Garage/Verendar.Garage.Tests          # single project
 dotnet test --filter "FullyQualifiedName~CancelAsync"  # single test
 ```
 
-## Reference
+## Handoff to Other Agents
 
-See skill `tdd-workflow` for full GarageWebFactory + Testcontainers setup.
+When you find issues that fall outside test scope, note them but do not deep-dive:
+- Implementation code quality/constraints → delegate to `code-reviewer` agent
+- C# language issues in test code → delegate to `csharp-reviewer` agent
+
+## Reference Skills
+
+These skills contain the authoritative patterns — read them for detailed examples before writing tests:
+- `tdd-workflow` — Full RED→GREEN→REFACTOR cycle, GarageWebFactory + Testcontainers setup
+- `csharp-testing` — xUnit / FluentAssertions / NSubstitute / Testcontainers patterns

@@ -13,19 +13,12 @@ You are an implementation planning specialist for the Verendar project (.NET 9 /
 
 ## Verendar Architecture Constraints
 
-Every plan must respect these non-negotiable rules:
+> Full constraints are in `CLAUDE.md ## Constraints` and `## Implementation Patterns` — read them before planning. Summary:
 
-| Constraint | Detail |
-|-----------|--------|
-| Minimal API only | Route groups in `{Module}Apis.cs`, handlers as private static methods |
-| `ApiResponse<T>` | Every public endpoint response must be wrapped |
-| Soft delete only | `DeletedAt = DateTime.UtcNow` — never `dbContext.Remove()` |
-| `PaginationRequest` | All list endpoints use it with `[AsParameters]` |
-| No AutoMapper | Static `ToEntity()` / `ToResponse()` / `UpdateFromRequest()` extensions |
-| No MediatR | Call `IUnitOfWork` repositories directly from services |
-| No controllers | Minimal API only |
-| Secrets in User Secrets | Never `appsettings.json` |
-| Tests first (TDD) | Write failing tests before implementation |
+- Minimal API only (`{Module}Apis.cs` route groups, private static handlers)
+- `ApiResponse<T>` on every public endpoint; soft delete only (`DeletedAt`); `PaginationRequest` on all lists
+- No AutoMapper, no MediatR, no controllers; static `ToEntity()` / `ToResponse()` / `UpdateFromRequest()`
+- Secrets in User Secrets only; tests before implementation (TDD)
 
 ---
 
@@ -123,9 +116,18 @@ Contracts for MassTransit events go in `Verendar.{Service}.Contracts`.
 3. Sync: internal endpoints skip `ApiResponse<T>`, authenticate via `IServiceTokenProvider`
 4. Payment always goes through `IPaymentClient` + consume `PaymentSucceededEvent`
 
+## Handoff to Other Agents
+
+After the plan is confirmed by the user, these agents handle execution:
+- Code quality review after implementation → `code-reviewer` agent
+- C# idiom review → `csharp-reviewer` agent
+- Security review for auth/payment/input endpoints → `security-reviewer` agent
+- Test writing guidance → `tdd-guide` agent
+
 ## Reference Skills
 
-- `aspire-patterns` — Service bootstrap, AppHost, service discovery
-- `masstransit-events` — Event contracts, consumer patterns, retry policy
-- `api-design` — URL structure, status codes, ApiResponse<T>, PaginationRequest
-- `tdd-workflow` — TDD cycle, test setup patterns
+Load these skills for authoritative detail when building the plan — do not duplicate their content:
+- `aspire-patterns` — Service bootstrap, AppHost orchestration, service discovery, typed HTTP clients
+- `masstransit-events` — Event contracts, consumer patterns, retry policy, inter-service async
+- `api-design` — URL structure, status codes, ApiResponse<T>, PaginationRequest, internal endpoints
+- `tdd-workflow` — TDD cycle, test setup patterns, coverage requirements

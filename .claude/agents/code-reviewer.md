@@ -35,10 +35,13 @@ db.Users.Where(u => u.Email == email).FirstOrDefaultAsync(ct);
 
 ### CRITICAL — Verendar Constraints
 
-- **Hard delete** — `dbContext.Remove()` is banned; use `entity.DeletedAt = DateTime.UtcNow`
-- **Missing `ApiResponse<T>`** — All public endpoints must return `ApiResponse<T>`; only `/api/internal/...` skips it
-- **Secrets in `appsettings.json`** — Never; use User Secrets in dev, env vars in prod
-- **Unbounded list** — Lists without `PaginationRequest` (exception: Location service with Redis cache)
+> Full constraint list is in `CLAUDE.md ## Constraints`. Key violations to flag:
+
+- **Hard delete** — `dbContext.Remove()` → use `entity.DeletedAt = DateTime.UtcNow`
+- **Missing `ApiResponse<T>`** — all public endpoints; only `/api/internal/...` skips it
+- **Missing authorization** — endpoint without `.RequireAuthorization()` or explicit public annotation
+- **Unbounded list** — lists without `PaginationRequest` (exception: Location service)
+- **Secrets in `appsettings.json`** — use User Secrets in dev, env vars in prod
 
 ### HIGH — Async Patterns
 
@@ -57,11 +60,10 @@ db.Users.Where(u => u.Email == email).FirstOrDefaultAsync(ct);
 
 ### MEDIUM — Verendar Patterns
 
-- **Validation in handlers** — Business rule validation belongs in service layer, not endpoint handlers
-- **DTO mapping with AutoMapper** — Banned; use static extension methods (`ToEntity()`, `ToResponse()`)
-- **MediatR usage** — Banned; call `IUnitOfWork` repositories directly from services
-- **Missing `AsNoTracking`** — Read-only EF queries should use `.AsNoTracking()`
-- **`[FromQuery]` params on list endpoints** — Must inherit `PaginationRequest` with `[AsParameters]`
+- **Validation in handlers** — business rules belong in service layer, not endpoint handlers
+- **AutoMapper / MediatR** — both banned (see `CLAUDE.md`); use static extensions and direct `IUnitOfWork` calls
+- **Missing `AsNoTracking`** — read-only EF queries should use `.AsNoTracking()`
+- **`[FromQuery]` on list endpoints** — must inherit `PaginationRequest` with `[AsParameters]`
 
 ### LOW — Best Practices
 
@@ -102,8 +104,15 @@ Verdict: WARNING — 1 HIGH issue should be resolved before merge.
 - **Warning**: HIGH issues only (can merge with caution)
 - **Block**: CRITICAL issues — must fix before merge
 
+## Handoff to Other Agents
+
+When you find issues that fall outside this agent's scope, note them but do not deep-dive:
+- C# language idioms, nullable types, type safety → delegate to `csharp-reviewer` agent
+- Security vulnerabilities (injection, auth, secrets) → delegate to `security-reviewer` agent
+
 ## Reference Skills
 
-- `csharp-reviewer` — Deep C# idiom and type-safety review
-- `security-review` — Detailed security checklist with .NET patterns
-- `api-design` — Verendar API conventions (ApiResponse<T>, PaginationRequest, route groups)
+These skills contain the authoritative patterns — read them for detailed examples before flagging issues:
+- `api-design` — Verendar API conventions (ApiResponse<T>, PaginationRequest, route groups, status codes)
+- `dotnet-patterns` — Idiomatic C# and .NET patterns, async/await, DI best practices
+- `aspire-patterns` — Service bootstrap, service discovery, internal service auth
