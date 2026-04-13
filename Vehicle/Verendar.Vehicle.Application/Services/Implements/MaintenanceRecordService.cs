@@ -183,6 +183,42 @@ namespace Verendar.Vehicle.Application.Services.Implements
             return ApiResponse<CreateRecordResponse>.CreatedResponse(response, "Tạo phiếu bảo dưỡng thành công");
         }
 
+        public async Task<ApiResponse<CreateRecordResponse>> CreateManualMaintenanceRecordAsync(
+            Guid userId,
+            CreateManualRecordRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            var vehicle = await _unitOfWork.UserVehicles.GetByIdAndUserIdWithoutPartTrackingsAsync(request.UserVehicleId, userId);
+            if (vehicle == null)
+            {
+                _logger.LogWarning("CreateManualMaintenanceRecord: vehicle not found {VehicleId} user {UserId}", request.UserVehicleId, userId);
+                return ApiResponse<CreateRecordResponse>.NotFoundResponse("Không tìm thấy xe");
+            }
+
+            var serviceDate = request.ServiceDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
+            var odometer = request.OdometerAtService ?? vehicle.CurrentOdometer;
+
+            var createRequest = new CreateRecordRequest
+            {
+                UserVehicleId = request.UserVehicleId,
+                ServiceDate = serviceDate,
+                OdometerAtService = odometer,
+                GarageName = request.GarageName,
+                Notes = request.Notes,
+                Items = request.Items.Select(i => new RecordItemInput
+                {
+                    PartCategorySlug = i.PartCategorySlug,
+                    CustomPartName = i.CustomPartName,
+                    CustomKmInterval = i.KmCanRun,
+                    CustomMonthsInterval = i.MonthsCanRun,
+                    Price = i.Price,
+                    UpdatesTracking = true,
+                }).ToList(),
+            };
+
+            return await CreateMaintenanceRecordAsync(userId, request.UserVehicleId, createRequest);
+        }
+
         public async Task<ApiResponse<IReadOnlyList<RecordSummaryDto>>> GetMaintenanceHistoryAsync(Guid userId, Guid userVehicleId)
         {
             var vehicle = await _unitOfWork.UserVehicles.FindOneAsync(v => v.Id == userVehicleId && v.UserId == userId);

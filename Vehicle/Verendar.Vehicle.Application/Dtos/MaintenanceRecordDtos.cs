@@ -1,5 +1,24 @@
 namespace Verendar.Vehicle.Application.Dtos
 {
+    public class ManualRecordItemInput
+    {
+        public string PartCategorySlug { get; set; } = string.Empty;
+        public string? CustomPartName { get; set; }
+        public int KmCanRun { get; set; }
+        public int MonthsCanRun { get; set; }
+        public decimal? Price { get; set; }
+    }
+
+    public class CreateManualRecordRequest
+    {
+        public Guid UserVehicleId { get; set; }
+        public DateOnly? ServiceDate { get; set; }
+        public int? OdometerAtService { get; set; }
+        public string GarageName { get; set; } = string.Empty;
+        public string? Notes { get; set; }
+        public List<ManualRecordItemInput> Items { get; set; } = [];
+    }
+
     public class RecordItemInput
     {
         public string PartCategorySlug { get; set; } = string.Empty;

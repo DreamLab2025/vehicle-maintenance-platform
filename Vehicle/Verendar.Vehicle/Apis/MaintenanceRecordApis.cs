@@ -36,12 +36,12 @@ namespace Verendar.Vehicle.Apis
                 .Produces<ApiResponse<RecordDetailDto>>(StatusCodes.Status400BadRequest)
                 .Produces(StatusCodes.Status401Unauthorized);
 
-            group.MapPost("/", CreateMaintenanceRecord)
-                .AddEndpointFilter(ValidationEndpointFilter.Validate<CreateRecordRequest>())
-                .WithName("CreateMaintenanceRecord")
+            group.MapPost("/manual", CreateManualMaintenanceRecord)
+                .AddEndpointFilter(ValidationEndpointFilter.Validate<CreateManualRecordRequest>())
+                .WithName("CreateManualMaintenanceRecord")
                 .WithOpenApi(operation =>
                 {
-                    operation.Summary = "Tạo phiếu bảo dưỡng (1 lần maintenance, nhiều phụ tùng thay thế)";
+                    operation.Summary = "Tạo phiếu bảo dưỡng thủ công (không qua proposal)";
                     return operation;
                 })
                 .RequireAuthorization()
@@ -88,15 +88,17 @@ namespace Verendar.Vehicle.Apis
             return result.ToHttpResult();
         }
 
-        private static async Task<IResult> CreateMaintenanceRecord(
-            CreateRecordRequest request,
+
+        private static async Task<IResult> CreateManualMaintenanceRecord(
+            CreateManualRecordRequest request,
             ICurrentUserService currentUserService,
-            IMaintenanceRecordService maintenanceRecordService)
+            IMaintenanceRecordService maintenanceRecordService,
+            CancellationToken cancellationToken)
         {
-            var result = await maintenanceRecordService.CreateMaintenanceRecordAsync(
+            var result = await maintenanceRecordService.CreateManualMaintenanceRecordAsync(
                 currentUserService.UserId,
-                request.UserVehicleId,
-                request);
+                request,
+                cancellationToken);
             return result.ToHttpResult();
         }
 
